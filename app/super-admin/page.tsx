@@ -9,87 +9,48 @@ const menuStructure = [
     key: 'dashboard', label: 'Dashboard', icon: '📊',
   },
   {
-    key: 'tenants', label: 'Firmalar', icon: '🏢', children: [
-      { key: 'tenants-list', label: 'Firma Listesi' },
-      { key: 'tenants-onboarding', label: 'Onboarding' },
+    key: 'firmalar', label: 'Firmalar', icon: '🏢', children: [
+      { key: 'firma-listesi', label: 'Firma Listesi' },
+      { key: 'firma-onboarding', label: 'Onboarding' },
     ]
   },
   {
-    key: 'workspaces', label: 'Çalışma Alanları', icon: '🗂️',
-  },
-  {
-    key: 'users', label: 'Kullanıcılar & Erişim', icon: '👥', children: [
-      { key: 'users-list', label: 'Kullanıcılar' },
-      { key: 'users-roles', label: 'Roller & İzinler' },
-      { key: 'users-invites', label: 'Davetler' },
-      { key: 'users-sessions', label: 'Oturumlar' },
+    key: 'kullanicilar', label: 'Kullanıcılar', icon: '👥', children: [
+      { key: 'kullanici-listesi', label: 'Tüm Kullanıcılar' },
+      { key: 'kullanici-roller', label: 'Roller & İzinler' },
+      { key: 'kullanici-oturumlar', label: 'Oturumlar' },
     ]
   },
   {
-    key: 'data', label: 'Veri', icon: '🗄️', children: [
-      { key: 'data-sources', label: 'Kaynaklar' },
-      { key: 'data-ingestion', label: 'Veri Akışları' },
-      { key: 'data-schemas', label: 'Şemalar & Eşleştirme' },
-      { key: 'data-quality', label: 'Veri Kalitesi' },
-      { key: 'data-storage', label: 'Depolama & Saklama' },
+    key: 'faturalama', label: 'Faturalama', icon: '💳', children: [
+      { key: 'fatura-planlar', label: 'Planlar' },
+      { key: 'fatura-abonelikler', label: 'Abonelikler' },
+      { key: 'fatura-faturalar', label: 'Faturalar' },
+      { key: 'fatura-kullanim', label: 'Kullanım' },
     ]
   },
   {
-    key: 'analytics', label: 'Analitik', icon: '📈', children: [
-      { key: 'analytics-metrics', label: 'Metrik Oluşturucu' },
-      { key: 'analytics-insights', label: 'İçgörü Modelleri' },
-      { key: 'analytics-experiments', label: 'Deneyler' },
+    key: 'guvenlik', label: 'Güvenlik', icon: '🔒', children: [
+      { key: 'guvenlik-loglar', label: 'Denetim Logları' },
+      { key: 'guvenlik-politikalar', label: 'Politikalar' },
+      { key: 'guvenlik-anahtarlar', label: 'Anahtarlar & Sırlar' },
     ]
   },
   {
-    key: 'reports', label: 'Raporlar', icon: '📋', children: [
-      { key: 'reports-dashboards', label: 'Dashboard\'lar' },
-      { key: 'reports-list', label: 'Raporlar' },
-      { key: 'reports-scheduling', label: 'Zamanlama' },
-      { key: 'reports-exports', label: 'Dışa Aktarma' },
+    key: 'sistem', label: 'Sistem', icon: '⚙️', children: [
+      { key: 'sistem-durum', label: 'Sistem Durumu' },
+      { key: 'sistem-loglar', label: 'Loglar' },
+      { key: 'sistem-uyarilar', label: 'Uyarılar' },
     ]
   },
   {
-    key: 'integrations', label: 'Entegrasyonlar', icon: '🔌', children: [
-      { key: 'integrations-catalog', label: 'Katalog' },
-      { key: 'integrations-connections', label: 'Bağlantılar' },
-      { key: 'integrations-webhooks', label: 'Webhook & API' },
-      { key: 'integrations-health', label: 'Sağlık Durumu' },
+    key: 'destek', label: 'Destek', icon: '🎧', children: [
+      { key: 'destek-talepler', label: 'Talepler' },
+      { key: 'destek-impersonation', label: 'Kimlik Taklidi' },
     ]
   },
   {
-    key: 'billing', label: 'Faturalama', icon: '💳', children: [
-      { key: 'billing-plans', label: 'Planlar' },
-      { key: 'billing-subscriptions', label: 'Abonelikler' },
-      { key: 'billing-invoices', label: 'Faturalar' },
-      { key: 'billing-usage', label: 'Kullanım' },
-    ]
-  },
-  {
-    key: 'security', label: 'Güvenlik', icon: '🔒', children: [
-      { key: 'security-audit', label: 'Denetim Logları' },
-      { key: 'security-policies', label: 'Politikalar' },
-      { key: 'security-keys', label: 'Anahtarlar & Sırlar' },
-      { key: 'security-privacy', label: 'Gizlilik Talepleri' },
-    ]
-  },
-  {
-    key: 'operations', label: 'Operasyonlar', icon: '⚙️', children: [
-      { key: 'operations-status', label: 'Sistem Durumu' },
-      { key: 'operations-logs', label: 'Loglar' },
-      { key: 'operations-alerts', label: 'Uyarılar' },
-      { key: 'operations-flags', label: 'Özellik Bayrakları' },
-    ]
-  },
-  {
-    key: 'support', label: 'Destek', icon: '🎧', children: [
-      { key: 'support-tickets', label: 'Talepler' },
-      { key: 'support-impersonation', label: 'Kimlik Taklidi' },
-      { key: 'support-kb', label: 'Bilgi Bankası' },
-    ]
-  },
-  {
-    key: 'settings', label: 'Platform Ayarları', icon: '🛠️',
+    key: 'ayarlar', label: 'Platform Ayarları', icon: '🛠️',
   },
 ]
 
@@ -98,14 +59,14 @@ export default function SuperAdminPage() {
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(['tenants'])
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(['firmalar'])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [customers, setCustomers] = useState<any[]>([])
   const [branches, setBranches] = useState<any[]>([])
   const [leads, setLeads] = useState<any[]>([])
   const [invoices, setInvoices] = useState<any[]>([])
+  const [allUsers, setAllUsers] = useState<any[]>([])
 
-  // Firma ekleme
   const [showAddCustomer, setShowAddCustomer] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
   const [showCustomerDetail, setShowCustomerDetail] = useState(false)
@@ -118,7 +79,7 @@ export default function SuperAdminPage() {
   const [newMonthlyFee, setNewMonthlyFee] = useState('')
   const [saving, setSaving] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [notifications] = useState(3)
+  const [generatingInvoices, setGeneratingInvoices] = useState(false)
 
   useEffect(() => { loadData() }, [])
 
@@ -142,6 +103,9 @@ export default function SuperAdminPage() {
 
     const { data: invoicesData } = await supabase.from('invoices').select('*, profiles(full_name, company_name)').order('created_at', { ascending: false })
     setInvoices(invoicesData || [])
+
+    const { data: usersData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
+    setAllUsers(usersData || [])
 
     setLoading(false)
   }
@@ -171,7 +135,8 @@ export default function SuperAdminPage() {
         per_branch_fee: parseFloat(newPerBranchFee) || 0,
       })
       setShowAddCustomer(false)
-      setNewName(''); setNewEmail(''); setNewPassword(''); setNewCompany(''); setNewSector(''); setNewPerBranchFee(''); setNewMonthlyFee('')
+      setNewName(''); setNewEmail(''); setNewPassword('')
+      setNewCompany(''); setNewSector(''); setNewPerBranchFee(''); setNewMonthlyFee('')
       loadData()
     }
     setSaving(false)
@@ -179,6 +144,32 @@ export default function SuperAdminPage() {
 
   const handleToggleActive = async (customer: any) => {
     await supabase.from('profiles').update({ is_active: !customer.is_active }).eq('id', customer.id)
+    loadData()
+  }
+
+  const handleGenerateInvoices = async () => {
+    setGeneratingInvoices(true)
+    const dueDate = new Date()
+    dueDate.setDate(15)
+    for (const customer of customers) {
+      const branchCount = branches.filter(b => b.owner_id === customer.id).length
+      const perBranchFee = customer.subscriptions?.[0]?.per_branch_fee || 0
+      const totalAmount = branchCount * perBranchFee
+      if (totalAmount > 0) {
+        await supabase.from('invoices').insert({
+          owner_id: customer.id, branch_count: branchCount,
+          per_branch_fee: perBranchFee, total_amount: totalAmount,
+          status: 'pending', due_date: dueDate.toISOString().split('T')[0],
+        })
+      }
+    }
+    setGeneratingInvoices(false)
+    loadData()
+    alert('Faturalar oluşturuldu!')
+  }
+
+  const handleMarkPaid = async (invoiceId: string) => {
+    await supabase.from('invoices').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', invoiceId)
     loadData()
   }
 
@@ -201,7 +192,7 @@ export default function SuperAdminPage() {
       if (item.key === activeTab) return item.label
       if (item.children) {
         const child = item.children.find(c => c.key === activeTab)
-        if (child) return child.label
+        if (child) return `${item.label} › ${child.label}`
       }
     }
     return 'Dashboard'
@@ -223,66 +214,45 @@ export default function SuperAdminPage() {
 
       {/* SIDEBAR */}
       <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} min-h-screen bg-slate-900 flex flex-col fixed left-0 top-0 shadow-xl transition-all duration-300 z-20`}>
-
-        {/* Logo */}
         <div className="p-4 border-b border-slate-700 flex items-center justify-between">
-          {!sidebarCollapsed && (
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">D</span>
+          {!sidebarCollapsed ? (
+            <>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-sm">D</span>
+                </div>
+                <span className="text-white font-bold">DataPilot</span>
               </div>
-              <span className="text-white font-bold text-lg">DataPilot</span>
-            </div>
-          )}
-          {sidebarCollapsed && (
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mx-auto">
-              <span className="text-white font-bold">D</span>
-            </div>
-          )}
-          {!sidebarCollapsed && (
-            <button onClick={() => setSidebarCollapsed(true)} className="text-slate-400 hover:text-white">
-              ◀
+              <button onClick={() => setSidebarCollapsed(true)} className="text-slate-500 hover:text-white text-xs">◀</button>
+            </>
+          ) : (
+            <button onClick={() => setSidebarCollapsed(false)} className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mx-auto">
+              <span className="text-white font-bold text-sm">D</span>
             </button>
           )}
         </div>
 
-        {sidebarCollapsed && (
-          <button onClick={() => setSidebarCollapsed(false)} className="text-slate-400 hover:text-white p-4 text-center">
-            ▶
-          </button>
-        )}
-
-        {/* Nav */}
-        <nav className="flex-1 p-3 overflow-y-auto space-y-0.5">
+        <nav className="flex-1 p-2 overflow-y-auto space-y-0.5">
           {menuStructure.map(item => (
             <div key={item.key}>
               <button
-                onClick={() => {
-                  if (item.children) {
-                    toggleMenu(item.key)
-                  } else {
-                    setActiveTab(item.key)
-                  }
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${activeTab === item.key ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
-                <span className="text-base flex-shrink-0">{item.icon}</span>
+                onClick={() => item.children ? toggleMenu(item.key) : setActiveTab(item.key)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${activeTab === item.key ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+                <span className="flex-shrink-0">{item.icon}</span>
                 {!sidebarCollapsed && (
                   <>
-                    <span className="flex-1">{item.label}</span>
+                    <span className="flex-1 text-sm">{item.label}</span>
                     {item.children && (
-                      <span className="text-xs">{expandedMenus.includes(item.key) ? '▼' : '▶'}</span>
+                      <span className="text-xs opacity-60">{expandedMenus.includes(item.key) ? '▼' : '▶'}</span>
                     )}
                   </>
                 )}
               </button>
-
-              {/* Alt menüler */}
               {item.children && expandedMenus.includes(item.key) && !sidebarCollapsed && (
-                <div className="ml-4 mt-0.5 space-y-0.5 border-l border-slate-700 pl-3">
+                <div className="ml-3 mt-0.5 border-l border-slate-700 pl-3 space-y-0.5">
                   {item.children.map(child => (
-                    <button key={child.key}
-                      onClick={() => setActiveTab(child.key)}
-                      className={`w-full flex items-center px-3 py-2 rounded-lg text-xs transition-all text-left ${activeTab === child.key ? 'bg-blue-600 text-white font-medium' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
+                    <button key={child.key} onClick={() => setActiveTab(child.key)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${activeTab === child.key ? 'bg-blue-600 text-white font-medium' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
                       {child.label}
                     </button>
                   ))}
@@ -292,11 +262,10 @@ export default function SuperAdminPage() {
           ))}
         </nav>
 
-        {/* User */}
         {!sidebarCollapsed && (
-          <div className="p-4 border-t border-slate-700">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="p-3 border-t border-slate-700">
+            <div className="flex items-center gap-2.5 px-2 mb-2">
+              <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
               </div>
               <div className="overflow-hidden">
@@ -305,7 +274,7 @@ export default function SuperAdminPage() {
               </div>
             </div>
             <button onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:bg-slate-800 hover:text-white">
               🚪 Çıkış Yap
             </button>
           </div>
@@ -316,115 +285,112 @@ export default function SuperAdminPage() {
       <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-64'} flex-1 transition-all duration-300`}>
 
         {/* TOP BAR */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-          <div className="flex items-center gap-4 flex-1">
-            {/* Global Search */}
-            <div className="relative flex-1 max-w-md">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-              <input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Firma, kullanıcı, lead ara..."
-                className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+        <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4 sticky top-0 z-10 shadow-sm">
+          <div className="relative flex-1 max-w-sm">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
+            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Firma, kullanıcı ara..."
+              className="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
-
-          <div className="flex items-center gap-3">
-            {/* Quick Actions */}
-            <button onClick={() => { setActiveTab('tenants-list'); setShowAddCustomer(true) }}
+          <div className="flex items-center gap-2 ml-auto">
+            <button onClick={() => { setActiveTab('firma-listesi'); setShowAddCustomer(true) }}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-medium">
               + Firma Ekle
             </button>
-
-            {/* Notifications */}
-            <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
               🔔
-              {notifications > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {notifications}
-                </span>
-              )}
+              <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
             </button>
-
-            {/* Admin badge */}
-            <span className="bg-blue-100 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-full">
-              Super Admin
-            </span>
+            <span className="bg-blue-100 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-full">Super Admin</span>
           </div>
         </div>
 
-        {/* PAGE CONTENT */}
         <div className="p-6">
-
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-xs text-gray-500 mb-6">
-            <span>DataPilot</span>
-            <span>›</span>
-            <span className="text-gray-900 font-medium">{getPageTitle()}</span>
-          </div>
+          <p className="text-xs text-gray-400 mb-5">DataPilot › <span className="text-gray-700 font-medium">{getPageTitle()}</span></p>
 
           {/* DASHBOARD */}
           {activeTab === 'dashboard' && (
             <>
-              <div className="grid grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+              <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
                 {[
-                  { label: 'Toplam Firma', value: customers.length, icon: '🏢', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
-                  { label: 'Toplam Şube', value: branches.length, icon: '📍', color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100' },
-                  { label: 'Toplam Lead', value: leads.length, icon: '📋', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100' },
-                  { label: 'Bekleyen Tahsilat', value: `₺${pendingInvoicesTotal.toLocaleString()}`, icon: '💰', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
+                  { label: 'Toplam Firma', value: customers.length, icon: '🏢', color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'Toplam Şube', value: branches.length, icon: '📍', color: 'text-purple-600', bg: 'bg-purple-50' },
+                  { label: 'Toplam Lead', value: leads.length, icon: '📋', color: 'text-green-600', bg: 'bg-green-50' },
+                  { label: 'Bekleyen Tahsilat', value: `₺${pendingInvoicesTotal.toLocaleString()}`, icon: '💰', color: 'text-amber-600', bg: 'bg-amber-50' },
                 ].map(card => (
-                  <div key={card.label} className={`bg-white rounded-xl p-5 shadow-sm border ${card.border}`}>
-                    <div className={`w-10 h-10 ${card.bg} rounded-lg flex items-center justify-center text-xl mb-3`}>
-                      {card.icon}
-                    </div>
+                  <div key={card.label} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                    <div className={`w-10 h-10 ${card.bg} rounded-xl flex items-center justify-center text-xl mb-3`}>{card.icon}</div>
                     <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
                     <p className="text-xs text-gray-500 mt-1">{card.label}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-3 gap-5">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
-                  <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+                  <div className="p-4 border-b border-gray-100 flex items-center justify-between">
                     <h3 className="font-bold text-gray-900 text-sm">Son Firmalar</h3>
-                    <button onClick={() => setActiveTab('tenants-list')} className="text-xs text-blue-600 hover:underline">Tümünü gör</button>
+                    <button onClick={() => setActiveTab('firma-listesi')} className="text-xs text-blue-600 hover:underline">Tümü →</button>
                   </div>
-                  {customers.slice(0, 5).map(c => (
-                    <div key={c.id} className="px-5 py-3.5 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer"
-                      onClick={() => { setSelectedCustomer(c); setShowCustomerDetail(true) }}>
+                  {customers.length === 0 && <p className="p-6 text-xs text-gray-400 text-center">Henüz firma yok.</p>}
+                  {customers.slice(0, 6).map(c => (
+                    <div key={c.id} onClick={() => { setSelectedCustomer(c); setShowCustomerDetail(true) }}
+                      className="px-4 py-3 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <span className="text-blue-600 font-bold text-xs">{c.full_name?.charAt(0)}</span>
                         </div>
                         <div>
                           <p className="font-medium text-gray-900 text-sm">{c.full_name}</p>
-                          <p className="text-xs text-gray-500">{c.company_name} • {c.sector}</p>
+                          <p className="text-xs text-gray-500">{c.company_name || c.email}</p>
                         </div>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${c.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {c.is_active ? 'Aktif' : 'Pasif'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">
+                          {branches.filter(b => b.owner_id === c.id).length} şube
+                        </span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${c.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {c.is_active ? 'Aktif' : 'Pasif'}
+                        </span>
+                      </div>
                     </div>
                   ))}
-                  {customers.length === 0 && <p className="p-5 text-xs text-gray-400">Henüz firma yok.</p>}
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                  <div className="p-5 border-b border-gray-100">
-                    <h3 className="font-bold text-gray-900 text-sm">Gelir Özeti</h3>
+                <div className="space-y-4">
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                    <h3 className="font-bold text-gray-900 text-sm mb-3">Gelir Özeti</h3>
+                    <div className="space-y-2">
+                      {[
+                        { label: 'Tahsil Edilen', value: `₺${paidInvoicesTotal.toLocaleString()}`, color: 'text-green-600', bg: 'bg-green-50' },
+                        { label: 'Bekleyen', value: `₺${pendingInvoicesTotal.toLocaleString()}`, color: 'text-amber-600', bg: 'bg-amber-50' },
+                        { label: 'Aktif Firma', value: customers.filter(c => c.is_active).length, color: 'text-blue-600', bg: 'bg-blue-50' },
+                      ].map(item => (
+                        <div key={item.label} className={`${item.bg} rounded-lg px-3 py-2.5 flex justify-between items-center`}>
+                          <span className="text-xs text-gray-600">{item.label}</span>
+                          <span className={`text-sm font-bold ${item.color}`}>{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="p-5 space-y-3">
-                    {[
-                      { label: 'Tahsil Edilen', value: `₺${paidInvoicesTotal.toLocaleString()}`, color: 'text-green-600', bg: 'bg-green-50' },
-                      { label: 'Bekleyen', value: `₺${pendingInvoicesTotal.toLocaleString()}`, color: 'text-amber-600', bg: 'bg-amber-50' },
-                      { label: 'Aktif Firma', value: customers.filter(c => c.is_active).length, color: 'text-blue-600', bg: 'bg-blue-50' },
-                    ].map(item => (
-                      <div key={item.label} className={`${item.bg} rounded-lg p-3.5 flex items-center justify-between`}>
-                        <p className="text-xs text-gray-600">{item.label}</p>
-                        <p className={`font-bold text-sm ${item.color}`}>{item.value}</p>
-                      </div>
-                    ))}
+
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                    <h3 className="font-bold text-gray-900 text-sm mb-3">Hızlı İşlemler</h3>
+                    <div className="space-y-2">
+                      <button onClick={() => { setActiveTab('firma-listesi'); setShowAddCustomer(true) }}
+                        className="w-full text-left text-xs px-3 py-2.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium">
+                        + Yeni Firma Ekle
+                      </button>
+                      <button onClick={() => setActiveTab('fatura-faturalar')}
+                        className="w-full text-left text-xs px-3 py-2.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 font-medium">
+                        🧾 Fatura Oluştur
+                      </button>
+                      <button onClick={() => setActiveTab('guvenlik-loglar')}
+                        className="w-full text-left text-xs px-3 py-2.5 bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 font-medium">
+                        🔒 Denetim Logları
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -432,10 +398,10 @@ export default function SuperAdminPage() {
           )}
 
           {/* FİRMA LİSTESİ */}
-          {activeTab === 'tenants-list' && (
+          {activeTab === 'firma-listesi' && (
             <>
-              <div className="flex items-center justify-between mb-5">
-                <p className="text-sm text-gray-500">{filteredCustomers.length} firma</p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-gray-500">{filteredCustomers.length} firma kayıtlı</p>
                 <button onClick={() => setShowAddCustomer(!showAddCustomer)}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
                   + Firma Ekle
@@ -443,8 +409,8 @@ export default function SuperAdminPage() {
               </div>
 
               {showAddCustomer && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-5">
-                  <div className="flex items-center justify-between mb-5">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
+                  <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-gray-900">Yeni Firma Ekle</h3>
                     <button onClick={() => setShowAddCustomer(false)} className="text-gray-400 hover:text-gray-600">✕</button>
                   </div>
@@ -478,7 +444,7 @@ export default function SuperAdminPage() {
                         <option value="diger">Diğer</option>
                       </select>
                     </div>
-                    <div className="col-span-2 flex gap-3 pt-2">
+                    <div className="col-span-2 flex gap-3 pt-1">
                       <button type="submit" disabled={saving}
                         className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium">
                         {saving ? 'Ekleniyor...' : 'Firma Ekle'}
@@ -499,53 +465,41 @@ export default function SuperAdminPage() {
                     <p className="text-gray-500 text-sm">Henüz firma yok.</p>
                   </div>
                 ) : filteredCustomers.map(c => (
-                  <div key={c.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-4 cursor-pointer flex-1"
+                  <div key={c.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
+                    <div className="flex items-center gap-3 flex-1 cursor-pointer"
                       onClick={() => { setSelectedCustomer(c); setShowCustomerDetail(true) }}>
-                      <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
                         <span className="text-blue-600 font-bold text-sm">{c.full_name?.charAt(0)}</span>
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900 text-sm">{c.full_name}</p>
                         <p className="text-xs text-gray-500">{c.email} {c.company_name && `• ${c.company_name}`}</p>
-                        <div className="flex gap-2 mt-1">
+                        <div className="flex gap-1.5 mt-1">
                           {c.sector && <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{c.sector}</span>}
-                          <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
-                            {c.subscriptions?.[0]?.plan || 'trial'}
-                          </span>
-                          <span className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">
-                            {branches.filter(b => b.owner_id === c.id).length} şube
-                          </span>
+                          <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{c.subscriptions?.[0]?.plan || 'trial'}</span>
+                          <span className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">{branches.filter(b => b.owner_id === c.id).length} şube</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleToggleActive(c)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${c.is_active ? 'bg-green-500' : 'bg-gray-300'}`}>
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${c.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
-                      </button>
-                    </div>
+                    <button onClick={() => handleToggleActive(c)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${c.is_active ? 'bg-green-500' : 'bg-gray-300'}`}>
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${c.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
                   </div>
                 ))}
               </div>
             </>
           )}
 
-          {/* ONBOARDING */}
-          {activeTab === 'tenants-onboarding' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-              <span className="text-4xl mb-3 block">🚀</span>
-              <h3 className="font-bold text-gray-900 mb-2">Onboarding Yönetimi</h3>
-              <p className="text-gray-500 text-sm">Yakında eklenecek...</p>
-            </div>
-          )}
-
           {/* FATURALAR */}
-          {activeTab === 'billing-invoices' && (
+          {activeTab === 'fatura-faturalar' && (
             <>
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-gray-500">{invoices.length} fatura</p>
+                <button onClick={handleGenerateInvoices} disabled={generatingInvoices}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                  {generatingInvoices ? 'Oluşturuluyor...' : '🧾 Bu Ay Fatura Oluştur'}
+                </button>
               </div>
               <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                 {invoices.length === 0 ? (
@@ -554,15 +508,16 @@ export default function SuperAdminPage() {
                     <p className="text-gray-500 text-sm">Henüz fatura yok.</p>
                   </div>
                 ) : invoices.map(inv => (
-                  <div key={inv.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0">
+                  <div key={inv.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
                     <div>
                       <p className="font-semibold text-gray-900 text-sm">{inv.profiles?.full_name}</p>
-                      <p className="text-xs text-gray-500">{inv.branch_count} şube × ₺{inv.per_branch_fee}</p>
+                      <p className="text-xs text-gray-500">{inv.branch_count} şube × ₺{inv.per_branch_fee} • {inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-'}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <p className="font-bold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
                       {inv.status === 'pending' ? (
-                        <span className="bg-amber-100 text-amber-700 text-xs px-3 py-1 rounded-full">Bekliyor</span>
+                        <button onClick={() => handleMarkPaid(inv.id)}
+                          className="bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-green-700">Ödendi</button>
                       ) : (
                         <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">✅ Ödendi</span>
                       )}
@@ -573,15 +528,77 @@ export default function SuperAdminPage() {
             </>
           )}
 
-          {/* DİĞER SAYFALAR - PLACEHOLDER */}
-          {!['dashboard', 'tenants-list', 'tenants-onboarding', 'billing-invoices'].includes(activeTab) && (
+          {/* TÜM KULLANICILAR */}
+          {activeTab === 'kullanici-listesi' && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="p-4 border-b border-gray-100">
+                <h3 className="font-bold text-gray-900 text-sm">{allUsers.length} Kullanıcı</h3>
+              </div>
+              {allUsers.map(u => (
+                <div key={u.id} className="px-5 py-3.5 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
+                      <span className="text-slate-600 font-bold text-xs">{u.full_name?.charAt(0)}</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{u.full_name}</p>
+                      <p className="text-xs text-gray-500">{u.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                      u.role === 'super_admin' ? 'bg-red-100 text-red-700' :
+                      u.role === 'customer' ? 'bg-blue-100 text-blue-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>{u.role}</span>
+                    <span className={`text-xs px-2 py-1 rounded-full ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {u.is_active ? 'Aktif' : 'Pasif'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* DENETİM LOGLARI */}
+          {activeTab === 'guvenlik-loglar' && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+              <span className="text-4xl mb-3 block">🔒</span>
+              <h3 className="font-bold text-gray-900 mb-2">Denetim Logları</h3>
+              <p className="text-gray-500 text-sm">Tüm sistem hareketleri burada görünecek. Yakında aktif olacak.</p>
+            </div>
+          )}
+
+          {/* DEStek - KİMLİK TAKLİDİ */}
+          {activeTab === 'destek-impersonation' && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h3 className="font-bold text-gray-900 mb-2">Kimlik Taklidi (Impersonation)</h3>
+              <p className="text-gray-500 text-sm mb-5">Firma tarafından onaylanan destek taleplerine 24 saatlik geçici erişim.</p>
+              <div className="space-y-3">
+                {customers.map(c => (
+                  <div key={c.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{c.full_name}</p>
+                      <p className="text-xs text-gray-500">{c.company_name}</p>
+                    </div>
+                    <button className="bg-amber-100 text-amber-700 text-xs px-3 py-2 rounded-lg font-medium hover:bg-amber-200">
+                      24 Saat Erişim İste
+                    </button>
+                  </div>
+                ))}
+                {customers.length === 0 && <p className="text-gray-400 text-sm text-center">Firma yok.</p>}
+              </div>
+            </div>
+          )}
+
+          {/* PLACEHOLDER - diğer sayfalar */}
+          {!['dashboard', 'firma-listesi', 'fatura-faturalar', 'kullanici-listesi', 'guvenlik-loglar', 'destek-impersonation'].includes(activeTab) && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
               <span className="text-5xl mb-4 block">🚧</span>
               <h3 className="font-bold text-gray-900 mb-2">{getPageTitle()}</h3>
               <p className="text-gray-500 text-sm">Bu modül yakında eklenecek.</p>
             </div>
           )}
-
         </div>
       </div>
 
@@ -590,7 +607,7 @@ export default function SuperAdminPage() {
         <div className="fixed inset-0 z-50 flex">
           <div className="flex-1 bg-black bg-opacity-40" onClick={() => setShowCustomerDetail(false)} />
           <div className="w-[480px] bg-white h-full overflow-y-auto shadow-2xl">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
+            <div className="p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                   <span className="text-blue-600 font-bold">{selectedCustomer.full_name?.charAt(0)}</span>
@@ -600,18 +617,18 @@ export default function SuperAdminPage() {
                   <p className="text-xs text-gray-500">{selectedCustomer.company_name}</p>
                 </div>
               </div>
-              <button onClick={() => setShowCustomerDetail(false)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+              <button onClick={() => setShowCustomerDetail(false)} className="text-gray-400 hover:text-gray-600 text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">✕</button>
             </div>
 
-            <div className="p-6 space-y-6">
-              {/* Genel Bilgiler */}
+            <div className="p-5 space-y-5">
               <div>
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Genel Bilgiler</h4>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Genel Bilgiler</p>
                 <div className="space-y-2">
                   {[
                     { label: 'E-posta', value: selectedCustomer.email },
                     { label: 'Sektör', value: selectedCustomer.sector || '-' },
-                    { label: 'Kayıt Tarihi', value: new Date(selectedCustomer.created_at).toLocaleDateString('tr-TR') },
+                    { label: 'Şirket', value: selectedCustomer.company_name || '-' },
+                    { label: 'Kayıt', value: new Date(selectedCustomer.created_at).toLocaleDateString('tr-TR') },
                   ].map(item => (
                     <div key={item.label} className="flex justify-between py-2 border-b border-gray-50">
                       <span className="text-xs text-gray-500">{item.label}</span>
@@ -621,15 +638,14 @@ export default function SuperAdminPage() {
                 </div>
               </div>
 
-              {/* Plan & Abonelik */}
               <div>
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Plan & Abonelik</h4>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Plan & Fiyatlandırma</p>
                 <div className="bg-blue-50 rounded-xl p-4 space-y-2">
                   {[
                     { label: 'Plan', value: selectedCustomer.subscriptions?.[0]?.plan || 'Trial' },
-                    { label: 'Şube Başı Ücret', value: `₺${selectedCustomer.subscriptions?.[0]?.per_branch_fee || 0}` },
+                    { label: 'Şube Başı', value: `₺${selectedCustomer.subscriptions?.[0]?.per_branch_fee || 0}` },
                     { label: 'Aylık Sabit', value: `₺${selectedCustomer.subscriptions?.[0]?.monthly_fee || 0}` },
-                    { label: 'Ödeme Tarihi', value: selectedCustomer.subscriptions?.[0]?.paid_until ? new Date(selectedCustomer.subscriptions[0].paid_until).toLocaleDateString('tr-TR') : '-' },
+                    { label: 'Ödeme Bitiş', value: selectedCustomer.subscriptions?.[0]?.paid_until ? new Date(selectedCustomer.subscriptions[0].paid_until).toLocaleDateString('tr-TR') : '-' },
                   ].map(item => (
                     <div key={item.label} className="flex justify-between">
                       <span className="text-xs text-blue-600">{item.label}</span>
@@ -639,11 +655,10 @@ export default function SuperAdminPage() {
                 </div>
               </div>
 
-              {/* Şubeler */}
               <div>
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">
                   Şubeler ({branches.filter(b => b.owner_id === selectedCustomer.id).length})
-                </h4>
+                </p>
                 {branches.filter(b => b.owner_id === selectedCustomer.id).length === 0 ? (
                   <p className="text-xs text-gray-400">Henüz şube yok.</p>
                 ) : branches.filter(b => b.owner_id === selectedCustomer.id).map(b => (
@@ -656,11 +671,10 @@ export default function SuperAdminPage() {
                 ))}
               </div>
 
-              {/* Durum */}
               <div>
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Durum</h4>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Hesap Durumu</p>
                 <div className="flex items-center justify-between bg-gray-50 rounded-xl p-4">
-                  <span className="text-sm text-gray-700">Hesap Durumu</span>
+                  <span className="text-sm text-gray-700">{selectedCustomer.is_active ? 'Hesap Aktif' : 'Hesap Pasif'}</span>
                   <button onClick={() => { handleToggleActive(selectedCustomer); setSelectedCustomer({ ...selectedCustomer, is_active: !selectedCustomer.is_active }) }}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${selectedCustomer.is_active ? 'bg-green-500' : 'bg-gray-300'}`}>
                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${selectedCustomer.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
