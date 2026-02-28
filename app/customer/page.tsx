@@ -5,9 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const menuStructure = [
-  {
-    key: 'dashboard', label: 'Dashboard', icon: '📊',
-  },
+  { key: 'dashboard', label: 'Dashboard', icon: '📊' },
   {
     key: 'meta', label: 'Meta Reklam', icon: '📣', children: [
       { key: 'meta-kampanyalar', label: 'Kampanyalar' },
@@ -25,9 +23,7 @@ const menuStructure = [
       { key: 'veri-raporlar', label: 'Raporlar' },
     ]
   },
-  {
-    key: 'ayarlar', label: 'Ayarlar', icon: '⚙️',
-  },
+  { key: 'ayarlar', label: 'Ayarlar', icon: '⚙️' },
 ]
 
 const STATUS_LABELS: any = {
@@ -36,6 +32,15 @@ const STATUS_LABELS: any = {
   appointment_scheduled: { label: 'Randevu', color: 'bg-purple-100 text-purple-700' },
   procedure_done: { label: 'Satış', color: 'bg-green-100 text-green-700' },
   cancelled: { label: 'İptal', color: 'bg-red-100 text-red-700' },
+}
+
+const SOURCE_LABELS: any = {
+  manual: { label: 'Manuel', color: 'bg-gray-100 text-gray-600' },
+  meta_form: { label: 'Meta Form', color: 'bg-blue-100 text-blue-600' },
+  instagram_dm: { label: 'Instagram DM', color: 'bg-pink-100 text-pink-600' },
+  whatsapp: { label: 'WhatsApp', color: 'bg-green-100 text-green-600' },
+  website: { label: 'Web Sitesi', color: 'bg-purple-100 text-purple-600' },
+  referral: { label: 'Referans', color: 'bg-orange-100 text-orange-600' },
 }
 
 export default function CustomerPage() {
@@ -49,23 +54,34 @@ export default function CustomerPage() {
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['meta'])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [saving, setSaving] = useState(false)
 
-  // Şube & ekip ekleme
+  // Şube ekleme
   const [showAddBranch, setShowAddBranch] = useState(false)
-  const [showAddMember, setShowAddMember] = useState(false)
-  const [selectedBranch, setSelectedBranch] = useState<any>(null)
+  const [inviteLink, setInviteLink] = useState('')
   const [branchName, setBranchName] = useState('')
   const [branchContact, setBranchContact] = useState('')
   const [branchEmail, setBranchEmail] = useState('')
   const [commissionModel, setCommissionModel] = useState('fixed_rate')
   const [commissionValue, setCommissionValue] = useState('')
+
+  // Satışçı ekleme
+  const [showAddMember, setShowAddMember] = useState(false)
   const [memberName, setMemberName] = useState('')
   const [memberEmail, setMemberEmail] = useState('')
   const [memberPassword, setMemberPassword] = useState('')
   const [memberCommission, setMemberCommission] = useState('')
   const [memberBranch, setMemberBranch] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [inviteLink, setInviteLink] = useState('')
+
+  // Lead ekleme
+  const [showAddLead, setShowAddLead] = useState(false)
+  const [leadName, setLeadName] = useState('')
+  const [leadPhone, setLeadPhone] = useState('')
+  const [leadEmail, setLeadEmail] = useState('')
+  const [leadBranch, setLeadBranch] = useState('')
+  const [leadSource, setLeadSource] = useState('manual')
+  const [leadAssignTo, setLeadAssignTo] = useState('')
+  const [leadNote, setLeadNote] = useState('')
 
   useEffect(() => { loadData() }, [])
 
@@ -158,6 +174,35 @@ export default function CustomerPage() {
     setSaving(false)
   }
 
+  const handleAddLead = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const leadCode = 'DP-' + Date.now().toString().slice(-6)
+
+    await supabase.from('leads').insert({
+      lead_code: leadCode,
+      branch_id: leadBranch,
+      owner_id: user.id,
+      assigned_to: leadAssignTo || null,
+      full_name: leadName,
+      phone: leadPhone,
+      email: leadEmail || null,
+      source: leadSource,
+      note: leadNote || null,
+      status: 'new',
+    })
+
+    setLeadName(''); setLeadPhone(''); setLeadEmail('')
+    setLeadBranch(''); setLeadSource('manual')
+    setLeadAssignTo(''); setLeadNote('')
+    setShowAddLead(false)
+    loadData()
+    setSaving(false)
+  }
+
   const handleToggleBranch = async (branch: any) => {
     await supabase.from('branches').update({ is_active: !branch.is_active }).eq('id', branch.id)
     loadData()
@@ -165,6 +210,11 @@ export default function CustomerPage() {
 
   const handleToggleMember = async (member: any) => {
     await supabase.from('team_members').update({ is_active: !member.is_active }).eq('id', member.id)
+    loadData()
+  }
+
+  const handleAssignLead = async (leadId: string, userId: string) => {
+    await supabase.from('leads').update({ assigned_to: userId }).eq('id', leadId)
     loadData()
   }
 
@@ -299,8 +349,12 @@ export default function CustomerPage() {
               className="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div className="flex items-center gap-2 ml-auto">
-            <button onClick={() => setActiveTab('meta-ekip')}
+            <button onClick={() => { setActiveTab('meta-leadler'); setShowAddLead(true) }}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-medium">
+              + Lead Ekle
+            </button>
+            <button onClick={() => { setActiveTab('meta-ekip'); setShowAddMember(true) }}
+              className="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-2 rounded-lg font-medium">
               + Satışçı Ekle
             </button>
             <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">🔔</button>
@@ -341,7 +395,12 @@ export default function CustomerPage() {
                   {leads.slice(0, 6).map(lead => (
                     <div key={lead.id} className="px-4 py-3 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
                       <div>
-                        <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full ${SOURCE_LABELS[lead.source]?.color || 'bg-gray-100 text-gray-500'}`}>
+                            {SOURCE_LABELS[lead.source]?.label || lead.source}
+                          </span>
+                        </div>
                         <p className="text-xs text-gray-500">{lead.phone} • {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_LABELS[lead.status]?.color}`}>
@@ -398,10 +457,91 @@ export default function CustomerPage() {
                   </div>
                 ))}
               </div>
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                <div className="p-4 border-b border-gray-100">
-                  <h3 className="font-bold text-gray-900 text-sm">Tüm Leadlar</h3>
+
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-gray-500">{leads.length} lead</p>
+                <button onClick={() => setShowAddLead(!showAddLead)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                  + Manuel Lead Ekle
+                </button>
+              </div>
+
+              {showAddLead && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-gray-900">Yeni Lead Ekle</h3>
+                    <button onClick={() => setShowAddLead(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                  </div>
+                  <form onSubmit={handleAddLead} className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Ad Soyad *</label>
+                      <input value={leadName} onChange={e => setLeadName(e.target.value)} required
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ad Soyad" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Telefon *</label>
+                      <input value={leadPhone} onChange={e => setLeadPhone(e.target.value)} required
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="05xx xxx xx xx" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">E-posta</label>
+                      <input type="email" value={leadEmail} onChange={e => setLeadEmail(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="ornek@email.com" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Şube *</label>
+                      <select value={leadBranch} onChange={e => setLeadBranch(e.target.value)} required
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Şube seçin...</option>
+                        {branches.map(b => (
+                          <option key={b.id} value={b.id}>{b.branch_name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Kaynak</label>
+                      <select value={leadSource} onChange={e => setLeadSource(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="manual">Manuel Giriş</option>
+                        <option value="meta_form">Meta Form</option>
+                        <option value="instagram_dm">Instagram DM</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="website">Web Sitesi</option>
+                        <option value="referral">Referans</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Satışçıya Ata</label>
+                      <select value={leadAssignTo} onChange={e => setLeadAssignTo(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Atama yapma</option>
+                        {teamMembers.filter(m => m.role === 'agent').map(m => (
+                          <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Not</label>
+                      <textarea value={leadNote} onChange={e => setLeadNote(e.target.value)} rows={2}
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Ek not..." />
+                    </div>
+                    <div className="col-span-2 flex gap-3">
+                      <button type="submit" disabled={saving}
+                        className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium">
+                        {saving ? 'Ekleniyor...' : 'Lead Ekle'}
+                      </button>
+                      <button type="button" onClick={() => setShowAddLead(false)}
+                        className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">İptal</button>
+                    </div>
+                  </form>
                 </div>
+              )}
+
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                 {leads.length === 0 ? (
                   <div className="p-12 text-center">
                     <span className="text-4xl mb-3 block">📭</span>
@@ -410,16 +550,30 @@ export default function CustomerPage() {
                 ) : leads.map(lead => (
                   <div key={lead.id} className="px-5 py-3.5 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
                     <div>
-                      <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${SOURCE_LABELS[lead.source]?.color || 'bg-gray-100 text-gray-500'}`}>
+                          {SOURCE_LABELS[lead.source]?.label || lead.source}
+                        </span>
+                      </div>
                       <p className="text-xs text-gray-500">{lead.phone} {lead.email && `• ${lead.email}`}</p>
-                      <p className="text-xs text-gray-400">{new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+                      <p className="text-xs text-gray-400">{lead.lead_code} • {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="flex items-center gap-2">
+                      {!lead.assigned_to && (
+                        <select onChange={e => { if (e.target.value) handleAssignLead(lead.id, e.target.value) }}
+                          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                          <option value="">Ata...</option>
+                          {teamMembers.filter(m => m.role === 'agent').map(m => (
+                            <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>
+                          ))}
+                        </select>
+                      )}
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_LABELS[lead.status]?.color}`}>
                         {STATUS_LABELS[lead.status]?.label}
                       </span>
                       {lead.procedure_amount > 0 && (
-                        <p className="text-xs font-bold text-green-600 mt-1">₺{lead.procedure_amount.toLocaleString()}</p>
+                        <span className="text-xs font-bold text-green-600">₺{lead.procedure_amount.toLocaleString()}</span>
                       )}
                     </div>
                   </div>
@@ -445,7 +599,7 @@ export default function CustomerPage() {
                   <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
                     {inviteLink ? (
                       <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                        <p className="text-green-700 font-medium text-sm mb-2">✅ Şube eklendi! Davet linki:</p>
+                        <p className="text-green-700 font-medium text-sm mb-2">✅ Şube eklendi!</p>
                         <div className="flex gap-2">
                           <input readOnly value={inviteLink} className="flex-1 bg-white border border-green-300 rounded-lg px-3 py-2 text-xs" />
                           <button onClick={() => { navigator.clipboard.writeText(inviteLink); alert('Kopyalandı!') }}
@@ -513,9 +667,14 @@ export default function CustomerPage() {
                       <div>
                         <p className="font-semibold text-gray-900 text-sm">{b.branch_name}</p>
                         <p className="text-xs text-gray-500">{b.contact_name} {b.contact_email && `• ${b.contact_email}`}</p>
-                        <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full mt-1 inline-block">
-                          {b.commission_model === 'fixed_rate' ? `%${b.commission_value}` : `₺${b.commission_value}`}
-                        </span>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
+                            {b.commission_model === 'fixed_rate' ? `%${b.commission_value} komisyon` : `₺${b.commission_value} komisyon`}
+                          </span>
+                          <span className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">
+                            {leads.filter(l => l.branch_id === b.id).length} lead
+                          </span>
+                        </div>
                       </div>
                       <button onClick={() => handleToggleBranch(b)}
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${b.is_active ? 'bg-green-500' : 'bg-gray-300'}`}>
