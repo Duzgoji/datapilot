@@ -9,6 +9,30 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<{ success?: boolean; message?: string; error?: string } | null>(null)
 
+  const handleDownloadTemplate = () => {
+    const XLSX = require('xlsx')
+    const templateData = [
+      {
+        Ad: 'Ahmet',
+        Soyad: 'Yılmaz',
+        Telefon: '05001234567',
+        Email: 'ahmet@example.com',
+        Notlar: 'Örnek not',
+      },
+      {
+        Ad: 'Ayşe',
+        Soyad: 'Kaya',
+        Telefon: '05319876543',
+        Email: 'ayse@example.com',
+        Notlar: '',
+      },
+    ]
+    const ws = XLSX.utils.json_to_sheet(templateData)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Leadler')
+    XLSX.writeFile(wb, 'datapilot_lead_sablonu.xlsx')
+  }
+
   const handleUpload = async () => {
     if (!file) return
 
@@ -18,7 +42,7 @@ export default function UploadPage() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('owner_id', 'test-owner') // Supabase açılınca gerçek kullanıcı ID'si gelecek
+      formData.append('owner_id', 'test-owner')
 
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -82,6 +106,14 @@ export default function UploadPage() {
           className="w-full mt-6 bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {loading ? '⏳ Yükleniyor...' : '🚀 Yükle'}
+        </button>
+
+        {/* Şablon İndir */}
+        <button
+          onClick={handleDownloadTemplate}
+          className="w-full mt-3 border border-gray-300 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all"
+        >
+          📥 Örnek Şablonu İndir
         </button>
 
         {/* Sonuç */}
