@@ -110,7 +110,7 @@ export default function LoginPage() {
           {[
             { value: '10K+', label: 'Lead Yönetildi' },
             { value: '%34', label: 'Dönüşüm Artışı' },
-            { value: '500+', label: 'Mutlu Müşteri' },
+            { value: '500+', label: 'Başarılı Firma' },
           ].map(s => (
             <div key={s.label} className="bg-slate-800 bg-opacity-50 rounded-xl p-3 border border-slate-700">
               <p className="text-blue-400 font-bold text-lg">{s.value}</p>
