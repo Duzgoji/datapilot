@@ -57,7 +57,6 @@ export default function CustomerPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [saving, setSaving] = useState(false)
 
-  // Şube ekleme
   const [showAddBranch, setShowAddBranch] = useState(false)
   const [inviteLink, setInviteLink] = useState('')
   const [branchName, setBranchName] = useState('')
@@ -66,7 +65,6 @@ export default function CustomerPage() {
   const [commissionModel, setCommissionModel] = useState('fixed_rate')
   const [commissionValue, setCommissionValue] = useState('')
 
-  // Satışçı ekleme
   const [showAddMember, setShowAddMember] = useState(false)
   const [memberName, setMemberName] = useState('')
   const [memberEmail, setMemberEmail] = useState('')
@@ -74,7 +72,6 @@ export default function CustomerPage() {
   const [memberCommission, setMemberCommission] = useState('')
   const [memberBranch, setMemberBranch] = useState('')
 
-  // Lead ekleme
   const [showAddLead, setShowAddLead] = useState(false)
   const [leadName, setLeadName] = useState('')
   const [leadPhone, setLeadPhone] = useState('')
@@ -85,7 +82,6 @@ export default function CustomerPage() {
   const [leadNote, setLeadNote] = useState('')
 
   useEffect(() => {
-    // URL'de meta=connected varsa ayarlar sekmesine git
     const params = new URLSearchParams(window.location.search)
     if (params.get('meta') === 'connected') {
       setActiveTab('ayarlar')
@@ -794,14 +790,29 @@ export default function CustomerPage() {
             <MetaConnect ownerId={profile?.id} />
           )}
 
+          {/* VERİ YÜKLE */}
+          {activeTab === 'veri-yukle' && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+              <span className="text-5xl mb-4 block">📂</span>
+              <h3 className="font-bold text-gray-900 mb-2">Veri Merkezi</h3>
+              <p className="text-gray-500 text-sm mb-6">Excel dosyanızı yükleyerek leadlerinizi sisteme aktarın</p>
+              <button
+                onClick={() => router.push('/customer/upload')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium">
+                📥 Veri Yükleme Sayfasına Git
+              </button>
+            </div>
+          )}
+
           {/* PLACEHOLDER */}
-          {!['dashboard', 'meta-leadler', 'meta-ekip', 'ayarlar'].includes(activeTab) && (
+          {!['dashboard', 'meta-leadler', 'meta-ekip', 'ayarlar', 'veri-yukle'].includes(activeTab) && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
               <span className="text-5xl mb-4 block">🚧</span>
               <h3 className="font-bold text-gray-900 mb-2">{getPageTitle()}</h3>
               <p className="text-gray-500 text-sm">Bu modül yakında eklenecek.</p>
             </div>
           )}
+
         </div>
       </div>
     </div>
