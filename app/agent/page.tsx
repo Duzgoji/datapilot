@@ -154,9 +154,7 @@ export default function AgentPage() {
           {!sidebarCollapsed ? (
             <>
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 bg-violet-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-sm">D</span>
-                </div>
+               <img src="/logo.png" alt="DataPilot" className="h-7 w-auto" />
                 <span className="text-white font-bold">DataPilot</span>
               </div>
               <button onClick={() => setSidebarCollapsed(true)} className="text-violet-400 hover:text-white text-xs">◀</button>

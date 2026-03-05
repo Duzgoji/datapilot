@@ -251,9 +251,7 @@ export default function CustomerPage() {
   if (loading) return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="text-center">
-        <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-          <span className="text-white font-bold text-xl">D</span>
-        </div>
+        <img src="/logo.png" alt="DataPilot" className="h-7 w-auto" />
         <p className="text-gray-500 text-sm">Yükleniyor...</p>
       </div>
     </div>
