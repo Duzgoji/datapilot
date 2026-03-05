@@ -65,7 +65,7 @@ export default function LoginPage() {
         </div>
 
         {/* Logo */}
-      <img src="/logo2.png" alt="DataPilot" className="h-10 w-auto mb-4" />
+      <img src="/logo.png" alt="DataPilot" className="h-10 w-auto mb-4" />
         {/* Orta içerik */}
         <div className="relative z-10">
           <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
@@ -117,7 +117,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
 
           {/* Mobil logo */}
-          <img src="/logo.png" alt="DataPilot" className="h-12 w-auto mx-auto" />
+          <img src="/logo2.png" alt="DataPilot" className="h-10 w-auto mb-4" />
 
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
             <div className="mb-8">
