@@ -218,7 +218,7 @@ export default function SuperAdminPage() {
           {!sidebarCollapsed ? (
             <>
               <div className="flex items-center gap-2.5">
-               <img src="/logo.png" alt="DataPilot" className="h-7 w-auto" />
+               <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto" />
                 <span className="text-white font-bold">DataPilot</span>
               </div>
               <button onClick={() => setSidebarCollapsed(true)} className="text-slate-500 hover:text-white text-xs">◀</button>
