@@ -65,15 +65,7 @@ export default function LoginPage() {
         </div>
 
         {/* Logo */}
-        <div className="relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">D</span>
-            </div>
-            <span className="text-white font-bold text-xl">DataPilot</span>
-          </div>
-        </div>
-
+      <img src="/logo.png" alt="DataPilot" className="h-10 w-auto" />
         {/* Orta içerik */}
         <div className="relative z-10">
           <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
@@ -125,12 +117,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
 
           {/* Mobil logo */}
-          <div className="lg:hidden text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-2xl mb-3 shadow-lg">
-              <span className="text-white text-xl font-bold">D</span>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">DataPilot</h1>
-          </div>
+          <img src="/logo.png" alt="DataPilot" className="h-12 w-auto mx-auto" />
 
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
             <div className="mb-8">
