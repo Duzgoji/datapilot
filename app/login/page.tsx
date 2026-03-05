@@ -65,7 +65,7 @@ export default function LoginPage() {
         </div>
 
         {/* Logo */}
-      <img src="/logo2.png" alt="DataPilot" className="h-8 w-auto" />
+      <img src="/logo2.png" alt="DataPilot" className="h-4 w-auto" />
         {/* Orta içerik */}
         <div className="relative z-10">
           <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
