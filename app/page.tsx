@@ -34,14 +34,7 @@ const plans = [
     desc: 'Küçük ekipler için ideal başlangıç paketi',
     color: 'border-gray-200',
     badge: '',
-    features: [
-      '3 kullanıcı',
-      '1 şube',
-      '500 lead/ay',
-      'Meta entegrasyonu',
-      'Excel yükleme',
-      'Temel raporlar',
-    ]
+    features: ['3 kullanıcı', '1 şube', '500 lead/ay', 'Meta entegrasyonu', 'Excel yükleme', 'Temel raporlar']
   },
   {
     name: 'Pro',
@@ -50,15 +43,7 @@ const plans = [
     desc: 'Büyüyen işletmeler için güçlü özellikler',
     color: 'border-blue-500',
     badge: 'En Popüler',
-    features: [
-      '15 kullanıcı',
-      '5 şube',
-      'Sınırsız lead',
-      'Meta entegrasyonu',
-      'Excel yükleme',
-      'AI analitik & raporlar',
-      'Öncelikli destek',
-    ]
+    features: ['15 kullanıcı', '5 şube', 'Sınırsız lead', 'Meta entegrasyonu', 'Excel yükleme', 'AI analitik & raporlar', 'Öncelikli destek']
   },
   {
     name: 'Enterprise',
@@ -67,15 +52,7 @@ const plans = [
     desc: 'Büyük kurumlar için özelleştirilebilir çözüm',
     color: 'border-purple-500',
     badge: '',
-    features: [
-      'Sınırsız kullanıcı',
-      'Sınırsız şube',
-      'Sınırsız lead',
-      'Tüm entegrasyonlar',
-      'Özel AI modeli',
-      'Dedicated destek',
-      'SLA garantisi',
-    ]
+    features: ['Sınırsız kullanıcı', 'Sınırsız şube', 'Sınırsız lead', 'Tüm entegrasyonlar', 'Özel AI modeli', 'Dedicated destek', 'SLA garantisi']
   },
 ]
 
@@ -99,7 +76,6 @@ export default function LandingPage() {
     setChatInput('')
     setChatMessages(prev => [...prev, { role: 'user', text: userMsg }])
     setChatLoading(true)
-
     try {
       const res = await fetch('/api/support/chat', {
         method: 'POST',
@@ -119,13 +95,8 @@ export default function LandingPage() {
 
       {/* NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">D</span>
-            </div>
-            <span className="font-bold text-gray-900 text-lg">DataPilot</span>
-          </div>
+        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+          <img src="/logo.png" alt="DataPilot" className="h-10 w-auto" />
           <div className="hidden md:flex items-center gap-8">
             <a href="#ozellikler" className="text-gray-500 hover:text-gray-900 text-sm transition-colors">Özellikler</a>
             <a href="#paketler" className="text-gray-500 hover:text-gray-900 text-sm transition-colors">Fiyatlar</a>
@@ -154,7 +125,7 @@ export default function LandingPage() {
             Leadlerinizi <span className="text-blue-400">akıllıca</span><br />yönetin
           </h1>
           <p className="text-slate-400 text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
-            Meta reklamlarından gelen leadleri otomatik toplayın, ekibinize dağıtın ve satışa dönüştürün. Yapay zeka destekli analizlerle işinizi büyütün.
+            Meta reklamlarından gelen leadleri otomatik toplayın, ekibinize dağıtın ve satışa dönüştürün.
           </p>
           <div className="flex items-center justify-center gap-4">
             <button onClick={() => router.push('/login')}
@@ -338,12 +309,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-2 md:col-span-1">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">D</span>
-                </div>
-                <span className="text-white font-bold">DataPilot</span>
-              </div>
+              <img src="/logo.png" alt="DataPilot" className="h-10 w-auto mb-4" />
               <p className="text-sm leading-relaxed">Akıllı lead yönetim platformu. İşinizi büyütün.</p>
             </div>
             <div>
@@ -413,9 +379,7 @@ export default function LandingPage() {
                 className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Mesajınızı yazın..." />
               <button onClick={sendChat}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm">
-                →
-              </button>
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm">→</button>
             </div>
           </div>
         )}
