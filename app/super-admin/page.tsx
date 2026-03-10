@@ -77,6 +77,8 @@ export default function SuperAdminPage() {
   const [newSector, setNewSector] = useState('')
   const [newPerBranchFee, setNewPerBranchFee] = useState('')
   const [newMonthlyFee, setNewMonthlyFee] = useState('')
+  const [newUserType, setNewUserType] = useState('customer')
+  const [inviteLink, setInviteLink] = useState('')
   const [saving, setSaving] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [generatingInvoices, setGeneratingInvoices] = useState(false)
@@ -119,27 +121,40 @@ export default function SuperAdminPage() {
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    const { data, error } = await supabase.auth.signUp({
-      email: newEmail, password: newPassword,
-      options: { data: { full_name: newName, role: 'customer' } }
+
+    const token = Math.random().toString(36).substring(2) + Date.now().toString(36)
+    const { data: { user } } = await supabase.auth.getUser()
+
+    await supabase.from('invitations').insert({
+      email: newEmail,
+      role: newUserType,
+      token,
+      invited_by: user?.id,
     })
-    if (error) { alert(error.message); setSaving(false); return }
-    if (data.user) {
-      await supabase.from('profiles').insert({
-        id: data.user.id, email: newEmail, full_name: newName,
-        role: 'customer', company_name: newCompany, sector: newSector, is_active: true,
+
+    if (newUserType === 'customer') {
+      const { data, error } = await supabase.auth.signUp({
+        email: newEmail, password: newPassword,
+        options: { data: { full_name: newName, role: 'customer' } }
       })
-      await supabase.from('subscriptions').insert({
-        owner_id: data.user.id, plan: 'trial', status: 'active',
-        monthly_fee: parseFloat(newMonthlyFee) || 0,
-        per_branch_fee: parseFloat(newPerBranchFee) || 0,
-      })
-      setShowAddCustomer(false)
-      setNewName(''); setNewEmail(''); setNewPassword('')
-      setNewCompany(''); setNewSector(''); setNewPerBranchFee(''); setNewMonthlyFee('')
-      loadData()
+      if (error) { alert(error.message); setSaving(false); return }
+      if (data.user) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id, email: newEmail, full_name: newName,
+          role: 'customer', company_name: newCompany, sector: newSector, is_active: true,
+        })
+        await supabase.from('subscriptions').insert({
+          owner_id: data.user.id, plan: 'trial', status: 'active',
+          monthly_fee: parseFloat(newMonthlyFee) || 0,
+          per_branch_fee: parseFloat(newPerBranchFee) || 0,
+        })
+      }
     }
+
+    const link = `${window.location.origin}/invite?token=${token}`
+    setInviteLink(link)
     setSaving(false)
+    loadData()
   }
 
   const handleToggleActive = async (customer: any) => {
@@ -176,6 +191,19 @@ export default function SuperAdminPage() {
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  const resetForm = () => {
+    setInviteLink('')
+    setShowAddCustomer(false)
+    setNewName('')
+    setNewEmail('')
+    setNewPassword('')
+    setNewCompany('')
+    setNewSector('')
+    setNewPerBranchFee('')
+    setNewMonthlyFee('')
+    setNewUserType('customer')
   }
 
   const filteredCustomers = customers.filter(c =>
@@ -218,7 +246,7 @@ export default function SuperAdminPage() {
           {!sidebarCollapsed ? (
             <>
               <div className="flex items-center gap-2.5">
-               <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto" />
+                <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto" />
                 <span className="text-white font-bold">DataPilot</span>
               </div>
               <button onClick={() => setSidebarCollapsed(true)} className="text-slate-500 hover:text-white text-xs">◀</button>
@@ -293,7 +321,7 @@ export default function SuperAdminPage() {
           <div className="flex items-center gap-2 ml-auto">
             <button onClick={() => { setActiveTab('firma-listesi'); setShowAddCustomer(true) }}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-medium">
-              + Firma Ekle
+              + Kullanıcı Ekle
             </button>
             <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
               🔔
@@ -378,7 +406,7 @@ export default function SuperAdminPage() {
                     <div className="space-y-2">
                       <button onClick={() => { setActiveTab('firma-listesi'); setShowAddCustomer(true) }}
                         className="w-full text-left text-xs px-3 py-2.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium">
-                        + Yeni Firma Ekle
+                        + Yeni Kullanıcı Ekle
                       </button>
                       <button onClick={() => setActiveTab('fatura-faturalar')}
                         className="w-full text-left text-xs px-3 py-2.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 font-medium">
@@ -402,56 +430,123 @@ export default function SuperAdminPage() {
                 <p className="text-sm text-gray-500">{filteredCustomers.length} firma kayıtlı</p>
                 <button onClick={() => setShowAddCustomer(!showAddCustomer)}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                  + Firma Ekle
+                  + Kullanıcı Ekle
                 </button>
               </div>
 
               {showAddCustomer && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-gray-900">Yeni Firma Ekle</h3>
-                    <button onClick={() => setShowAddCustomer(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                    <h3 className="font-bold text-gray-900">Yeni Kullanıcı Ekle</h3>
+                    <button onClick={resetForm} className="text-gray-400 hover:text-gray-600">✕</button>
                   </div>
+
                   <form onSubmit={handleAddCustomer} className="grid grid-cols-2 gap-4">
-                    {[
-                      { label: 'Ad Soyad *', value: newName, set: setNewName, placeholder: 'Ad Soyad', type: 'text', required: true },
-                      { label: 'Şirket Adı', value: newCompany, set: setNewCompany, placeholder: 'Şirket adı', type: 'text', required: false },
-                      { label: 'E-posta *', value: newEmail, set: setNewEmail, placeholder: 'email@example.com', type: 'email', required: true },
-                      { label: 'Şifre *', value: newPassword, set: setNewPassword, placeholder: 'En az 6 karakter', type: 'password', required: true },
-                      { label: 'Şube Başı Ücret (₺)', value: newPerBranchFee, set: setNewPerBranchFee, placeholder: '2500', type: 'number', required: false },
-                      { label: 'Aylık Sabit Ücret (₺)', value: newMonthlyFee, set: setNewMonthlyFee, placeholder: '0', type: 'number', required: false },
-                    ].map(field => (
-                      <div key={field.label}>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">{field.label}</label>
-                        <input type={field.type} value={field.value} onChange={e => field.set(e.target.value)}
-                          required={field.required} placeholder={field.placeholder}
-                          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    {inviteLink ? (
+                      <div className="col-span-2 bg-green-50 border border-green-200 rounded-xl p-4">
+                        <p className="text-green-700 font-medium text-sm mb-2">✅ Davet linki oluşturuldu!</p>
+                        <p className="text-green-600 text-xs mb-3">Bu linki kullanıcıya gönderin. 7 gün geçerlidir.</p>
+                        <div className="flex gap-2">
+                          <input readOnly value={inviteLink}
+                            className="flex-1 bg-white border border-green-300 rounded-lg px-3 py-2 text-xs text-gray-700" />
+                          <button type="button"
+                            onClick={() => { navigator.clipboard.writeText(inviteLink); alert('Link kopyalandı!') }}
+                            className="bg-green-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-green-700">
+                            Kopyala
+                          </button>
+                        </div>
+                        <button type="button" onClick={resetForm}
+                          className="mt-3 text-xs text-green-600 hover:underline">
+                          Kapat
+                        </button>
                       </div>
-                    ))}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Sektör</label>
-                      <select value={newSector} onChange={e => setNewSector(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Seçin...</option>
-                        <option value="saglik">Sağlık</option>
-                        <option value="estetik">Estetik & Güzellik</option>
-                        <option value="turizm">Turizm</option>
-                        <option value="restoran">Restoran & Gıda</option>
-                        <option value="egitim">Eğitim</option>
-                        <option value="gayrimenkul">Gayrimenkul</option>
-                        <option value="diger">Diğer</option>
-                      </select>
-                    </div>
-                    <div className="col-span-2 flex gap-3 pt-1">
-                      <button type="submit" disabled={saving}
-                        className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium">
-                        {saving ? 'Ekleniyor...' : 'Firma Ekle'}
-                      </button>
-                      <button type="button" onClick={() => setShowAddCustomer(false)}
-                        className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">
-                        İptal
-                      </button>
-                    </div>
+                    ) : (
+                      <>
+                        <div className="col-span-2">
+                          <label className="block text-xs font-medium text-gray-600 mb-2">Kullanıcı Tipi *</label>
+                          <div className="flex gap-3">
+                            <button type="button" onClick={() => setNewUserType('customer')}
+                              className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${newUserType === 'customer' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                              🏢 Müşteri
+                            </button>
+                            <button type="button" onClick={() => setNewUserType('advertiser')}
+                              className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${newUserType === 'advertiser' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                              📣 Reklamcı
+                            </button>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Ad Soyad *</label>
+                          <input type="text" value={newName} onChange={e => setNewName(e.target.value)}
+                            required placeholder="Ad Soyad"
+                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Şirket Adı</label>
+                          <input type="text" value={newCompany} onChange={e => setNewCompany(e.target.value)}
+                            placeholder="Şirket adı"
+                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">E-posta *</label>
+                          <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
+                            required placeholder="email@example.com"
+                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Şifre *</label>
+                          <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                            required placeholder="En az 6 karakter"
+                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
+
+                        {newUserType === 'customer' && (
+                          <>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Şube Başı Ücret (₺)</label>
+                              <input type="number" value={newPerBranchFee} onChange={e => setNewPerBranchFee(e.target.value)}
+                                placeholder="2500"
+                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Aylık Sabit Ücret (₺)</label>
+                              <input type="number" value={newMonthlyFee} onChange={e => setNewMonthlyFee(e.target.value)}
+                                placeholder="0"
+                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Sektör</label>
+                              <select value={newSector} onChange={e => setNewSector(e.target.value)}
+                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Seçin...</option>
+                                <option value="saglik">Sağlık</option>
+                                <option value="estetik">Estetik & Güzellik</option>
+                                <option value="turizm">Turizm</option>
+                                <option value="restoran">Restoran & Gıda</option>
+                                <option value="egitim">Eğitim</option>
+                                <option value="gayrimenkul">Gayrimenkul</option>
+                                <option value="diger">Diğer</option>
+                              </select>
+                            </div>
+                          </>
+                        )}
+
+                        <div className="col-span-2 flex gap-3 pt-1">
+                          <button type="submit" disabled={saving}
+                            className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                            {saving ? 'Oluşturuluyor...' : '📨 Davet Linki Oluştur'}
+                          </button>
+                          <button type="button" onClick={resetForm}
+                            className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm hover:bg-gray-50">
+                            İptal
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </form>
                 </div>
               )}
@@ -547,6 +642,7 @@ export default function SuperAdminPage() {
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                       u.role === 'super_admin' ? 'bg-red-100 text-red-700' :
                       u.role === 'customer' ? 'bg-blue-100 text-blue-700' :
+                      u.role === 'advertiser' ? 'bg-purple-100 text-purple-700' :
                       'bg-gray-100 text-gray-700'
                     }`}>{u.role}</span>
                     <span className={`text-xs px-2 py-1 rounded-full ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -567,7 +663,7 @@ export default function SuperAdminPage() {
             </div>
           )}
 
-          {/* DEStek - KİMLİK TAKLİDİ */}
+          {/* DESTEK - KİMLİK TAKLİDİ */}
           {activeTab === 'destek-impersonation' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h3 className="font-bold text-gray-900 mb-2">Kimlik Taklidi (Impersonation)</h3>
@@ -589,7 +685,7 @@ export default function SuperAdminPage() {
             </div>
           )}
 
-          {/* PLACEHOLDER - diğer sayfalar */}
+          {/* PLACEHOLDER */}
           {!['dashboard', 'firma-listesi', 'fatura-faturalar', 'kullanici-listesi', 'guvenlik-loglar', 'destek-impersonation'].includes(activeTab) && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
               <span className="text-5xl mb-4 block">🚧</span>
