@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import MetaConnect from '@/components/MetaConnect'
@@ -14,6 +14,7 @@ const menuStructure = [
       { key: 'meta-leadler', label: 'Lead Yönetimi' },
       { key: 'meta-analitik', label: 'Analitik & Raporlar' },
       { key: 'meta-ekip', label: 'Ekip & Satışçılar' },
+      { key: 'meta-baglanti', label: 'Meta Bağlantısı' },
     ]
   },
   {
@@ -56,6 +57,8 @@ export default function CustomerPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [saving, setSaving] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
 
   const [showAddBranch, setShowAddBranch] = useState(false)
   const [inviteLink, setInviteLink] = useState('')
@@ -84,9 +87,17 @@ export default function CustomerPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('meta') === 'connected') {
-      setActiveTab('ayarlar')
+      setActiveTab('meta-baglanti')
     }
     loadData()
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const loadData = async () => {
@@ -268,9 +279,7 @@ export default function CustomerPage() {
           {!sidebarCollapsed ? (
             <>
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-sm">D</span>
-                </div>
+                <img src="/logo2.png" alt="DataPilot" className="h-6 w-auto" />
                 <span className="text-white font-bold">DataPilot</span>
               </div>
               <button onClick={() => setSidebarCollapsed(true)} className="text-slate-500 hover:text-white text-xs">◀</button>
@@ -321,24 +330,6 @@ export default function CustomerPage() {
             </div>
           ))}
         </nav>
-
-        {!sidebarCollapsed && (
-          <div className="p-3 border-t border-slate-700">
-            <div className="flex items-center gap-2.5 px-2 mb-2">
-              <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-white text-xs font-semibold truncate">{profile?.full_name}</p>
-                <p className="text-slate-400 text-xs truncate">{profile?.email}</p>
-              </div>
-            </div>
-            <button onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:bg-slate-800 hover:text-white">
-              🚪 Çıkış Yap
-            </button>
-          </div>
-        )}
       </div>
 
       {/* MAIN */}
@@ -362,9 +353,50 @@ export default function CustomerPage() {
               + Satışçı Ekle
             </button>
             <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">🔔</button>
-            <span className="bg-blue-100 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-full">
-              {profile?.company_name || 'Müşteri'}
-            </span>
+
+            {/* PROFİL DROPDOWN */}
+            <div className="relative" ref={profileMenuRef}>
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl px-3 py-1.5 transition-colors">
+                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
+                </div>
+                <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate">
+                  {profile?.full_name}
+                </span>
+                <span className="text-gray-400 text-xs">{showProfileMenu ? '▲' : '▼'}</span>
+              </button>
+
+              {showProfileMenu && (
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <p className="font-semibold text-gray-900 text-sm">{profile?.full_name}</p>
+                    <p className="text-xs text-gray-500 truncate">{profile?.email}</p>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mt-1 inline-block">
+                      {profile?.company_name || 'Müşteri'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => { setActiveTab('ayarlar'); setShowProfileMenu(false) }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                    ⚙️ Hesap Ayarları
+                  </button>
+                  <button
+                    onClick={() => { setActiveTab('meta-baglanti'); setShowProfileMenu(false) }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                    📣 Meta Bağlantısı
+                  </button>
+                  <div className="border-t border-gray-100 mt-1 pt-1">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                      🚪 Çıkış Yap
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -785,9 +817,18 @@ export default function CustomerPage() {
             </>
           )}
 
+          {/* META BAĞLANTISI */}
+          {activeTab === 'meta-baglanti' && (
+            <MetaConnect ownerId={profile?.id} />
+          )}
+
           {/* AYARLAR */}
           {activeTab === 'ayarlar' && (
-            <MetaConnect ownerId={profile?.id} />
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+              <span className="text-5xl mb-4 block">⚙️</span>
+              <h3 className="font-bold text-gray-900 mb-2">Hesap Ayarları</h3>
+              <p className="text-gray-500 text-sm">Profil bilgileri, firma logosu ve şifre değiştirme yakında eklenecek.</p>
+            </div>
           )}
 
           {/* VERİ YÜKLE */}
@@ -805,14 +846,13 @@ export default function CustomerPage() {
           )}
 
           {/* PLACEHOLDER */}
-          {!['dashboard', 'meta-leadler', 'meta-ekip', 'ayarlar', 'veri-yukle'].includes(activeTab) && (
+          {!['dashboard', 'meta-leadler', 'meta-ekip', 'meta-baglanti', 'ayarlar', 'veri-yukle'].includes(activeTab) && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
               <span className="text-5xl mb-4 block">🚧</span>
               <h3 className="font-bold text-gray-900 mb-2">{getPageTitle()}</h3>
               <p className="text-gray-500 text-sm">Bu modül yakında eklenecek.</p>
             </div>
           )}
-
         </div>
       </div>
     </div>
