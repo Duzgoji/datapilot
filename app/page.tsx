@@ -95,18 +95,34 @@ export default function LandingPage() {
 
       {/* NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-          <img src="/logo.png" alt="DataPilot" className="h-10 w-auto" />
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">D</span>
+            </div>
+            <span className="font-bold text-gray-900 text-lg">DataPilot</span>
+          </div>
           <div className="hidden md:flex items-center gap-8">
             <a href="#ozellikler" className="text-gray-500 hover:text-gray-900 text-sm transition-colors">Özellikler</a>
             <a href="#paketler" className="text-gray-500 hover:text-gray-900 text-sm transition-colors">Fiyatlar</a>
             <a href="#sss" className="text-gray-500 hover:text-gray-900 text-sm transition-colors">SSS</a>
             <a href="#iletisim" className="text-gray-500 hover:text-gray-900 text-sm transition-colors">İletişim</a>
           </div>
-          <button onClick={() => router.push('/login')}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-            Giriş Yap →
-          </button>
+          {/* SAĞ ÜSTE: GİRİŞ YAP + ÜYE OL */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push('/login')}
+              className="text-gray-600 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              Giriş Yap
+            </button>
+            <button
+              onClick={() => router.push('/register')}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            >
+              Üye Ol →
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -128,14 +144,14 @@ export default function LandingPage() {
             Meta reklamlarından gelen leadleri otomatik toplayın, ekibinize dağıtın ve satışa dönüştürün.
           </p>
           <div className="flex items-center justify-center gap-4">
-            <button onClick={() => router.push('/login')}
+            <button onClick={() => router.push('/register')}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-xl transition-all shadow-lg shadow-blue-900 text-sm">
-              Ücretsiz Deneyin →
+              Ücretsiz Başlayın →
             </button>
-            <a href="#ozellikler"
+            <button onClick={() => router.push('/login')}
               className="border border-slate-700 text-slate-300 hover:text-white font-medium px-8 py-4 rounded-xl transition-all text-sm">
-              Daha Fazla Bilgi
-            </a>
+              Giriş Yap
+            </button>
           </div>
           <div className="flex items-center justify-center gap-8 mt-12">
             {[
@@ -158,7 +174,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Her şey tek platformda</h2>
-            <p className="text-gray-500 max-w-xl mx-auto">Lead yönetiminden analitiğe, ekip yönetiminden raporlamaya kadar ihtiyacınız olan her şey</p>
+            <p className="text-gray-500 max-w-xl mx-auto">Lead yönetiminden analitiğe kadar ihtiyacınız olan her şey</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
@@ -207,7 +223,7 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <button onClick={() => router.push('/login')}
+                <button onClick={() => router.push('/register')}
                   className={`w-full py-3 rounded-xl font-medium text-sm transition-all ${plan.badge ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200' : 'border border-gray-200 hover:bg-gray-50 text-gray-700'}`}>
                   {plan.name === 'Enterprise' ? 'Teklif Alın' : '14 Gün Ücretsiz Dene'}
                 </button>
@@ -309,7 +325,12 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-2 md:col-span-1">
-              <img src="/logo2.png" alt="DataPilot" className="h-10 w-auto mb-4" />
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">D</span>
+                </div>
+                <span className="text-white font-bold">DataPilot</span>
+              </div>
               <p className="text-sm leading-relaxed">Akıllı lead yönetim platformu. İşinizi büyütün.</p>
             </div>
             <div>
@@ -329,10 +350,10 @@ export default function LandingPage() {
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-medium text-sm mb-3">Destek</h4>
+              <h4 className="text-white font-medium text-sm mb-3">Hesap</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Yardım Merkezi</a></li>
-                <li><a href="#iletisim" className="hover:text-white transition-colors">Bize Ulaşın</a></li>
+                <li><a href="/login" className="hover:text-white transition-colors">Giriş Yap</a></li>
+                <li><a href="/register" className="hover:text-white transition-colors">Üye Ol</a></li>
               </ul>
             </div>
           </div>
@@ -379,7 +400,9 @@ export default function LandingPage() {
                 className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Mesajınızı yazın..." />
               <button onClick={sendChat}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm">→</button>
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm">
+                →
+              </button>
             </div>
           </div>
         )}
