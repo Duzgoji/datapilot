@@ -43,7 +43,7 @@ const menuStructure = [
 
 const STATUS_LABELS: any = {
   new: { label: 'Yeni', color: 'bg-blue-100 text-blue-700' },
-  called: { label: 'Arındı', color: 'bg-yellow-100 text-yellow-700' },
+  called: { label: 'Arandı', color: 'bg-yellow-100 text-yellow-700' },
   appointment_scheduled: { label: 'Randevu', color: 'bg-purple-100 text-purple-700' },
   procedure_done: { label: 'Satış', color: 'bg-green-100 text-green-700' },
   cancelled: { label: 'İptal', color: 'bg-red-100 text-red-700' },
@@ -1096,7 +1096,7 @@ export default function CustomerPage() {
                 <select value={newStatus} onChange={e => setNewStatus(e.target.value)} required
                   className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="">Seçin...</option>
-                  <option value="called">Arındı</option>
+                  <option value="called">Arandı</option>
                   <option value="appointment_scheduled">Randevu Alındı</option>
                   <option value="procedure_done">Satış Yapıldı</option>
                   <option value="cancelled">İptal</option>
