@@ -24,8 +24,6 @@ const menuStructure = [
     key: 'ekip', label: 'Ekip', icon: '👥', children: [
       { key: 'ekip-sube', label: 'Şubeler' },
       { key: 'ekip-liste', label: 'Satışçılar' },
-      { key: 'ekip-hakedis', label: 'Hakediş' },
-      { key: 'ekip-loglar', label: 'Satışçı Logları' },
     ]
   },
   {
@@ -102,6 +100,10 @@ export default function CustomerPage() {
   const [leadSource, setLeadSource] = useState('manual')
   const [leadAssignTo, setLeadAssignTo] = useState('')
   const [leadNote, setLeadNote] = useState('')
+
+  // Member detail
+  const [selectedMember, setSelectedMember] = useState<any>(null)
+  const [memberTab, setMemberTab] = useState<'leads' | 'hakedis' | 'loglar'>('leads')
 
   // Lead status update
   const [selectedLead, setSelectedLead] = useState<any>(null)
@@ -358,23 +360,9 @@ export default function CustomerPage() {
       <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-64'} flex-1 transition-all duration-300`}>
 
         {/* TOP BAR */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4 sticky top-0 z-10 shadow-sm">
-          <div className="relative flex-1 max-w-sm">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
-            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Lead, satışçı ara..."
-              className="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
+        <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center sticky top-0 z-10 shadow-sm">
+          <h1 className="font-semibold text-gray-800 text-sm">{getPageTitle()}</h1>
           <div className="flex items-center gap-2 ml-auto">
-            <button onClick={() => { setActiveTab('leadler-liste'); setShowAddLead(true) }}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-medium">
-              + Lead Ekle
-            </button>
-            <button onClick={() => { setActiveTab('ekip-liste'); setShowAddMember(true) }}
-              className="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-2 rounded-lg font-medium">
-              + Satışçı Ekle
-            </button>
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">🔔</button>
 
             {/* PROFİL DROPDOWN */}
             <div className="relative" ref={profileMenuRef}>
@@ -819,7 +807,8 @@ export default function CustomerPage() {
                   const mRevenue = mSales.reduce((sum, l) => sum + (l.procedure_amount || 0), 0)
                   const commission = mRevenue * ((m.commission_rate || 0) / 100)
                   return (
-                    <div key={m.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
+                    <div key={m.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer"
+                      onClick={() => { setMemberTab('leads'); setSelectedMember({ ...m, mLeads, mSales, mRevenue, commission }) }}>
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
                           <span className="text-purple-600 font-bold text-sm">{m.profiles?.full_name?.charAt(0)}</span>
@@ -834,7 +823,7 @@ export default function CustomerPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                         <span className={`text-xs px-2 py-1 rounded-full ${m.role === 'manager' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'}`}>
                           {m.role === 'manager' ? 'Yönetici' : 'Satışçı'}
                         </span>
@@ -850,46 +839,7 @@ export default function CustomerPage() {
             </>
           )}
 
-          {/* HAKEDİŞ */}
-          {activeTab === 'ekip-hakedis' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="p-4 border-b border-gray-100">
-                <h3 className="font-bold text-gray-900 text-sm">Hakediş Listesi</h3>
-              </div>
-              {teamMembers.filter(m => m.role === 'agent').length === 0 ? (
-                <p className="p-8 text-center text-xs text-gray-400">Henüz satışçı yok.</p>
-              ) : teamMembers.filter(m => m.role === 'agent').map(m => {
-                const mSales = leads.filter(l => l.assigned_to === m.user_id && l.status === 'procedure_done')
-                const mRevenue = mSales.reduce((sum, l) => sum + (l.procedure_amount || 0), 0)
-                const commission = mRevenue * ((m.commission_rate || 0) / 100)
-                return (
-                  <div key={m.id} className="px-5 py-4 border-b border-gray-50 last:border-0">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                          <span className="text-purple-600 text-xs font-bold">{m.profiles?.full_name?.charAt(0)}</span>
-                        </div>
-                        <p className="font-semibold text-gray-900 text-sm">{m.profiles?.full_name}</p>
-                      </div>
-                      <span className="text-xs text-gray-500">%{m.commission_rate} prim oranı</span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { label: 'Satış Adedi', value: mSales.length, color: 'text-blue-600', bg: 'bg-blue-50' },
-                        { label: 'Toplam Ciro', value: `₺${mRevenue.toLocaleString()}`, color: 'text-green-600', bg: 'bg-green-50' },
-                        { label: 'Kazanılan Prim', value: `₺${commission.toLocaleString()}`, color: 'text-amber-600', bg: 'bg-amber-50' },
-                      ].map(item => (
-                        <div key={item.label} className={`${item.bg} rounded-lg p-3 text-center`}>
-                          <p className={`font-bold ${item.color}`}>{item.value}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{item.label}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          {/* HAKEDİŞ - removed, now in member detail modal */}
 
           {/* META BAĞLANTISI */}
           {activeTab === 'meta-baglanti' && <MetaConnect ownerId={profile?.id} />}
@@ -916,17 +866,10 @@ export default function CustomerPage() {
             </div>
           )}
 
-          {/* SATIŞÇI LOGLARI */}
-          {activeTab === 'ekip-loglar' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-              <span className="text-4xl mb-3 block">📊</span>
-              <h3 className="font-bold text-gray-900 mb-2">Satışçı Logları</h3>
-              <p className="text-gray-500 text-sm">Aktivite logları yakında eklenecek.</p>
-            </div>
-          )}
+          {/* SATIŞÇI LOGLARI - removed, now in member detail modal */}
 
           {/* PLACEHOLDER */}
-          {!['dashboard', 'leadler-liste', 'leadler-dagitim', 'ekip-sube', 'ekip-liste', 'ekip-hakedis', 'ekip-loglar', 'meta-baglanti', 'ayarlar', 'veri-yukle'].includes(activeTab) && (
+          {!['dashboard', 'leadler-liste', 'leadler-dagitim', 'ekip-sube', 'ekip-liste', 'meta-baglanti', 'ayarlar', 'veri-yukle'].includes(activeTab) && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
               <span className="text-5xl mb-4 block">🚧</span>
               <h3 className="font-bold text-gray-900 mb-2">{getPageTitle()}</h3>
@@ -935,6 +878,135 @@ export default function CustomerPage() {
           )}
         </div>
       </div>
+
+      {/* SATIŞÇI DETAY MODAL */}
+      {selectedMember && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                  <span className="text-purple-600 font-bold text-lg">{selectedMember.profiles?.full_name?.charAt(0)}</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">{selectedMember.profiles?.full_name}</h3>
+                  <p className="text-xs text-gray-500">{selectedMember.profiles?.email} • {selectedMember.branches?.branch_name}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full mt-1 inline-block ${selectedMember.role === 'manager' ? 'bg-indigo-100 text-indigo-700' : 'bg-purple-100 text-purple-700'}`}>
+                    {selectedMember.role === 'manager' ? 'Yönetici' : 'Satışçı'}
+                  </span>
+                </div>
+              </div>
+              <button onClick={() => setSelectedMember(null)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+            </div>
+
+            {/* Stats */}
+            <div className="p-5 border-b border-gray-100 flex-shrink-0">
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { label: 'Toplam Lead', value: selectedMember.mLeads.length, color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'Satış', value: selectedMember.mSales.length, color: 'text-green-600', bg: 'bg-green-50' },
+                  { label: 'Dönüşüm', value: selectedMember.mLeads.length > 0 ? `%${((selectedMember.mSales.length / selectedMember.mLeads.length) * 100).toFixed(0)}` : '%0', color: 'text-purple-600', bg: 'bg-purple-50' },
+                  { label: 'Prim', value: `₺${selectedMember.commission.toLocaleString()}`, color: 'text-amber-600', bg: 'bg-amber-50' },
+                ].map(s => (
+                  <div key={s.label} className={`${s.bg} rounded-xl p-3 text-center`}>
+                    <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex gap-3">
+                <div className="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+                  <p className="text-lg font-bold text-gray-800">₺{selectedMember.mRevenue.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">Toplam Ciro</p>
+                </div>
+                <div className="flex-1 bg-gray-50 rounded-xl p-3 text-center">
+                  <p className="text-lg font-bold text-gray-800">%{selectedMember.commission_rate}</p>
+                  <p className="text-xs text-gray-500">Prim Oranı</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex border-b border-gray-100 px-5 flex-shrink-0">
+                {[
+                  { key: 'leads', label: 'Lead Geçmişi' },
+                  { key: 'hakedis', label: 'Hakediş' },
+                  { key: 'loglar', label: 'Aktivite Logları' },
+                ].map(t => (
+                  <button key={t.key} onClick={() => setMemberTab(t.key as any)}
+                    className={`px-4 py-3 text-xs font-medium border-b-2 transition-colors ${memberTab === t.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {memberTab === 'leads' && (
+                  <>
+                    {selectedMember.mLeads.length === 0 ? (
+                      <div className="p-10 text-center"><span className="text-3xl mb-2 block">📭</span><p className="text-gray-400 text-sm">Henüz atanmış lead yok.</p></div>
+                    ) : selectedMember.mLeads.map((lead: any) => (
+                      <div key={lead.id} className="px-5 py-3 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
+                        <div>
+                          <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
+                          <p className="text-xs text-gray-500">{lead.phone} • {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {lead.procedure_amount > 0 && (
+                            <span className="text-xs font-bold text-green-600">₺{lead.procedure_amount.toLocaleString()}</span>
+                          )}
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_LABELS[lead.status]?.color}`}>
+                            {STATUS_LABELS[lead.status]?.label}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+                {memberTab === 'hakedis' && (
+                  <div className="p-5 space-y-4">
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { label: 'Satış Adedi', value: selectedMember.mSales.length, color: 'text-blue-600', bg: 'bg-blue-50' },
+                        { label: 'Toplam Ciro', value: `₺${selectedMember.mRevenue.toLocaleString()}`, color: 'text-green-600', bg: 'bg-green-50' },
+                        { label: 'Kazanılan Prim', value: `₺${selectedMember.commission.toLocaleString()}`, color: 'text-amber-600', bg: 'bg-amber-50' },
+                      ].map(item => (
+                        <div key={item.label} className={`${item.bg} rounded-xl p-4 text-center`}>
+                          <p className={`text-xl font-bold ${item.color}`}>{item.value}</p>
+                          <p className="text-xs text-gray-500 mt-1">{item.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-gray-50 rounded-xl p-4">
+                      <h5 className="font-semibold text-gray-800 text-sm mb-3">Satılan İşlemler</h5>
+                      {selectedMember.mSales.length === 0 ? (
+                        <p className="text-xs text-gray-400 text-center py-4">Henüz satış yok.</p>
+                      ) : selectedMember.mSales.map((lead: any) => (
+                        <div key={lead.id} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{lead.full_name}</p>
+                            <p className="text-xs text-gray-500">{lead.procedure_type || '-'} • {lead.procedure_date ? new Date(lead.procedure_date).toLocaleDateString('tr-TR') : '-'}</p>
+                          </div>
+                          <span className="text-sm font-bold text-green-600">₺{(lead.procedure_amount || 0).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {memberTab === 'loglar' && (
+                  <div className="p-10 text-center">
+                    <span className="text-4xl mb-3 block">📊</span>
+                    <p className="font-semibold text-gray-700 mb-1">Aktivite Logları</p>
+                    <p className="text-gray-400 text-sm">Giriş/çıkış saatleri ve aktiviteler yakında eklenecek.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* DURUM GÜNCELLEME MODAL */}
       {selectedLead && (
