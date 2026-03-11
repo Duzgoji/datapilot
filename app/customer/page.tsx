@@ -5,61 +5,144 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import MetaConnect from '@/components/MetaConnect'
 
+// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+
 const menuStructure = [
-  { key: 'dashboard', label: 'Dashboard', icon: '📊' },
+  { key: 'dashboard', label: 'Dashboard', icon: '⬡' },
   {
-    key: 'meta', label: 'Meta Reklam', icon: '📣', children: [
+    key: 'meta', label: 'Meta Reklam', icon: '◈', children: [
       { key: 'meta-kampanyalar', label: 'Kampanyalar' },
       { key: 'meta-leadformlar', label: 'Lead Formları' },
-      { key: 'meta-baglanti', label: 'Meta Bağlantısı' },
+      { key: 'meta-baglanti', label: 'Bağlantı' },
     ]
   },
   {
-    key: 'leadler', label: 'Leadlar', icon: '📋', children: [
+    key: 'leadler', label: 'Leadler', icon: '◎', children: [
       { key: 'leadler-liste', label: 'Lead Listesi' },
-      { key: 'leadler-dagitim', label: 'Lead Dağıtımı' },
+      { key: 'leadler-dagitim', label: 'Dağıtım' },
     ]
   },
   {
-    key: 'ekip', label: 'Ekip', icon: '👥', children: [
+    key: 'ekip', label: 'Ekip', icon: '◉', children: [
       { key: 'ekip-sube', label: 'Şubeler' },
       { key: 'ekip-liste', label: 'Satışçılar' },
     ]
   },
   {
-    key: 'performans', label: 'Performans', icon: '📈', children: [
-      { key: 'performans-genel', label: 'Genel Performans' },
+    key: 'performans', label: 'Performans', icon: '◐', children: [
+      { key: 'performans-genel', label: 'Genel' },
       { key: 'performans-karsilastirma', label: 'Karşılaştırma' },
     ]
   },
   {
-    key: 'veri', label: 'Veri Merkezi', icon: '📂', children: [
+    key: 'veri', label: 'Veri Merkezi', icon: '◫', children: [
       { key: 'veri-yukle', label: 'Veri Yükle' },
       { key: 'veri-setlerim', label: 'Veri Setlerim' },
     ]
   },
-  { key: 'ayarlar', label: 'Ayarlar', icon: '⚙️' },
+  { key: 'ayarlar', label: 'Ayarlar', icon: '◌' },
 ]
 
-const STATUS_LABELS: any = {
-  new: { label: 'Yeni', color: 'bg-blue-100 text-blue-700' },
-  called: { label: 'Arandı', color: 'bg-yellow-100 text-yellow-700' },
-  appointment_scheduled: { label: 'Randevu', color: 'bg-purple-100 text-purple-700' },
-  procedure_done: { label: 'Satış', color: 'bg-green-100 text-green-700' },
-  cancelled: { label: 'İptal', color: 'bg-red-100 text-red-700' },
+const STATUS_CONFIG: any = {
+  new:                   { label: 'Yeni',     dot: 'bg-blue-500',   badge: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' },
+  called:                { label: 'Arandı',   dot: 'bg-amber-500',  badge: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' },
+  appointment_scheduled: { label: 'Randevu',  dot: 'bg-violet-500', badge: 'bg-violet-50 text-violet-700 ring-1 ring-violet-200' },
+  procedure_done:        { label: 'Satış',    dot: 'bg-emerald-500',badge: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' },
+  cancelled:             { label: 'İptal',    dot: 'bg-red-400',    badge: 'bg-red-50 text-red-600 ring-1 ring-red-200' },
 }
 
-const SOURCE_LABELS: any = {
-  manual: { label: 'Manuel', color: 'bg-gray-100 text-gray-600' },
-  meta_form: { label: 'Meta Form', color: 'bg-blue-100 text-blue-600' },
-  instagram_dm: { label: 'Instagram DM', color: 'bg-pink-100 text-pink-600' },
-  whatsapp: { label: 'WhatsApp', color: 'bg-green-100 text-green-600' },
-  website: { label: 'Web Sitesi', color: 'bg-purple-100 text-purple-600' },
-  referral: { label: 'Referans', color: 'bg-orange-100 text-orange-600' },
+const SOURCE_CONFIG: any = {
+  manual:       { label: 'Manuel',       badge: 'bg-slate-100 text-slate-600' },
+  meta_form:    { label: 'Meta Form',    badge: 'bg-blue-100 text-blue-700' },
+  instagram_dm: { label: 'Instagram',    badge: 'bg-pink-100 text-pink-700' },
+  whatsapp:     { label: 'WhatsApp',     badge: 'bg-green-100 text-green-700' },
+  website:      { label: 'Web',          badge: 'bg-purple-100 text-purple-700' },
+  referral:     { label: 'Referans',     badge: 'bg-orange-100 text-orange-700' },
 }
+
+// ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
+
+const Badge = ({ status }: { status: string }) => (
+  <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_CONFIG[status]?.badge || 'bg-gray-100 text-gray-600'}`}>
+    <span className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG[status]?.dot || 'bg-gray-400'}`} />
+    {STATUS_CONFIG[status]?.label || status}
+  </span>
+)
+
+const SourceBadge = ({ source }: { source: string }) => (
+  <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${SOURCE_CONFIG[source]?.badge || 'bg-gray-100 text-gray-500'}`}>
+    {SOURCE_CONFIG[source]?.label || source}
+  </span>
+)
+
+const Modal = ({ open, onClose, title, subtitle, children, size = 'md' }: any) => {
+  if (!open) return null
+  const sizes: any = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-2xl' }
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className={`relative bg-white rounded-2xl shadow-2xl w-full ${sizes[size]} z-10 max-h-[90vh] flex flex-col`}>
+        <div className="flex items-start justify-between p-6 border-b border-gray-100 flex-shrink-0">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+            {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+          </div>
+          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors ml-4 flex-shrink-0">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+const Input = ({ label, ...props }: any) => (
+  <div>
+    {label && <label className="block text-xs font-medium text-gray-500 mb-1.5">{label}</label>}
+    <input {...props} className={`w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${props.className || ''}`} />
+  </div>
+)
+
+const Select = ({ label, children, ...props }: any) => (
+  <div>
+    {label && <label className="block text-xs font-medium text-gray-500 mb-1.5">{label}</label>}
+    <div className="relative">
+      <select {...props} className={`w-full appearance-none px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all pr-9 ${props.className || ''}`}>
+        {children}
+      </select>
+      <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    </div>
+  </div>
+)
+
+const Btn = ({ variant = 'primary', size = 'md', children, className = '', ...props }: any) => {
+  const variants: any = {
+    primary: 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200',
+    secondary: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200',
+    danger: 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200',
+    success: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-200',
+    ghost: 'hover:bg-gray-100 text-gray-600',
+  }
+  const sizes: any = {
+    sm: 'px-3 py-1.5 text-xs',
+    md: 'px-4 py-2.5 text-sm',
+    lg: 'px-5 py-3 text-sm',
+  }
+  return (
+    <button {...props} className={`inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}>
+      {children}
+    </button>
+  )
+}
+
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
 export default function CustomerPage() {
   const router = useRouter()
+  const profileMenuRef = useRef<HTMLDivElement>(null)
+
+  // Core state
   const [profile, setProfile] = useState<any>(null)
   const [branches, setBranches] = useState<any[]>([])
   const [leads, setLeads] = useState<any[]>([])
@@ -68,14 +151,15 @@ export default function CustomerPage() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['leadler', 'ekip'])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+
+  // Filters
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterDate, setFilterDate] = useState('all')
-  const [saving, setSaving] = useState(false)
-  const [showProfileMenu, setShowProfileMenu] = useState(false)
-  const profileMenuRef = useRef<HTMLDivElement>(null)
 
-  // Branch form
+  // Branch
   const [showAddBranch, setShowAddBranch] = useState(false)
   const [branchInviteLink, setBranchInviteLink] = useState('')
   const [branchName, setBranchName] = useState('')
@@ -84,7 +168,7 @@ export default function CustomerPage() {
   const [commissionModel, setCommissionModel] = useState('fixed_rate')
   const [commissionValue, setCommissionValue] = useState('')
 
-  // Member form
+  // Member
   const [showAddMember, setShowAddMember] = useState(false)
   const [memberName, setMemberName] = useState('')
   const [memberEmail, setMemberEmail] = useState('')
@@ -92,8 +176,10 @@ export default function CustomerPage() {
   const [memberCommission, setMemberCommission] = useState('')
   const [memberBranch, setMemberBranch] = useState('')
   const [memberRole, setMemberRole] = useState('agent')
+  const [selectedMember, setSelectedMember] = useState<any>(null)
+  const [memberTab, setMemberTab] = useState<'leads' | 'hakedis' | 'loglar'>('leads')
 
-  // Lead form
+  // Lead
   const [showAddLead, setShowAddLead] = useState(false)
   const [leadName, setLeadName] = useState('')
   const [leadPhone, setLeadPhone] = useState('')
@@ -103,18 +189,19 @@ export default function CustomerPage() {
   const [leadAssignTo, setLeadAssignTo] = useState('')
   const [leadNote, setLeadNote] = useState('')
 
-  // Member detail
-  const [selectedMember, setSelectedMember] = useState<any>(null)
-  const [memberTab, setMemberTab] = useState<'leads' | 'hakedis' | 'loglar'>('leads')
-
-  // Lead status update
+  // Lead detail/update
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [newStatus, setNewStatus] = useState('')
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [detailLead, setDetailLead] = useState<any>(null)
   const [leadHistory, setLeadHistory] = useState<any[]>([])
+  const [statusNote, setStatusNote] = useState('')
+  const [procedureType, setProcedureType] = useState('')
+  const [procedureAmount, setProcedureAmount] = useState('')
+  const [cancelReason, setCancelReason] = useState('')
+  const [appointmentDate, setAppointmentDate] = useState('')
 
-  // Rapor state'leri
+  // Report
   const [showReportPanel, setShowReportPanel] = useState(false)
   const [reportPeriod, setReportPeriod] = useState('this_month')
   const [reportFormat, setReportFormat] = useState('excel')
@@ -122,57 +209,44 @@ export default function CustomerPage() {
   const [reportStartDate, setReportStartDate] = useState('')
   const [reportEndDate, setReportEndDate] = useState('')
   const [reportLoading, setReportLoading] = useState(false)
-  const [statusNote, setStatusNote] = useState('')
-  const [procedureType, setProcedureType] = useState('')
-  const [procedureAmount, setProcedureAmount] = useState('')
-  const [cancelReason, setCancelReason] = useState('')
-  const [appointmentDate, setAppointmentDate] = useState('')
+
+  // ─── EFFECTS ──────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('meta') === 'connected') setActiveTab('meta-baglanti')
     loadData()
-
     const handleClickOutside = (e: MouseEvent) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
-        setShowProfileMenu(false)
-      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) setShowProfileMenu(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // ─── DATA ─────────────────────────────────────────────────────────────────
+
   const loadData = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
-
     const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (profileData?.role !== 'customer') { router.push('/login'); return }
     setProfile(profileData)
-
-    const { data: branchesData } = await supabase
-      .from('branches').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
+    const { data: branchesData } = await supabase.from('branches').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
     setBranches(branchesData || [])
-
     if (branchesData && branchesData.length > 0) {
       const branchIds = branchesData.map((b: any) => b.id)
-      const { data: leadsData, error: leadsError } = await supabase
-        .from('leads').select('*').in('branch_id', branchIds).order('created_at', { ascending: false })
-      if (leadsError) console.error('Leads error:', leadsError)
-      console.log('branchIds:', branchIds, 'leads:', leadsData?.length)
+      const { data: leadsData } = await supabase.from('leads').select('*').in('branch_id', branchIds).order('created_at', { ascending: false })
       setLeads(leadsData || [])
-
-      const { data: membersData } = await supabase
-        .from('team_members').select('*, profiles(full_name, email), branches(branch_name)').in('branch_id', branchIds)
+      const { data: membersData } = await supabase.from('team_members').select('*, profiles(full_name, email), branches(branch_name)').in('branch_id', branchIds)
       setTeamMembers(membersData || [])
     }
-
     setLoading(false)
   }
 
+  // ─── HANDLERS ─────────────────────────────────────────────────────────────
+
   const handleAddBranch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
+    e.preventDefault(); setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase()
@@ -183,40 +257,27 @@ export default function CustomerPage() {
     }).select().single()
     if (!error && data) {
       setBranchInviteLink(`${window.location.origin}/join/${inviteCode}`)
-      setBranchName(''); setBranchContact(''); setBranchEmail('')
-      setCommissionModel('fixed_rate'); setCommissionValue('')
+      setBranchName(''); setBranchContact(''); setBranchEmail(''); setCommissionModel('fixed_rate'); setCommissionValue('')
       loadData()
     }
     setSaving(false)
   }
 
   const handleAddMember = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-    const { data, error } = await supabase.auth.signUp({
-      email: memberEmail, password: memberPassword,
-      options: { data: { full_name: memberName, role: 'team' } }
-    })
+    e.preventDefault(); setSaving(true)
+    const { data, error } = await supabase.auth.signUp({ email: memberEmail, password: memberPassword, options: { data: { full_name: memberName, role: 'team' } } })
     if (error) { alert(error.message); setSaving(false); return }
     if (data.user) {
-      await supabase.from('profiles').insert({
-        id: data.user.id, email: memberEmail, full_name: memberName, role: 'team', is_active: true,
-      })
-      await supabase.from('team_members').insert({
-        branch_id: memberBranch, user_id: data.user.id,
-        role: memberRole, commission_rate: parseFloat(memberCommission) || 0,
-      })
-      setMemberName(''); setMemberEmail(''); setMemberPassword('')
-      setMemberCommission(''); setMemberBranch(''); setMemberRole('agent')
-      setShowAddMember(false)
-      loadData()
+      await supabase.from('profiles').insert({ id: data.user.id, email: memberEmail, full_name: memberName, role: 'team', is_active: true })
+      await supabase.from('team_members').insert({ branch_id: memberBranch, user_id: data.user.id, role: memberRole, commission_rate: parseFloat(memberCommission) || 0 })
+      setMemberName(''); setMemberEmail(''); setMemberPassword(''); setMemberCommission(''); setMemberBranch(''); setMemberRole('agent')
+      setShowAddMember(false); loadData()
     }
     setSaving(false)
   }
 
   const handleAddLead = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
+    e.preventDefault(); setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const leadCode = 'DP-' + Date.now().toString().slice(-6)
@@ -226,10 +287,8 @@ export default function CustomerPage() {
       email: leadEmail || null, source: leadSource, note: leadNote || null, status: 'new',
     })
     if (!error) {
-      setLeadName(''); setLeadPhone(''); setLeadEmail('')
-      setLeadBranch(''); setLeadSource('manual'); setLeadAssignTo(''); setLeadNote('')
-      setShowAddLead(false)
-      await loadData()
+      setLeadName(''); setLeadPhone(''); setLeadEmail(''); setLeadBranch(''); setLeadSource('manual'); setLeadAssignTo(''); setLeadNote('')
+      setShowAddLead(false); await loadData()
     }
     setSaving(false)
   }
@@ -241,167 +300,33 @@ export default function CustomerPage() {
     const updates: any = { status: newStatus }
     if (newStatus === 'called') updates.called_at = new Date().toISOString()
     if (newStatus === 'appointment_scheduled') updates.appointment_date = appointmentDate
-    if (newStatus === 'procedure_done') {
-      updates.procedure_type = procedureType
-      updates.procedure_amount = parseFloat(procedureAmount) || 0
-      updates.procedure_date = new Date().toISOString()
-    }
+    if (newStatus === 'procedure_done') { updates.procedure_type = procedureType; updates.procedure_amount = parseFloat(procedureAmount) || 0; updates.procedure_date = new Date().toISOString() }
     if (newStatus === 'cancelled') updates.cancel_reason = cancelReason
     await supabase.from('leads').update(updates).eq('id', selectedLead.id)
-    await supabase.from('lead_history').insert({
-      lead_id: selectedLead.id, changed_by: profile.id,
-      old_status: selectedLead.status, new_status: newStatus, note: statusNote,
-    })
-    setSelectedLead(null)
-    setStatusNote(''); setProcedureType(''); setProcedureAmount(''); setCancelReason(''); setAppointmentDate('')
-    loadData()
-    setSaving(false)
+    await supabase.from('lead_history').insert({ lead_id: selectedLead.id, changed_by: profile.id, old_status: selectedLead.status, new_status: newStatus, note: statusNote })
+    setSelectedLead(null); setStatusNote(''); setProcedureType(''); setProcedureAmount(''); setCancelReason(''); setAppointmentDate('')
+    loadData(); setSaving(false)
   }
 
-  const handleToggleBranch = async (branch: any) => {
-    await supabase.from('branches').update({ is_active: !branch.is_active }).eq('id', branch.id)
-    loadData()
-  }
-
-  const handleToggleMember = async (member: any) => {
-    await supabase.from('team_members').update({ is_active: !member.is_active }).eq('id', member.id)
-    loadData()
-  }
-
-  const handleAssignLead = async (leadId: string, userId: string) => {
-    await supabase.from('leads').update({ assigned_to: userId }).eq('id', leadId)
-    loadData()
-  }
+  const handleToggleBranch = async (branch: any) => { await supabase.from('branches').update({ is_active: !branch.is_active }).eq('id', branch.id); loadData() }
+  const handleToggleMember = async (member: any) => { await supabase.from('team_members').update({ is_active: !member.is_active }).eq('id', member.id); loadData() }
+  const handleAssignLead = async (leadId: string, userId: string) => { await supabase.from('leads').update({ assigned_to: userId }).eq('id', leadId); loadData() }
 
   const openDetailModal = async (lead: any) => {
-    setDetailLead(lead)
-    setShowDetailModal(true)
-    const { data } = await supabase
-      .from('lead_history')
-      .select('*, profiles(full_name)')
-      .eq('lead_id', lead.id)
-      .order('created_at', { ascending: false })
+    setDetailLead(lead); setShowDetailModal(true)
+    const { data } = await supabase.from('lead_history').select('*, profiles(full_name)').eq('lead_id', lead.id).order('created_at', { ascending: false })
     setLeadHistory(data || [])
   }
 
-  const getReportLeads = () => {
-    const now = new Date()
-    let start: Date
-    let end: Date = new Date(now)
-    end.setHours(23, 59, 59, 999)
+  const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
+  const toggleMenu = (key: string) => setExpandedMenus(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
 
-    if (reportPeriod === 'today') {
-      start = new Date(now); start.setHours(0, 0, 0, 0)
-    } else if (reportPeriod === 'this_week') {
-      start = new Date(now); start.setDate(now.getDate() - now.getDay() + 1); start.setHours(0, 0, 0, 0)
-    } else if (reportPeriod === 'this_month') {
-      start = new Date(now.getFullYear(), now.getMonth(), 1)
-    } else if (reportPeriod === 'last_month') {
-      start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-      end = new Date(now.getFullYear(), now.getMonth(), 0); end.setHours(23, 59, 59, 999)
-    } else {
-      start = reportStartDate ? new Date(reportStartDate) : new Date(0)
-      end = reportEndDate ? new Date(reportEndDate + 'T23:59:59') : new Date()
-    }
-
-    return leads.filter(l => {
-      const d = new Date(l.created_at)
-      const matchesDate = d >= start && d <= end
-      const matchesStatus = reportStatus === 'all' || l.status === reportStatus
-      return matchesDate && matchesStatus
-    })
-  }
-
-  const downloadExcel = async () => {
-    setReportLoading(true)
-    const data = getReportLeads()
-    const XLSX = await import('xlsx')
-
-    const rows = data.map(l => ({
-      'Lead Kodu': l.lead_code,
-      'Ad Soyad': l.full_name || '',
-      'Telefon': l.phone || '',
-      'E-posta': l.email || '',
-      'Durum': STATUS_LABELS[l.status]?.label || l.status,
-      'Kaynak': SOURCE_LABELS[l.source]?.label || l.source,
-      'İşlem Tutarı': l.procedure_amount || 0,
-      'Randevu': l.appointment_at ? new Date(l.appointment_at).toLocaleDateString('tr-TR') : '',
-      'Not': l.note || '',
-      'Eklenme Tarihi': new Date(l.created_at).toLocaleDateString('tr-TR'),
-    }))
-
-    const ws = XLSX.utils.json_to_sheet(rows)
-    ws['!cols'] = [12, 20, 14, 24, 12, 14, 14, 14, 30, 14].map(w => ({ wch: w }))
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Leadler')
-
-    const periodLabel: any = { today: 'Bugün', this_week: 'Bu_Hafta', this_month: 'Bu_Ay', last_month: 'Geçen_Ay', custom: 'Özel' }
-    XLSX.writeFile(wb, `DataPilot_Leadler_${periodLabel[reportPeriod]}.xlsx`)
-    setReportLoading(false)
-    setShowReportPanel(false)
-  }
-
-  const downloadPDF = async () => {
-    setReportLoading(true)
-    const data = getReportLeads()
-    const { default: jsPDF } = await import('jspdf')
-    const { default: autoTable } = await import('jspdf-autotable')
-
-    const doc = new jsPDF({ orientation: 'landscape' })
-
-    // Başlık
-    doc.setFontSize(16)
-    doc.setFont('helvetica', 'bold')
-    doc.text('DataPilot - Lead Raporu', 14, 18)
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    const periodLabel: any = { today: 'Bugün', this_week: 'Bu Hafta', this_month: 'Bu Ay', last_month: 'Geçen Ay', custom: 'Özel Tarih' }
-    doc.text(`Dönem: ${periodLabel[reportPeriod]} | Toplam: ${data.length} lead | Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 14, 26)
-
-    // Özet istatistikler
-    const sales = data.filter(l => l.status === 'procedure_done').length
-    const revenue = data.filter(l => l.status === 'procedure_done').reduce((s, l) => s + (l.procedure_amount || 0), 0)
-    doc.text(`Satış: ${sales} | Ciro: ${revenue.toLocaleString('tr-TR')} TL | Dönüşüm: %${data.length > 0 ? ((sales/data.length)*100).toFixed(1) : 0}`, 14, 33)
-
-    autoTable(doc, {
-      startY: 38,
-      head: [['Lead Kodu', 'Ad Soyad', 'Telefon', 'Durum', 'Kaynak', 'Tutar', 'Tarih']],
-      body: data.map(l => [
-        l.lead_code,
-        l.full_name || '',
-        l.phone || '',
-        STATUS_LABELS[l.status]?.label || l.status,
-        SOURCE_LABELS[l.source]?.label || l.source,
-        l.procedure_amount ? `${l.procedure_amount.toLocaleString()} TL` : '-',
-        new Date(l.created_at).toLocaleDateString('tr-TR'),
-      ]),
-      styles: { fontSize: 8, cellPadding: 3 },
-      headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-    })
-
-    const periodLabelFile: any = { today: 'Bugün', this_week: 'Bu_Hafta', this_month: 'Bu_Ay', last_month: 'Geçen_Ay', custom: 'Özel' }
-    doc.save(`DataPilot_Leadler_${periodLabelFile[reportPeriod]}.pdf`)
-    setReportLoading(false)
-    setShowReportPanel(false)
-  }
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
-
-  const toggleMenu = (key: string) => {
-    setExpandedMenus(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
-  }
+  // ─── COMPUTED ─────────────────────────────────────────────────────────────
 
   const getPageTitle = () => {
     for (const item of menuStructure) {
       if (item.key === activeTab) return item.label
-      if (item.children) {
-        const child = item.children.find(c => c.key === activeTab)
-        if (child) return `${item.label} › ${child.label}`
-      }
+      if (item.children) { const child = item.children.find(c => c.key === activeTab); if (child) return `${item.label} › ${child.label}` }
     }
     return 'Dashboard'
   }
@@ -409,94 +334,146 @@ export default function CustomerPage() {
   const totalSales = leads.filter(l => l.status === 'procedure_done').length
   const totalRevenue = leads.filter(l => l.status === 'procedure_done').reduce((sum, l) => sum + (l.procedure_amount || 0), 0)
   const conversionRate = leads.length > 0 ? ((totalSales / leads.length) * 100).toFixed(1) : '0'
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const weekEnd = new Date(today)
-  weekEnd.setDate(today.getDate() + 7)
+
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7)
 
   const filteredLeads = leads.filter(l => {
-    const matchesSearch =
-      l.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.phone?.includes(searchQuery) ||
-      l.lead_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      l.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = !searchQuery || l.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || l.phone?.includes(searchQuery) || l.lead_code?.toLowerCase().includes(searchQuery.toLowerCase()) || l.email?.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = filterStatus === 'all' || l.status === filterStatus
     let matchesDate = true
     if (filterDate !== 'all' && l.appointment_at) {
-      const d = new Date(l.appointment_at)
-      d.setHours(0, 0, 0, 0)
+      const d = new Date(l.appointment_at); d.setHours(0, 0, 0, 0)
       if (filterDate === 'today') matchesDate = d.getTime() === today.getTime()
       else if (filterDate === 'this_week') matchesDate = d >= today && d <= weekEnd
       else if (filterDate === 'overdue') matchesDate = d < today
-    } else if (filterDate !== 'all') {
-      matchesDate = false
-    }
+    } else if (filterDate !== 'all') { matchesDate = false }
     return matchesSearch && matchesStatus && matchesDate
   })
 
+  // ─── REPORT ───────────────────────────────────────────────────────────────
+
+  const getReportLeads = () => {
+    const now = new Date()
+    let start: Date, end: Date = new Date(now); end.setHours(23, 59, 59, 999)
+    if (reportPeriod === 'today') { start = new Date(now); start.setHours(0, 0, 0, 0) }
+    else if (reportPeriod === 'this_week') { start = new Date(now); start.setDate(now.getDate() - now.getDay() + 1); start.setHours(0, 0, 0, 0) }
+    else if (reportPeriod === 'this_month') { start = new Date(now.getFullYear(), now.getMonth(), 1) }
+    else if (reportPeriod === 'last_month') { start = new Date(now.getFullYear(), now.getMonth() - 1, 1); end = new Date(now.getFullYear(), now.getMonth(), 0); end.setHours(23, 59, 59, 999) }
+    else { start = reportStartDate ? new Date(reportStartDate) : new Date(0); end = reportEndDate ? new Date(reportEndDate + 'T23:59:59') : new Date() }
+    return leads.filter(l => { const d = new Date(l.created_at); return d >= start && d <= end && (reportStatus === 'all' || l.status === reportStatus) })
+  }
+
+  const downloadExcel = async () => {
+    setReportLoading(true)
+    const data = getReportLeads()
+    const XLSX = await import('xlsx')
+    const rows = data.map(l => ({ 'Lead Kodu': l.lead_code, 'Ad Soyad': l.full_name || '', 'Telefon': l.phone || '', 'E-posta': l.email || '', 'Durum': STATUS_CONFIG[l.status]?.label || l.status, 'Kaynak': SOURCE_CONFIG[l.source]?.label || l.source, 'İşlem Tutarı': l.procedure_amount || 0, 'Randevu': l.appointment_at ? new Date(l.appointment_at).toLocaleDateString('tr-TR') : '', 'Not': l.note || '', 'Eklenme Tarihi': new Date(l.created_at).toLocaleDateString('tr-TR') }))
+    const ws = XLSX.utils.json_to_sheet(rows)
+    ws['!cols'] = [12, 20, 14, 24, 12, 14, 14, 14, 30, 14].map(w => ({ wch: w }))
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Leadler')
+    const pLabel: any = { today: 'Bugün', this_week: 'Bu_Hafta', this_month: 'Bu_Ay', last_month: 'Geçen_Ay', custom: 'Özel' }
+    XLSX.writeFile(wb, `DataPilot_${pLabel[reportPeriod]}.xlsx`)
+    setReportLoading(false); setShowReportPanel(false)
+  }
+
+  const downloadPDF = async () => {
+    setReportLoading(true)
+    const data = getReportLeads()
+    const { default: jsPDF } = await import('jspdf')
+    const { default: autoTable } = await import('jspdf-autotable')
+    const doc = new jsPDF({ orientation: 'landscape' })
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.text('DataPilot — Lead Raporu', 14, 18)
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal')
+    const pLabel: any = { today: 'Bugün', this_week: 'Bu Hafta', this_month: 'Bu Ay', last_month: 'Geçen Ay', custom: 'Özel' }
+    const sales = data.filter(l => l.status === 'procedure_done').length
+    const revenue = data.filter(l => l.status === 'procedure_done').reduce((s, l) => s + (l.procedure_amount || 0), 0)
+    doc.text(`Dönem: ${pLabel[reportPeriod]}  |  Toplam: ${data.length} lead  |  Satış: ${sales}  |  Ciro: ₺${revenue.toLocaleString()}  |  Dönüşüm: %${data.length > 0 ? ((sales / data.length) * 100).toFixed(1) : 0}`, 14, 26)
+    autoTable(doc, { startY: 32, head: [['Lead Kodu', 'Ad Soyad', 'Telefon', 'Durum', 'Kaynak', 'Tutar', 'Tarih']], body: data.map(l => [l.lead_code, l.full_name || '', l.phone || '', STATUS_CONFIG[l.status]?.label || l.status, SOURCE_CONFIG[l.source]?.label || l.source, l.procedure_amount ? `₺${l.procedure_amount.toLocaleString()}` : '-', new Date(l.created_at).toLocaleDateString('tr-TR')]), styles: { fontSize: 8, cellPadding: 3 }, headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' }, alternateRowStyles: { fillColor: [249, 250, 251] } })
+    const pLabelFile: any = { today: 'Bugün', this_week: 'Bu_Hafta', this_month: 'Bu_Ay', last_month: 'Geçen_Ay', custom: 'Özel' }
+    doc.save(`DataPilot_${pLabelFile[reportPeriod]}.pdf`)
+    setReportLoading(false); setShowReportPanel(false)
+  }
+
+  // ─── LOADING ──────────────────────────────────────────────────────────────
+
   if (loading) return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
-        <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-          <span className="text-white font-bold text-xl">D</span>
+        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center mx-auto mb-3">
+          <span className="text-white font-bold">D</span>
         </div>
-        <p className="text-gray-500 text-sm">Yükleniyor...</p>
+        <div className="flex gap-1 justify-center">
+          {[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
+        </div>
       </div>
     </div>
   )
 
-  return (
-    <div className="min-h-screen bg-gray-100 flex">
+  // ─── RENDER ───────────────────────────────────────────────────────────────
 
-      {/* SIDEBAR */}
-      <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} min-h-screen bg-slate-900 flex flex-col fixed left-0 top-0 shadow-xl transition-all duration-300 z-20`}>
-        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
-          {!sidebarCollapsed ? (
-            <>
-              <div className="flex items-center gap-2.5">
-                <img src="/logo2.png" alt="DataPilot" className="h-6 w-auto" />
-                <span className="text-white font-bold">DataPilot</span>
-              </div>
-              <button onClick={() => setSidebarCollapsed(true)} className="text-slate-500 hover:text-white text-xs">◀</button>
-            </>
-          ) : (
-            <button onClick={() => setSidebarCollapsed(false)} className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mx-auto">
-              <span className="text-white font-bold text-sm">D</span>
+  return (
+    <div className="min-h-screen bg-gray-50 flex" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+
+      {/* ── SIDEBAR ── */}
+      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-white border-r border-gray-100 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-300 shadow-sm`}>
+
+        {/* Logo */}
+        <div className={`flex items-center h-14 border-b border-gray-100 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <span className="text-white text-xs font-bold">D</span>
+          </div>
+          {!sidebarCollapsed && <span className="font-semibold text-gray-900 text-sm tracking-tight">DataPilot</span>}
+          {!sidebarCollapsed && (
+            <button onClick={() => setSidebarCollapsed(true)} className="ml-auto text-gray-300 hover:text-gray-500 transition-colors">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          )}
+          {sidebarCollapsed && (
+            <button onClick={() => setSidebarCollapsed(false)} className="text-gray-300 hover:text-gray-500 transition-colors">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           )}
         </div>
 
+        {/* Firma */}
         {!sidebarCollapsed && (
-          <div className="px-4 py-3 border-b border-slate-700">
-            <p className="text-slate-400 text-xs uppercase tracking-wide mb-1">Firma</p>
-            <p className="text-white font-semibold text-sm truncate">{profile?.company_name || profile?.full_name}</p>
-            <span className="text-xs bg-blue-900 text-blue-300 px-2 py-0.5 rounded-full mt-1 inline-block">
-              {profile?.sector || 'Müşteri'}
-            </span>
+          <div className="px-4 py-3 border-b border-gray-100">
+            <p className="text-xs text-gray-400 mb-0.5">Firma</p>
+            <p className="text-sm font-semibold text-gray-800 truncate">{profile?.company_name || profile?.full_name}</p>
+            <span className="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">Müşteri</span>
           </div>
         )}
 
-        <nav className="flex-1 p-2 overflow-y-auto space-y-0.5">
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto py-2 px-2">
           {menuStructure.map(item => (
             <div key={item.key}>
               <button
-                onClick={() => item.children ? toggleMenu(item.key) : setActiveTab(item.key)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${activeTab === item.key ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
-                <span className="flex-shrink-0">{item.icon}</span>
+                onClick={() => { if (item.children) toggleMenu(item.key); else setActiveTab(item.key) }}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all mb-0.5 ${
+                  activeTab === item.key && !item.children
+                    ? 'bg-indigo-600 text-white font-medium shadow-sm shadow-indigo-200'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <span className="text-base flex-shrink-0">{item.icon}</span>
                 {!sidebarCollapsed && (
                   <>
-                    <span className="flex-1 text-sm">{item.label}</span>
+                    <span className="flex-1 text-left">{item.label}</span>
                     {item.children && (
-                      <span className="text-xs opacity-60">{expandedMenus.includes(item.key) ? '▼' : '▶'}</span>
+                      <svg className={`w-3.5 h-3.5 transition-transform text-gray-400 ${expandedMenus.includes(item.key) ? 'rotate-90' : ''}`} viewBox="0 0 14 14" fill="none"><path d="M4 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     )}
                   </>
                 )}
               </button>
               {item.children && expandedMenus.includes(item.key) && !sidebarCollapsed && (
-                <div className="ml-3 mt-0.5 border-l border-slate-700 pl-3 space-y-0.5">
+                <div className="ml-3 pl-3 border-l border-gray-100 mb-1">
                   {item.children.map(child => (
                     <button key={child.key} onClick={() => setActiveTab(child.key)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${activeTab === child.key ? 'bg-blue-600 text-white font-medium' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
+                      className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all mb-0.5 ${
+                        activeTab === child.key ? 'text-indigo-600 font-medium bg-indigo-50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
+                      }`}>
                       {child.label}
                     </button>
                   ))}
@@ -505,1028 +482,684 @@ export default function CustomerPage() {
             </div>
           ))}
         </nav>
-      </div>
 
-      {/* MAIN */}
-      <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-64'} flex-1 transition-all duration-300`}>
+        {/* Bottom */}
+        {!sidebarCollapsed && (
+          <div className="p-3 border-t border-gray-100">
+            <div className="flex items-center gap-2.5 px-2 py-1.5">
+              <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                <span className="text-indigo-600 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-800 truncate">{profile?.full_name}</p>
+                <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </aside>
 
-        {/* TOP BAR */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center sticky top-0 z-10 shadow-sm">
-          <h1 className="font-semibold text-gray-800 text-sm">{getPageTitle()}</h1>
-          <div className="flex items-center gap-2 ml-auto">
+      {/* ── MAIN ── */}
+      <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-60'} flex-1 transition-all duration-300 min-w-0`}>
 
-            {/* PROFİL DROPDOWN */}
-            <div className="relative" ref={profileMenuRef}>
+        {/* Top bar */}
+        <header className="h-14 bg-white border-b border-gray-100 flex items-center px-6 sticky top-0 z-10">
+          <div className="flex items-center gap-1.5 text-sm text-gray-400">
+            <span>DataPilot</span>
+            {getPageTitle().split(' › ').map((part, i, arr) => (
+              <span key={i} className="flex items-center gap-1.5">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span className={i === arr.length - 1 ? 'text-gray-800 font-medium' : ''}>{part}</span>
+              </span>
+            ))}
+          </div>
+
+          <div className="ml-auto flex items-center gap-2" ref={profileMenuRef}>
+            <div className="relative">
               <button onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl px-3 py-1.5 transition-colors">
-                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
+                className="flex items-center gap-2 hover:bg-gray-50 rounded-xl px-3 py-1.5 transition-colors border border-transparent hover:border-gray-200">
+                <div className="w-6 h-6 rounded-lg bg-indigo-100 flex items-center justify-center">
+                  <span className="text-indigo-600 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
                 </div>
-                <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate">{profile?.full_name}</span>
-                <span className="text-gray-400 text-xs">{showProfileMenu ? '▲' : '▼'}</span>
+                <span className="text-sm font-medium text-gray-700 hidden md:block">{profile?.full_name}</span>
+                <svg className="text-gray-400" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
-
               {showProfileMenu && (
-                <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="font-semibold text-gray-900 text-sm">{profile?.full_name}</p>
-                    <p className="text-xs text-gray-500 truncate">{profile?.email}</p>
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mt-1 inline-block">
-                      {profile?.company_name || 'Müşteri'}
-                    </span>
+                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50">
+                  <div className="px-4 py-2.5 border-b border-gray-100 mb-1">
+                    <p className="text-sm font-semibold text-gray-900">{profile?.full_name}</p>
+                    <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
                   </div>
-                  <button onClick={() => { setActiveTab('ayarlar'); setShowProfileMenu(false) }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                    ⚙️ Hesap Ayarları
+                  <button onClick={() => { setActiveTab('ayarlar'); setShowProfileMenu(false) }} className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-2">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.25"/><path d="M7 1v1m0 10v1M1 7h1m10 0h1m-2.05-3.95-.7.7M4.75 9.25l-.7.7m0-6.65.7.7m4.5 4.5.7.7" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round"/></svg>
+                    Ayarlar
                   </button>
-                  <button onClick={() => { setActiveTab('meta-baglanti'); setShowProfileMenu(false) }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                    📣 Meta Bağlantısı
+                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 12H2.5A1.5 1.5 0 011 10.5v-7A1.5 1.5 0 012.5 2H5M9 10l3-3-3-3M12 7H5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    Çıkış Yap
                   </button>
-                  <div className="border-t border-gray-100 mt-1 pt-1">
-                    <button onClick={handleLogout}
-                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                      🚪 Çıkış Yap
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
           </div>
-        </div>
+        </header>
 
-        <div className="p-6">
-          <p className="text-xs text-gray-400 mb-5">DataPilot › <span className="text-gray-700 font-medium">{getPageTitle()}</span></p>
+        {/* Content */}
+        <main className="p-6">
 
-          {/* DASHBOARD */}
+          {/* ── DASHBOARD ── */}
           {activeTab === 'dashboard' && (
-            <>
-              <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+            <div className="space-y-6">
+              {/* Welcome */}
+              <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-6 text-white relative overflow-hidden">
+                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                <p className="text-indigo-200 text-sm mb-1">Hoş geldin,</p>
+                <h1 className="text-2xl font-bold mb-1">{profile?.full_name}</h1>
+                <p className="text-indigo-300 text-sm">{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                <div className="flex gap-6 mt-5 pt-5 border-t border-indigo-500/40">
+                  <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Toplam Lead</p></div>
+                  <div><p className="text-3xl font-bold">{totalSales}</p><p className="text-indigo-300 text-xs mt-0.5">Satış</p></div>
+                  <div><p className="text-3xl font-bold">%{conversionRate}</p><p className="text-indigo-300 text-xs mt-0.5">Dönüşüm</p></div>
+                  <div><p className="text-3xl font-bold">₺{(totalRevenue / 1000).toFixed(0)}K</p><p className="text-indigo-300 text-xs mt-0.5">Ciro</p></div>
+                </div>
+              </div>
+
+              {/* Stat cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: 'Toplam Lead', value: leads.length, icon: '📋', color: 'text-blue-600', bg: 'bg-blue-50' },
-                  { label: 'Toplam Satış', value: totalSales, icon: '✅', color: 'text-green-600', bg: 'bg-green-50' },
-                  { label: 'Dönüşüm Oranı', value: `%${conversionRate}`, icon: '📈', color: 'text-purple-600', bg: 'bg-purple-50' },
-                  { label: 'Toplam Ciro', value: `₺${totalRevenue.toLocaleString()}`, icon: '💰', color: 'text-amber-600', bg: 'bg-amber-50' },
+                  { label: 'Aktif Lead', value: leads.filter(l => l.status === 'new' || l.status === 'called').length, sub: 'Yeni + Arandı', color: 'text-blue-600', bg: 'bg-blue-50', icon: '◎' },
+                  { label: 'Randevu', value: leads.filter(l => l.status === 'appointment_scheduled').length, sub: 'Bekleyen randevu', color: 'text-violet-600', bg: 'bg-violet-50', icon: '◐' },
+                  { label: 'Toplam Satış', value: totalSales, sub: `₺${totalRevenue.toLocaleString()}`, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: '◉' },
+                  { label: 'Şubeler', value: branches.length, sub: `${teamMembers.length} ekip üyesi`, color: 'text-orange-600', bg: 'bg-orange-50', icon: '◈' },
                 ].map(card => (
-                  <div key={card.label} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-                    <div className={`w-10 h-10 ${card.bg} rounded-xl flex items-center justify-center text-xl mb-3`}>{card.icon}</div>
+                  <div key={card.label} className="bg-white rounded-2xl p-5 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
+                    <div className={`w-9 h-9 ${card.bg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
                     <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
-                    <p className="text-xs text-gray-500 mt-1">{card.label}</p>
+                    <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
-                  <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                    <h3 className="font-bold text-gray-900 text-sm">Son Leadlar</h3>
-                    <button onClick={() => setActiveTab('leadler-liste')} className="text-xs text-blue-600 hover:underline">Tümü →</button>
-                  </div>
-                  {leads.length === 0 && <p className="p-6 text-xs text-gray-400 text-center">Henüz lead yok.</p>}
-                  {leads.slice(0, 6).map(lead => (
-                    <div key={lead.id} className="px-4 py-3 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
-                          <span className={`text-xs px-1.5 py-0.5 rounded-full ${SOURCE_LABELS[lead.source]?.color || 'bg-gray-100 text-gray-500'}`}>
-                            {SOURCE_LABELS[lead.source]?.label || lead.source}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500">{lead.phone} • {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
-                      </div>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_LABELS[lead.status]?.color}`}>
-                        {STATUS_LABELS[lead.status]?.label}
-                      </span>
+              {/* Recent leads */}
+              <div className="bg-white rounded-2xl border border-gray-100">
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 text-sm">Son Leadler</h3>
+                  <button onClick={() => setActiveTab('leadler-liste')} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Tümünü gör →</button>
+                </div>
+                {leads.length === 0 ? (
+                  <div className="p-12 text-center"><p className="text-gray-400 text-sm">Henüz lead yok.</p></div>
+                ) : leads.slice(0, 6).map(lead => (
+                  <div key={lead.id} onClick={() => openDetailModal(lead)} className="px-5 py-3.5 flex items-center gap-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 cursor-pointer transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-semibold text-gray-500">{(lead.full_name || 'İ').charAt(0)}</span>
                     </div>
-                  ))}
-                </div>
-
-                <div className="space-y-4">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <h3 className="font-bold text-gray-900 text-sm mb-3">Ekip Özeti</h3>
-                    {teamMembers.length === 0 && <p className="text-xs text-gray-400">Henüz satışçı yok.</p>}
-                    {teamMembers.slice(0, 5).map(m => {
-                      const mLeads = leads.filter(l => l.assigned_to === m.user_id)
-                      const mSales = mLeads.filter(l => l.status === 'procedure_done').length
-                      return (
-                        <div key={m.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
-                              <span className="text-purple-600 text-xs font-bold">{m.profiles?.full_name?.charAt(0)}</span>
-                            </div>
-                            <span className="text-xs font-medium text-gray-900 truncate">{m.profiles?.full_name}</span>
-                          </div>
-                          <div className="flex gap-1">
-                            <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">{mLeads.length}L</span>
-                            <span className="text-xs bg-green-50 text-green-600 px-1.5 py-0.5 rounded">{mSales}S</span>
-                          </div>
-                        </div>
-                      )
-                    })}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
+                      <p className="text-xs text-gray-400">{lead.phone}</p>
+                    </div>
+                    <Badge status={lead.status} />
                   </div>
-
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <h3 className="font-bold text-gray-900 text-sm mb-3">Şubeler</h3>
-                    {branches.length === 0 && <p className="text-xs text-gray-400">Henüz şube yok.</p>}
-                    {branches.slice(0, 4).map(b => (
-                      <div key={b.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                        <span className="text-xs font-medium text-gray-900">{b.branch_name}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${b.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {b.is_active ? 'Aktif' : 'Pasif'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                ))}
               </div>
-            </>
+            </div>
           )}
 
-          {/* LEAD LİSTESİ */}
+          {/* ── LEAD LİSTESİ ── */}
           {activeTab === 'leadler-liste' && (
-            <>
-              <div className="grid grid-cols-4 gap-4 mb-5">
-                {[
-                  { label: 'Toplam', value: leads.length, color: 'text-blue-600', bg: 'bg-blue-50' },
-                  { label: 'Randevu', value: leads.filter(l => l.status === 'appointment_scheduled').length, color: 'text-purple-600', bg: 'bg-purple-50' },
-                  { label: 'Satış', value: totalSales, color: 'text-green-600', bg: 'bg-green-50' },
-                  { label: 'İptal', value: leads.filter(l => l.status === 'cancelled').length, color: 'text-red-600', bg: 'bg-red-50' },
-                ].map(s => (
-                  <div key={s.label} className={`${s.bg} rounded-xl p-4 text-center border border-gray-100`}>
-                    <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-                    <p className="text-xs text-gray-500 mt-1">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between mb-4">
+            <div className="space-y-4">
+              {/* Actions bar */}
+              <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-500">{filteredLeads.length} / {leads.length} lead</p>
                 <div className="flex gap-2">
-                  <button onClick={() => setShowReportPanel(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
-                    📊 Rapor İndir
-                  </button>
-                  <button onClick={() => setShowAddLead(!showAddLead)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                    + Manuel Lead Ekle
-                  </button>
+                  <Btn variant="secondary" size="sm" onClick={() => setShowReportPanel(true)}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 10h10M2 7h6M2 4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    Rapor İndir
+                  </Btn>
+                  <Btn size="sm" onClick={() => setShowAddLead(true)}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+                    Lead Ekle
+                  </Btn>
                 </div>
               </div>
 
-              {/* Arama */}
-              <div className="relative mb-3">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-                <input
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="İsim, telefon, lead kodu ara..."
-                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-                />
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">✕</button>
-                )}
+              {/* Search */}
+              <div className="relative">
+                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="İsim, telefon veya lead kodu ara..."
+                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></button>}
               </div>
 
-              {/* Durum filtreleri */}
-              <div className="mb-3">
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Durum</p>
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {[{ key: 'all', label: 'Tümü' }, ...Object.entries(STATUS_LABELS).map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
-                    <button key={f.key} onClick={() => setFilterStatus(f.key)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                        filterStatus === f.key ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                      }`}>
-                      {f.label} ({f.key === 'all' ? leads.length : leads.filter(l => l.status === f.key).length})
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Randevu tarihi filtreleri */}
-              <div className="mb-4">
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Randevu Tarihi</p>
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {[
-                    { key: 'all', label: 'Tümü' },
-                    { key: 'today', label: '🔴 Bugün', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d.getTime() === today.getTime() }).length },
-                    { key: 'this_week', label: '🟡 Bu Hafta', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d >= today && d <= weekEnd }).length },
-                    { key: 'overdue', label: '⚠️ Geçmiş', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d < today }).length },
-                  ].map(f => (
-                    <button key={f.key} onClick={() => setFilterDate(f.key)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                        filterDate === f.key ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                      }`}>
-                      {f.label}{f.count !== undefined ? ` (${f.count})` : ''}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {showAddLead && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-gray-900">Yeni Lead Ekle</h3>
-                    <button onClick={() => setShowAddLead(false)} className="text-gray-400 hover:text-gray-600">✕</button>
-                  </div>
-                  <form onSubmit={handleAddLead} className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Ad Soyad *</label>
-                      <input value={leadName} onChange={e => setLeadName(e.target.value)} required
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ad Soyad" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Telefon *</label>
-                      <input value={leadPhone} onChange={e => setLeadPhone(e.target.value)} required
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="05xx xxx xx xx" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">E-posta</label>
-                      <input type="email" value={leadEmail} onChange={e => setLeadEmail(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ornek@email.com" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Şube *</label>
-                      <select value={leadBranch} onChange={e => setLeadBranch(e.target.value)} required
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Şube seçin...</option>
-                        {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Kaynak</label>
-                      <select value={leadSource} onChange={e => setLeadSource(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="manual">Manuel Giriş</option>
-                        <option value="meta_form">Meta Form</option>
-                        <option value="instagram_dm">Instagram DM</option>
-                        <option value="whatsapp">WhatsApp</option>
-                        <option value="website">Web Sitesi</option>
-                        <option value="referral">Referans</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Satışçıya Ata</label>
-                      <select value={leadAssignTo} onChange={e => setLeadAssignTo(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Atama yapma</option>
-                        {teamMembers.filter(m => m.role === 'agent').map(m => (
-                          <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="col-span-2">
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Not</label>
-                      <textarea value={leadNote} onChange={e => setLeadNote(e.target.value)} rows={2}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ek not..." />
-                    </div>
-                    <div className="col-span-2 flex gap-3">
-                      <button type="submit" disabled={saving} className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium">
-                        {saving ? 'Ekleniyor...' : 'Lead Ekle'}
+              {/* Filters */}
+              <div className="space-y-2">
+                <div>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Durum</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {[{ key: 'all', label: 'Tümü' }, ...Object.entries(STATUS_CONFIG).map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
+                      <button key={f.key} onClick={() => setFilterStatus(f.key)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterStatus === f.key ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}>
+                        {f.label} ({f.key === 'all' ? leads.length : leads.filter(l => l.status === f.key).length})
                       </button>
-                      <button type="button" onClick={() => setShowAddLead(false)} className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">İptal</button>
-                    </div>
-                  </form>
+                    ))}
+                  </div>
                 </div>
-              )}
+                <div>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Randevu Tarihi</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {[
+                      { key: 'all', label: 'Tümü' },
+                      { key: 'today', label: '● Bugün', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d.getTime() === today.getTime() }).length },
+                      { key: 'this_week', label: '● Bu Hafta', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d >= today && d <= weekEnd }).length },
+                      { key: 'overdue', label: '● Geçmiş', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d < today }).length },
+                    ].map(f => (
+                      <button key={f.key} onClick={() => setFilterDate(f.key)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterDate === f.key ? 'bg-violet-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}>
+                        {f.label}{f.count !== undefined ? ` (${f.count})` : ''}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              {/* Lead table */}
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 {filteredLeads.length === 0 ? (
-                  <div className="p-12 text-center"><span className="text-4xl mb-3 block">📭</span><p className="text-gray-500 text-sm">Henüz lead yok.</p></div>
-                ) : filteredLeads.map(lead => (
-                  <div key={lead.id} onClick={() => openDetailModal(lead)} className="px-5 py-3.5 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
-                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${SOURCE_LABELS[lead.source]?.color || 'bg-gray-100 text-gray-500'}`}>
-                          {SOURCE_LABELS[lead.source]?.label || lead.source}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500">{lead.phone} {lead.email && `• ${lead.email}`}</p>
-                      <p className="text-xs text-gray-400">{lead.lead_code} • {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
-                      {lead.appointment_at && (
-                        <p className="text-xs text-purple-600 mt-0.5 font-medium">
-                          📅 {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      )}
+                  <div className="p-16 text-center">
+                    <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">◎</div>
+                    <p className="text-gray-500 text-sm font-medium">Sonuç bulunamadı</p>
+                    {(searchQuery || filterStatus !== 'all' || filterDate !== 'all') && <button onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterDate('all') }} className="mt-2 text-xs text-indigo-600 hover:underline">Filtreleri temizle</button>}
+                  </div>
+                ) : filteredLeads.map((lead, i) => (
+                  <div key={lead.id} onClick={() => openDetailModal(lead)}
+                    className={`px-5 py-4 flex items-center gap-4 cursor-pointer hover:bg-gray-50/70 transition-colors ${i < filteredLeads.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center flex-shrink-0">
+                      <span className="text-indigo-600 text-sm font-semibold">{(lead.full_name || 'İ').charAt(0)}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_LABELS[lead.status]?.color}`}>
-                        {STATUS_LABELS[lead.status]?.label}
-                      </span>
-                      {lead.procedure_amount > 0 && (
-                        <span className="text-xs font-bold text-green-600">₺{lead.procedure_amount.toLocaleString()}</span>
-                      )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
+                        <SourceBadge source={lead.source} />
+                      </div>
+                      <p className="text-xs text-gray-400">{lead.phone}{lead.email && ` · ${lead.email}`}</p>
+                      {lead.appointment_at && <p className="text-xs text-violet-600 mt-0.5 font-medium">📅 {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>}
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <div className="text-right hidden sm:block">
+                        {lead.procedure_amount > 0 && <p className="text-sm font-semibold text-emerald-600">₺{lead.procedure_amount.toLocaleString()}</p>}
+                        <p className="text-xs text-gray-400">{new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+                      </div>
+                      <Badge status={lead.status} />
                       <button onClick={e => { e.stopPropagation(); setSelectedLead(lead); setNewStatus(lead.status) }}
-                        className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">
-                        Güncelle
+                        className="p-2 hover:bg-indigo-50 rounded-lg text-gray-400 hover:text-indigo-600 transition-colors">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3-8 8H1.5v-3l8-8z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
-            </>
+            </div>
           )}
 
-          {/* LEAD DAĞITIMI */}
+          {/* ── LEAD DAĞITIMI ── */}
           {activeTab === 'leadler-dagitim' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="p-4 border-b border-gray-100">
-                <h3 className="font-bold text-gray-900 text-sm">Lead Dağıtımı</h3>
-                <p className="text-xs text-gray-500 mt-1">Atanmamış leadları satışçılara atayın</p>
+            <div className="bg-white rounded-2xl border border-gray-100">
+              <div className="px-5 py-4 border-b border-gray-100">
+                <h3 className="font-semibold text-gray-900 text-sm">Lead Dağıtımı</h3>
+                <p className="text-xs text-gray-400 mt-0.5">Atanmamış leadları satışçılara atayın</p>
               </div>
               {leads.filter(l => !l.assigned_to).length === 0 ? (
-                <div className="p-12 text-center"><span className="text-4xl mb-3 block">✅</span><p className="text-gray-500 text-sm">Tüm leadlar atanmış.</p></div>
-              ) : leads.filter(l => !l.assigned_to).map(lead => (
-                <div key={lead.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0">
-                  <div>
-                    <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
-                    <p className="text-xs text-gray-500">{lead.phone} • {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+                <div className="p-16 text-center"><div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-3 text-lg">✓</div><p className="text-gray-500 text-sm">Tüm leadlar atanmış.</p></div>
+              ) : leads.filter(l => !l.assigned_to).map((lead, i, arr) => (
+                <div key={lead.id} className={`px-5 py-4 flex items-center justify-between ${i < arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center"><span className="text-sm font-semibold text-gray-500">{(lead.full_name || 'İ').charAt(0)}</span></div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{lead.full_name || 'İsimsiz'}</p>
+                      <p className="text-xs text-gray-400">{lead.phone} · {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+                    </div>
                   </div>
-                  <select onChange={e => { if (e.target.value) handleAssignLead(lead.id, e.target.value) }}
-                    className="px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <Select value="" onChange={(e: any) => { if (e.target.value) handleAssignLead(lead.id, e.target.value) }} className="w-44">
                     <option value="">Satışçı seç...</option>
-                    {teamMembers.filter(m => m.role === 'agent').map(m => (
-                      <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>
-                    ))}
-                  </select>
+                    {teamMembers.filter(m => m.role === 'agent').map(m => <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>)}
+                  </Select>
                 </div>
               ))}
             </div>
           )}
 
-          {/* ŞUBELER */}
+          {/* ── ŞUBELER ── */}
           {activeTab === 'ekip-sube' && (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-gray-500">{branches.length} şube</p>
-                <button onClick={() => { setShowAddBranch(!showAddBranch); setBranchInviteLink('') }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Şube Ekle</button>
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                <Btn size="sm" onClick={() => setShowAddBranch(true)}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+                  Şube Ekle
+                </Btn>
               </div>
-              {showAddBranch && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
-                  {branchInviteLink ? (
-                    <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                      <p className="text-green-700 font-medium text-sm mb-2">✅ Şube eklendi!</p>
-                      <div className="flex gap-2">
-                        <input readOnly value={branchInviteLink} className="flex-1 bg-white border border-green-300 rounded-lg px-3 py-2 text-xs" />
-                        <button onClick={() => { navigator.clipboard.writeText(branchInviteLink); alert('Kopyalandı!') }}
-                          className="bg-green-600 text-white px-3 py-2 rounded-lg text-xs">Kopyala</button>
-                      </div>
-                      <button onClick={() => { setBranchInviteLink(''); setShowAddBranch(false) }} className="mt-3 text-xs text-green-600 hover:underline">Kapat</button>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleAddBranch} className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Şube Adı *</label>
-                        <input value={branchName} onChange={e => setBranchName(e.target.value)} required
-                          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Şube adı" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">İletişim Kişisi</label>
-                        <input value={branchContact} onChange={e => setBranchContact(e.target.value)}
-                          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ad Soyad" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">E-posta</label>
-                        <input type="email" value={branchEmail} onChange={e => setBranchEmail(e.target.value)}
-                          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="sube@email.com" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Komisyon Modeli</label>
-                        <select value={commissionModel} onChange={e => setCommissionModel(e.target.value)}
-                          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                          <option value="fixed_rate">Sabit Oran (%)</option>
-                          <option value="fixed_amount">Sabit Tutar (₺)</option>
-                          <option value="tiered">Kademeli</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">{commissionModel === 'fixed_amount' ? 'Tutar (₺)' : 'Oran (%)'}</label>
-                        <input type="number" value={commissionValue} onChange={e => setCommissionValue(e.target.value)}
-                          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder={commissionModel === 'fixed_amount' ? '500' : '10'} />
-                      </div>
-                      <div className="col-span-2 flex gap-3">
-                        <button type="submit" disabled={saving} className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium">
-                          {saving ? 'Ekleniyor...' : 'Şube Ekle'}
-                        </button>
-                        <button type="button" onClick={() => setShowAddBranch(false)} className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">İptal</button>
-                      </div>
-                    </form>
-                  )}
+              {branchInviteLink && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
+                  <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm">✓</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-emerald-800">Şube oluşturuldu!</p>
+                    <p className="text-xs text-emerald-600 truncate mt-0.5">{branchInviteLink}</p>
+                  </div>
+                  <button onClick={() => navigator.clipboard.writeText(branchInviteLink)} className="text-xs text-emerald-700 font-medium hover:text-emerald-900 bg-emerald-100 hover:bg-emerald-200 px-3 py-1.5 rounded-lg transition-colors flex-shrink-0">Kopyala</button>
                 </div>
               )}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="bg-white rounded-2xl border border-gray-100">
                 {branches.length === 0 ? (
-                  <div className="p-10 text-center"><span className="text-3xl mb-2 block">🏢</span><p className="text-gray-500 text-sm">Henüz şube yok.</p></div>
-                ) : branches.map(b => (
-                  <div key={b.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
-                    <div>
-                      <p className="font-semibold text-gray-900 text-sm">{b.branch_name}</p>
-                      <p className="text-xs text-gray-500">{b.contact_name} {b.contact_email && `• ${b.contact_email}`}</p>
-                      <div className="flex gap-2 mt-1">
-                        <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
-                          {b.commission_model === 'fixed_rate' ? `%${b.commission_value} komisyon` : `₺${b.commission_value} komisyon`}
-                        </span>
-                        <span className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">{leads.filter(l => l.branch_id === b.id).length} lead</span>
-                        <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">{teamMembers.filter(m => m.branch_id === b.id).length} satışçı</span>
-                      </div>
+                  <div className="p-16 text-center"><p className="text-gray-400 text-sm">Henüz şube yok.</p></div>
+                ) : branches.map((branch, i) => (
+                  <div key={branch.id} className={`px-5 py-4 flex items-center gap-4 ${i < branches.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                    <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0"><span className="text-indigo-600 font-semibold text-sm">{branch.branch_name?.charAt(0)}</span></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-gray-900">{branch.branch_name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{branch.contact_name} · {branch.contact_email}</p>
+                      <p className="text-xs text-gray-400">Komisyon: %{branch.commission_value}</p>
                     </div>
-                    <button onClick={() => handleToggleBranch(b)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${b.is_active ? 'bg-green-500' : 'bg-gray-300'}`}>
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${b.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked={branch.is_active} onChange={() => handleToggleBranch(branch)} className="sr-only peer" />
+                      <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                    </label>
                   </div>
                 ))}
               </div>
-            </>
+            </div>
           )}
 
-          {/* SATIŞÇILAR */}
+          {/* ── SATIŞÇILAR ── */}
           {activeTab === 'ekip-liste' && (
-            <>
-              <div className="flex items-center justify-between mb-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-500">{teamMembers.length} ekip üyesi</p>
-                <button onClick={() => setShowAddMember(!showAddMember)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                  + Satışçı / Yönetici Ekle
-                </button>
+                <Btn size="sm" onClick={() => setShowAddMember(true)}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+                  Üye Ekle
+                </Btn>
               </div>
-              {showAddMember && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-gray-900">Ekip Üyesi Ekle</h3>
-                    <button onClick={() => setShowAddMember(false)} className="text-gray-400 hover:text-gray-600">✕</button>
-                  </div>
-                  <form onSubmit={handleAddMember} className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2">
-                      <label className="block text-xs font-medium text-gray-600 mb-2">Rol *</label>
-                      <div className="flex gap-3">
-                        <button type="button" onClick={() => setMemberRole('agent')}
-                          className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${memberRole === 'agent' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 text-gray-500'}`}>
-                          👤 Satışçı
-                        </button>
-                        <button type="button" onClick={() => setMemberRole('manager')}
-                          className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${memberRole === 'manager' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500'}`}>
-                          👔 Yönetici
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Ad Soyad *</label>
-                      <input value={memberName} onChange={e => setMemberName(e.target.value)} required
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ad Soyad" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Şube *</label>
-                      <select value={memberBranch} onChange={e => setMemberBranch(e.target.value)} required
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Şube seçin...</option>
-                        {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">E-posta *</label>
-                      <input type="email" value={memberEmail} onChange={e => setMemberEmail(e.target.value)} required
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="satis@email.com" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Şifre *</label>
-                      <input type="password" value={memberPassword} onChange={e => setMemberPassword(e.target.value)} required
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="En az 6 karakter" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Prim Oranı (%)</label>
-                      <input type="number" value={memberCommission} onChange={e => setMemberCommission(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="5" />
-                    </div>
-                    <div className="col-span-2 flex gap-3">
-                      <button type="submit" disabled={saving} className="bg-purple-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium">
-                        {saving ? 'Ekleniyor...' : 'Ekle'}
-                      </button>
-                      <button type="button" onClick={() => setShowAddMember(false)} className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">İptal</button>
-                    </div>
-                  </form>
-                </div>
-              )}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="bg-white rounded-2xl border border-gray-100">
                 {teamMembers.length === 0 ? (
-                  <div className="p-10 text-center"><span className="text-3xl mb-2 block">👥</span><p className="text-gray-500 text-sm">Henüz ekip üyesi yok.</p></div>
-                ) : teamMembers.map(m => {
-                  const mLeads = leads.filter(l => l.assigned_to === m.user_id)
-                  const mSales = mLeads.filter(l => l.status === 'procedure_done')
-                  const mRevenue = mSales.reduce((sum, l) => sum + (l.procedure_amount || 0), 0)
-                  const commission = mRevenue * ((m.commission_rate || 0) / 100)
+                  <div className="p-16 text-center"><p className="text-gray-400 text-sm">Henüz ekip üyesi yok.</p></div>
+                ) : teamMembers.map((member, i) => {
+                  const memberLeads = leads.filter(l => l.assigned_to === member.user_id)
+                  const memberSales = memberLeads.filter(l => l.status === 'procedure_done').length
+                  const memberRevenue = memberLeads.filter(l => l.status === 'procedure_done').reduce((s, l) => s + (l.procedure_amount || 0), 0)
                   return (
-                    <div key={m.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer"
-                      onClick={() => { setMemberTab('leads'); setSelectedMember({ ...m, mLeads, mSales, mRevenue, commission }) }}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <span className="text-purple-600 font-bold text-sm">{m.profiles?.full_name?.charAt(0)}</span>
+                    <div key={member.id} className={`px-5 py-4 flex items-center gap-4 ${i < teamMembers.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-indigo-600 font-semibold text-sm">{member.profiles?.full_name?.charAt(0)}</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-gray-900">{member.profiles?.full_name}</p>
+                          <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{member.role === 'agent' ? 'Satışçı' : 'Yönetici'}</span>
                         </div>
-                        <div>
-                          <p className="font-semibold text-gray-900 text-sm">{m.profiles?.full_name}</p>
-                          <p className="text-xs text-gray-500">{m.branches?.branch_name} • %{m.commission_rate} prim</p>
-                          <div className="flex gap-2 mt-1">
-                            <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{mLeads.length} lead</span>
-                            <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">{mSales.length} satış</span>
-                            <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">₺{commission.toLocaleString()} prim</span>
-                          </div>
+                        <p className="text-xs text-gray-400 mt-0.5">{member.branches?.branch_name} · %{member.commission_rate} prim</p>
+                        <div className="flex gap-3 mt-1.5">
+                          <span className="text-xs text-blue-600 font-medium">{memberLeads.length} lead</span>
+                          <span className="text-xs text-emerald-600 font-medium">{memberSales} satış</span>
+                          {memberRevenue > 0 && <span className="text-xs text-gray-500">₺{memberRevenue.toLocaleString()}</span>}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                        <span className={`text-xs px-2 py-1 rounded-full ${m.role === 'manager' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {m.role === 'manager' ? 'Yönetici' : 'Satışçı'}
-                        </span>
-                        <button onClick={() => handleToggleMember(m)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${m.is_active !== false ? 'bg-green-500' : 'bg-gray-300'}`}>
-                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${m.is_active !== false ? 'translate-x-6' : 'translate-x-1'}`} />
-                        </button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setSelectedMember(member)} className="text-xs text-indigo-600 font-medium hover:text-indigo-700 px-3 py-1.5 hover:bg-indigo-50 rounded-lg transition-colors">Detay</button>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" checked={member.is_active !== false} onChange={() => handleToggleMember(member)} className="sr-only peer" />
+                          <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                        </label>
                       </div>
                     </div>
                   )
                 })}
               </div>
-            </>
+            </div>
           )}
 
-          {/* HAKEDİŞ - removed, now in member detail modal */}
+          {/* ── META ── */}
+          {activeTab === 'meta-baglanti' && <MetaConnect />}
+          {activeTab === 'meta-kampanyalar' && <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center"><p className="text-gray-400 text-sm">Kampanyalar yakında gelecek.</p></div>}
+          {activeTab === 'meta-leadformlar' && <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center"><p className="text-gray-400 text-sm">Lead formları yakında gelecek.</p></div>}
 
-          {/* META BAĞLANTISI */}
-          {activeTab === 'meta-baglanti' && <MetaConnect ownerId={profile?.id} />}
+          {/* ── PERFORMANS ── */}
+          {(activeTab === 'performans-genel' || activeTab === 'performans-karsilastirma') && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center"><p className="text-gray-400 text-sm">Performans raporları yakında gelecek.</p></div>
+          )}
 
-          {/* AYARLAR */}
+          {/* ── VERİ MERKEZİ ── */}
+          {(activeTab === 'veri-yukle' || activeTab === 'veri-setlerim') && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center"><p className="text-gray-400 text-sm">Veri merkezi yakında gelecek.</p></div>
+          )}
+
+          {/* ── AYARLAR ── */}
           {activeTab === 'ayarlar' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-              <span className="text-5xl mb-4 block">⚙️</span>
-              <h3 className="font-bold text-gray-900 mb-2">Hesap Ayarları</h3>
-              <p className="text-gray-500 text-sm">Profil bilgileri, firma logosu ve şifre değiştirme yakında eklenecek.</p>
+            <div className="max-w-2xl space-y-4">
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <h3 className="font-semibold text-gray-900 mb-4">Profil Bilgileri</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input label="Ad Soyad" value={profile?.full_name || ''} readOnly />
+                  <Input label="E-posta" value={profile?.email || ''} readOnly />
+                  <Input label="Firma" value={profile?.company_name || ''} readOnly />
+                </div>
+              </div>
             </div>
           )}
 
-          {/* VERİ YÜKLE */}
-          {activeTab === 'veri-yukle' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-              <span className="text-5xl mb-4 block">📂</span>
-              <h3 className="font-bold text-gray-900 mb-2">Veri Merkezi</h3>
-              <p className="text-gray-500 text-sm mb-6">Excel dosyanızı yükleyerek leadlerinizi sisteme aktarın</p>
-              <button onClick={() => router.push('/customer/upload')}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium">
-                📥 Veri Yükleme Sayfasına Git
-              </button>
-            </div>
-          )}
-
-          {/* SATIŞÇI LOGLARI - removed, now in member detail modal */}
-
-          {/* PLACEHOLDER */}
-          {!['dashboard', 'leadler-liste', 'leadler-dagitim', 'ekip-sube', 'ekip-liste', 'meta-baglanti', 'ayarlar', 'veri-yukle'].includes(activeTab) && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-              <span className="text-5xl mb-4 block">🚧</span>
-              <h3 className="font-bold text-gray-900 mb-2">{getPageTitle()}</h3>
-              <p className="text-gray-500 text-sm">Bu modül yakında eklenecek.</p>
-            </div>
-          )}
-        </div>
+        </main>
       </div>
 
-      {/* SATIŞÇI DETAY MODAL */}
-      {selectedMember && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
-            {/* Header */}
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                  <span className="text-purple-600 font-bold text-lg">{selectedMember.profiles?.full_name?.charAt(0)}</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900">{selectedMember.profiles?.full_name}</h3>
-                  <p className="text-xs text-gray-500">{selectedMember.profiles?.email} • {selectedMember.branches?.branch_name}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full mt-1 inline-block ${selectedMember.role === 'manager' ? 'bg-indigo-100 text-indigo-700' : 'bg-purple-100 text-purple-700'}`}>
-                    {selectedMember.role === 'manager' ? 'Yönetici' : 'Satışçı'}
-                  </span>
-                </div>
-              </div>
-              <button onClick={() => setSelectedMember(null)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
-            </div>
+      {/* ─────────────────── MODALS ─────────────────────── */}
 
-            {/* Stats */}
-            <div className="p-5 border-b border-gray-100 flex-shrink-0">
-              <div className="grid grid-cols-4 gap-3">
-                {[
-                  { label: 'Toplam Lead', value: selectedMember.mLeads.length, color: 'text-blue-600', bg: 'bg-blue-50' },
-                  { label: 'Satış', value: selectedMember.mSales.length, color: 'text-green-600', bg: 'bg-green-50' },
-                  { label: 'Dönüşüm', value: selectedMember.mLeads.length > 0 ? `%${((selectedMember.mSales.length / selectedMember.mLeads.length) * 100).toFixed(0)}` : '%0', color: 'text-purple-600', bg: 'bg-purple-50' },
-                  { label: 'Prim', value: `₺${selectedMember.commission.toLocaleString()}`, color: 'text-amber-600', bg: 'bg-amber-50' },
-                ].map(s => (
-                  <div key={s.label} className={`${s.bg} rounded-xl p-3 text-center`}>
-                    <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 flex gap-3">
-                <div className="flex-1 bg-gray-50 rounded-xl p-3 text-center">
-                  <p className="text-lg font-bold text-gray-800">₺{selectedMember.mRevenue.toLocaleString()}</p>
-                  <p className="text-xs text-gray-500">Toplam Ciro</p>
-                </div>
-                <div className="flex-1 bg-gray-50 rounded-xl p-3 text-center">
-                  <p className="text-lg font-bold text-gray-800">%{selectedMember.commission_rate}</p>
-                  <p className="text-xs text-gray-500">Prim Oranı</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex border-b border-gray-100 px-5 flex-shrink-0">
-                {[
-                  { key: 'leads', label: 'Lead Geçmişi' },
-                  { key: 'hakedis', label: 'Hakediş' },
-                  { key: 'loglar', label: 'Aktivite Logları' },
-                ].map(t => (
-                  <button key={t.key} onClick={() => setMemberTab(t.key as any)}
-                    className={`px-4 py-3 text-xs font-medium border-b-2 transition-colors ${memberTab === t.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-              <div className="flex-1 overflow-y-auto">
-                {memberTab === 'leads' && (
-                  <>
-                    {selectedMember.mLeads.length === 0 ? (
-                      <div className="p-10 text-center"><span className="text-3xl mb-2 block">📭</span><p className="text-gray-400 text-sm">Henüz atanmış lead yok.</p></div>
-                    ) : selectedMember.mLeads.map((lead: any) => (
-                      <div key={lead.id} className="px-5 py-3 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
-                        <div>
-                          <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
-                          <p className="text-xs text-gray-500">{lead.phone} • {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {lead.procedure_amount > 0 && (
-                            <span className="text-xs font-bold text-green-600">₺{lead.procedure_amount.toLocaleString()}</span>
-                          )}
-                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_LABELS[lead.status]?.color}`}>
-                            {STATUS_LABELS[lead.status]?.label}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                )}
-                {memberTab === 'hakedis' && (
-                  <div className="p-5 space-y-4">
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { label: 'Satış Adedi', value: selectedMember.mSales.length, color: 'text-blue-600', bg: 'bg-blue-50' },
-                        { label: 'Toplam Ciro', value: `₺${selectedMember.mRevenue.toLocaleString()}`, color: 'text-green-600', bg: 'bg-green-50' },
-                        { label: 'Kazanılan Prim', value: `₺${selectedMember.commission.toLocaleString()}`, color: 'text-amber-600', bg: 'bg-amber-50' },
-                      ].map(item => (
-                        <div key={item.label} className={`${item.bg} rounded-xl p-4 text-center`}>
-                          <p className={`text-xl font-bold ${item.color}`}>{item.value}</p>
-                          <p className="text-xs text-gray-500 mt-1">{item.label}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="bg-gray-50 rounded-xl p-4">
-                      <h5 className="font-semibold text-gray-800 text-sm mb-3">Satılan İşlemler</h5>
-                      {selectedMember.mSales.length === 0 ? (
-                        <p className="text-xs text-gray-400 text-center py-4">Henüz satış yok.</p>
-                      ) : selectedMember.mSales.map((lead: any) => (
-                        <div key={lead.id} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{lead.full_name}</p>
-                            <p className="text-xs text-gray-500">{lead.procedure_type || '-'} • {lead.procedure_date ? new Date(lead.procedure_date).toLocaleDateString('tr-TR') : '-'}</p>
-                          </div>
-                          <span className="text-sm font-bold text-green-600">₺{(lead.procedure_amount || 0).toLocaleString()}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {memberTab === 'loglar' && (
-                  <div className="p-10 text-center">
-                    <span className="text-4xl mb-3 block">📊</span>
-                    <p className="font-semibold text-gray-700 mb-1">Aktivite Logları</p>
-                    <p className="text-gray-400 text-sm">Giriş/çıkış saatleri ve aktiviteler yakında eklenecek.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
+      {/* ── ŞUBE EKLE ── */}
+      <Modal open={showAddBranch} onClose={() => setShowAddBranch(false)} title="Yeni Şube" subtitle="Şube bilgilerini girin">
+        <form onSubmit={handleAddBranch} className="p-6 space-y-4">
+          <Input label="Şube Adı *" value={branchName} onChange={(e: any) => setBranchName(e.target.value)} required placeholder="İstanbul Şubesi" />
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="İletişim Kişisi" value={branchContact} onChange={(e: any) => setBranchContact(e.target.value)} placeholder="Ad Soyad" />
+            <Input label="E-posta" type="email" value={branchEmail} onChange={(e: any) => setBranchEmail(e.target.value)} placeholder="sube@email.com" />
           </div>
-        </div>
-      )}
+          <div className="grid grid-cols-2 gap-4">
+            <Select label="Komisyon Modeli" value={commissionModel} onChange={(e: any) => setCommissionModel(e.target.value)}>
+              <option value="fixed_rate">Sabit Oran</option>
+              <option value="per_lead">Lead Başına</option>
+            </Select>
+            <Input label="Komisyon Değeri" type="number" value={commissionValue} onChange={(e: any) => setCommissionValue(e.target.value)} placeholder="10" />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddBranch(false)}>İptal</Btn>
+            <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Oluşturuluyor...' : 'Şube Oluştur'}</Btn>
+          </div>
+        </form>
+      </Modal>
 
-      {/* DURUM GÜNCELLEME MODAL */}
-      {selectedLead && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="font-bold text-gray-900">Durum Güncelle</h3>
-                <p className="text-gray-500 text-sm">{selectedLead.full_name}</p>
-              </div>
-              <button onClick={() => setSelectedLead(null)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
-            </div>
-            <form onSubmit={handleUpdateStatus} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Yeni Durum</label>
-                <select value={newStatus} onChange={e => setNewStatus(e.target.value)} required
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Seçin...</option>
-                  <option value="called">Arandı</option>
-                  <option value="appointment_scheduled">Randevu Alındı</option>
-                  <option value="procedure_done">Satış Yapıldı</option>
-                  <option value="cancelled">İptal</option>
-                </select>
-              </div>
-              {newStatus === 'appointment_scheduled' && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Randevu Tarihi</label>
-                  <input type="datetime-local" value={appointmentDate} onChange={e => setAppointmentDate(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-              )}
-              {newStatus === 'procedure_done' && (
-                <>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">İşlem / Ürün</label>
-                    <input value={procedureType} onChange={e => setProcedureType(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ürün veya hizmet adı" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Tutar (₺)</label>
-                    <input type="number" value={procedureAmount} onChange={e => setProcedureAmount(e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0" />
-                  </div>
-                </>
-              )}
-              {newStatus === 'cancelled' && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">İptal Nedeni</label>
-                  <input value={cancelReason} onChange={e => setCancelReason(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="İptal nedeni..." />
-                </div>
-              )}
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Not</label>
-                <textarea value={statusNote} onChange={e => setStatusNote(e.target.value)} rows={2}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ek not..." />
-              </div>
-              <div className="flex gap-3">
-                <button type="button" onClick={() => setSelectedLead(null)}
-                  className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm">İptal</button>
-                <button type="submit" disabled={saving}
-                  className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-sm font-medium">
-                  {saving ? 'Kaydediliyor...' : 'Kaydet'}
+      {/* ── ÜYE EKLE ── */}
+      <Modal open={showAddMember} onClose={() => setShowAddMember(false)} title="Ekip Üyesi Ekle" subtitle="Yeni satışçı veya yönetici ekleyin">
+        <form onSubmit={handleAddMember} className="p-6 space-y-4">
+          <div>
+            <p className="text-xs font-medium text-gray-500 mb-2">Rol</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[{ key: 'agent', label: '👤 Satışçı' }, { key: 'manager', label: '👔 Yönetici' }].map(r => (
+                <button key={r.key} type="button" onClick={() => setMemberRole(r.key)}
+                  className={`py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${memberRole === r.key ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                  {r.label}
                 </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* RAPOR MODAL */}
-      {showReportPanel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowReportPanel(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10">
-
-            {/* Header */}
-            <div className="p-6 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">📊 Rapor İndir</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Leadleri filtrele ve indir</p>
-                </div>
-                <button onClick={() => setShowReportPanel(false)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600">✕</button>
-              </div>
+              ))}
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Ad Soyad *" value={memberName} onChange={(e: any) => setMemberName(e.target.value)} required placeholder="Ad Soyad" />
+            <Select label="Şube *" value={memberBranch} onChange={(e: any) => setMemberBranch(e.target.value)} required>
+              <option value="">Şube seçin...</option>
+              {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="E-posta *" type="email" value={memberEmail} onChange={(e: any) => setMemberEmail(e.target.value)} required placeholder="satis@email.com" />
+            <Input label="Şifre *" type="password" value={memberPassword} onChange={(e: any) => setMemberPassword(e.target.value)} required placeholder="En az 6 karakter" />
+          </div>
+          <Input label="Prim Oranı (%)" type="number" value={memberCommission} onChange={(e: any) => setMemberCommission(e.target.value)} placeholder="10" />
+          <div className="flex gap-3 pt-2">
+            <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddMember(false)}>İptal</Btn>
+            <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Ekleniyor...' : 'Üye Ekle'}</Btn>
+          </div>
+        </form>
+      </Modal>
 
-            <div className="p-6 space-y-5">
+      {/* ── LEAD EKLE ── */}
+      <Modal open={showAddLead} onClose={() => setShowAddLead(false)} title="Yeni Lead" subtitle="Manuel lead ekleyin" size="lg">
+        <form onSubmit={handleAddLead} className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Ad Soyad *" value={leadName} onChange={(e: any) => setLeadName(e.target.value)} required placeholder="Ad Soyad" />
+            <Input label="Telefon *" value={leadPhone} onChange={(e: any) => setLeadPhone(e.target.value)} required placeholder="05xx xxx xx xx" />
+            <Input label="E-posta" type="email" value={leadEmail} onChange={(e: any) => setLeadEmail(e.target.value)} placeholder="ornek@email.com" />
+            <Select label="Şube *" value={leadBranch} onChange={(e: any) => setLeadBranch(e.target.value)} required>
+              <option value="">Şube seçin...</option>
+              {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
+            </Select>
+            <Select label="Kaynak" value={leadSource} onChange={(e: any) => setLeadSource(e.target.value)}>
+              <option value="manual">Manuel Giriş</option>
+              <option value="meta_form">Meta Form</option>
+              <option value="instagram_dm">Instagram DM</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="website">Web Sitesi</option>
+              <option value="referral">Referans</option>
+            </Select>
+            <Select label="Satışçıya Ata" value={leadAssignTo} onChange={(e: any) => setLeadAssignTo(e.target.value)}>
+              <option value="">Atama yapma</option>
+              {teamMembers.filter(m => m.role === 'agent').map(m => <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>)}
+            </Select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Not</label>
+            <textarea value={leadNote} onChange={e => setLeadNote(e.target.value)} rows={2} placeholder="Ek not..."
+              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddLead(false)}>İptal</Btn>
+            <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Ekleniyor...' : 'Lead Ekle'}</Btn>
+          </div>
+        </form>
+      </Modal>
 
-              {/* Dönem */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Dönem</label>
-                <div className="relative">
-                  <select value={reportPeriod} onChange={e => setReportPeriod(e.target.value)}
-                    className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer pr-10">
-                    <option value="today">📅 Bugün</option>
-                    <option value="this_week">📅 Bu Hafta</option>
-                    <option value="this_month">📅 Bu Ay</option>
-                    <option value="last_month">📅 Geçen Ay</option>
-                    <option value="custom">🗓️ Özel Tarih Aralığı</option>
-                  </select>
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">▼</span>
-                </div>
+      {/* ── DURUM GÜNCELLE ── */}
+      <Modal open={!!selectedLead} onClose={() => setSelectedLead(null)} title={selectedLead?.full_name || 'Lead'} subtitle={`${selectedLead?.lead_code} · Durum güncelle`}>
+        <form onSubmit={handleUpdateStatus} className="p-6 space-y-4">
+          <div>
+            <p className="text-xs font-medium text-gray-500 mb-2">Yeni Durum</p>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(STATUS_CONFIG).map(([key, val]: any) => (
+                <button key={key} type="button" onClick={() => setNewStatus(key)}
+                  className={`py-2.5 px-3 rounded-xl text-sm font-medium border-2 transition-all flex items-center gap-2 ${newStatus === key ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                  <span className={`w-2 h-2 rounded-full ${val.dot}`} />{val.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {newStatus === 'procedure_done' && (
+            <div className="bg-emerald-50 rounded-xl p-4 space-y-3">
+              <p className="text-xs font-semibold text-emerald-700">Satış Detayları</p>
+              <Input label="İşlem Tipi" value={procedureType} onChange={(e: any) => setProcedureType(e.target.value)} placeholder="Örn: Yıllık üyelik" />
+              <Input label="Tutar (₺)" type="number" value={procedureAmount} onChange={(e: any) => setProcedureAmount(e.target.value)} placeholder="0" />
+            </div>
+          )}
+          {newStatus === 'appointment_scheduled' && (
+            <div className="bg-violet-50 rounded-xl p-4">
+              <p className="text-xs font-semibold text-violet-700 mb-2">Randevu Tarihi</p>
+              <Input type="datetime-local" value={appointmentDate} onChange={(e: any) => setAppointmentDate(e.target.value)} />
+            </div>
+          )}
+          {newStatus === 'cancelled' && (
+            <Input label="İptal Sebebi" value={cancelReason} onChange={(e: any) => setCancelReason(e.target.value)} placeholder="Sebebi yazın..." />
+          )}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Not</label>
+            <textarea value={statusNote} onChange={e => setStatusNote(e.target.value)} rows={2} placeholder="Görüşme notu..."
+              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Btn type="button" variant="secondary" className="flex-1" onClick={() => setSelectedLead(null)}>İptal</Btn>
+            <Btn type="submit" className="flex-1" disabled={saving || !newStatus}>{saving ? 'Kaydediliyor...' : 'Kaydet'}</Btn>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── LEAD DETAY ── */}
+      <Modal open={showDetailModal} onClose={() => setShowDetailModal(false)} title={detailLead?.full_name || 'Lead Detayı'} subtitle={detailLead?.lead_code} size="lg">
+        {detailLead && (
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <Badge status={detailLead.status} />
+              <SourceBadge source={detailLead.source} />
+              {detailLead.procedure_amount > 0 && <span className="text-sm font-semibold text-emerald-600">₺{detailLead.procedure_amount.toLocaleString()}</span>}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 rounded-xl p-3.5">
+                <p className="text-xs text-gray-400 mb-1">Telefon</p>
+                <p className="text-sm font-medium text-gray-900">{detailLead.phone}</p>
               </div>
-
-              {/* Özel tarih aralığı */}
-              {reportPeriod === 'custom' && (
-                <div className="bg-blue-50 rounded-xl p-4 space-y-3">
-                  <p className="text-xs font-semibold text-blue-700">Tarih Aralığı Seç</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Başlangıç</label>
-                      <input type="date" value={reportStartDate} onChange={e => setReportStartDate(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-blue-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Bitiş</label>
-                      <input type="date" value={reportEndDate} onChange={e => setReportEndDate(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-blue-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                  </div>
+              {detailLead.email && (
+                <div className="bg-gray-50 rounded-xl p-3.5">
+                  <p className="text-xs text-gray-400 mb-1">E-posta</p>
+                  <p className="text-sm font-medium text-gray-900 truncate">{detailLead.email}</p>
                 </div>
               )}
-
-              {/* Durum */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Durum Filtresi</label>
-                <div className="relative">
-                  <select value={reportStatus} onChange={e => setReportStatus(e.target.value)}
-                    className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer pr-10">
-                    <option value="all">Tüm Durumlar</option>
-                    {Object.entries(STATUS_LABELS).map(([k, v]: any) => (
-                      <option key={k} value={k}>{v.label}</option>
-                    ))}
-                  </select>
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">▼</span>
-                </div>
+              <div className="bg-gray-50 rounded-xl p-3.5">
+                <p className="text-xs text-gray-400 mb-1">Eklenme</p>
+                <p className="text-sm font-medium text-gray-900">{new Date(detailLead.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
               </div>
-
-              {/* Format */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Format</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { key: 'excel', label: 'Excel', icon: '📗', desc: '.xlsx dosyası', color: 'green' },
-                    { key: 'pdf', label: 'PDF', icon: '📕', desc: '.pdf dosyası', color: 'red' },
-                  ].map(f => (
-                    <button key={f.key} onClick={() => setReportFormat(f.key)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all ${
-                        reportFormat === f.key
-                          ? f.color === 'green' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}>
-                      <span className="text-2xl block mb-1">{f.icon}</span>
-                      <p className={`text-sm font-bold ${reportFormat === f.key ? (f.color === 'green' ? 'text-green-700' : 'text-red-700') : 'text-gray-700'}`}>{f.label}</p>
-                      <p className="text-xs text-gray-400">{f.desc}</p>
-                    </button>
+              {detailLead.appointment_at && (
+                <div className="bg-violet-50 rounded-xl p-3.5">
+                  <p className="text-xs text-violet-400 mb-1">Randevu</p>
+                  <p className="text-sm font-medium text-violet-700">{new Date(detailLead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+              )}
+            </div>
+            {detailLead.note && (
+              <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+                <p className="text-xs font-medium text-amber-600 mb-1">Not</p>
+                <p className="text-sm text-gray-700">{detailLead.note}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">İşlem Geçmişi</p>
+              {leadHistory.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-6">Henüz işlem yapılmamış.</p>
+              ) : (
+                <div className="space-y-2">
+                  {leadHistory.map((h, i) => (
+                    <div key={i} className="flex gap-3 items-start">
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-300 mt-2 flex-shrink-0" />
+                      <div className="flex-1 bg-gray-50 rounded-xl p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1.5">
+                            <Badge status={h.old_status} />
+                            <svg className="text-gray-300" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            <Badge status={h.new_status} />
+                          </div>
+                          <p className="text-xs text-gray-400">{new Date(h.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                        {h.note && <p className="text-xs text-gray-600 mt-1">{h.note}</p>}
+                        {h.profiles?.full_name && <p className="text-xs text-gray-400 mt-0.5">— {h.profiles.full_name}</p>}
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </div>
-
-              {/* Önizleme */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 flex items-center justify-between border border-blue-100">
-                <div>
-                  <p className="text-xs text-gray-500">Seçilen kriterlere göre</p>
-                  <p className="text-xl font-bold text-blue-600 mt-0.5">{getReportLeads().length} <span className="text-sm font-normal text-gray-500">lead bulundu</span></p>
-                </div>
-                <span className="text-3xl">{reportFormat === 'excel' ? '📗' : '📕'}</span>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 pb-6 flex gap-3">
-              <button onClick={() => setShowReportPanel(false)}
-                className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm hover:bg-gray-50">
-                İptal
-              </button>
-              <button
-                onClick={reportFormat === 'excel' ? downloadExcel : downloadPDF}
-                disabled={reportLoading || getReportLeads().length === 0}
-                className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-                {reportLoading ? (
-                  <><span className="animate-spin">⏳</span> Hazırlanıyor...</>
-                ) : (
-                  <>{reportFormat === 'excel' ? '📗' : '📕'} İndir</>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* LEAD DETAY MODAL */}
-      {showDetailModal && detailLead && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowDetailModal(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg z-10 max-h-[90vh] overflow-y-auto">
-            
-            {/* Header */}
-            <div className="p-5 border-b border-gray-100 flex items-start justify-between sticky top-0 bg-white rounded-t-2xl">
-              <div>
-                <h3 className="font-bold text-gray-900 text-lg">{detailLead.full_name || 'İsimsiz'}</h3>
-                <p className="text-sm text-gray-500">{detailLead.lead_code}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${STATUS_LABELS[detailLead.status]?.color}`}>
-                  {STATUS_LABELS[detailLead.status]?.label}
-                </span>
-                <button onClick={() => setShowDetailModal(false)} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">✕</button>
-              </div>
-            </div>
-
-            <div className="p-5 space-y-4">
-
-              {/* İletişim Bilgileri */}
-              <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">İletişim Bilgileri</p>
-                <div className="flex items-center gap-3">
-                  <span className="text-base">📞</span>
-                  <div>
-                    <p className="text-xs text-gray-400">Telefon</p>
-                    <p className="text-sm font-medium text-gray-900">{detailLead.phone}</p>
-                  </div>
-                </div>
-                {detailLead.email && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-base">✉️</span>
-                    <div>
-                      <p className="text-xs text-gray-400">E-posta</p>
-                      <p className="text-sm font-medium text-gray-900">{detailLead.email}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Lead Bilgileri */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-blue-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-500 mb-1">Kaynak</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${SOURCE_LABELS[detailLead.source]?.color || 'bg-gray-100 text-gray-600'}`}>
-                    {SOURCE_LABELS[detailLead.source]?.label || detailLead.source}
-                  </span>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-500 mb-1">Eklenme Tarihi</p>
-                  <p className="text-xs font-medium text-gray-900">{new Date(detailLead.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                </div>
-                {detailLead.procedure_amount > 0 && (
-                  <div className="bg-green-50 rounded-xl p-3">
-                    <p className="text-xs text-gray-500 mb-1">İşlem Tutarı</p>
-                    <p className="text-sm font-bold text-green-600">₺{detailLead.procedure_amount.toLocaleString()}</p>
-                  </div>
-                )}
-                {detailLead.appointment_at && (
-                  <div className="bg-purple-50 rounded-xl p-3">
-                    <p className="text-xs text-gray-500 mb-1">Randevu</p>
-                    <p className="text-xs font-medium text-purple-700">
-                      📅 {new Date(detailLead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Not */}
-              {detailLead.note && (
-                <div className="bg-yellow-50 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Not</p>
-                  <p className="text-sm text-gray-700">{detailLead.note}</p>
-                </div>
               )}
+            </div>
+            <Btn className="w-full" onClick={() => { setShowDetailModal(false); setSelectedLead(detailLead); setNewStatus(detailLead.status) }}>
+              Durumu Güncelle
+            </Btn>
+          </div>
+        )}
+      </Modal>
 
-              {/* Geçmiş */}
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">İşlem Geçmişi</p>
-                {leadHistory.length === 0 ? (
-                  <p className="text-xs text-gray-400 text-center py-4">Henüz işlem yapılmamış.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {leadHistory.map((h, i) => (
-                      <div key={i} className="flex gap-3 items-start">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0" />
-                        <div className="flex-1 bg-gray-50 rounded-xl p-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-1.5">
-                              <span className={`text-xs px-1.5 py-0.5 rounded-full ${STATUS_LABELS[h.old_status]?.color}`}>{STATUS_LABELS[h.old_status]?.label}</span>
-                              <span className="text-xs text-gray-400">→</span>
-                              <span className={`text-xs px-1.5 py-0.5 rounded-full ${STATUS_LABELS[h.new_status]?.color}`}>{STATUS_LABELS[h.new_status]?.label}</span>
-                            </div>
-                            <p className="text-xs text-gray-400">{new Date(h.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
-                          </div>
-                          {h.note && <p className="text-xs text-gray-600 mt-1">💬 {h.note}</p>}
-                          {h.profiles?.full_name && <p className="text-xs text-gray-400 mt-1">👤 {h.profiles.full_name}</p>}
-                        </div>
-                      </div>
-                    ))}
+      {/* ── ÜYE DETAY ── */}
+      <Modal open={!!selectedMember} onClose={() => setSelectedMember(null)} title={selectedMember?.profiles?.full_name || 'Ekip Üyesi'} subtitle={selectedMember?.branches?.branch_name} size="lg">
+        {selectedMember && (
+          <div className="p-6">
+            <div className="flex gap-2 mb-5 border-b border-gray-100 pb-4">
+              {(['leads', 'hakedis', 'loglar'] as const).map(tab => (
+                <button key={tab} onClick={() => setMemberTab(tab)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${memberTab === tab ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}>
+                  {tab === 'leads' ? 'Leadler' : tab === 'hakedis' ? 'Hakediş' : 'Loglar'}
+                </button>
+              ))}
+            </div>
+            {memberTab === 'leads' && (
+              <div className="space-y-2">
+                {leads.filter(l => l.assigned_to === selectedMember.user_id).length === 0 ? (
+                  <p className="text-gray-400 text-sm text-center py-8">Lead atanmamış.</p>
+                ) : leads.filter(l => l.assigned_to === selectedMember.user_id).map(lead => (
+                  <div key={lead.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{lead.full_name}</p>
+                      <p className="text-xs text-gray-400">{lead.phone}</p>
+                    </div>
+                    <Badge status={lead.status} />
                   </div>
-                )}
+                ))}
               </div>
+            )}
+            {memberTab === 'hakedis' && (
+              <div className="space-y-3">
+                {(() => {
+                  const mLeads = leads.filter(l => l.assigned_to === selectedMember.user_id)
+                  const mSales = mLeads.filter(l => l.status === 'procedure_done')
+                  const mRevenue = mSales.reduce((s, l) => s + (l.procedure_amount || 0), 0)
+                  const commission = mRevenue * ((selectedMember.commission_rate || 0) / 100)
+                  return (
+                    <>
+                      {[
+                        { label: 'Toplam Lead', value: mLeads.length, color: 'text-blue-600' },
+                        { label: 'Toplam Satış', value: mSales.length, color: 'text-emerald-600' },
+                        { label: 'Toplam Ciro', value: `₺${mRevenue.toLocaleString()}`, color: 'text-gray-900' },
+                        { label: 'Prim Oranı', value: `%${selectedMember.commission_rate || 0}`, color: 'text-gray-900' },
+                        { label: 'Toplam Prim', value: `₺${commission.toLocaleString()}`, color: 'text-indigo-600', highlight: true },
+                      ].map(item => (
+                        <div key={item.label} className={`flex items-center justify-between px-4 py-3 rounded-xl ${item.highlight ? 'bg-indigo-50' : 'bg-gray-50'}`}>
+                          <p className="text-sm text-gray-600">{item.label}</p>
+                          <p className={`text-sm font-semibold ${item.color}`}>{item.value}</p>
+                        </div>
+                      ))}
+                    </>
+                  )
+                })()}
+              </div>
+            )}
+            {memberTab === 'loglar' && <p className="text-gray-400 text-sm text-center py-8">Loglar yakında eklenecek.</p>}
+          </div>
+        )}
+      </Modal>
 
-              {/* Güncelle butonu */}
-              <button
-                onClick={() => { setShowDetailModal(false); setSelectedLead(detailLead); setNewStatus(detailLead.status) }}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-medium">
-                Durumu Güncelle
-              </button>
+      {/* ── RAPOR ── */}
+      <Modal open={showReportPanel} onClose={() => setShowReportPanel(false)} title="Rapor İndir" subtitle="Filtreleri ayarlayın ve indirin">
+        <div className="p-6 space-y-5">
+          <Select label="Dönem" value={reportPeriod} onChange={(e: any) => setReportPeriod(e.target.value)}>
+            <option value="today">Bugün</option>
+            <option value="this_week">Bu Hafta</option>
+            <option value="this_month">Bu Ay</option>
+            <option value="last_month">Geçen Ay</option>
+            <option value="custom">Özel Tarih Aralığı</option>
+          </Select>
+          {reportPeriod === 'custom' && (
+            <div className="grid grid-cols-2 gap-3 bg-indigo-50 rounded-xl p-4">
+              <Input label="Başlangıç" type="date" value={reportStartDate} onChange={(e: any) => setReportStartDate(e.target.value)} />
+              <Input label="Bitiş" type="date" value={reportEndDate} onChange={(e: any) => setReportEndDate(e.target.value)} />
+            </div>
+          )}
+          <Select label="Durum Filtresi" value={reportStatus} onChange={(e: any) => setReportStatus(e.target.value)}>
+            <option value="all">Tüm Durumlar</option>
+            {Object.entries(STATUS_CONFIG).map(([k, v]: any) => <option key={k} value={k}>{v.label}</option>)}
+          </Select>
+          <div>
+            <p className="text-xs font-medium text-gray-500 mb-2">Format</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[{ key: 'excel', label: 'Excel', icon: '📗', ext: '.xlsx' }, { key: 'pdf', label: 'PDF', icon: '📕', ext: '.pdf' }].map(f => (
+                <button key={f.key} onClick={() => setReportFormat(f.key)}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${reportFormat === f.key ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <span className="text-xl block mb-1">{f.icon}</span>
+                  <p className={`text-sm font-semibold ${reportFormat === f.key ? 'text-indigo-700' : 'text-gray-700'}`}>{f.label}</p>
+                  <p className="text-xs text-gray-400">{f.ext} dosyası</p>
+                </button>
+              ))}
             </div>
           </div>
+          <div className="bg-gradient-to-r from-indigo-50 to-violet-50 rounded-xl p-4 flex items-center justify-between border border-indigo-100">
+            <div>
+              <p className="text-xs text-gray-500">Seçilen kriterlere göre</p>
+              <p className="text-xl font-bold text-indigo-600 mt-0.5">{getReportLeads().length} <span className="text-sm font-normal text-gray-500">lead</span></p>
+            </div>
+            <span className="text-3xl">{reportFormat === 'excel' ? '📗' : '📕'}</span>
+          </div>
+          <div className="flex gap-3">
+            <Btn variant="secondary" className="flex-1" onClick={() => setShowReportPanel(false)}>İptal</Btn>
+            <Btn variant="success" className="flex-1" onClick={reportFormat === 'excel' ? downloadExcel : downloadPDF} disabled={reportLoading || getReportLeads().length === 0}>
+              {reportLoading ? 'Hazırlanıyor...' : `${reportFormat === 'excel' ? '📗' : '📕'} İndir`}
+            </Btn>
+          </div>
         </div>
-      )}
+      </Modal>
+
     </div>
   )
 }
