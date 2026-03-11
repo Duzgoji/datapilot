@@ -37,6 +37,8 @@ export default function AgentPage() {
   const [newNote, setNewNote] = useState('')
   const [procedureAmount, setProcedureAmount] = useState('')
   const [saving, setSaving] = useState(false)
+  const [appointmentDate, setAppointmentDate] = useState('')
+  const [appointmentTime, setAppointmentTime] = useState('')
 
   const [filterStatus, setFilterStatus] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -88,6 +90,9 @@ export default function AgentPage() {
     if (newStatus === 'procedure_done' && procedureAmount) {
       updateData.procedure_amount = parseFloat(procedureAmount)
     }
+    if (newStatus === 'appointment_scheduled' && appointmentDate) {
+      updateData.appointment_at = appointmentTime ? `${appointmentDate}T${appointmentTime}` : appointmentDate
+    }
 
     await supabase.from('leads').update(updateData).eq('id', selectedLead.id)
 
@@ -104,6 +109,8 @@ export default function AgentPage() {
     setNewStatus('')
     setNewNote('')
     setProcedureAmount('')
+    setAppointmentDate('')
+    setAppointmentTime('')
     setSaving(false)
     loadData()
   }
@@ -405,6 +412,24 @@ export default function AgentPage() {
                   <input type="number" value={procedureAmount} onChange={e => setProcedureAmount(e.target.value)}
                     className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="0" />
+                </div>
+              )}
+
+              {newStatus === 'appointment_scheduled' && (
+                <div className="bg-purple-50 rounded-xl p-4 space-y-3">
+                  <p className="text-xs font-medium text-purple-700">📅 Randevu Tarihi</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Tarih</label>
+                      <input type="date" value={appointmentDate} onChange={e => setAppointmentDate(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Saat</label>
+                      <input type="time" value={appointmentTime} onChange={e => setAppointmentTime(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white" />
+                    </div>
+                  </div>
                 </div>
               )}
 
