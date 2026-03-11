@@ -164,6 +164,8 @@ export default function SuperAdminPage() {
     setCustomers(customersData || [])
     const { data: branchesData } = await supabase.from('branches').select('*')
     setBranches(branchesData || [])
+    console.log('branches:', branchesData?.map(b => b.owner_id))
+    console.log('customers:', customersData?.map(c => c.id))
     const { data: leadsData } = await supabase.from('leads').select('id, status, procedure_amount, created_at, branch_id, assigned_to')
     setLeads(leadsData || [])
     const { data: invoicesData } = await supabase.from('invoices').select('*, profiles(full_name, company_name)').order('created_at', { ascending: false })
