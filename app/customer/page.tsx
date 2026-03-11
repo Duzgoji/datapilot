@@ -662,7 +662,7 @@ export default function CustomerPage() {
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-gray-500">{filteredLeads.length} / {leads.length} lead</p>
                 <div className="flex gap-2">
-                  <button onClick={() => setShowReportPanel(!showReportPanel)}
+                  <button onClick={() => setShowReportPanel(true)}
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
                     📊 Rapor İndir
                   </button>
@@ -672,95 +672,6 @@ export default function CustomerPage() {
                   </button>
                 </div>
               </div>
-
-              {/* RAPOR PANELİ */}
-              {showReportPanel && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-gray-900">📊 Rapor İndir</h3>
-                    <button onClick={() => setShowReportPanel(false)} className="text-gray-400 hover:text-gray-600">✕</button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    {/* Dönem */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-2">Dönem</label>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {[
-                          { key: 'today', label: 'Bugün' },
-                          { key: 'this_week', label: 'Bu Hafta' },
-                          { key: 'this_month', label: 'Bu Ay' },
-                          { key: 'last_month', label: 'Geçen Ay' },
-                          { key: 'custom', label: 'Özel Tarih' },
-                        ].map(p => (
-                          <button key={p.key} onClick={() => setReportPeriod(p.key)}
-                            className={`py-2 rounded-lg text-xs font-medium border-2 transition-all ${
-                              reportPeriod === p.key ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                            }`}>
-                            {p.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Format + Durum */}
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-2">Format</label>
-                        <div className="flex gap-2">
-                          {[{ key: 'excel', label: '📗 Excel' }, { key: 'pdf', label: '📕 PDF' }].map(f => (
-                            <button key={f.key} onClick={() => setReportFormat(f.key)}
-                              className={`flex-1 py-2 rounded-lg text-xs font-medium border-2 transition-all ${
-                                reportFormat === f.key ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                              }`}>
-                              {f.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-2">Durum Filtresi</label>
-                        <select value={reportStatus} onChange={e => setReportStatus(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
-                          <option value="all">Tüm Durumlar</option>
-                          {Object.entries(STATUS_LABELS).map(([k, v]: any) => (
-                            <option key={k} value={k}>{v.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Özel tarih */}
-                  {reportPeriod === 'custom' && (
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Başlangıç</label>
-                        <input type="date" value={reportStartDate} onChange={e => setReportStartDate(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Bitiş</label>
-                        <input type="date" value={reportEndDate} onChange={e => setReportEndDate(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Önizleme */}
-                  <div className="bg-gray-50 rounded-lg px-4 py-2.5 mb-4 flex items-center justify-between">
-                    <span className="text-xs text-gray-500">Seçilen kriterlere göre</span>
-                    <span className="text-sm font-bold text-blue-600">{getReportLeads().length} lead</span>
-                  </div>
-
-                  <button
-                    onClick={reportFormat === 'excel' ? downloadExcel : downloadPDF}
-                    disabled={reportLoading}
-                    className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-2">
-                    {reportLoading ? 'Hazırlanıyor...' : `${reportFormat === 'excel' ? '📗 Excel' : '📕 PDF'} İndir (${getReportLeads().length} lead)`}
-                  </button>
-                </div>
-              )}
 
               {/* Arama */}
               <div className="relative mb-3">
@@ -1373,6 +1284,128 @@ export default function CustomerPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* RAPOR MODAL */}
+      {showReportPanel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowReportPanel(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10">
+
+            {/* Header */}
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">📊 Rapor İndir</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Leadleri filtrele ve indir</p>
+                </div>
+                <button onClick={() => setShowReportPanel(false)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600">✕</button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-5">
+
+              {/* Dönem */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Dönem</label>
+                <div className="relative">
+                  <select value={reportPeriod} onChange={e => setReportPeriod(e.target.value)}
+                    className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer pr-10">
+                    <option value="today">📅 Bugün</option>
+                    <option value="this_week">📅 Bu Hafta</option>
+                    <option value="this_month">📅 Bu Ay</option>
+                    <option value="last_month">📅 Geçen Ay</option>
+                    <option value="custom">🗓️ Özel Tarih Aralığı</option>
+                  </select>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">▼</span>
+                </div>
+              </div>
+
+              {/* Özel tarih aralığı */}
+              {reportPeriod === 'custom' && (
+                <div className="bg-blue-50 rounded-xl p-4 space-y-3">
+                  <p className="text-xs font-semibold text-blue-700">Tarih Aralığı Seç</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Başlangıç</label>
+                      <input type="date" value={reportStartDate} onChange={e => setReportStartDate(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-blue-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Bitiş</label>
+                      <input type="date" value={reportEndDate} onChange={e => setReportEndDate(e.target.value)}
+                        className="w-full px-3 py-2.5 border border-blue-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Durum */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Durum Filtresi</label>
+                <div className="relative">
+                  <select value={reportStatus} onChange={e => setReportStatus(e.target.value)}
+                    className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer pr-10">
+                    <option value="all">Tüm Durumlar</option>
+                    {Object.entries(STATUS_LABELS).map(([k, v]: any) => (
+                      <option key={k} value={k}>{v.label}</option>
+                    ))}
+                  </select>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">▼</span>
+                </div>
+              </div>
+
+              {/* Format */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Format</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { key: 'excel', label: 'Excel', icon: '📗', desc: '.xlsx dosyası', color: 'green' },
+                    { key: 'pdf', label: 'PDF', icon: '📕', desc: '.pdf dosyası', color: 'red' },
+                  ].map(f => (
+                    <button key={f.key} onClick={() => setReportFormat(f.key)}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        reportFormat === f.key
+                          ? f.color === 'green' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}>
+                      <span className="text-2xl block mb-1">{f.icon}</span>
+                      <p className={`text-sm font-bold ${reportFormat === f.key ? (f.color === 'green' ? 'text-green-700' : 'text-red-700') : 'text-gray-700'}`}>{f.label}</p>
+                      <p className="text-xs text-gray-400">{f.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Önizleme */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 flex items-center justify-between border border-blue-100">
+                <div>
+                  <p className="text-xs text-gray-500">Seçilen kriterlere göre</p>
+                  <p className="text-xl font-bold text-blue-600 mt-0.5">{getReportLeads().length} <span className="text-sm font-normal text-gray-500">lead bulundu</span></p>
+                </div>
+                <span className="text-3xl">{reportFormat === 'excel' ? '📗' : '📕'}</span>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 pb-6 flex gap-3">
+              <button onClick={() => setShowReportPanel(false)}
+                className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm hover:bg-gray-50">
+                İptal
+              </button>
+              <button
+                onClick={reportFormat === 'excel' ? downloadExcel : downloadPDF}
+                disabled={reportLoading || getReportLeads().length === 0}
+                className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+                {reportLoading ? (
+                  <><span className="animate-spin">⏳</span> Hazırlanıyor...</>
+                ) : (
+                  <>{reportFormat === 'excel' ? '📗' : '📕'} İndir</>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
