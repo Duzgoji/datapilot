@@ -817,7 +817,7 @@ export default function CustomerPage() {
           )}
 
           {/* ── META ── */}
-          {activeTab === 'meta-baglanti' && <MetaConnect />}
+          {activeTab === 'meta-baglanti' && profile?.id && <MetaConnect ownerId={profile.id} />}
           {activeTab === 'meta-kampanyalar' && <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center"><p className="text-gray-400 text-sm">Kampanyalar yakında gelecek.</p></div>}
           {activeTab === 'meta-leadformlar' && <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center"><p className="text-gray-400 text-sm">Lead formları yakında gelecek.</p></div>}
 
