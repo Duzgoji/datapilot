@@ -43,7 +43,7 @@ const menuStructure = [
 
 const STATUS_LABELS: any = {
   new: { label: 'Yeni', color: 'bg-blue-100 text-blue-700' },
-  called: { label: 'Arındı', color: 'bg-yellow-100 text-yellow-700' },
+  called: { label: 'Arandı', color: 'bg-yellow-100 text-yellow-700' },
   appointment_scheduled: { label: 'Randevu', color: 'bg-purple-100 text-purple-700' },
   procedure_done: { label: 'Satış', color: 'bg-green-100 text-green-700' },
   cancelled: { label: 'İptal', color: 'bg-red-100 text-red-700' },
@@ -110,6 +110,9 @@ export default function CustomerPage() {
   // Lead status update
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [newStatus, setNewStatus] = useState('')
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [detailLead, setDetailLead] = useState<any>(null)
+  const [leadHistory, setLeadHistory] = useState<any[]>([])
   const [statusNote, setStatusNote] = useState('')
   const [procedureType, setProcedureType] = useState('')
   const [procedureAmount, setProcedureAmount] = useState('')
@@ -259,6 +262,17 @@ export default function CustomerPage() {
   const handleAssignLead = async (leadId: string, userId: string) => {
     await supabase.from('leads').update({ assigned_to: userId }).eq('id', leadId)
     loadData()
+  }
+
+  const openDetailModal = async (lead: any) => {
+    setDetailLead(lead)
+    setShowDetailModal(true)
+    const { data } = await supabase
+      .from('lead_history')
+      .select('*, profiles(full_name)')
+      .eq('lead_id', lead.id)
+      .order('created_at', { ascending: false })
+    setLeadHistory(data || [])
   }
 
   const handleLogout = async () => {
@@ -662,7 +676,7 @@ export default function CustomerPage() {
                 {filteredLeads.length === 0 ? (
                   <div className="p-12 text-center"><span className="text-4xl mb-3 block">📭</span><p className="text-gray-500 text-sm">Henüz lead yok.</p></div>
                 ) : filteredLeads.map(lead => (
-                  <div key={lead.id} className="px-5 py-3.5 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
+                  <div key={lead.id} onClick={() => openDetailModal(lead)} className="px-5 py-3.5 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer">
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
@@ -672,6 +686,11 @@ export default function CustomerPage() {
                       </div>
                       <p className="text-xs text-gray-500">{lead.phone} {lead.email && `• ${lead.email}`}</p>
                       <p className="text-xs text-gray-400">{lead.lead_code} • {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+                      {lead.appointment_at && (
+                        <p className="text-xs text-purple-600 mt-0.5 font-medium">
+                          📅 {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_LABELS[lead.status]?.color}`}>
@@ -680,7 +699,7 @@ export default function CustomerPage() {
                       {lead.procedure_amount > 0 && (
                         <span className="text-xs font-bold text-green-600">₺{lead.procedure_amount.toLocaleString()}</span>
                       )}
-                      <button onClick={() => { setSelectedLead(lead); setNewStatus(lead.status) }}
+                      <button onClick={e => { e.stopPropagation(); setSelectedLead(lead); setNewStatus(lead.status) }}
                         className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">
                         Güncelle
                       </button>
@@ -1100,7 +1119,7 @@ export default function CustomerPage() {
                 <select value={newStatus} onChange={e => setNewStatus(e.target.value)} required
                   className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="">Seçin...</option>
-                  <option value="called">Arındı</option>
+                  <option value="called">Arandı</option>
                   <option value="appointment_scheduled">Randevu Alındı</option>
                   <option value="procedure_done">Satış Yapıldı</option>
                   <option value="cancelled">İptal</option>
@@ -1148,6 +1167,124 @@ export default function CustomerPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* LEAD DETAY MODAL */}
+      {showDetailModal && detailLead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowDetailModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg z-10 max-h-[90vh] overflow-y-auto">
+            
+            {/* Header */}
+            <div className="p-5 border-b border-gray-100 flex items-start justify-between sticky top-0 bg-white rounded-t-2xl">
+              <div>
+                <h3 className="font-bold text-gray-900 text-lg">{detailLead.full_name || 'İsimsiz'}</h3>
+                <p className="text-sm text-gray-500">{detailLead.lead_code}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${STATUS_LABELS[detailLead.status]?.color}`}>
+                  {STATUS_LABELS[detailLead.status]?.label}
+                </span>
+                <button onClick={() => setShowDetailModal(false)} className="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">✕</button>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-4">
+
+              {/* İletişim Bilgileri */}
+              <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">İletişim Bilgileri</p>
+                <div className="flex items-center gap-3">
+                  <span className="text-base">📞</span>
+                  <div>
+                    <p className="text-xs text-gray-400">Telefon</p>
+                    <p className="text-sm font-medium text-gray-900">{detailLead.phone}</p>
+                  </div>
+                </div>
+                {detailLead.email && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-base">✉️</span>
+                    <div>
+                      <p className="text-xs text-gray-400">E-posta</p>
+                      <p className="text-sm font-medium text-gray-900">{detailLead.email}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Lead Bilgileri */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-blue-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-500 mb-1">Kaynak</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${SOURCE_LABELS[detailLead.source]?.color || 'bg-gray-100 text-gray-600'}`}>
+                    {SOURCE_LABELS[detailLead.source]?.label || detailLead.source}
+                  </span>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-500 mb-1">Eklenme Tarihi</p>
+                  <p className="text-xs font-medium text-gray-900">{new Date(detailLead.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                </div>
+                {detailLead.procedure_amount > 0 && (
+                  <div className="bg-green-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-500 mb-1">İşlem Tutarı</p>
+                    <p className="text-sm font-bold text-green-600">₺{detailLead.procedure_amount.toLocaleString()}</p>
+                  </div>
+                )}
+                {detailLead.appointment_at && (
+                  <div className="bg-purple-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-500 mb-1">Randevu</p>
+                    <p className="text-xs font-medium text-purple-700">
+                      📅 {new Date(detailLead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Not */}
+              {detailLead.note && (
+                <div className="bg-yellow-50 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Not</p>
+                  <p className="text-sm text-gray-700">{detailLead.note}</p>
+                </div>
+              )}
+
+              {/* Geçmiş */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">İşlem Geçmişi</p>
+                {leadHistory.length === 0 ? (
+                  <p className="text-xs text-gray-400 text-center py-4">Henüz işlem yapılmamış.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {leadHistory.map((h, i) => (
+                      <div key={i} className="flex gap-3 items-start">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-2 flex-shrink-0" />
+                        <div className="flex-1 bg-gray-50 rounded-xl p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-xs px-1.5 py-0.5 rounded-full ${STATUS_LABELS[h.old_status]?.color}`}>{STATUS_LABELS[h.old_status]?.label}</span>
+                              <span className="text-xs text-gray-400">→</span>
+                              <span className={`text-xs px-1.5 py-0.5 rounded-full ${STATUS_LABELS[h.new_status]?.color}`}>{STATUS_LABELS[h.new_status]?.label}</span>
+                            </div>
+                            <p className="text-xs text-gray-400">{new Date(h.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                          </div>
+                          {h.note && <p className="text-xs text-gray-600 mt-1">💬 {h.note}</p>}
+                          {h.profiles?.full_name && <p className="text-xs text-gray-400 mt-1">👤 {h.profiles.full_name}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Güncelle butonu */}
+              <button
+                onClick={() => { setShowDetailModal(false); setSelectedLead(detailLead); setNewStatus(detailLead.status) }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-medium">
+                Durumu Güncelle
+              </button>
+            </div>
           </div>
         </div>
       )}
