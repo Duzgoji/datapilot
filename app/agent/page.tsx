@@ -94,6 +94,8 @@ export default function AgentPage() {
       }
       if (newStatus === 'appointment_scheduled' && appointmentDate) {
         updateData.appointment_at = appointmentTime ? `${appointmentDate}T${appointmentTime}` : appointmentDate
+      } else if (newStatus !== 'appointment_scheduled') {
+        updateData.appointment_at = null
       }
 
       const { error } = await supabase.from('leads').update(updateData).eq('id', selectedLead.id)
