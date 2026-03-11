@@ -86,24 +86,29 @@ export default function AgentPage() {
     e.preventDefault()
     setSaving(true)
 
-    const updateData: any = { status: newStatus }
-    if (newNote) updateData.note = newNote
-    if (newStatus === 'procedure_done' && procedureAmount) {
-      updateData.procedure_amount = parseFloat(procedureAmount)
-    }
-    if (newStatus === 'appointment_scheduled' && appointmentDate) {
-      updateData.appointment_at = appointmentTime ? `${appointmentDate}T${appointmentTime}` : appointmentDate
-    }
+    try {
+      const updateData: any = { status: newStatus }
+      if (newNote) updateData.note = newNote
+      if (newStatus === 'procedure_done' && procedureAmount) {
+        updateData.procedure_amount = parseFloat(procedureAmount)
+      }
+      if (newStatus === 'appointment_scheduled' && appointmentDate) {
+        updateData.appointment_at = appointmentTime ? `${appointmentDate}T${appointmentTime}` : appointmentDate
+      }
 
-    await supabase.from('leads').update(updateData).eq('id', selectedLead.id)
+      const { error } = await supabase.from('leads').update(updateData).eq('id', selectedLead.id)
+      if (error) throw error
 
-    await supabase.from('lead_history').insert({
-      lead_id: selectedLead.id,
-      changed_by: profile.id,
-      old_status: selectedLead.status,
-      new_status: newStatus,
-      note: newNote || null,
-    })
+      await supabase.from('lead_history').insert({
+        lead_id: selectedLead.id,
+        changed_by: profile.id,
+        old_status: selectedLead.status,
+        new_status: newStatus,
+        note: newNote || null,
+      })
+    } catch (err) {
+      console.error('Güncelleme hatası:', err)
+    }
 
     setShowUpdateModal(false)
     setSelectedLead(null)
@@ -306,42 +311,48 @@ export default function AgentPage() {
             </div>
 
             {/* Durum filtreleri */}
-            <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
-              {[{ key: 'all', label: 'Tümü' }, ...Object.entries(STATUS_LABELS).map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => setFilterStatus(f.key)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                    filterStatus === f.key
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  {f.label} ({f.key === 'all' ? leads.length : leads.filter(l => l.status === f.key).length})
-                </button>
-              ))}
+            <div className="mb-3">
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Durum</p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {[{ key: 'all', label: 'Tümü' }, ...Object.entries(STATUS_LABELS).map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
+                  <button
+                    key={f.key}
+                    onClick={() => setFilterStatus(f.key)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                      filterStatus === f.key
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {f.label} ({f.key === 'all' ? leads.length : leads.filter(l => l.status === f.key).length})
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Randevu tarih filtreleri */}
-            <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-              {[
-                { key: 'all', label: '📅 Tüm Tarihler' },
-                { key: 'today', label: '🔴 Bugün', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d.getTime() === today.getTime() }).length },
-                { key: 'this_week', label: '🟡 Bu Hafta', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d >= today && d <= weekEnd }).length },
-                { key: 'overdue', label: '⚠️ Geçmiş', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d < today }).length },
-              ].map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => setFilterDate(f.key)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                    filterDate === f.key
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  {f.label}{f.count !== undefined ? ` (${f.count})` : ''}
-                </button>
-              ))}
+            <div className="mb-4">
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Randevu Tarihi</p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {[
+                  { key: 'all', label: 'Tümü' },
+                  { key: 'today', label: '🔴 Bugün', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d.getTime() === today.getTime() }).length },
+                  { key: 'this_week', label: '🟡 Bu Hafta', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d >= today && d <= weekEnd }).length },
+                  { key: 'overdue', label: '⚠️ Geçmiş', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d < today }).length },
+                ].map(f => (
+                  <button
+                    key={f.key}
+                    onClick={() => setFilterDate(f.key)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                      filterDate === f.key
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {f.label}{f.count !== undefined ? ` (${f.count})` : ''}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Sonuç sayısı */}
