@@ -144,8 +144,10 @@ export default function CustomerPage() {
 
     if (branchesData && branchesData.length > 0) {
       const branchIds = branchesData.map((b: any) => b.id)
-      const { data: leadsData } = await supabase
-        .from('leads').select('*, profiles(full_name)').in('branch_id', branchIds).order('created_at', { ascending: false })
+      const { data: leadsData, error: leadsError } = await supabase
+        .from('leads').select('*').in('branch_id', branchIds).order('created_at', { ascending: false })
+      if (leadsError) console.error('Leads error:', leadsError)
+      console.log('branchIds:', branchIds, 'leads:', leadsData?.length)
       setLeads(leadsData || [])
 
       const { data: membersData } = await supabase
