@@ -176,6 +176,7 @@ export default function SuperAdminPage() {
   }
 
   const teamMembersBelongTo = (userId: string, branchIds: string[]) => {
+    console.log('teamMembers count:', teamMembers.length, 'userId:', userId, 'branchIds:', branchIds)
     return teamMembers.some(tm => tm.user_id === userId && branchIds.includes(tm.branch_id))
   }
 
