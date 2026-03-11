@@ -551,7 +551,7 @@ export default function SuperAdminPage() {
               <div className="grid grid-cols-4 gap-3">
                 {[
                   { label: 'Toplam Firma', value: customers.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                  { label: 'Satışçı', value: allUsers.filter(u => u.role === 'team').length, color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'Satışçı', value: allUsers.filter(u => ['team','agent'].includes(u.role)).length, color: 'text-blue-600', bg: 'bg-blue-50' },
                   { label: 'Aktif', value: allUsers.filter(u => u.is_active !== false).length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                   { label: 'Pasif', value: allUsers.filter(u => u.is_active === false).length, color: 'text-gray-500', bg: 'bg-gray-100' },
                 ].map(c => (
@@ -590,7 +590,7 @@ export default function SuperAdminPage() {
                   const cBranches = branches.filter(b => b.owner_id === customer.id)
                   const branchIds = cBranches.map(b => b.id)
                   const cMembers = allUsers.filter(u =>
-                    u.role === 'team' && teamMembersBelongTo(u.id, branchIds)
+                    ['team', 'agent'].includes(u.role) && teamMembersBelongTo(u.id, branchIds)
                   )
                   const cLeads = leads.filter(l => branchIds.includes(l.branch_id))
                   const cSales = cLeads.filter(l => l.status === 'procedure_done')
@@ -653,7 +653,7 @@ export default function SuperAdminPage() {
             const cLeads = leads.filter((l: any) => branchIds.includes(l.branch_id))
             const cSales = cLeads.filter((l: any) => l.status === 'procedure_done')
             const cRevenue = cSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
-            const cMembers = allUsers.filter(u => u.role === 'team' && teamMembersBelongTo(u.id, branchIds))
+            const cMembers = allUsers.filter(u => ['team', 'agent'].includes(u.role) && teamMembersBelongTo(u.id, branchIds))
 
             const filteredMembers = firmaUserFilter === 'all' ? cMembers
               : firmaUserFilter === 'active' ? cMembers.filter(m => m.is_active !== false)
