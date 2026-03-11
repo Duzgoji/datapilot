@@ -69,6 +69,8 @@ export default function CustomerPage() {
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['leadler', 'ekip'])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [filterDate, setFilterDate] = useState('all')
   const [saving, setSaving] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const profileMenuRef = useRef<HTMLDivElement>(null)
@@ -278,10 +280,30 @@ export default function CustomerPage() {
   const totalSales = leads.filter(l => l.status === 'procedure_done').length
   const totalRevenue = leads.filter(l => l.status === 'procedure_done').reduce((sum, l) => sum + (l.procedure_amount || 0), 0)
   const conversionRate = leads.length > 0 ? ((totalSales / leads.length) * 100).toFixed(1) : '0'
-  const filteredLeads = leads.filter(l =>
-    l.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    l.phone?.includes(searchQuery)
-  )
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const weekEnd = new Date(today)
+  weekEnd.setDate(today.getDate() + 7)
+
+  const filteredLeads = leads.filter(l => {
+    const matchesSearch =
+      l.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      l.phone?.includes(searchQuery) ||
+      l.lead_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      l.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesStatus = filterStatus === 'all' || l.status === filterStatus
+    let matchesDate = true
+    if (filterDate !== 'all' && l.appointment_at) {
+      const d = new Date(l.appointment_at)
+      d.setHours(0, 0, 0, 0)
+      if (filterDate === 'today') matchesDate = d.getTime() === today.getTime()
+      else if (filterDate === 'this_week') matchesDate = d >= today && d <= weekEnd
+      else if (filterDate === 'overdue') matchesDate = d < today
+    } else if (filterDate !== 'all') {
+      matchesDate = false
+    }
+    return matchesSearch && matchesStatus && matchesDate
+  })
 
   if (loading) return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -509,11 +531,60 @@ export default function CustomerPage() {
               </div>
 
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-gray-500">{leads.length} lead</p>
+                <p className="text-sm text-gray-500">{filteredLeads.length} / {leads.length} lead</p>
                 <button onClick={() => setShowAddLead(!showAddLead)}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
                   + Manuel Lead Ekle
                 </button>
+              </div>
+
+              {/* Arama */}
+              <div className="relative mb-3">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+                <input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="İsim, telefon, lead kodu ara..."
+                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">✕</button>
+                )}
+              </div>
+
+              {/* Durum filtreleri */}
+              <div className="mb-3">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Durum</p>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {[{ key: 'all', label: 'Tümü' }, ...Object.entries(STATUS_LABELS).map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
+                    <button key={f.key} onClick={() => setFilterStatus(f.key)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                        filterStatus === f.key ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                      }`}>
+                      {f.label} ({f.key === 'all' ? leads.length : leads.filter(l => l.status === f.key).length})
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Randevu tarihi filtreleri */}
+              <div className="mb-4">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Randevu Tarihi</p>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {[
+                    { key: 'all', label: 'Tümü' },
+                    { key: 'today', label: '🔴 Bugün', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d.getTime() === today.getTime() }).length },
+                    { key: 'this_week', label: '🟡 Bu Hafta', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d >= today && d <= weekEnd }).length },
+                    { key: 'overdue', label: '⚠️ Geçmiş', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d < today }).length },
+                  ].map(f => (
+                    <button key={f.key} onClick={() => setFilterDate(f.key)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                        filterDate === f.key ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                      }`}>
+                      {f.label}{f.count !== undefined ? ` (${f.count})` : ''}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {showAddLead && (
