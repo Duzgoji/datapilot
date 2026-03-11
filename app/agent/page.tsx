@@ -39,6 +39,7 @@ export default function AgentPage() {
   const [saving, setSaving] = useState(false)
 
   const [filterStatus, setFilterStatus] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     loadData()
@@ -61,7 +62,6 @@ export default function AgentPage() {
     }
     setProfile(profileData)
 
-    // team_members kaydını bul
     const { data: memberData } = await supabase
       .from('team_members')
       .select('*, branches(branch_name, owner_id)')
@@ -69,7 +69,6 @@ export default function AgentPage() {
       .single()
     setTeamMember(memberData)
 
-    // Bu agent'a atanmış leadler
     const { data: leadsData } = await supabase
       .from('leads')
       .select('*')
@@ -92,7 +91,6 @@ export default function AgentPage() {
 
     await supabase.from('leads').update(updateData).eq('id', selectedLead.id)
 
-    // lead_history kaydı ekle
     await supabase.from('lead_history').insert({
       lead_id: selectedLead.id,
       changed_by: profile.id,
@@ -123,7 +121,16 @@ export default function AgentPage() {
     router.push('/login')
   }
 
-  const filteredLeads = filterStatus === 'all' ? leads : leads.filter(l => l.status === filterStatus)
+  const filteredLeads = leads.filter(lead => {
+    const matchesStatus = filterStatus === 'all' || lead.status === filterStatus
+    const q = searchQuery.toLowerCase()
+    const matchesSearch = !q ||
+      lead.full_name?.toLowerCase().includes(q) ||
+      lead.phone?.includes(q) ||
+      lead.lead_code?.toLowerCase().includes(q) ||
+      lead.email?.toLowerCase().includes(q)
+    return matchesStatus && matchesSearch
+  })
 
   const totalSales = leads.filter(l => l.status === 'procedure_done').length
   const totalRevenue = leads.filter(l => l.status === 'procedure_done').reduce((sum, l) => sum + (l.procedure_amount || 0), 0)
@@ -142,150 +149,94 @@ export default function AgentPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 pb-20">
 
       {/* TOP BAR */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shadow-sm sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="DataPilot" className="h-7 w-auto" />
           <div className="h-5 w-px bg-gray-200" />
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 truncate max-w-[140px]">
             {teamMember?.branches?.branch_name || 'Şube'}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="relative" ref={profileMenuRef}>
-            <button
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl px-3 py-1.5 transition-colors"
-            >
-              <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
-              </div>
-              <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate">{profile?.full_name}</span>
-              <span className="text-gray-400 text-xs">{showProfileMenu ? '▲' : '▼'}</span>
-            </button>
+        <div className="relative" ref={profileMenuRef}>
+          <button
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl px-3 py-1.5 transition-colors"
+          >
+            <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
+            </div>
+            <span className="text-sm font-medium text-gray-700 max-w-[100px] truncate hidden sm:block">{profile?.full_name}</span>
+            <span className="text-gray-400 text-xs">{showProfileMenu ? '▲' : '▼'}</span>
+          </button>
 
-            {showProfileMenu && (
-              <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <p className="font-semibold text-gray-900 text-sm">{profile?.full_name}</p>
-                  <p className="text-xs text-gray-500 truncate">{profile?.email}</p>
-                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full mt-1 inline-block">
-                    Satışçı
-                  </span>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                >
-                  🚪 Çıkış Yap
-                </button>
+          {showProfileMenu && (
+            <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+              <div className="px-4 py-3 border-b border-gray-100">
+                <p className="font-semibold text-gray-900 text-sm">{profile?.full_name}</p>
+                <p className="text-xs text-gray-500 truncate">{profile?.email}</p>
+                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full mt-1 inline-block">Satışçı</span>
               </div>
-            )}
-          </div>
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+              >
+                🚪 Çıkış Yap
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* SEKMELER */}
-      <div className="bg-white border-b border-gray-200 px-6">
-        <div className="flex gap-1">
-          {[
-            { key: 'dashboard', label: '📊 Dashboard' },
-            { key: 'leadler', label: '📋 Leadlerim' },
-          ].map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.key
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="p-4 max-w-2xl mx-auto">
 
         {/* DASHBOARD */}
         {activeTab === 'dashboard' && (
           <>
-            {/* Hoşgeldin */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-6 mb-6 text-white">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-5 mb-5 text-white">
               <p className="text-blue-200 text-sm mb-1">Merhaba,</p>
-              <h2 className="text-2xl font-bold mb-1">{profile?.full_name} 👋</h2>
+              <h2 className="text-xl font-bold mb-1">{profile?.full_name} 👋</h2>
               <p className="text-blue-200 text-sm">
                 {teamMember?.branches?.branch_name} • %{teamMember?.commission_rate || 0} prim oranı
               </p>
             </div>
 
-            {/* İstatistik kartları */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-3 mb-5">
               {[
                 { label: 'Toplam Lead', value: leads.length, icon: '📋', color: 'text-blue-600', bg: 'bg-blue-50' },
                 { label: 'Satış', value: totalSales, icon: '✅', color: 'text-green-600', bg: 'bg-green-50' },
                 { label: 'Dönüşüm', value: `%${conversionRate}`, icon: '📈', color: 'text-purple-600', bg: 'bg-purple-50' },
                 { label: 'Toplam Prim', value: `₺${commission.toLocaleString()}`, icon: '💰', color: 'text-amber-600', bg: 'bg-amber-50' },
               ].map(card => (
-                <div key={card.label} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-                  <div className={`w-10 h-10 ${card.bg} rounded-xl flex items-center justify-center text-xl mb-3`}>{card.icon}</div>
-                  <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
-                  <p className="text-xs text-gray-500 mt-1">{card.label}</p>
+                <div key={card.label} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                  <div className={`w-9 h-9 ${card.bg} rounded-xl flex items-center justify-center text-lg mb-2`}>{card.icon}</div>
+                  <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{card.label}</p>
                 </div>
               ))}
             </div>
 
-            {/* Durum dağılımı */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-                <h3 className="font-bold text-gray-900 text-sm mb-4">Lead Durumları</h3>
-                <div className="space-y-2">
-                  {Object.entries(STATUS_LABELS).map(([key, val]: any) => {
-                    const count = leads.filter(l => l.status === key).length
-                    const pct = leads.length > 0 ? Math.round((count / leads.length) * 100) : 0
-                    return (
-                      <div key={key}>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-gray-600">{val.label}</span>
-                          <span className="font-medium text-gray-900">{count}</span>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-1.5">
-                          <div
-                            className="bg-blue-500 h-1.5 rounded-full transition-all"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-                    )
-                  })}
+            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 mb-5">
+              <h3 className="font-bold text-gray-900 text-sm mb-4">Prim Özeti</h3>
+              <div className="space-y-2">
+                <div className="bg-green-50 rounded-xl p-3 flex justify-between items-center">
+                  <span className="text-xs text-gray-600">Toplam Ciro</span>
+                  <span className="text-sm font-bold text-green-600">₺{totalRevenue.toLocaleString()}</span>
                 </div>
-              </div>
-
-              <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-                <h3 className="font-bold text-gray-900 text-sm mb-4">Prim Özeti</h3>
-                <div className="space-y-3">
-                  <div className="bg-green-50 rounded-xl p-3 flex justify-between items-center">
-                    <span className="text-xs text-gray-600">Toplam Ciro</span>
-                    <span className="text-sm font-bold text-green-600">₺{totalRevenue.toLocaleString()}</span>
-                  </div>
-                  <div className="bg-amber-50 rounded-xl p-3 flex justify-between items-center">
-                    <span className="text-xs text-gray-600">Prim Oranı</span>
-                    <span className="text-sm font-bold text-amber-600">%{teamMember?.commission_rate || 0}</span>
-                  </div>
-                  <div className="bg-blue-50 rounded-xl p-3 flex justify-between items-center">
-                    <span className="text-xs text-gray-600">Toplam Prim</span>
-                    <span className="text-sm font-bold text-blue-600">₺{commission.toLocaleString()}</span>
-                  </div>
+                <div className="bg-amber-50 rounded-xl p-3 flex justify-between items-center">
+                  <span className="text-xs text-gray-600">Prim Oranı</span>
+                  <span className="text-sm font-bold text-amber-600">%{teamMember?.commission_rate || 0}</span>
+                </div>
+                <div className="bg-blue-50 rounded-xl p-3 flex justify-between items-center">
+                  <span className="text-xs text-gray-600">Toplam Prim</span>
+                  <span className="text-sm font-bold text-blue-600">₺{commission.toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
-            {/* Son leadler */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="p-4 border-b border-gray-100 flex items-center justify-between">
                 <h3 className="font-bold text-gray-900 text-sm">Son Leadler</h3>
@@ -297,18 +248,11 @@ export default function AgentPage() {
                   <p className="text-gray-500 text-sm">Henüz lead atanmadı.</p>
                 </div>
               ) : leads.slice(0, 5).map(lead => (
-                <div key={lead.id}
-                  onClick={() => openUpdateModal(lead)}
-                  className="px-5 py-3.5 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer"
-                >
+                <div key={lead.id} onClick={() => openUpdateModal(lead)}
+                  className="px-4 py-3.5 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${SOURCE_LABELS[lead.source]?.color || 'bg-gray-100 text-gray-500'}`}>
-                        {SOURCE_LABELS[lead.source]?.label || lead.source}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500">{lead.phone} • {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+                    <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
+                    <p className="text-xs text-gray-500">{lead.phone}</p>
                   </div>
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_LABELS[lead.status]?.color}`}>
                     {STATUS_LABELS[lead.status]?.label}
@@ -322,58 +266,77 @@ export default function AgentPage() {
         {/* LEADLER */}
         {activeTab === 'leadler' && (
           <>
-            {/* Filtre */}
-            <div className="flex gap-2 mb-4 flex-wrap">
+            {/* Arama */}
+            <div className="relative mb-3">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+              <input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="İsim, telefon veya lead kodu ara..."
+                className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">✕</button>
+              )}
+            </div>
+
+            {/* Durum filtreleri */}
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
               {[{ key: 'all', label: 'Tümü' }, ...Object.entries(STATUS_LABELS).map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
                 <button
                   key={f.key}
                   onClick={() => setFilterStatus(f.key)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
                     filterStatus === f.key
                       ? 'bg-blue-600 text-white'
                       : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                   }`}
                 >
-                  {f.label} {f.key === 'all' ? `(${leads.length})` : `(${leads.filter(l => l.status === f.key).length})`}
+                  {f.label} ({f.key === 'all' ? leads.length : leads.filter(l => l.status === f.key).length})
                 </button>
               ))}
             </div>
 
+            {/* Sonuç sayısı */}
+            {(searchQuery || filterStatus !== 'all') && (
+              <p className="text-xs text-gray-500 mb-3">{filteredLeads.length} sonuç bulundu</p>
+            )}
+
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               {filteredLeads.length === 0 ? (
                 <div className="p-12 text-center">
-                  <span className="text-4xl mb-3 block">📭</span>
-                  <p className="text-gray-500 text-sm">Bu filtrede lead yok.</p>
+                  <span className="text-4xl mb-3 block">🔎</span>
+                  <p className="text-gray-500 text-sm">Sonuç bulunamadı.</p>
+                  {(searchQuery || filterStatus !== 'all') && (
+                    <button onClick={() => { setSearchQuery(''); setFilterStatus('all') }}
+                      className="mt-3 text-xs text-blue-600 hover:underline">Filtreleri temizle</button>
+                  )}
                 </div>
               ) : filteredLeads.map(lead => (
-                <div
-                  key={lead.id}
-                  onClick={() => openUpdateModal(lead)}
-                  className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${SOURCE_LABELS[lead.source]?.color || 'bg-gray-100 text-gray-500'}`}>
+                <div key={lead.id} onClick={() => openUpdateModal(lead)}
+                  className="px-4 py-4 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="font-semibold text-gray-900 text-sm truncate">{lead.full_name || 'İsimsiz'}</p>
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${SOURCE_LABELS[lead.source]?.color || 'bg-gray-100 text-gray-500'}`}>
                         {SOURCE_LABELS[lead.source]?.label || lead.source}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500">{lead.phone}{lead.email && ` • ${lead.email}`}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{lead.lead_code} • {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
                     {lead.note && (
-                      <p className="text-xs text-gray-500 mt-1 bg-gray-50 rounded px-2 py-1 inline-block">
-                        💬 {lead.note.length > 60 ? lead.note.slice(0, 60) + '...' : lead.note}
+                      <p className="text-xs text-gray-500 mt-1.5 bg-gray-50 rounded-lg px-2 py-1">
+                        💬 {lead.note.length > 50 ? lead.note.slice(0, 50) + '...' : lead.note}
                       </p>
                     )}
                   </div>
-                  <div className="flex flex-col items-end gap-1 ml-3">
+                  <div className="flex flex-col items-end gap-1 ml-3 flex-shrink-0">
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_LABELS[lead.status]?.color}`}>
                       {STATUS_LABELS[lead.status]?.label}
                     </span>
                     {lead.procedure_amount > 0 && (
                       <span className="text-xs font-bold text-green-600">₺{lead.procedure_amount.toLocaleString()}</span>
                     )}
-                    <span className="text-xs text-blue-500">Güncelle →</span>
                   </div>
                 </div>
               ))}
@@ -382,11 +345,37 @@ export default function AgentPage() {
         )}
       </div>
 
+      {/* BOTTOM NAVIGATION */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10 shadow-lg">
+        <div className="flex max-w-2xl mx-auto">
+          {[
+            { key: 'dashboard', label: 'Dashboard', icon: '📊' },
+            { key: 'leadler', label: 'Leadlerim', icon: '📋' },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex-1 flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors ${
+                activeTab === tab.key ? 'text-blue-600' : 'text-gray-400'
+              }`}
+            >
+              <span className="text-xl">{tab.icon}</span>
+              <span>{tab.label}</span>
+              {tab.key === 'leadler' && leads.filter(l => l.status === 'new').length > 0 && (
+                <span className="absolute top-2 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {leads.filter(l => l.status === 'new').length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* DURUM GÜNCELLEME MODAL */}
       {showUpdateModal && selectedLead && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowUpdateModal(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10">
+          <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md z-10">
             <div className="p-5 border-b border-gray-100 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-gray-900">{selectedLead.full_name || 'İsimsiz'}</h3>
@@ -397,19 +386,13 @@ export default function AgentPage() {
 
             <form onSubmit={handleUpdateLead} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2">Durum</label>
+                <label className="block text-xs font-medium text-gray-600 mb-2">Durum Güncelle</label>
                 <div className="grid grid-cols-2 gap-2">
                   {Object.entries(STATUS_LABELS).map(([key, val]: any) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setNewStatus(key)}
-                      className={`py-2 rounded-xl text-xs font-medium border-2 transition-all ${
-                        newStatus === key
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                      }`}
-                    >
+                    <button key={key} type="button" onClick={() => setNewStatus(key)}
+                      className={`py-2.5 rounded-xl text-xs font-medium border-2 transition-all ${
+                        newStatus === key ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                      }`}>
                       {val.label}
                     </button>
                   ))}
@@ -419,40 +402,26 @@ export default function AgentPage() {
               {newStatus === 'procedure_done' && (
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">İşlem Tutarı (₺)</label>
-                  <input
-                    type="number"
-                    value={procedureAmount}
-                    onChange={e => setProcedureAmount(e.target.value)}
+                  <input type="number" value={procedureAmount} onChange={e => setProcedureAmount(e.target.value)}
                     className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0"
-                  />
+                    placeholder="0" />
                 </div>
               )}
 
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Not</label>
-                <textarea
-                  value={newNote}
-                  onChange={e => setNewNote(e.target.value)}
-                  rows={3}
+                <textarea value={newNote} onChange={e => setNewNote(e.target.value)} rows={3}
                   className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Görüşme notu, hatırlatma..."
-                />
+                  placeholder="Görüşme notu..." />
               </div>
 
-              <div className="flex gap-3 pt-1">
-                <button
-                  type="submit"
-                  disabled={saving || !newStatus}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium"
-                >
+              <div className="flex gap-3">
+                <button type="submit" disabled={saving || !newStatus}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-medium">
                   {saving ? 'Kaydediliyor...' : 'Kaydet'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowUpdateModal(false)}
-                  className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm hover:bg-gray-50"
-                >
+                <button type="button" onClick={() => setShowUpdateModal(false)}
+                  className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm hover:bg-gray-50">
                   İptal
                 </button>
               </div>
