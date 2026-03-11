@@ -125,10 +125,13 @@ export default function SuperAdminPage() {
   const [leads, setLeads] = useState<any[]>([])
   const [invoices, setInvoices] = useState<any[]>([])
   const [allUsers, setAllUsers] = useState<any[]>([])
+  const [teamMembers, setTeamMembers] = useState<any[]>([])
 
   const [showAddCustomer, setShowAddCustomer] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
   const [showCustomerDetail, setShowCustomerDetail] = useState(false)
+  const [selectedFirmaUser, setSelectedFirmaUser] = useState<any>(null)
+  const [firmaUserFilter, setFirmaUserFilter] = useState('all')
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -161,13 +164,19 @@ export default function SuperAdminPage() {
     setCustomers(customersData || [])
     const { data: branchesData } = await supabase.from('branches').select('*')
     setBranches(branchesData || [])
-    const { data: leadsData } = await supabase.from('leads').select('id, status, procedure_amount, created_at')
+    const { data: leadsData } = await supabase.from('leads').select('id, status, procedure_amount, created_at, branch_id, assigned_to')
     setLeads(leadsData || [])
     const { data: invoicesData } = await supabase.from('invoices').select('*, profiles(full_name, company_name)').order('created_at', { ascending: false })
     setInvoices(invoicesData || [])
     const { data: usersData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
     setAllUsers(usersData || [])
+    const { data: teamMembersData } = await supabase.from('team_members').select('user_id, branch_id')
+    setTeamMembers(teamMembersData || [])
     setLoading(false)
+  }
+
+  const teamMembersBelongTo = (userId: string, branchIds: string[]) => {
+    return teamMembers.some(tm => tm.user_id === userId && branchIds.includes(tm.branch_id))
   }
 
   const toggleMenu = (key: string) => setExpandedMenus(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
@@ -535,36 +544,260 @@ export default function SuperAdminPage() {
             </div>
           )}
 
-          {/* ── KULLANICILAR ── */}
-          {activeTab === 'kullanici-listesi' && (
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100">
-                <h3 className="font-semibold text-gray-900 text-sm">{allUsers.length} kullanıcı</h3>
+          {/* ── KULLANICILAR HİYERARŞİ ── */}
+          {activeTab === 'kullanici-listesi' && !selectedFirmaUser && (
+            <div className="space-y-3">
+              {/* Özet bar */}
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { label: 'Toplam Firma', value: customers.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                  { label: 'Satışçı', value: allUsers.filter(u => u.role === 'team').length, color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'Aktif', value: allUsers.filter(u => u.is_active !== false).length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                  { label: 'Pasif', value: allUsers.filter(u => u.is_active === false).length, color: 'text-gray-500', bg: 'bg-gray-100' },
+                ].map(c => (
+                  <div key={c.label} className="bg-white rounded-xl border border-gray-100 px-4 py-3">
+                    <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{c.label}</p>
+                  </div>
+                ))}
               </div>
-              {allUsers.map((u, i) => (
-                <div key={u.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < allUsers.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                  <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-semibold text-gray-500">{(u.full_name || u.email || 'U').charAt(0)}</span>
+
+              {/* Admin kullanıcılar */}
+              {allUsers.filter(u => u.role === 'super_admin').length > 0 && (
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  <div className="px-5 py-3 bg-rose-50 border-b border-rose-100 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-rose-400 rounded-full" />
+                    <p className="text-xs font-semibold text-rose-700">Platform Adminleri</p>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">{u.full_name || '-'}</p>
-                    <p className="text-xs text-gray-400">{u.email}</p>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      u.role === 'super_admin' ? 'bg-rose-50 text-rose-600' :
-                      u.role === 'customer' ? 'bg-indigo-50 text-indigo-600' :
-                      u.role === 'team' ? 'bg-blue-50 text-blue-600' :
-                      'bg-gray-100 text-gray-500'
-                    }`}>{u.role === 'team' ? 'Satışçı' : u.role === 'customer' ? 'Müşteri' : u.role === 'super_admin' ? 'Admin' : u.role}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${u.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
-                      {u.is_active !== false ? 'Aktif' : 'Pasif'}
-                    </span>
-                  </div>
+                  {allUsers.filter(u => u.role === 'super_admin').map((u, i, arr) => (
+                    <div key={u.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                      <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-rose-600 text-xs font-bold">{(u.full_name || u.email || 'A').charAt(0)}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900">{u.full_name || '-'}</p>
+                        <p className="text-xs text-gray-400">{u.email}</p>
+                      </div>
+                      <span className="text-xs bg-rose-50 text-rose-600 font-medium px-2 py-0.5 rounded-full">Super Admin</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+
+              {/* Firmalar + bağlı kullanıcılar */}
+              <div className="space-y-2">
+                {customers.map(customer => {
+                  const cBranches = branches.filter(b => b.owner_id === customer.id)
+                  const branchIds = cBranches.map(b => b.id)
+                  const cMembers = allUsers.filter(u =>
+                    u.role === 'team' && teamMembersBelongTo(u.id, branchIds)
+                  )
+                  const cLeads = leads.filter(l => branchIds.includes(l.branch_id))
+                  const cSales = cLeads.filter(l => l.status === 'procedure_done')
+                  const cRevenue = cSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+
+                  return (
+                    <div key={customer.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                      {/* Firma header — tıklanabilir */}
+                      <button
+                        onClick={() => setSelectedFirmaUser(customer)}
+                        className="w-full px-5 py-4 flex items-center gap-4 hover:bg-gray-50/70 transition-colors text-left">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center flex-shrink-0">
+                          <span className="text-indigo-600 font-bold">{(customer.company_name || customer.full_name || 'F').charAt(0)}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="text-sm font-semibold text-gray-900">{customer.company_name || customer.full_name}</p>
+                            {customer.sector && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{customer.sector}</span>}
+                          </div>
+                          <p className="text-xs text-gray-400">{customer.email}</p>
+                          <div className="flex gap-3 mt-1.5">
+                            <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
+                            <span className="text-xs text-blue-600 font-medium">{cMembers.length} satışçı</span>
+                            <span className="text-xs text-gray-400">{cLeads.length} lead</span>
+                            {cRevenue > 0 && <span className="text-xs text-emerald-600 font-medium">₺{cRevenue.toLocaleString()}</span>}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${customer.is_active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                            {customer.is_active !== false ? 'Aktif' : 'Pasif'}
+                          </span>
+                          <svg className="text-gray-300" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </div>
+                      </button>
+
+                      {/* Satışçılar — firma altında özet */}
+                      {cMembers.length > 0 && (
+                        <div className="border-t border-gray-50 px-5 py-2 bg-gray-50/50 flex gap-2 flex-wrap">
+                          {cMembers.slice(0, 4).map(m => (
+                            <span key={m.id} className="inline-flex items-center gap-1 text-xs text-gray-500 bg-white border border-gray-200 rounded-lg px-2 py-1">
+                              <span className="w-4 h-4 bg-blue-100 text-blue-600 rounded font-bold text-xs flex items-center justify-center">{(m.full_name || 'U').charAt(0)}</span>
+                              {m.full_name || m.email}
+                            </span>
+                          ))}
+                          {cMembers.length > 4 && <span className="text-xs text-gray-400 self-center">+{cMembers.length - 4} daha</span>}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
+
+          {/* ── FİRMA DETAY — KULLANICI HİYERARŞİ ── */}
+          {activeTab === 'kullanici-listesi' && selectedFirmaUser && (() => {
+            const customer = selectedFirmaUser
+            const cBranches = branches.filter(b => b.owner_id === customer.id)
+            const branchIds = cBranches.map((b: any) => b.id)
+            const cLeads = leads.filter((l: any) => branchIds.includes(l.branch_id))
+            const cSales = cLeads.filter((l: any) => l.status === 'procedure_done')
+            const cRevenue = cSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+            const cMembers = allUsers.filter(u => u.role === 'team' && teamMembersBelongTo(u.id, branchIds))
+
+            const filteredMembers = firmaUserFilter === 'all' ? cMembers
+              : firmaUserFilter === 'active' ? cMembers.filter(m => m.is_active !== false)
+              : cMembers.filter(m => m.is_active === false)
+
+            return (
+              <div className="space-y-4">
+                {/* Geri butonu */}
+                <button onClick={() => { setSelectedFirmaUser(null); setFirmaUserFilter('all') }}
+                  className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Tüm Firmalar
+                </button>
+
+                {/* Firma başlık */}
+                <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-5 text-white relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-xl font-bold">{(customer.company_name || customer.full_name || 'F').charAt(0)}</span>
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold">{customer.company_name || customer.full_name}</h2>
+                      <p className="text-indigo-200 text-xs">{customer.email}{customer.sector && ` · ${customer.sector}`}</p>
+                    </div>
+                    <div className="ml-auto">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" checked={customer.is_active !== false} onChange={() => handleToggleActive(customer)} className="sr-only peer" />
+                        <div className="w-10 h-6 bg-white/30 rounded-full peer peer-checked:bg-white transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:bg-indigo-600 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                      </label>
+                    </div>
+                  </div>
+                  <div className="flex gap-6 mt-4 pt-4 border-t border-indigo-500/40">
+                    <div><p className="text-2xl font-bold">{cBranches.length}</p><p className="text-indigo-300 text-xs mt-0.5">Şube</p></div>
+                    <div><p className="text-2xl font-bold">{cMembers.length}</p><p className="text-indigo-300 text-xs mt-0.5">Satışçı</p></div>
+                    <div><p className="text-2xl font-bold">{cLeads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Lead</p></div>
+                    <div><p className="text-2xl font-bold">{cSales.length}</p><p className="text-indigo-300 text-xs mt-0.5">Satış</p></div>
+                    <div><p className="text-2xl font-bold">₺{(cRevenue/1000).toFixed(0)}K</p><p className="text-indigo-300 text-xs mt-0.5">Ciro</p></div>
+                  </div>
+                </div>
+
+                {/* Şubeler */}
+                <div className="bg-white rounded-2xl border border-gray-100">
+                  <div className="px-5 py-3.5 border-b border-gray-100">
+                    <p className="text-sm font-semibold text-gray-900">Şubeler ({cBranches.length})</p>
+                  </div>
+                  {cBranches.length === 0 ? (
+                    <p className="text-xs text-gray-400 text-center py-8">Şube yok.</p>
+                  ) : cBranches.map((branch: any, i: number) => {
+                    const bLeads = cLeads.filter((l: any) => l.branch_id === branch.id)
+                    const bSales = bLeads.filter((l: any) => l.status === 'procedure_done').length
+                    return (
+                      <div key={branch.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < cBranches.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                          <span className="text-indigo-600 text-xs font-bold">{branch.branch_name?.charAt(0)}</span>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{branch.branch_name}</p>
+                          <div className="flex gap-3 mt-0.5">
+                            <span className="text-xs text-gray-400">{bLeads.length} lead</span>
+                            <span className="text-xs text-emerald-600">{bSales} satış</span>
+                            <span className="text-xs text-gray-400">%{branch.commission_value} komisyon</span>
+                          </div>
+                        </div>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${branch.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+                          {branch.is_active ? 'Aktif' : 'Pasif'}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Satışçılar */}
+                <div className="bg-white rounded-2xl border border-gray-100">
+                  <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+                    <p className="text-sm font-semibold text-gray-900">Satışçılar ({cMembers.length})</p>
+                    <div className="flex gap-1">
+                      {[{ key: 'all', label: 'Tümü' }, { key: 'active', label: 'Aktif' }, { key: 'passive', label: 'Pasif' }].map(f => (
+                        <button key={f.key} onClick={() => setFirmaUserFilter(f.key)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${firmaUserFilter === f.key ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-100'}`}>
+                          {f.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {filteredMembers.length === 0 ? (
+                    <p className="text-xs text-gray-400 text-center py-8">Satışçı yok.</p>
+                  ) : filteredMembers.map((member: any, i: number) => {
+                    const mLeads = cLeads.filter((l: any) => l.assigned_to === member.id)
+                    const mSales = mLeads.filter((l: any) => l.status === 'procedure_done')
+                    const mRevenue = mSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+                    const conversion = mLeads.length > 0 ? ((mSales.length / mLeads.length) * 100).toFixed(0) : '0'
+                    return (
+                      <div key={member.id} className={`px-5 py-4 flex items-center gap-4 ${i < filteredMembers.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center flex-shrink-0">
+                          <span className="text-blue-600 font-semibold text-sm">{(member.full_name || 'U').charAt(0)}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">{member.full_name || '-'}</p>
+                          <p className="text-xs text-gray-400">{member.email}</p>
+                          <div className="flex gap-3 mt-1.5">
+                            <span className="text-xs text-blue-600 font-medium">{mLeads.length} lead</span>
+                            <span className="text-xs text-emerald-600 font-medium">{mSales.length} satış</span>
+                            <span className="text-xs text-gray-400">%{conversion} dönüşüm</span>
+                            {mRevenue > 0 && <span className="text-xs text-gray-500">₺{mRevenue.toLocaleString()}</span>}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${member.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+                            {member.is_active !== false ? 'Aktif' : 'Pasif'}
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" checked={member.is_active !== false}
+                              onChange={async () => { await supabase.from('profiles').update({ is_active: !member.is_active }).eq('id', member.id); loadData() }}
+                              className="sr-only peer" />
+                            <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                          </label>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Abonelik */}
+                {customer.subscriptions?.[0] && (
+                  <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                    <p className="text-sm font-semibold text-gray-900 mb-3">Abonelik</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { label: 'Plan', value: customer.subscriptions[0].plan, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                        { label: 'Aylık Ücret', value: `₺${customer.subscriptions[0].monthly_fee}`, color: 'text-gray-800', bg: 'bg-gray-50' },
+                        { label: 'Şube Başı', value: `₺${customer.subscriptions[0].per_branch_fee}`, color: 'text-gray-800', bg: 'bg-gray-50' },
+                      ].map(item => (
+                        <div key={item.label} className={`${item.bg} rounded-xl p-3.5`}>
+                          <p className="text-xs text-gray-400 mb-1">{item.label}</p>
+                          <p className={`text-sm font-semibold ${item.color}`}>{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           {/* ── KİMLİK TAKLİDİ ── */}
           {activeTab === 'destek-impersonation' && (
