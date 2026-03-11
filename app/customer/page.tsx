@@ -400,9 +400,7 @@ export default function CustomerPage() {
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
-        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center mx-auto mb-3">
-          <span className="text-white font-bold">D</span>
-        </div>
+         <img src="/logo.png" alt="DataPilot" className="h-7 w-auto" />
         <div className="flex gap-1 justify-center">
           {[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
         </div>
