@@ -35,7 +35,7 @@ export default function LoginPage() {
       const role = profile?.role
       if (role === 'super_admin') router.push('/super-admin')
       else if (role === 'customer') router.push('/customer')
-      else if (role === 'agent') router.push('/agent')
+      else if (role === 'agent' || role === 'team') router.push('/agent')
       else if (role === 'manager') router.push('/customer')
       else router.push('/customer')
     }
