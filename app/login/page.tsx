@@ -47,7 +47,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img src="/logo2.png" alt="DataPilot" className="h-12 w-auto mx-auto mb-4" />
+          <img src="/logo.png" alt="DataPilot" className="h-12 w-auto mx-auto mb-4" />
           <h1 className="text-white text-2xl font-bold">Hoş Geldiniz</h1>
           <p className="text-slate-400 text-sm mt-1">Hesabınıza giriş yapın</p>
         </div>

@@ -147,7 +147,7 @@ export default function AgentPage() {
       {/* TOP BAR */}
       <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shadow-sm sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto" />
+          <img src="/logo.png" alt="DataPilot" className="h-7 w-auto" />
           <div className="h-5 w-px bg-gray-200" />
           <span className="text-sm font-medium text-gray-700">
             {teamMember?.branches?.branch_name || 'Şube'}
