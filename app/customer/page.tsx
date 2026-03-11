@@ -113,6 +113,15 @@ export default function CustomerPage() {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [detailLead, setDetailLead] = useState<any>(null)
   const [leadHistory, setLeadHistory] = useState<any[]>([])
+
+  // Rapor state'leri
+  const [showReportPanel, setShowReportPanel] = useState(false)
+  const [reportPeriod, setReportPeriod] = useState('this_month')
+  const [reportFormat, setReportFormat] = useState('excel')
+  const [reportStatus, setReportStatus] = useState('all')
+  const [reportStartDate, setReportStartDate] = useState('')
+  const [reportEndDate, setReportEndDate] = useState('')
+  const [reportLoading, setReportLoading] = useState(false)
   const [statusNote, setStatusNote] = useState('')
   const [procedureType, setProcedureType] = useState('')
   const [procedureAmount, setProcedureAmount] = useState('')
@@ -273,6 +282,108 @@ export default function CustomerPage() {
       .eq('lead_id', lead.id)
       .order('created_at', { ascending: false })
     setLeadHistory(data || [])
+  }
+
+  const getReportLeads = () => {
+    const now = new Date()
+    let start: Date
+    let end: Date = new Date(now)
+    end.setHours(23, 59, 59, 999)
+
+    if (reportPeriod === 'today') {
+      start = new Date(now); start.setHours(0, 0, 0, 0)
+    } else if (reportPeriod === 'this_week') {
+      start = new Date(now); start.setDate(now.getDate() - now.getDay() + 1); start.setHours(0, 0, 0, 0)
+    } else if (reportPeriod === 'this_month') {
+      start = new Date(now.getFullYear(), now.getMonth(), 1)
+    } else if (reportPeriod === 'last_month') {
+      start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+      end = new Date(now.getFullYear(), now.getMonth(), 0); end.setHours(23, 59, 59, 999)
+    } else {
+      start = reportStartDate ? new Date(reportStartDate) : new Date(0)
+      end = reportEndDate ? new Date(reportEndDate + 'T23:59:59') : new Date()
+    }
+
+    return leads.filter(l => {
+      const d = new Date(l.created_at)
+      const matchesDate = d >= start && d <= end
+      const matchesStatus = reportStatus === 'all' || l.status === reportStatus
+      return matchesDate && matchesStatus
+    })
+  }
+
+  const downloadExcel = async () => {
+    setReportLoading(true)
+    const data = getReportLeads()
+    const XLSX = await import('xlsx')
+
+    const rows = data.map(l => ({
+      'Lead Kodu': l.lead_code,
+      'Ad Soyad': l.full_name || '',
+      'Telefon': l.phone || '',
+      'E-posta': l.email || '',
+      'Durum': STATUS_LABELS[l.status]?.label || l.status,
+      'Kaynak': SOURCE_LABELS[l.source]?.label || l.source,
+      'İşlem Tutarı': l.procedure_amount || 0,
+      'Randevu': l.appointment_at ? new Date(l.appointment_at).toLocaleDateString('tr-TR') : '',
+      'Not': l.note || '',
+      'Eklenme Tarihi': new Date(l.created_at).toLocaleDateString('tr-TR'),
+    }))
+
+    const ws = XLSX.utils.json_to_sheet(rows)
+    ws['!cols'] = [12, 20, 14, 24, 12, 14, 14, 14, 30, 14].map(w => ({ wch: w }))
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Leadler')
+
+    const periodLabel: any = { today: 'Bugün', this_week: 'Bu_Hafta', this_month: 'Bu_Ay', last_month: 'Geçen_Ay', custom: 'Özel' }
+    XLSX.writeFile(wb, `DataPilot_Leadler_${periodLabel[reportPeriod]}.xlsx`)
+    setReportLoading(false)
+    setShowReportPanel(false)
+  }
+
+  const downloadPDF = async () => {
+    setReportLoading(true)
+    const data = getReportLeads()
+    const { default: jsPDF } = await import('jspdf')
+    const { default: autoTable } = await import('jspdf-autotable')
+
+    const doc = new jsPDF({ orientation: 'landscape' })
+
+    // Başlık
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    doc.text('DataPilot - Lead Raporu', 14, 18)
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    const periodLabel: any = { today: 'Bugün', this_week: 'Bu Hafta', this_month: 'Bu Ay', last_month: 'Geçen Ay', custom: 'Özel Tarih' }
+    doc.text(`Dönem: ${periodLabel[reportPeriod]} | Toplam: ${data.length} lead | Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 14, 26)
+
+    // Özet istatistikler
+    const sales = data.filter(l => l.status === 'procedure_done').length
+    const revenue = data.filter(l => l.status === 'procedure_done').reduce((s, l) => s + (l.procedure_amount || 0), 0)
+    doc.text(`Satış: ${sales} | Ciro: ${revenue.toLocaleString('tr-TR')} TL | Dönüşüm: %${data.length > 0 ? ((sales/data.length)*100).toFixed(1) : 0}`, 14, 33)
+
+    autoTable(doc, {
+      startY: 38,
+      head: [['Lead Kodu', 'Ad Soyad', 'Telefon', 'Durum', 'Kaynak', 'Tutar', 'Tarih']],
+      body: data.map(l => [
+        l.lead_code,
+        l.full_name || '',
+        l.phone || '',
+        STATUS_LABELS[l.status]?.label || l.status,
+        SOURCE_LABELS[l.source]?.label || l.source,
+        l.procedure_amount ? `${l.procedure_amount.toLocaleString()} TL` : '-',
+        new Date(l.created_at).toLocaleDateString('tr-TR'),
+      ]),
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+    })
+
+    const periodLabelFile: any = { today: 'Bugün', this_week: 'Bu_Hafta', this_month: 'Bu_Ay', last_month: 'Geçen_Ay', custom: 'Özel' }
+    doc.save(`DataPilot_Leadler_${periodLabelFile[reportPeriod]}.pdf`)
+    setReportLoading(false)
+    setShowReportPanel(false)
   }
 
   const handleLogout = async () => {
@@ -550,11 +661,106 @@ export default function CustomerPage() {
 
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-gray-500">{filteredLeads.length} / {leads.length} lead</p>
-                <button onClick={() => setShowAddLead(!showAddLead)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                  + Manuel Lead Ekle
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={() => setShowReportPanel(!showReportPanel)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
+                    📊 Rapor İndir
+                  </button>
+                  <button onClick={() => setShowAddLead(!showAddLead)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                    + Manuel Lead Ekle
+                  </button>
+                </div>
               </div>
+
+              {/* RAPOR PANELİ */}
+              {showReportPanel && (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-gray-900">📊 Rapor İndir</h3>
+                    <button onClick={() => setShowReportPanel(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    {/* Dönem */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Dönem</label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {[
+                          { key: 'today', label: 'Bugün' },
+                          { key: 'this_week', label: 'Bu Hafta' },
+                          { key: 'this_month', label: 'Bu Ay' },
+                          { key: 'last_month', label: 'Geçen Ay' },
+                          { key: 'custom', label: 'Özel Tarih' },
+                        ].map(p => (
+                          <button key={p.key} onClick={() => setReportPeriod(p.key)}
+                            className={`py-2 rounded-lg text-xs font-medium border-2 transition-all ${
+                              reportPeriod === p.key ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                            }`}>
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Format + Durum */}
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-2">Format</label>
+                        <div className="flex gap-2">
+                          {[{ key: 'excel', label: '📗 Excel' }, { key: 'pdf', label: '📕 PDF' }].map(f => (
+                            <button key={f.key} onClick={() => setReportFormat(f.key)}
+                              className={`flex-1 py-2 rounded-lg text-xs font-medium border-2 transition-all ${
+                                reportFormat === f.key ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                              }`}>
+                              {f.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-2">Durum Filtresi</label>
+                        <select value={reportStatus} onChange={e => setReportStatus(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                          <option value="all">Tüm Durumlar</option>
+                          {Object.entries(STATUS_LABELS).map(([k, v]: any) => (
+                            <option key={k} value={k}>{v.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Özel tarih */}
+                  {reportPeriod === 'custom' && (
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Başlangıç</label>
+                        <input type="date" value={reportStartDate} onChange={e => setReportStartDate(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Bitiş</label>
+                        <input type="date" value={reportEndDate} onChange={e => setReportEndDate(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Önizleme */}
+                  <div className="bg-gray-50 rounded-lg px-4 py-2.5 mb-4 flex items-center justify-between">
+                    <span className="text-xs text-gray-500">Seçilen kriterlere göre</span>
+                    <span className="text-sm font-bold text-blue-600">{getReportLeads().length} lead</span>
+                  </div>
+
+                  <button
+                    onClick={reportFormat === 'excel' ? downloadExcel : downloadPDF}
+                    disabled={reportLoading}
+                    className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-2">
+                    {reportLoading ? 'Hazırlanıyor...' : `${reportFormat === 'excel' ? '📗 Excel' : '📕 PDF'} İndir (${getReportLeads().length} lead)`}
+                  </button>
+                </div>
+              )}
 
               {/* Arama */}
               <div className="relative mb-3">
