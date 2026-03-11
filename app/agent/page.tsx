@@ -41,6 +41,7 @@ export default function AgentPage() {
   const [appointmentTime, setAppointmentTime] = useState('')
 
   const [filterStatus, setFilterStatus] = useState('all')
+  const [filterDate, setFilterDate] = useState('all') // all | today | this_week | overdue
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
@@ -128,6 +129,11 @@ export default function AgentPage() {
     router.push('/login')
   }
 
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const weekEnd = new Date(today)
+  weekEnd.setDate(today.getDate() + 7)
+
   const filteredLeads = leads.filter(lead => {
     const matchesStatus = filterStatus === 'all' || lead.status === filterStatus
     const q = searchQuery.toLowerCase()
@@ -136,7 +142,19 @@ export default function AgentPage() {
       lead.phone?.includes(q) ||
       lead.lead_code?.toLowerCase().includes(q) ||
       lead.email?.toLowerCase().includes(q)
-    return matchesStatus && matchesSearch
+
+    let matchesDate = true
+    if (filterDate !== 'all' && lead.appointment_at) {
+      const appt = new Date(lead.appointment_at)
+      appt.setHours(0, 0, 0, 0)
+      if (filterDate === 'today') matchesDate = appt.getTime() === today.getTime()
+      else if (filterDate === 'this_week') matchesDate = appt >= today && appt <= weekEnd
+      else if (filterDate === 'overdue') matchesDate = appt < today
+    } else if (filterDate !== 'all') {
+      matchesDate = false
+    }
+
+    return matchesStatus && matchesSearch && matchesDate
   })
 
   const totalSales = leads.filter(l => l.status === 'procedure_done').length
@@ -288,7 +306,7 @@ export default function AgentPage() {
             </div>
 
             {/* Durum filtreleri */}
-            <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+            <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
               {[{ key: 'all', label: 'Tümü' }, ...Object.entries(STATUS_LABELS).map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
                 <button
                   key={f.key}
@@ -304,8 +322,30 @@ export default function AgentPage() {
               ))}
             </div>
 
+            {/* Randevu tarih filtreleri */}
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+              {[
+                { key: 'all', label: '📅 Tüm Tarihler' },
+                { key: 'today', label: '🔴 Bugün', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d.getTime() === today.getTime() }).length },
+                { key: 'this_week', label: '🟡 Bu Hafta', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d >= today && d <= weekEnd }).length },
+                { key: 'overdue', label: '⚠️ Geçmiş', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d < today }).length },
+              ].map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setFilterDate(f.key)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                    filterDate === f.key
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {f.label}{f.count !== undefined ? ` (${f.count})` : ''}
+                </button>
+              ))}
+            </div>
+
             {/* Sonuç sayısı */}
-            {(searchQuery || filterStatus !== 'all') && (
+            {(searchQuery || filterStatus !== 'all' || filterDate !== 'all') && (
               <p className="text-xs text-gray-500 mb-3">{filteredLeads.length} sonuç bulundu</p>
             )}
 
@@ -314,8 +354,8 @@ export default function AgentPage() {
                 <div className="p-12 text-center">
                   <span className="text-4xl mb-3 block">🔎</span>
                   <p className="text-gray-500 text-sm">Sonuç bulunamadı.</p>
-                  {(searchQuery || filterStatus !== 'all') && (
-                    <button onClick={() => { setSearchQuery(''); setFilterStatus('all') }}
+                  {(searchQuery || filterStatus !== 'all' || filterDate !== 'all') && (
+                    <button onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterDate('all') }}
                       className="mt-3 text-xs text-blue-600 hover:underline">Filtreleri temizle</button>
                   )}
                 </div>
@@ -331,6 +371,11 @@ export default function AgentPage() {
                     </div>
                     <p className="text-xs text-gray-500">{lead.phone}{lead.email && ` • ${lead.email}`}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{lead.lead_code} • {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+                    {lead.appointment_at && (
+                      <p className="text-xs text-purple-600 mt-1 font-medium">
+                        📅 {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    )}
                     {lead.note && (
                       <p className="text-xs text-gray-500 mt-1.5 bg-gray-50 rounded-lg px-2 py-1">
                         💬 {lead.note.length > 50 ? lead.note.slice(0, 50) + '...' : lead.note}
