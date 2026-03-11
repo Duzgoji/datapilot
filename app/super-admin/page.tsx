@@ -1,28 +1,26 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const menuStructure = [
+  { key: 'dashboard', label: 'Dashboard', icon: '⬡' },
   {
-    key: 'dashboard', label: 'Dashboard', icon: '📊',
-  },
-  {
-    key: 'firmalar', label: 'Firmalar', icon: '🏢', children: [
+    key: 'firmalar', label: 'Firmalar', icon: '◈', children: [
       { key: 'firma-listesi', label: 'Firma Listesi' },
       { key: 'firma-onboarding', label: 'Onboarding' },
     ]
   },
   {
-    key: 'kullanicilar', label: 'Kullanıcılar', icon: '👥', children: [
+    key: 'kullanicilar', label: 'Kullanıcılar', icon: '◉', children: [
       { key: 'kullanici-listesi', label: 'Tüm Kullanıcılar' },
       { key: 'kullanici-roller', label: 'Roller & İzinler' },
       { key: 'kullanici-oturumlar', label: 'Oturumlar' },
     ]
   },
   {
-    key: 'faturalama', label: 'Faturalama', icon: '💳', children: [
+    key: 'faturalama', label: 'Faturalama', icon: '◎', children: [
       { key: 'fatura-planlar', label: 'Planlar' },
       { key: 'fatura-abonelikler', label: 'Abonelikler' },
       { key: 'fatura-faturalar', label: 'Faturalar' },
@@ -30,37 +28,98 @@ const menuStructure = [
     ]
   },
   {
-    key: 'guvenlik', label: 'Güvenlik', icon: '🔒', children: [
+    key: 'guvenlik', label: 'Güvenlik', icon: '◐', children: [
       { key: 'guvenlik-loglar', label: 'Denetim Logları' },
       { key: 'guvenlik-politikalar', label: 'Politikalar' },
-      { key: 'guvenlik-anahtarlar', label: 'Anahtarlar & Sırlar' },
     ]
   },
   {
-    key: 'sistem', label: 'Sistem', icon: '⚙️', children: [
+    key: 'sistem', label: 'Sistem', icon: '◫', children: [
       { key: 'sistem-durum', label: 'Sistem Durumu' },
       { key: 'sistem-loglar', label: 'Loglar' },
-      { key: 'sistem-uyarilar', label: 'Uyarılar' },
     ]
   },
   {
-    key: 'destek', label: 'Destek', icon: '🎧', children: [
+    key: 'destek', label: 'Destek', icon: '◌', children: [
       { key: 'destek-talepler', label: 'Talepler' },
       { key: 'destek-impersonation', label: 'Kimlik Taklidi' },
     ]
   },
-  {
-    key: 'ayarlar', label: 'Platform Ayarları', icon: '🛠️',
-  },
+  { key: 'ayarlar', label: 'Platform Ayarları', icon: '◍' },
 ]
+
+// ─── SHARED ───────────────────────────────────────────────────────────────────
+
+const Modal = ({ open, onClose, title, subtitle, children, size = 'md' }: any) => {
+  if (!open) return null
+  const sizes: any = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-2xl' }
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className={`relative bg-white rounded-2xl shadow-2xl w-full ${sizes[size]} z-10 max-h-[90vh] flex flex-col`}>
+        <div className="flex items-start justify-between p-6 border-b border-gray-100 flex-shrink-0">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+            {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+          </div>
+          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 ml-4">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+const Input = ({ label, ...props }: any) => (
+  <div>
+    {label && <label className="block text-xs font-medium text-gray-500 mb-1.5">{label}</label>}
+    <input {...props} className={`w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all ${props.className || ''}`} />
+  </div>
+)
+
+const Select = ({ label, children, ...props }: any) => (
+  <div>
+    {label && <label className="block text-xs font-medium text-gray-500 mb-1.5">{label}</label>}
+    <div className="relative">
+      <select {...props} className="w-full appearance-none px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-9">
+        {children}
+      </select>
+      <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    </div>
+  </div>
+)
+
+const Btn = ({ variant = 'primary', size = 'md', children, className = '', ...props }: any) => {
+  const v: any = {
+    primary: 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm',
+    secondary: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200',
+    danger: 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200',
+    success: 'bg-emerald-600 hover:bg-emerald-700 text-white',
+    ghost: 'hover:bg-gray-100 text-gray-600',
+  }
+  const s: any = { sm: 'px-3 py-1.5 text-xs', md: 'px-4 py-2.5 text-sm', lg: 'px-5 py-3 text-sm' }
+  return (
+    <button {...props} className={`inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all disabled:opacity-50 ${v[variant]} ${s[size]} ${className}`}>
+      {children}
+    </button>
+  )
+}
+
+// ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 export default function SuperAdminPage() {
   const router = useRouter()
+  const profileMenuRef = useRef<HTMLDivElement>(null)
+
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['firmalar'])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+
   const [customers, setCustomers] = useState<any[]>([])
   const [branches, setBranches] = useState<any[]>([])
   const [leads, setLeads] = useState<any[]>([])
@@ -83,7 +142,14 @@ export default function SuperAdminPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [generatingInvoices, setGeneratingInvoices] = useState(false)
 
-  useEffect(() => { loadData() }, [])
+  useEffect(() => {
+    loadData()
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) setShowProfileMenu(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const loadData = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -91,119 +157,63 @@ export default function SuperAdminPage() {
     const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (profileData?.role !== 'super_admin') { router.push('/login'); return }
     setProfile(profileData)
-
-    const { data: customersData } = await supabase
-      .from('profiles').select('*, subscriptions(*)')
-      .eq('role', 'customer').order('created_at', { ascending: false })
+    const { data: customersData } = await supabase.from('profiles').select('*, subscriptions(*)').eq('role', 'customer').order('created_at', { ascending: false })
     setCustomers(customersData || [])
-
     const { data: branchesData } = await supabase.from('branches').select('*')
     setBranches(branchesData || [])
-
     const { data: leadsData } = await supabase.from('leads').select('id, status, procedure_amount, created_at')
     setLeads(leadsData || [])
-
     const { data: invoicesData } = await supabase.from('invoices').select('*, profiles(full_name, company_name)').order('created_at', { ascending: false })
     setInvoices(invoicesData || [])
-
     const { data: usersData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
     setAllUsers(usersData || [])
-
     setLoading(false)
   }
 
-  const toggleMenu = (key: string) => {
-    setExpandedMenus(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    )
-  }
+  const toggleMenu = (key: string) => setExpandedMenus(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
 
   const handleAddCustomer = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-
+    e.preventDefault(); setSaving(true)
     const token = Math.random().toString(36).substring(2) + Date.now().toString(36)
     const { data: { user } } = await supabase.auth.getUser()
-
-    await supabase.from('invitations').insert({
-      email: newEmail,
-      role: newUserType,
-      token,
-      invited_by: user?.id,
-    })
-
+    await supabase.from('invitations').insert({ email: newEmail, role: newUserType, token, invited_by: user?.id })
     if (newUserType === 'customer') {
-      const { data, error } = await supabase.auth.signUp({
-        email: newEmail, password: newPassword,
-        options: { data: { full_name: newName, role: 'customer' } }
-      })
+      const { data, error } = await supabase.auth.signUp({ email: newEmail, password: newPassword, options: { data: { full_name: newName, role: 'customer' } } })
       if (error) { alert(error.message); setSaving(false); return }
       if (data.user) {
-        await supabase.from('profiles').upsert({
-          id: data.user.id, email: newEmail, full_name: newName,
-          role: 'customer', company_name: newCompany, sector: newSector, is_active: true,
-        })
-        await supabase.from('subscriptions').insert({
-          owner_id: data.user.id, plan: 'trial', status: 'active',
-          monthly_fee: parseFloat(newMonthlyFee) || 0,
-          per_branch_fee: parseFloat(newPerBranchFee) || 0,
-        })
+        await supabase.from('profiles').upsert({ id: data.user.id, email: newEmail, full_name: newName, role: 'customer', company_name: newCompany, sector: newSector, is_active: true })
+        await supabase.from('subscriptions').insert({ owner_id: data.user.id, plan: 'trial', status: 'active', monthly_fee: parseFloat(newMonthlyFee) || 0, per_branch_fee: parseFloat(newPerBranchFee) || 0 })
       }
     }
-
-    const link = `${window.location.origin}/invite?token=${token}`
-    setInviteLink(link)
-    setSaving(false)
-    loadData()
+    setInviteLink(`${window.location.origin}/invite?token=${token}`)
+    setSaving(false); loadData()
   }
 
   const handleToggleActive = async (customer: any) => {
-    await supabase.from('profiles').update({ is_active: !customer.is_active }).eq('id', customer.id)
-    loadData()
+    await supabase.from('profiles').update({ is_active: !customer.is_active }).eq('id', customer.id); loadData()
   }
 
   const handleGenerateInvoices = async () => {
     setGeneratingInvoices(true)
-    const dueDate = new Date()
-    dueDate.setDate(15)
+    const dueDate = new Date(); dueDate.setDate(15)
     for (const customer of customers) {
       const branchCount = branches.filter(b => b.owner_id === customer.id).length
       const perBranchFee = customer.subscriptions?.[0]?.per_branch_fee || 0
       const totalAmount = branchCount * perBranchFee
-      if (totalAmount > 0) {
-        await supabase.from('invoices').insert({
-          owner_id: customer.id, branch_count: branchCount,
-          per_branch_fee: perBranchFee, total_amount: totalAmount,
-          status: 'pending', due_date: dueDate.toISOString().split('T')[0],
-        })
-      }
+      if (totalAmount > 0) await supabase.from('invoices').insert({ owner_id: customer.id, branch_count: branchCount, per_branch_fee: perBranchFee, total_amount: totalAmount, status: 'pending', due_date: dueDate.toISOString().split('T')[0] })
     }
-    setGeneratingInvoices(false)
-    loadData()
-    alert('Faturalar oluşturuldu!')
+    setGeneratingInvoices(false); loadData(); alert('Faturalar oluşturuldu!')
   }
 
   const handleMarkPaid = async (invoiceId: string) => {
-    await supabase.from('invoices').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', invoiceId)
-    loadData()
+    await supabase.from('invoices').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', invoiceId); loadData()
   }
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
+  const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
 
   const resetForm = () => {
-    setInviteLink('')
-    setShowAddCustomer(false)
-    setNewName('')
-    setNewEmail('')
-    setNewPassword('')
-    setNewCompany('')
-    setNewSector('')
-    setNewPerBranchFee('')
-    setNewMonthlyFee('')
-    setNewUserType('customer')
+    setInviteLink(''); setShowAddCustomer(false); setNewName(''); setNewEmail('')
+    setNewPassword(''); setNewCompany(''); setNewSector(''); setNewPerBranchFee(''); setNewMonthlyFee(''); setNewUserType('customer')
   }
 
   const filteredCustomers = customers.filter(c =>
@@ -218,67 +228,77 @@ export default function SuperAdminPage() {
   const getPageTitle = () => {
     for (const item of menuStructure) {
       if (item.key === activeTab) return item.label
-      if (item.children) {
-        const child = item.children.find(c => c.key === activeTab)
-        if (child) return `${item.label} › ${child.label}`
-      }
+      if (item.children) { const child = item.children.find(c => c.key === activeTab); if (child) return `${item.label} › ${child.label}` }
     }
     return 'Dashboard'
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
-        <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-          <span className="text-white font-bold text-xl">D</span>
+        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center mx-auto mb-3">
+          <span className="text-white font-bold text-sm">D</span>
         </div>
-        <p className="text-gray-500 text-sm">Yükleniyor...</p>
+        <div className="flex gap-1 justify-center">
+          {[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
+        </div>
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gray-50 flex" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
-      {/* SIDEBAR */}
-      <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} min-h-screen bg-slate-900 flex flex-col fixed left-0 top-0 shadow-xl transition-all duration-300 z-20`}>
-        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+      {/* ── SIDEBAR ── */}
+      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-white border-r border-gray-100 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-300 shadow-sm`}>
+        <div className={`flex items-center h-14 border-b border-gray-100 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <span className="text-white text-xs font-bold">D</span>
+          </div>
+          {!sidebarCollapsed && <span className="font-semibold text-gray-900 text-sm tracking-tight">DataPilot</span>}
           {!sidebarCollapsed ? (
-            <>
-              <div className="flex items-center gap-2.5">
-                <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto" />
-                <span className="text-white font-bold">DataPilot</span>
-              </div>
-              <button onClick={() => setSidebarCollapsed(true)} className="text-slate-500 hover:text-white text-xs">◀</button>
-            </>
+            <button onClick={() => setSidebarCollapsed(true)} className="ml-auto text-gray-300 hover:text-gray-500">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
           ) : (
-            <button onClick={() => setSidebarCollapsed(false)} className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mx-auto">
-              <span className="text-white font-bold text-sm">D</span>
+            <button onClick={() => setSidebarCollapsed(false)} className="text-gray-300 hover:text-gray-500">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           )}
         </div>
 
-        <nav className="flex-1 p-2 overflow-y-auto space-y-0.5">
+        {!sidebarCollapsed && (
+          <div className="px-4 py-3 border-b border-gray-100">
+            <p className="text-xs text-gray-400 mb-0.5">Rol</p>
+            <span className="text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">Super Admin</span>
+          </div>
+        )}
+
+        <nav className="flex-1 overflow-y-auto py-2 px-2">
           {menuStructure.map(item => (
             <div key={item.key}>
               <button
-                onClick={() => item.children ? toggleMenu(item.key) : setActiveTab(item.key)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${activeTab === item.key ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
-                <span className="flex-shrink-0">{item.icon}</span>
+                onClick={() => { if (item.children) toggleMenu(item.key); else setActiveTab(item.key) }}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all mb-0.5 ${
+                  activeTab === item.key && !item.children ? 'bg-indigo-600 text-white font-medium shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}>
+                <span className="text-base flex-shrink-0">{item.icon}</span>
                 {!sidebarCollapsed && (
                   <>
-                    <span className="flex-1 text-sm">{item.label}</span>
+                    <span className="flex-1 text-left">{item.label}</span>
                     {item.children && (
-                      <span className="text-xs opacity-60">{expandedMenus.includes(item.key) ? '▼' : '▶'}</span>
+                      <svg className={`w-3.5 h-3.5 transition-transform text-gray-400 ${expandedMenus.includes(item.key) ? 'rotate-180' : ''}`} viewBox="0 0 14 14" fill="none"><path d="M4 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     )}
                   </>
                 )}
               </button>
               {item.children && expandedMenus.includes(item.key) && !sidebarCollapsed && (
-                <div className="ml-3 mt-0.5 border-l border-slate-700 pl-3 space-y-0.5">
+                <div className="ml-3 pl-3 border-l border-gray-100 mb-1">
                   {item.children.map(child => (
                     <button key={child.key} onClick={() => setActiveTab(child.key)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${activeTab === child.key ? 'bg-blue-600 text-white font-medium' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
+                      className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all mb-0.5 ${
+                        activeTab === child.key ? 'text-indigo-600 font-medium bg-indigo-50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
+                      }`}>
                       {child.label}
                     </button>
                   ))}
@@ -289,364 +309,256 @@ export default function SuperAdminPage() {
         </nav>
 
         {!sidebarCollapsed && (
-          <div className="p-3 border-t border-slate-700">
-            <div className="flex items-center gap-2.5 px-2 mb-2">
-              <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
+          <div className="p-3 border-t border-gray-100">
+            <div className="flex items-center gap-2.5 px-2 py-1.5">
+              <div className="w-7 h-7 rounded-lg bg-rose-100 flex items-center justify-center flex-shrink-0">
+                <span className="text-rose-600 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
               </div>
-              <div className="overflow-hidden">
-                <p className="text-white text-xs font-semibold truncate">{profile?.full_name}</p>
-                <p className="text-slate-400 text-xs truncate">{profile?.email}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-800 truncate">{profile?.full_name}</p>
+                <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
               </div>
             </div>
-            <button onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:bg-slate-800 hover:text-white">
-              🚪 Çıkış Yap
-            </button>
           </div>
         )}
-      </div>
+      </aside>
 
-      {/* MAIN */}
-      <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-64'} flex-1 transition-all duration-300`}>
+      {/* ── MAIN ── */}
+      <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-60'} flex-1 transition-all duration-300 min-w-0`}>
 
-        {/* TOP BAR */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4 sticky top-0 z-10 shadow-sm">
-          <div className="relative flex-1 max-w-sm">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
-            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Firma, kullanıcı ara..."
-              className="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        {/* Top bar */}
+        <header className="h-14 bg-white border-b border-gray-100 flex items-center px-6 sticky top-0 z-10">
+          <div className="flex items-center gap-1.5 text-sm text-gray-400">
+            <span>DataPilot</span>
+            {getPageTitle().split(' › ').map((part, i, arr) => (
+              <span key={i} className="flex items-center gap-1.5">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span className={i === arr.length - 1 ? 'text-gray-800 font-medium' : ''}>{part}</span>
+              </span>
+            ))}
           </div>
-          <div className="flex items-center gap-2 ml-auto">
-            <button onClick={() => { setActiveTab('firma-listesi'); setShowAddCustomer(true) }}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-medium">
-              + Kullanıcı Ekle
-            </button>
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">
-              🔔
-              <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
-            </button>
-            <span className="bg-blue-100 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-full">Super Admin</span>
-          </div>
-        </div>
-
-        <div className="p-6">
-          {/* Breadcrumb */}
-          <p className="text-xs text-gray-400 mb-5">DataPilot › <span className="text-gray-700 font-medium">{getPageTitle()}</span></p>
-
-          {/* DASHBOARD */}
-          {activeTab === 'dashboard' && (
-            <>
-              <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-                {[
-                  { label: 'Toplam Firma', value: customers.length, icon: '🏢', color: 'text-blue-600', bg: 'bg-blue-50' },
-                  { label: 'Toplam Şube', value: branches.length, icon: '📍', color: 'text-purple-600', bg: 'bg-purple-50' },
-                  { label: 'Toplam Lead', value: leads.length, icon: '📋', color: 'text-green-600', bg: 'bg-green-50' },
-                  { label: 'Bekleyen Tahsilat', value: `₺${pendingInvoicesTotal.toLocaleString()}`, icon: '💰', color: 'text-amber-600', bg: 'bg-amber-50' },
-                ].map(card => (
-                  <div key={card.label} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-                    <div className={`w-10 h-10 ${card.bg} rounded-xl flex items-center justify-center text-xl mb-3`}>{card.icon}</div>
-                    <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
-                    <p className="text-xs text-gray-500 mt-1">{card.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
-                  <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                    <h3 className="font-bold text-gray-900 text-sm">Son Firmalar</h3>
-                    <button onClick={() => setActiveTab('firma-listesi')} className="text-xs text-blue-600 hover:underline">Tümü →</button>
-                  </div>
-                  {customers.length === 0 && <p className="p-6 text-xs text-gray-400 text-center">Henüz firma yok.</p>}
-                  {customers.slice(0, 6).map(c => (
-                    <div key={c.id} onClick={() => { setSelectedCustomer(c); setShowCustomerDetail(true) }}
-                      className="px-4 py-3 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-blue-600 font-bold text-xs">{c.full_name?.charAt(0)}</span>
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900 text-sm">{c.full_name}</p>
-                          <p className="text-xs text-gray-500">{c.company_name || c.email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">
-                          {branches.filter(b => b.owner_id === c.id).length} şube
-                        </span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${c.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {c.is_active ? 'Aktif' : 'Pasif'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+          <div className="ml-auto" ref={profileMenuRef}>
+            <div className="relative">
+              <button onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 hover:bg-gray-50 rounded-xl px-3 py-1.5 border border-transparent hover:border-gray-200 transition-all">
+                <div className="w-6 h-6 rounded-lg bg-rose-100 flex items-center justify-center">
+                  <span className="text-rose-600 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
                 </div>
-
-                <div className="space-y-4">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <h3 className="font-bold text-gray-900 text-sm mb-3">Gelir Özeti</h3>
-                    <div className="space-y-2">
-                      {[
-                        { label: 'Tahsil Edilen', value: `₺${paidInvoicesTotal.toLocaleString()}`, color: 'text-green-600', bg: 'bg-green-50' },
-                        { label: 'Bekleyen', value: `₺${pendingInvoicesTotal.toLocaleString()}`, color: 'text-amber-600', bg: 'bg-amber-50' },
-                        { label: 'Aktif Firma', value: customers.filter(c => c.is_active).length, color: 'text-blue-600', bg: 'bg-blue-50' },
-                      ].map(item => (
-                        <div key={item.label} className={`${item.bg} rounded-lg px-3 py-2.5 flex justify-between items-center`}>
-                          <span className="text-xs text-gray-600">{item.label}</span>
-                          <span className={`text-sm font-bold ${item.color}`}>{item.value}</span>
-                        </div>
-                      ))}
-                    </div>
+                <span className="text-sm font-medium text-gray-700 hidden md:block">{profile?.full_name}</span>
+                <span className="text-xs bg-rose-50 text-rose-600 font-medium px-2 py-0.5 rounded-full hidden md:block">Super Admin</span>
+                <svg className="text-gray-400" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              {showProfileMenu && (
+                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50">
+                  <div className="px-4 py-2.5 border-b border-gray-100 mb-1">
+                    <p className="text-sm font-semibold text-gray-900">{profile?.full_name}</p>
+                    <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
                   </div>
-
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <h3 className="font-bold text-gray-900 text-sm mb-3">Hızlı İşlemler</h3>
-                    <div className="space-y-2">
-                      <button onClick={() => { setActiveTab('firma-listesi'); setShowAddCustomer(true) }}
-                        className="w-full text-left text-xs px-3 py-2.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium">
-                        + Yeni Kullanıcı Ekle
-                      </button>
-                      <button onClick={() => setActiveTab('fatura-faturalar')}
-                        className="w-full text-left text-xs px-3 py-2.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 font-medium">
-                        🧾 Fatura Oluştur
-                      </button>
-                      <button onClick={() => setActiveTab('guvenlik-loglar')}
-                        className="w-full text-left text-xs px-3 py-2.5 bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 font-medium">
-                        🔒 Denetim Logları
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* FİRMA LİSTESİ */}
-          {activeTab === 'firma-listesi' && (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-gray-500">{filteredCustomers.length} firma kayıtlı</p>
-                <button onClick={() => setShowAddCustomer(!showAddCustomer)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                  + Kullanıcı Ekle
-                </button>
-              </div>
-
-              {showAddCustomer && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-gray-900">Yeni Kullanıcı Ekle</h3>
-                    <button onClick={resetForm} className="text-gray-400 hover:text-gray-600">✕</button>
-                  </div>
-
-                  <form onSubmit={handleAddCustomer} className="grid grid-cols-2 gap-4">
-                    {inviteLink ? (
-                      <div className="col-span-2 bg-green-50 border border-green-200 rounded-xl p-4">
-                        <p className="text-green-700 font-medium text-sm mb-2">✅ Davet linki oluşturuldu!</p>
-                        <p className="text-green-600 text-xs mb-3">Bu linki kullanıcıya gönderin. 7 gün geçerlidir.</p>
-                        <div className="flex gap-2">
-                          <input readOnly value={inviteLink}
-                            className="flex-1 bg-white border border-green-300 rounded-lg px-3 py-2 text-xs text-gray-700" />
-                          <button type="button"
-                            onClick={() => { navigator.clipboard.writeText(inviteLink); alert('Link kopyalandı!') }}
-                            className="bg-green-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-green-700">
-                            Kopyala
-                          </button>
-                        </div>
-                        <button type="button" onClick={resetForm}
-                          className="mt-3 text-xs text-green-600 hover:underline">
-                          Kapat
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="col-span-2">
-                          <label className="block text-xs font-medium text-gray-600 mb-2">Kullanıcı Tipi *</label>
-                          <div className="flex gap-3">
-                            <button type="button" onClick={() => setNewUserType('customer')}
-                              className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${newUserType === 'customer' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
-                              🏢 Müşteri
-                            </button>
-                            <button type="button" onClick={() => setNewUserType('advertiser')}
-                              className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${newUserType === 'advertiser' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
-                              📣 Reklamcı
-                            </button>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Ad Soyad *</label>
-                          <input type="text" value={newName} onChange={e => setNewName(e.target.value)}
-                            required placeholder="Ad Soyad"
-                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Şirket Adı</label>
-                          <input type="text" value={newCompany} onChange={e => setNewCompany(e.target.value)}
-                            placeholder="Şirket adı"
-                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">E-posta *</label>
-                          <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
-                            required placeholder="email@example.com"
-                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Şifre *</label>
-                          <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                            required placeholder="En az 6 karakter"
-                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        </div>
-
-                        {newUserType === 'customer' && (
-                          <>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">Şube Başı Ücret (₺)</label>
-                              <input type="number" value={newPerBranchFee} onChange={e => setNewPerBranchFee(e.target.value)}
-                                placeholder="2500"
-                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">Aylık Sabit Ücret (₺)</label>
-                              <input type="number" value={newMonthlyFee} onChange={e => setNewMonthlyFee(e.target.value)}
-                                placeholder="0"
-                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">Sektör</label>
-                              <select value={newSector} onChange={e => setNewSector(e.target.value)}
-                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="">Seçin...</option>
-                                <option value="saglik">Sağlık</option>
-                                <option value="estetik">Estetik & Güzellik</option>
-                                <option value="turizm">Turizm</option>
-                                <option value="restoran">Restoran & Gıda</option>
-                                <option value="egitim">Eğitim</option>
-                                <option value="gayrimenkul">Gayrimenkul</option>
-                                <option value="diger">Diğer</option>
-                              </select>
-                            </div>
-                          </>
-                        )}
-
-                        <div className="col-span-2 flex gap-3 pt-1">
-                          <button type="submit" disabled={saving}
-                            className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-                            {saving ? 'Oluşturuluyor...' : '📨 Davet Linki Oluştur'}
-                          </button>
-                          <button type="button" onClick={resetForm}
-                            className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm hover:bg-gray-50">
-                            İptal
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </form>
+                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M5 11H2.5A1.5 1.5 0 011 9.5v-6A1.5 1.5 0 012.5 2H5M9 9.5l3-3-3-3M12 6.5H5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    Çıkış Yap
+                  </button>
                 </div>
               )}
+            </div>
+          </div>
+        </header>
 
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                {filteredCustomers.length === 0 ? (
-                  <div className="p-16 text-center">
-                    <span className="text-4xl mb-3 block">🏢</span>
-                    <p className="text-gray-500 text-sm">Henüz firma yok.</p>
+        <main className="p-6">
+
+          {/* ── DASHBOARD ── */}
+          {activeTab === 'dashboard' && (
+            <div className="space-y-6">
+              <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-6 text-white relative overflow-hidden">
+                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-indigo-200 text-sm">Hoş geldin,</p>
+                    <h1 className="text-2xl font-bold mt-0.5">{profile?.full_name}</h1>
+                    <p className="text-indigo-300 text-sm mt-1">Platform genel durumu</p>
                   </div>
-                ) : filteredCustomers.map(c => (
-                  <div key={c.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
-                    <div className="flex items-center gap-3 flex-1 cursor-pointer"
-                      onClick={() => { setSelectedCustomer(c); setShowCustomerDetail(true) }}>
-                      <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <span className="text-blue-600 font-bold text-sm">{c.full_name?.charAt(0)}</span>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 text-sm">{c.full_name}</p>
-                        <p className="text-xs text-gray-500">{c.email} {c.company_name && `• ${c.company_name}`}</p>
-                        <div className="flex gap-1.5 mt-1">
-                          {c.sector && <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{c.sector}</span>}
-                          <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{c.subscriptions?.[0]?.plan || 'trial'}</span>
-                          <span className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">{branches.filter(b => b.owner_id === c.id).length} şube</span>
-                        </div>
-                      </div>
-                    </div>
-                    <button onClick={() => handleToggleActive(c)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${c.is_active ? 'bg-green-500' : 'bg-gray-300'}`}>
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${c.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
+                  <span className="bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full">Super Admin</span>
+                </div>
+                <div className="flex gap-8 mt-5 pt-5 border-t border-indigo-500/40">
+                  <div><p className="text-3xl font-bold">{customers.length}</p><p className="text-indigo-300 text-xs mt-0.5">Firma</p></div>
+                  <div><p className="text-3xl font-bold">{branches.length}</p><p className="text-indigo-300 text-xs mt-0.5">Şube</p></div>
+                  <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Lead</p></div>
+                  <div><p className="text-3xl font-bold">{allUsers.length}</p><p className="text-indigo-300 text-xs mt-0.5">Kullanıcı</p></div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: 'Aktif Firma', value: customers.filter(c => c.is_active !== false).length, sub: `${customers.filter(c => c.is_active === false).length} pasif`, color: 'text-indigo-600', bg: 'bg-indigo-50', icon: '◈' },
+                  { label: 'Toplam Lead', value: leads.length, sub: `${leads.filter(l => l.status === 'procedure_done').length} satış`, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: '◎' },
+                  { label: 'Bekleyen Fatura', value: `₺${pendingInvoicesTotal.toLocaleString()}`, sub: `${invoices.filter(i => i.status === 'pending').length} fatura`, color: 'text-amber-600', bg: 'bg-amber-50', icon: '◐' },
+                  { label: 'Tahsil Edilen', value: `₺${paidInvoicesTotal.toLocaleString()}`, sub: 'Bu ay', color: 'text-rose-600', bg: 'bg-rose-50', icon: '◉' },
+                ].map(card => (
+                  <div key={card.label} className="bg-white rounded-2xl p-5 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
+                    <div className={`w-9 h-9 ${card.bg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
+                    <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+                    <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
                   </div>
                 ))}
               </div>
-            </>
+
+              {/* Son firmalar */}
+              <div className="bg-white rounded-2xl border border-gray-100">
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 text-sm">Son Firmalar</h3>
+                  <button onClick={() => setActiveTab('firma-listesi')} className="text-xs text-indigo-600 font-medium">Tümünü gör →</button>
+                </div>
+                {customers.slice(0, 5).map((c, i) => {
+                  const cBranches = branches.filter(b => b.owner_id === c.id).length
+                  return (
+                    <div key={c.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < Math.min(customers.length, 5) - 1 ? 'border-b border-gray-50' : ''}`}>
+                      <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                        <span className="text-indigo-600 font-semibold text-sm">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{c.company_name || c.full_name}</p>
+                        <p className="text-xs text-gray-400">{c.email} · {cBranches} şube</p>
+                      </div>
+                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${c.is_active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                        {c.is_active !== false ? 'Aktif' : 'Pasif'}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           )}
 
-          {/* FATURALAR */}
-          {activeTab === 'fatura-faturalar' && (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-gray-500">{invoices.length} fatura</p>
-                <button onClick={handleGenerateInvoices} disabled={generatingInvoices}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                  {generatingInvoices ? 'Oluşturuluyor...' : '🧾 Bu Ay Fatura Oluştur'}
-                </button>
+          {/* ── FİRMA LİSTESİ ── */}
+          {activeTab === 'firma-listesi' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-500">{filteredCustomers.length} firma</p>
+                <Btn size="sm" onClick={() => setShowAddCustomer(true)}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+                  Firma Ekle
+                </Btn>
               </div>
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                {invoices.length === 0 ? (
-                  <div className="p-16 text-center">
-                    <span className="text-4xl mb-3 block">🧾</span>
-                    <p className="text-gray-500 text-sm">Henüz fatura yok.</p>
-                  </div>
-                ) : invoices.map(inv => (
-                  <div key={inv.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
-                    <div>
-                      <p className="font-semibold text-gray-900 text-sm">{inv.profiles?.full_name}</p>
-                      <p className="text-xs text-gray-500">{inv.branch_count} şube × ₺{inv.per_branch_fee} • {inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-'}</p>
+
+              <div className="relative">
+                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Firma adı veya e-posta ara..."
+                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                {filteredCustomers.length === 0 ? (
+                  <div className="p-16 text-center"><p className="text-gray-400 text-sm">Firma bulunamadı.</p></div>
+                ) : filteredCustomers.map((c, i) => {
+                  const cBranches = branches.filter(b => b.owner_id === c.id).length
+                  const cLeads = leads.filter(() => false).length
+                  const sub = c.subscriptions?.[0]
+                  return (
+                    <div key={c.id} className={`px-5 py-4 flex items-center gap-4 ${i < filteredCustomers.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center flex-shrink-0">
+                        <span className="text-indigo-600 font-bold">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className="text-sm font-semibold text-gray-900 truncate">{c.company_name || c.full_name}</p>
+                          {c.sector && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">{c.sector}</span>}
+                        </div>
+                        <p className="text-xs text-gray-400">{c.email}</p>
+                        <div className="flex gap-3 mt-1.5">
+                          <span className="text-xs text-indigo-600 font-medium">{cBranches} şube</span>
+                          {sub && <span className="text-xs text-gray-400">₺{sub.per_branch_fee}/şube · Plan: {sub.plan}</span>}
+                          <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('tr-TR')}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button onClick={() => { setSelectedCustomer(c); setShowCustomerDetail(true) }}
+                          className="text-xs text-indigo-600 font-medium hover:text-indigo-700 px-3 py-1.5 hover:bg-indigo-50 rounded-lg transition-colors">
+                          Detay
+                        </button>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" checked={c.is_active !== false} onChange={() => handleToggleActive(c)} className="sr-only peer" />
+                          <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                        </label>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <p className="font-bold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── FATURALAR ── */}
+          {activeTab === 'fatura-faturalar' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { label: 'Bekleyen', value: `₺${pendingInvoicesTotal.toLocaleString()}`, count: invoices.filter(i => i.status === 'pending').length, color: 'text-amber-600', bg: 'bg-amber-50' },
+                  { label: 'Ödendi', value: `₺${paidInvoicesTotal.toLocaleString()}`, count: invoices.filter(i => i.status === 'paid').length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                  { label: 'Toplam', value: `₺${(pendingInvoicesTotal + paidInvoicesTotal).toLocaleString()}`, count: invoices.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                ].map(card => (
+                  <div key={card.label} className="bg-white rounded-2xl border border-gray-100 p-5">
+                    <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
+                    <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
+                    <p className="text-xs text-gray-400">{card.count} fatura</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end">
+                <Btn variant="success" size="sm" onClick={handleGenerateInvoices} disabled={generatingInvoices}>
+                  {generatingInvoices ? 'Oluşturuluyor...' : '+ Fatura Oluştur'}
+                </Btn>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                {invoices.length === 0 ? (
+                  <div className="p-16 text-center"><p className="text-gray-400 text-sm">Henüz fatura yok.</p></div>
+                ) : invoices.map((inv, i) => (
+                  <div key={inv.id} className={`px-5 py-4 flex items-center gap-4 ${i < invoices.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                    <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="#94a3b8" strokeWidth="1.25"/><path d="M5 6h6M5 9h4" stroke="#94a3b8" strokeWidth="1.25" strokeLinecap="round"/></svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{inv.profiles?.company_name || inv.profiles?.full_name}</p>
+                      <p className="text-xs text-gray-400">{inv.branch_count} şube · ₺{inv.per_branch_fee}/şube · Vade: {inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-'}</p>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <p className="text-sm font-semibold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
                       {inv.status === 'pending' ? (
-                        <button onClick={() => handleMarkPaid(inv.id)}
-                          className="bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-green-700">Ödendi</button>
+                        <button onClick={() => handleMarkPaid(inv.id)} className="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium px-3 py-1.5 rounded-lg transition-colors">Ödendi</button>
                       ) : (
-                        <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">✅ Ödendi</span>
+                        <span className="text-xs bg-emerald-50 text-emerald-600 font-medium px-2.5 py-1 rounded-full">✓ Ödendi</span>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
-            </>
+            </div>
           )}
 
-          {/* TÜM KULLANICILAR */}
+          {/* ── KULLANICILAR ── */}
           {activeTab === 'kullanici-listesi' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="p-4 border-b border-gray-100">
-                <h3 className="font-bold text-gray-900 text-sm">{allUsers.length} Kullanıcı</h3>
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100">
+                <h3 className="font-semibold text-gray-900 text-sm">{allUsers.length} kullanıcı</h3>
               </div>
-              {allUsers.map(u => (
-                <div key={u.id} className="px-5 py-3.5 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
-                      <span className="text-slate-600 font-bold text-xs">{u.full_name?.charAt(0)}</span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 text-sm">{u.full_name}</p>
-                      <p className="text-xs text-gray-500">{u.email}</p>
-                    </div>
+              {allUsers.map((u, i) => (
+                <div key={u.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < allUsers.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                  <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-semibold text-gray-500">{(u.full_name || u.email || 'U').charAt(0)}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      u.role === 'super_admin' ? 'bg-red-100 text-red-700' :
-                      u.role === 'customer' ? 'bg-blue-100 text-blue-700' :
-                      u.role === 'advertiser' ? 'bg-purple-100 text-purple-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>{u.role}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {u.is_active ? 'Aktif' : 'Pasif'}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{u.full_name || '-'}</p>
+                    <p className="text-xs text-gray-400">{u.email}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                      u.role === 'super_admin' ? 'bg-rose-50 text-rose-600' :
+                      u.role === 'customer' ? 'bg-indigo-50 text-indigo-600' :
+                      u.role === 'team' ? 'bg-blue-50 text-blue-600' :
+                      'bg-gray-100 text-gray-500'
+                    }`}>{u.role === 'team' ? 'Satışçı' : u.role === 'customer' ? 'Müşteri' : u.role === 'super_admin' ? 'Admin' : u.role}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${u.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+                      {u.is_active !== false ? 'Aktif' : 'Pasif'}
                     </span>
                   </div>
                 </div>
@@ -654,131 +566,146 @@ export default function SuperAdminPage() {
             </div>
           )}
 
-          {/* DENETİM LOGLARI */}
-          {activeTab === 'guvenlik-loglar' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-              <span className="text-4xl mb-3 block">🔒</span>
-              <h3 className="font-bold text-gray-900 mb-2">Denetim Logları</h3>
-              <p className="text-gray-500 text-sm">Tüm sistem hareketleri burada görünecek. Yakında aktif olacak.</p>
-            </div>
-          )}
-
-          {/* DESTEK - KİMLİK TAKLİDİ */}
+          {/* ── KİMLİK TAKLİDİ ── */}
           {activeTab === 'destek-impersonation' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="font-bold text-gray-900 mb-2">Kimlik Taklidi (Impersonation)</h3>
-              <p className="text-gray-500 text-sm mb-5">Firma tarafından onaylanan destek taleplerine 24 saatlik geçici erişim.</p>
-              <div className="space-y-3">
-                {customers.map(c => (
-                  <div key={c.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+            <div className="space-y-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+                <div className="text-amber-500 flex-shrink-0 mt-0.5">⚠️</div>
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">Dikkat</p>
+                  <p className="text-xs text-amber-700 mt-0.5">Kimlik taklidi yetkisi yalnızca destek amaçlıdır. Tüm işlemler loglanır.</p>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-100">
+                {customers.map((c, i) => (
+                  <div key={c.id} className={`px-5 py-3.5 flex items-center justify-between ${i < customers.length - 1 ? 'border-b border-gray-50' : ''}`}>
                     <div>
-                      <p className="font-medium text-gray-900 text-sm">{c.full_name}</p>
-                      <p className="text-xs text-gray-500">{c.company_name}</p>
+                      <p className="text-sm font-medium text-gray-900">{c.company_name || c.full_name}</p>
+                      <p className="text-xs text-gray-400">{c.email}</p>
                     </div>
-                    <button className="bg-amber-100 text-amber-700 text-xs px-3 py-2 rounded-lg font-medium hover:bg-amber-200">
-                      24 Saat Erişim İste
-                    </button>
+                    <Btn variant="secondary" size="sm">Giriş Yap</Btn>
                   </div>
                 ))}
-                {customers.length === 0 && <p className="text-gray-400 text-sm text-center">Firma yok.</p>}
               </div>
             </div>
           )}
 
-          {/* PLACEHOLDER */}
-          {!['dashboard', 'firma-listesi', 'fatura-faturalar', 'kullanici-listesi', 'guvenlik-loglar', 'destek-impersonation'].includes(activeTab) && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-              <span className="text-5xl mb-4 block">🚧</span>
-              <h3 className="font-bold text-gray-900 mb-2">{getPageTitle()}</h3>
-              <p className="text-gray-500 text-sm">Bu modül yakında eklenecek.</p>
+          {/* ── BOŞLAR ── */}
+          {!['dashboard', 'firma-listesi', 'fatura-faturalar', 'kullanici-listesi', 'destek-impersonation'].includes(activeTab) && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+              <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">◌</div>
+              <p className="text-gray-500 text-sm font-medium">{getPageTitle()}</p>
+              <p className="text-gray-400 text-xs mt-1">Bu sayfa yakında gelecek.</p>
             </div>
           )}
-        </div>
+
+        </main>
       </div>
 
-      {/* FİRMA DETAY DRAWER */}
-      {showCustomerDetail && selectedCustomer && (
-        <div className="fixed inset-0 z-50 flex">
-          <div className="flex-1 bg-black bg-opacity-40" onClick={() => setShowCustomerDetail(false)} />
-          <div className="w-[480px] bg-white h-full overflow-y-auto shadow-2xl">
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <span className="text-blue-600 font-bold">{selectedCustomer.full_name?.charAt(0)}</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900">{selectedCustomer.full_name}</h3>
-                  <p className="text-xs text-gray-500">{selectedCustomer.company_name}</p>
-                </div>
-              </div>
-              <button onClick={() => setShowCustomerDetail(false)} className="text-gray-400 hover:text-gray-600 text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">✕</button>
+      {/* ── FİRMA EKLE MODAL ── */}
+      <Modal open={showAddCustomer} onClose={resetForm} title="Yeni Firma Ekle" subtitle="Müşteri hesabı oluşturun" size="lg">
+        {inviteLink ? (
+          <div className="p-6 space-y-4">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+              <p className="text-sm font-semibold text-emerald-800 mb-1">✓ Firma oluşturuldu!</p>
+              <p className="text-xs text-emerald-700">Davet linki:</p>
+              <p className="text-xs font-mono bg-white border border-emerald-200 rounded-lg px-3 py-2 mt-2 break-all">{inviteLink}</p>
             </div>
-
-            <div className="p-5 space-y-5">
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Genel Bilgiler</p>
-                <div className="space-y-2">
-                  {[
-                    { label: 'E-posta', value: selectedCustomer.email },
-                    { label: 'Sektör', value: selectedCustomer.sector || '-' },
-                    { label: 'Şirket', value: selectedCustomer.company_name || '-' },
-                    { label: 'Kayıt', value: new Date(selectedCustomer.created_at).toLocaleDateString('tr-TR') },
-                  ].map(item => (
-                    <div key={item.label} className="flex justify-between py-2 border-b border-gray-50">
-                      <span className="text-xs text-gray-500">{item.label}</span>
-                      <span className="text-xs font-medium text-gray-900">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Plan & Fiyatlandırma</p>
-                <div className="bg-blue-50 rounded-xl p-4 space-y-2">
-                  {[
-                    { label: 'Plan', value: selectedCustomer.subscriptions?.[0]?.plan || 'Trial' },
-                    { label: 'Şube Başı', value: `₺${selectedCustomer.subscriptions?.[0]?.per_branch_fee || 0}` },
-                    { label: 'Aylık Sabit', value: `₺${selectedCustomer.subscriptions?.[0]?.monthly_fee || 0}` },
-                    { label: 'Ödeme Bitiş', value: selectedCustomer.subscriptions?.[0]?.paid_until ? new Date(selectedCustomer.subscriptions[0].paid_until).toLocaleDateString('tr-TR') : '-' },
-                  ].map(item => (
-                    <div key={item.label} className="flex justify-between">
-                      <span className="text-xs text-blue-600">{item.label}</span>
-                      <span className="text-xs font-bold text-blue-800">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">
-                  Şubeler ({branches.filter(b => b.owner_id === selectedCustomer.id).length})
-                </p>
-                {branches.filter(b => b.owner_id === selectedCustomer.id).length === 0 ? (
-                  <p className="text-xs text-gray-400">Henüz şube yok.</p>
-                ) : branches.filter(b => b.owner_id === selectedCustomer.id).map(b => (
-                  <div key={b.id} className="flex items-center justify-between py-2 border-b border-gray-50">
-                    <span className="text-xs font-medium text-gray-900">{b.branch_name}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${b.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {b.is_active ? 'Aktif' : 'Pasif'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Hesap Durumu</p>
-                <div className="flex items-center justify-between bg-gray-50 rounded-xl p-4">
-                  <span className="text-sm text-gray-700">{selectedCustomer.is_active ? 'Hesap Aktif' : 'Hesap Pasif'}</span>
-                  <button onClick={() => { handleToggleActive(selectedCustomer); setSelectedCustomer({ ...selectedCustomer, is_active: !selectedCustomer.is_active }) }}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${selectedCustomer.is_active ? 'bg-green-500' : 'bg-gray-300'}`}>
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${selectedCustomer.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
-                  </button>
-                </div>
-              </div>
+            <div className="flex gap-3">
+              <Btn variant="secondary" className="flex-1" onClick={() => navigator.clipboard.writeText(inviteLink)}>Kopyala</Btn>
+              <Btn className="flex-1" onClick={resetForm}>Tamam</Btn>
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <form onSubmit={handleAddCustomer} className="p-6 space-y-4">
+            <div>
+              <p className="text-xs font-medium text-gray-500 mb-2">Kullanıcı Tipi</p>
+              <div className="grid grid-cols-2 gap-2">
+                {[{ key: 'customer', label: '🏢 Müşteri Firma' }, { key: 'advertiser', label: '📣 Reklamcı' }].map(t => (
+                  <button key={t.key} type="button" onClick={() => setNewUserType(t.key)}
+                    className={`py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${newUserType === t.key ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Ad Soyad *" value={newName} onChange={(e: any) => setNewName(e.target.value)} required placeholder="Ad Soyad" />
+              <Input label="E-posta *" type="email" value={newEmail} onChange={(e: any) => setNewEmail(e.target.value)} required placeholder="firma@email.com" />
+              <Input label="Şifre *" type="password" value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)} required placeholder="En az 6 karakter" />
+              <Input label="Firma Adı" value={newCompany} onChange={(e: any) => setNewCompany(e.target.value)} placeholder="Firma Adı A.Ş." />
+              <Input label="Sektör" value={newSector} onChange={(e: any) => setNewSector(e.target.value)} placeholder="Estetik, Emlak..." />
+              <Input label="Aylık Sabit Ücret (₺)" type="number" value={newMonthlyFee} onChange={(e: any) => setNewMonthlyFee(e.target.value)} placeholder="0" />
+              <Input label="Şube Başı Ücret (₺)" type="number" value={newPerBranchFee} onChange={(e: any) => setNewPerBranchFee(e.target.value)} placeholder="0" />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Btn type="button" variant="secondary" className="flex-1" onClick={resetForm}>İptal</Btn>
+              <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Oluşturuluyor...' : 'Firma Oluştur'}</Btn>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* ── FİRMA DETAY MODAL ── */}
+      <Modal open={showCustomerDetail} onClose={() => setShowCustomerDetail(false)} title={selectedCustomer?.company_name || selectedCustomer?.full_name || 'Firma Detayı'} subtitle={selectedCustomer?.email} size="lg">
+        {selectedCustomer && (
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Ad Soyad', value: selectedCustomer.full_name },
+                { label: 'E-posta', value: selectedCustomer.email },
+                { label: 'Sektör', value: selectedCustomer.sector || '-' },
+                { label: 'Kayıt Tarihi', value: new Date(selectedCustomer.created_at).toLocaleDateString('tr-TR') },
+              ].map(item => (
+                <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
+                  <p className="text-xs text-gray-400 mb-1">{item.label}</p>
+                  <p className="text-sm font-medium text-gray-900">{item.value}</p>
+                </div>
+              ))}
+            </div>
+            {selectedCustomer.subscriptions?.[0] && (
+              <div className="bg-indigo-50 rounded-xl p-4">
+                <p className="text-xs font-semibold text-indigo-700 mb-3">Abonelik</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: 'Plan', value: selectedCustomer.subscriptions[0].plan },
+                    { label: 'Aylık Ücret', value: `₺${selectedCustomer.subscriptions[0].monthly_fee}` },
+                    { label: 'Şube/Ücret', value: `₺${selectedCustomer.subscriptions[0].per_branch_fee}` },
+                  ].map(item => (
+                    <div key={item.label}>
+                      <p className="text-xs text-indigo-400">{item.label}</p>
+                      <p className="text-sm font-semibold text-indigo-800">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Şubeler ({branches.filter(b => b.owner_id === selectedCustomer.id).length})</p>
+              {branches.filter(b => b.owner_id === selectedCustomer.id).length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-4">Şube yok.</p>
+              ) : branches.filter(b => b.owner_id === selectedCustomer.id).map(branch => (
+                <div key={branch.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 mb-2">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{branch.branch_name}</p>
+                    <p className="text-xs text-gray-400">{branch.contact_name}</p>
+                  </div>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${branch.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+                    {branch.is_active ? 'Aktif' : 'Pasif'}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <Btn variant="danger" className="flex-1" onClick={() => { handleToggleActive(selectedCustomer); setShowCustomerDetail(false) }}>
+                {selectedCustomer.is_active !== false ? 'Pasife Al' : 'Aktife Al'}
+              </Btn>
+              <Btn className="flex-1" onClick={() => setShowCustomerDetail(false)}>Kapat</Btn>
+            </div>
+          </div>
+        )}
+      </Modal>
+
     </div>
   )
 }
