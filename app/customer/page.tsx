@@ -240,8 +240,8 @@ export default function CustomerPage() {
   // Veri Merkezi
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importPreview, setImportPreview] = useState<any[]>([])
-  const [importBranch, setImportBranch] = useState(''')
-  const [importAssign, setImportAssign] = useState(''')
+  const [importBranch, setImportBranch] = useState('')
+  const [importAssign, setImportAssign] = useState('')
   const [importLoading, setImportLoading] = useState(false)
   const [importResult, setImportResult] = useState<{success: number, error: number, errors: string[]} | null>(null)
   const [importSets, setImportSets] = useState<any[]>([])
