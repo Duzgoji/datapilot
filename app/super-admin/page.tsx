@@ -181,38 +181,23 @@ export default function SuperAdminPage() {
   const handleOnboardingStep3 = async () => {
     setObSaving(true)
     try {
-      // 1. Kullanıcı oluştur
-      const { data, error } = await supabase.auth.signUp({
-        email: obEmail, password: obPassword,
-        options: { data: { full_name: obName, role: 'customer' } }
-      })
-      if (error) { alert(error.message); setObSaving(false); return }
-      const userId = data.user?.id
-      if (!userId) { alert('Kullanıcı oluşturulamadı.'); setObSaving(false); return }
-      setObCreatedUserId(userId)
-
-      // 2. Profile upsert
-      await supabase.from('profiles').upsert({
-        id: userId, email: obEmail, full_name: obName, role: 'customer',
-        company_name: obCompany, sector: obSector, phone: obPhone, is_active: true
-      })
-
-      // 3. Subscription
-      await supabase.from('subscriptions').insert({
-        owner_id: userId, plan: obPlan, status: 'active',
-        monthly_fee: parseFloat(obMonthlyFee) || 0,
-        per_branch_fee: parseFloat(obPerBranchFee) || 0,
-      })
-
-      // 4. İlk şube
-      if (obBranchName) {
-        await supabase.from('branches').insert({
-          owner_id: userId, branch_name: obBranchName, city: obBranchCity || null,
-          commission_model: obCommissionModel, is_active: true
+      // API route üzerinden oluştur (mevcut super admin oturumunu bozmaz)
+      const res = await fetch('/api/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: obEmail, password: obPassword, full_name: obName,
+          company_name: obCompany, sector: obSector, phone: obPhone,
+          plan: obPlan, monthly_fee: obMonthlyFee, per_branch_fee: obPerBranchFee,
+          branch_name: obBranchName, branch_city: obBranchCity,
+          commission_model: obCommissionModel
         })
-      }
+      })
+      const result = await res.json()
+      if (result.error) { alert(result.error); setObSaving(false); return }
+      setObCreatedUserId(result.userId)
 
-      // 5. Davet linki
+      // Davet linki
       const token = Math.random().toString(36).substring(2) + Date.now().toString(36)
       const { data: { user: curUser } } = await supabase.auth.getUser()
       await supabase.from('invitations').insert({ email: obEmail, role: 'customer', token, invited_by: curUser?.id })
