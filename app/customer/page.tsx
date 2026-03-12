@@ -63,6 +63,12 @@ const SOURCE_CONFIG: any = {
 
 // ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
 
+const MetaLogo = ({ size = 20, className = '' }: { size?: number, className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z" fill="currentColor"/>
+  </svg>
+)
+
 const Badge = ({ status }: { status: string }) => (
   <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_CONFIG[status]?.badge || 'bg-gray-100 text-gray-600'}`}>
     <span className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG[status]?.dot || 'bg-gray-400'}`} />
@@ -71,7 +77,10 @@ const Badge = ({ status }: { status: string }) => (
 )
 
 const SourceBadge = ({ source }: { source: string }) => (
-  <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${SOURCE_CONFIG[source]?.badge || 'bg-gray-100 text-gray-500'}`}>
+  <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md ${SOURCE_CONFIG[source]?.badge || 'bg-gray-100 text-gray-500'}`}>
+    {source === 'meta' && (
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/></svg>
+    )}
     {SOURCE_CONFIG[source]?.label || source}
   </span>
 )
@@ -930,7 +939,9 @@ export default function CustomerPage() {
 
             if (notConnected) return (
               <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
-                <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">𝑓</div>
+                <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <MetaLogo size={28} className="text-blue-600" />
+                </div>
                 <p className="text-gray-700 font-semibold mb-1">Meta Bağlantısı Gerekli</p>
                 <p className="text-sm text-gray-400 mb-4">Önce Meta hesabını bağlamalısın.</p>
                 <button onClick={() => setActiveTab('meta-baglanti')} className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-xl font-medium hover:bg-indigo-700 transition-colors">Meta Bağlantısına Git →</button>
@@ -945,7 +956,7 @@ export default function CustomerPage() {
                   <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/5 rounded-full" />
                   <div className="relative flex items-center gap-4">
                     <div className="w-12 h-12 bg-white/15 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <span className="text-2xl font-bold">𝑓</span>
+                      <MetaLogo size={26} className="text-white" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-0.5">
@@ -1001,7 +1012,9 @@ export default function CustomerPage() {
                   </div>
                   {metaLeads.length === 0 ? (
                     <div className="p-16 text-center">
-                      <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl">𝑓</div>
+                      <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                        <MetaLogo size={24} className="text-blue-500" />
+                      </div>
                       <p className="text-gray-500 text-sm font-medium">Henüz Meta'dan lead gelmedi</p>
                       <p className="text-xs text-gray-400 mt-1">Reklam formunu dolduran biri olduğunda otomatik buraya düşecek</p>
                     </div>
