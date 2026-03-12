@@ -496,27 +496,27 @@ export default function CustomerPage() {
       <aside
         onMouseEnter={() => setSidebarCollapsed(false)}
         onMouseLeave={() => setSidebarCollapsed(true)}
-        className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-white border-r border-gray-100 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-200 shadow-sm`}>
+        className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-gray-950 border-r border-gray-800 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-200 shadow-xl`}>
 
         {/* DataPilot Logo */}
-        <div className={`flex items-center h-14 border-b border-gray-100 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+        <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
           <img src="/logo.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
-          {!sidebarCollapsed && <span className="font-semibold text-gray-900 text-sm tracking-tight truncate">DataPilot</span>}
+          {!sidebarCollapsed && <span className="font-semibold text-white text-sm tracking-tight truncate">DataPilot</span>}
         </div>
 
         {/* Firma */}
         {!sidebarCollapsed && (
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5">
+          <div className="px-4 py-3 border-b border-gray-800 flex items-center gap-2.5">
             {profile?.logo_url ? (
-              <img src={profile.logo_url} alt="Firma" className="w-8 h-8 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+              <img src={profile.logo_url} alt="Firma" className="w-8 h-8 rounded-lg object-cover flex-shrink-0 border border-gray-700" />
             ) : (
-              <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-indigo-600 text-xs font-bold">{(profile?.company_name || profile?.full_name || 'F').charAt(0)}</span>
+              <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-indigo-400 text-xs font-bold">{(profile?.company_name || profile?.full_name || 'F').charAt(0)}</span>
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-gray-800 truncate">{profile?.company_name || profile?.full_name}</p>
-              <span className="text-xs text-indigo-600 font-medium">Müşteri</span>
+              <p className="text-xs font-semibold text-gray-200 truncate">{profile?.company_name || profile?.full_name}</p>
+              <span className="text-xs text-indigo-400 font-medium">Müşteri</span>
             </div>
           </div>
         )}
@@ -529,8 +529,8 @@ export default function CustomerPage() {
                 onClick={() => { if (item.children) toggleMenu(item.key); else setActiveTab(item.key) }}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all mb-0.5 ${
                   activeTab === item.key && !item.children
-                    ? 'bg-indigo-600 text-white font-medium shadow-sm shadow-indigo-200'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-indigo-600 text-white font-medium shadow-lg shadow-indigo-900/50'
+                    : 'text-gray-400 hover:bg-white/10 hover:text-white'
                 }`}
               >
                 <span className="text-base flex-shrink-0">{item.icon}</span>
@@ -538,17 +538,17 @@ export default function CustomerPage() {
                   <>
                     <span className="flex-1 text-left">{item.label}</span>
                     {item.children && (
-                      <svg className={`w-3.5 h-3.5 transition-transform text-gray-400 ${expandedMenus.includes(item.key) ? 'rotate-90' : ''}`} viewBox="0 0 14 14" fill="none"><path d="M4 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <svg className={`w-3.5 h-3.5 transition-transform text-gray-600 ${expandedMenus.includes(item.key) ? 'rotate-90' : ''}`} viewBox="0 0 14 14" fill="none"><path d="M4 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     )}
                   </>
                 )}
               </button>
               {item.children && expandedMenus.includes(item.key) && !sidebarCollapsed && (
-                <div className="ml-3 pl-3 border-l border-gray-100 mb-1">
+                <div className="ml-3 pl-3 border-l border-gray-700 mb-1">
                   {item.children.map(child => (
                     <button key={child.key} onClick={() => setActiveTab(child.key)}
                       className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all mb-0.5 ${
-                        activeTab === child.key ? 'text-indigo-600 font-medium bg-indigo-50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
+                        activeTab === child.key ? 'text-indigo-400 font-medium bg-indigo-500/10' : 'text-gray-500 hover:text-gray-200 hover:bg-white/5'
                       }`}>
                       {child.label}
                     </button>
@@ -560,16 +560,22 @@ export default function CustomerPage() {
         </nav>
 
         {/* Bottom */}
-        {!sidebarCollapsed && (
-          <div className="p-3 border-t border-gray-100">
+        {!sidebarCollapsed ? (
+          <div className="p-3 border-t border-gray-800">
             <div className="flex items-center gap-2.5 px-2 py-1.5">
-              <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-indigo-600 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
+              <div className="w-7 h-7 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-indigo-400 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-gray-800 truncate">{profile?.full_name}</p>
-                <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
+                <p className="text-xs font-medium text-gray-300 truncate">{profile?.full_name}</p>
+                <p className="text-xs text-gray-600 truncate">{profile?.email}</p>
               </div>
+            </div>
+          </div>
+        ) : (
+          <div className="p-3 border-t border-gray-800">
+            <div className="w-7 h-7 rounded-lg bg-indigo-500/20 flex items-center justify-center mx-auto">
+              <span className="text-indigo-400 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
             </div>
           </div>
         )}
@@ -579,7 +585,7 @@ export default function CustomerPage() {
       <div className="ml-16 flex-1 transition-all duration-200 min-w-0">
 
         {/* Top bar */}
-        <header className="h-14 bg-white border-b border-gray-100 flex items-center px-6 sticky top-0 z-10">
+        <header className="h-14 bg-white/80 backdrop-blur-sm border-b border-gray-100 flex items-center px-6 sticky top-0 z-10 shadow-sm">
           <div className="flex items-center gap-1.5 text-sm text-gray-400">
             <span>DataPilot</span>
             {getPageTitle().split(' › ').map((part, i, arr) => (
@@ -621,35 +627,39 @@ export default function CustomerPage() {
         </header>
 
         {/* Content */}
-        <main className="p-6">
+        <main className="p-6 min-h-screen" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
 
           {/* ── DASHBOARD ── */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
               {/* Welcome */}
-              <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-6 text-white relative overflow-hidden">
+              <div className="bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-700 rounded-2xl p-6 text-white relative overflow-hidden">
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-                <p className="text-indigo-200 text-sm mb-1">Hoş geldin,</p>
-                <h1 className="text-2xl font-bold mb-1">{profile?.full_name}</h1>
-                <p className="text-indigo-300 text-sm">{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-                <div className="flex gap-6 mt-5 pt-5 border-t border-indigo-500/40">
-                  <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Toplam Lead</p></div>
-                  <div><p className="text-3xl font-bold">{totalSales}</p><p className="text-indigo-300 text-xs mt-0.5">Satış</p></div>
-                  <div><p className="text-3xl font-bold">%{conversionRate}</p><p className="text-indigo-300 text-xs mt-0.5">Dönüşüm</p></div>
-                  <div><p className="text-3xl font-bold">₺{(totalRevenue / 1000).toFixed(0)}K</p><p className="text-indigo-300 text-xs mt-0.5">Ciro</p></div>
+                <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/5 rounded-full" />
+                <div className="absolute -right-2 bottom-0 w-24 h-24 bg-violet-500/20 rounded-full" />
+                <div className="relative">
+                  <p className="text-indigo-200 text-sm mb-1">Hoş geldin,</p>
+                  <h1 className="text-2xl font-bold mb-1">{profile?.full_name}</h1>
+                  <p className="text-indigo-300 text-sm">{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                  <div className="flex gap-8 mt-5 pt-5 border-t border-white/10">
+                    <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Toplam Lead</p></div>
+                    <div><p className="text-3xl font-bold">{totalSales}</p><p className="text-indigo-300 text-xs mt-0.5">Satış</p></div>
+                    <div><p className="text-3xl font-bold">%{conversionRate}</p><p className="text-indigo-300 text-xs mt-0.5">Dönüşüm</p></div>
+                    <div><p className="text-3xl font-bold">₺{(totalRevenue / 1000).toFixed(0)}K</p><p className="text-indigo-300 text-xs mt-0.5">Ciro</p></div>
+                  </div>
                 </div>
               </div>
 
               {/* Stat cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: 'Aktif Lead', value: leads.filter(l => l.status === 'new' || l.status === 'called').length, sub: 'Yeni + Arandı', color: 'text-blue-600', bg: 'bg-blue-50', icon: '◎' },
-                  { label: 'Randevu', value: leads.filter(l => l.status === 'appointment_scheduled').length, sub: 'Bekleyen randevu', color: 'text-violet-600', bg: 'bg-violet-50', icon: '◐' },
-                  { label: 'Toplam Satış', value: totalSales, sub: `₺${totalRevenue.toLocaleString()}`, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: '◉' },
-                  { label: 'Şubeler', value: branches.length, sub: `${teamMembers.length} ekip üyesi`, color: 'text-orange-600', bg: 'bg-orange-50', icon: '◈' },
+                  { label: 'Aktif Lead', value: leads.filter(l => l.status === 'new' || l.status === 'called').length, sub: 'Yeni + Arandı', color: 'text-blue-600', border: 'border-blue-100', gradient: 'from-blue-50 to-white', iconBg: 'bg-blue-100', icon: '◎' },
+                  { label: 'Randevu', value: leads.filter(l => l.status === 'appointment_scheduled').length, sub: 'Bekleyen randevu', color: 'text-violet-600', border: 'border-violet-100', gradient: 'from-violet-50 to-white', iconBg: 'bg-violet-100', icon: '◐' },
+                  { label: 'Toplam Satış', value: totalSales, sub: `₺${totalRevenue.toLocaleString()}`, color: 'text-emerald-600', border: 'border-emerald-100', gradient: 'from-emerald-50 to-white', iconBg: 'bg-emerald-100', icon: '◉' },
+                  { label: 'Şubeler', value: branches.length, sub: `${teamMembers.length} ekip üyesi`, color: 'text-orange-600', border: 'border-orange-100', gradient: 'from-orange-50 to-white', iconBg: 'bg-orange-100', icon: '◈' },
                 ].map(card => (
-                  <div key={card.label} className="bg-white rounded-2xl p-5 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
-                    <div className={`w-9 h-9 ${card.bg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
+                  <div key={card.label} className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-5 border ${card.border} hover:shadow-md transition-all`}>
+                    <div className={`w-9 h-9 ${card.iconBg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
                     <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
                     <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
@@ -665,10 +675,13 @@ export default function CustomerPage() {
                 </div>
                 {leads.length === 0 ? (
                   <div className="p-12 text-center"><p className="text-gray-400 text-sm">Henüz lead yok.</p></div>
-                ) : leads.slice(0, 6).map(lead => (
-                  <div key={lead.id} onClick={() => openDetailModal(lead)} className="px-5 py-3.5 flex items-center gap-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 cursor-pointer transition-colors">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-semibold text-gray-500">{(lead.full_name || 'İ').charAt(0)}</span>
+                ) : leads.slice(0, 6).map((lead, idx) => {
+                  const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600','from-violet-100 to-purple-100 text-violet-600','from-emerald-100 to-teal-100 text-emerald-600','from-orange-100 to-amber-100 text-orange-600','from-pink-100 to-rose-100 text-rose-600','from-cyan-100 to-blue-100 text-blue-600']
+                  const ac = avatarColors[idx % avatarColors.length]
+                  return (
+                  <div key={lead.id} onClick={() => openDetailModal(lead)} className="px-5 py-3.5 flex items-center gap-3 border-b border-gray-50 last:border-0 hover:bg-indigo-50/30 cursor-pointer transition-colors group">
+                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${ac} flex items-center justify-center flex-shrink-0`}>
+                      <span className="text-xs font-semibold">{(lead.full_name || 'İ').charAt(0)}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
@@ -676,7 +689,8 @@ export default function CustomerPage() {
                     </div>
                     <Badge status={lead.status} />
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
@@ -789,7 +803,7 @@ export default function CustomerPage() {
               ) : leads.filter(l => !l.assigned_to).map((lead, i, arr) => (
                 <div key={lead.id} className={`px-5 py-4 flex items-center justify-between ${i < arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center"><span className="text-sm font-semibold text-gray-500">{(lead.full_name || 'İ').charAt(0)}</span></div>
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center"><span className="text-sm font-semibold text-orange-600">{(lead.full_name || 'İ').charAt(0)}</span></div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">{lead.full_name || 'İsimsiz'}</p>
                       <p className="text-xs text-gray-400">{lead.phone} · {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
@@ -826,9 +840,12 @@ export default function CustomerPage() {
               <div className="bg-white rounded-2xl border border-gray-100">
                 {branches.length === 0 ? (
                   <div className="p-16 text-center"><p className="text-gray-400 text-sm">Henüz şube yok.</p></div>
-                ) : branches.map((branch, i) => (
-                  <div key={branch.id} className={`px-5 py-4 flex items-center gap-4 ${i < branches.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                    <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0"><span className="text-indigo-600 font-semibold text-sm">{branch.branch_name?.charAt(0)}</span></div>
+                ) : branches.map((branch, i) => {
+                  const branchColors = ['bg-indigo-100 text-indigo-600','bg-violet-100 text-violet-600','bg-emerald-100 text-emerald-600','bg-orange-100 text-orange-600']
+                  const bc = branchColors[i % branchColors.length]
+                  return (
+                  <div key={branch.id} className={`px-5 py-4 flex items-center gap-4 ${i < branches.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                    <div className={`w-9 h-9 rounded-xl ${bc} flex items-center justify-center flex-shrink-0`}><span className="font-semibold text-sm">{branch.branch_name?.charAt(0)}</span></div>
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-gray-900">{branch.branch_name}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{branch.contact_name} · {branch.contact_email}</p>
@@ -839,7 +856,7 @@ export default function CustomerPage() {
                       <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                     </label>
                   </div>
-                ))}
+                )})}
               </div>
             </div>
           )}
@@ -861,21 +878,23 @@ export default function CustomerPage() {
                   const memberLeads = leads.filter(l => l.assigned_to === member.user_id)
                   const memberSales = memberLeads.filter(l => l.status === 'procedure_done').length
                   const memberRevenue = memberLeads.filter(l => l.status === 'procedure_done').reduce((s, l) => s + (l.procedure_amount || 0), 0)
+                  const avatarPairs = ['from-violet-200 to-indigo-200 text-indigo-700','from-emerald-200 to-teal-200 text-emerald-700','from-orange-200 to-amber-200 text-orange-700','from-pink-200 to-rose-200 text-rose-700','from-blue-200 to-cyan-200 text-blue-700']
+                  const ap = avatarPairs[i % avatarPairs.length]
                   return (
-                    <div key={member.id} className={`px-5 py-4 flex items-center gap-4 ${i < teamMembers.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center flex-shrink-0">
-                        <span className="text-indigo-600 font-semibold text-sm">{member.profiles?.full_name?.charAt(0)}</span>
+                    <div key={member.id} className={`px-5 py-4 flex items-center gap-4 ${i < teamMembers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                      <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${ap} flex items-center justify-center flex-shrink-0`}>
+                        <span className="font-semibold text-sm">{member.profiles?.full_name?.charAt(0)}</span>
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-semibold text-gray-900">{member.profiles?.full_name}</p>
-                          <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{member.role === 'agent' ? 'Satışçı' : 'Yönetici'}</span>
+                          <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium">{member.role === 'agent' ? 'Satışçı' : 'Yönetici'}</span>
                         </div>
                         <p className="text-xs text-gray-400 mt-0.5">{member.branches?.branch_name} · %{member.commission_rate} prim</p>
-                        <div className="flex gap-3 mt-1.5">
-                          <span className="text-xs text-blue-600 font-medium">{memberLeads.length} lead</span>
-                          <span className="text-xs text-emerald-600 font-medium">{memberSales} satış</span>
-                          {memberRevenue > 0 && <span className="text-xs text-gray-500">₺{memberRevenue.toLocaleString()}</span>}
+                        <div className="flex gap-2 mt-1.5">
+                          <span className="text-xs bg-blue-50 text-blue-600 font-medium px-2 py-0.5 rounded-md">{memberLeads.length} lead</span>
+                          <span className="text-xs bg-emerald-50 text-emerald-600 font-medium px-2 py-0.5 rounded-md">{memberSales} satış</span>
+                          {memberRevenue > 0 && <span className="text-xs bg-gray-50 text-gray-600 font-medium px-2 py-0.5 rounded-md">₺{memberRevenue.toLocaleString()}</span>}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
