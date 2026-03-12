@@ -32,6 +32,7 @@ const menuStructure = [
     key: 'performans', label: 'Performans', icon: '◐', children: [
       { key: 'performans-genel', label: 'Genel' },
       { key: 'performans-karsilastirma', label: 'Karşılaştırma' },
+      { key: 'performans-kar', label: 'Kâr Analizi' },
     ]
   },
   {
@@ -499,7 +500,7 @@ export default function CustomerPage() {
 
         {/* DataPilot Logo */}
         <div className={`flex items-center h-14 border-b border-gray-100 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-          <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
+          <img src="/logo.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
           {!sidebarCollapsed && <span className="font-semibold text-gray-900 text-sm tracking-tight truncate">DataPilot</span>}
         </div>
 
@@ -1302,6 +1303,187 @@ export default function CustomerPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            )
+          })()}
+
+          {/* ── KÂR ANALİZİ ── */}
+          {activeTab === 'performans-kar' && (() => {
+            const now = new Date()
+
+            // Dönem filtresi — genel ile aynı state paylaşır
+            const getPeriodRange = () => {
+              const end = new Date(); end.setHours(23,59,59,999)
+              if (perfPeriod === 'today') { const s = new Date(); s.setHours(0,0,0,0); return { start: s, end } }
+              if (perfPeriod === '7day') { const s = new Date(); s.setDate(s.getDate()-6); s.setHours(0,0,0,0); return { start: s, end } }
+              if (perfPeriod === '1month') { const s = new Date(now.getFullYear(), now.getMonth(), 1); return { start: s, end } }
+              if (perfPeriod === '3month') { const s = new Date(now.getFullYear(), now.getMonth()-2, 1); return { start: s, end } }
+              if (perfPeriod === '6month') { const s = new Date(now.getFullYear(), now.getMonth()-5, 1); return { start: s, end } }
+              if (perfPeriod === '1year') { const s = new Date(now.getFullYear(), 0, 1); return { start: s, end } }
+              if (perfPeriod === 'custom' && perfStartDate && perfEndDate) {
+                const s = new Date(perfStartDate); s.setHours(0,0,0,0)
+                const e = new Date(perfEndDate); e.setHours(23,59,59,999)
+                return { start: s, end: e }
+              }
+              return { start: new Date(now.getFullYear(), now.getMonth()-5, 1), end }
+            }
+            const { start: rangeStart, end: rangeEnd } = getPeriodRange()
+            const filteredLeads = leads.filter(l => { const d = new Date(l.created_at); return d >= rangeStart && d <= rangeEnd })
+            const soldLeads = filteredLeads.filter(l => l.status === 'procedure_done')
+
+            // Toplam ciro
+            const totalRevenue = soldLeads.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+
+            // Satışçı prim hesabı
+            const memberEarnings = teamMembers.map((tm: any) => {
+              const branch = branches.find((b: any) => b.id === tm.branch_id)
+              const commModel = branch?.commission_model || 'fixed_rate'
+              const commValue = tm.commission_value ?? branch?.commission_value ?? 0
+              const mSales = soldLeads.filter(l => l.assigned_to === tm.user_id)
+              const mRevenue = mSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+              const mLeads = filteredLeads.filter(l => l.assigned_to === tm.user_id)
+
+              let prim = 0
+              if (commModel === 'fixed_rate') prim = (mRevenue * commValue) / 100
+              else if (commModel === 'per_lead') prim = mLeads.length * commValue
+
+              return {
+                name: tm.profiles?.full_name || tm.profiles?.email || '—',
+                branch: branch?.branch_name || '—',
+                leads: mLeads.length,
+                sales: mSales.length,
+                revenue: mRevenue,
+                commModel,
+                commValue,
+                prim,
+              }
+            }).sort((a: any, b: any) => b.prim - a.prim)
+
+            const totalPrim = memberEarnings.reduce((s: number, m: any) => s + m.prim, 0)
+            const netProfit = totalRevenue - totalPrim
+
+            const periodLabels: any = {
+              today: 'Bugün', '7day': 'Son 7 Gün', '1month': 'Bu Ay',
+              '3month': 'Son 3 Ay', '6month': 'Son 6 Ay', '1year': 'Bu Yıl', custom: 'Özel Dönem'
+            }
+
+            return (
+              <div className="space-y-5">
+
+                {/* Dönem Filtresi */}
+                <div className="bg-white rounded-2xl border border-gray-100 px-5 py-3.5 flex items-center gap-3 flex-wrap">
+                  <span className="text-xs font-medium text-gray-500 flex-shrink-0">Dönem:</span>
+                  <div className="flex gap-1 flex-wrap">
+                    {[
+                      { key: 'today', label: 'Bugün' }, { key: '7day', label: 'Son 7 Gün' },
+                      { key: '1month', label: 'Bu Ay' }, { key: '3month', label: 'Son 3 Ay' },
+                      { key: '6month', label: 'Son 6 Ay' }, { key: '1year', label: 'Bu Yıl' },
+                      { key: 'custom', label: 'Özel' },
+                    ].map(p => (
+                      <button key={p.key} onClick={() => setPerfPeriod(p.key)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${perfPeriod === p.key ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'}`}>
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                  {perfPeriod === 'custom' && (
+                    <div className="flex items-center gap-2 ml-auto">
+                      <input type="date" value={perfStartDate} onChange={e => setPerfStartDate(e.target.value)}
+                        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      <span className="text-xs text-gray-400">—</span>
+                      <input type="date" value={perfEndDate} onChange={e => setPerfEndDate(e.target.value)}
+                        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Ana Özet Kartlar */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl border border-emerald-100 p-5">
+                    <p className="text-xs text-gray-400 mb-1">Toplam Ciro</p>
+                    <p className="text-3xl font-bold text-emerald-600">₺{totalRevenue.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400 mt-1">{soldLeads.length} satış · {periodLabels[perfPeriod]}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-rose-50 to-white rounded-2xl border border-rose-100 p-5">
+                    <p className="text-xs text-gray-400 mb-1">Toplam Prim</p>
+                    <p className="text-3xl font-bold text-rose-500">₺{totalPrim.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400 mt-1">{memberEarnings.length} satışçı · komisyon toplamı</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-indigo-50 to-white rounded-2xl border border-indigo-100 p-5 relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, #4f46e5 1px, transparent 1px)', backgroundSize: '12px 12px' }} />
+                    <p className="text-xs text-gray-400 mb-1">Sana Kalan</p>
+                    <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>₺{netProfit.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {totalRevenue > 0 ? `%${((netProfit / totalRevenue) * 100).toFixed(1)} net oran` : 'Henüz satış yok'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Görsel Dağılım */}
+                {totalRevenue > 0 && (
+                  <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                    <p className="text-sm font-semibold text-gray-900 mb-4">Gelir Dağılımı</p>
+                    <div className="h-4 rounded-full overflow-hidden flex">
+                      <div className="h-full bg-indigo-500 transition-all" style={{ width: `${(netProfit / totalRevenue) * 100}%` }} title={`Sana kalan: ₺${netProfit.toLocaleString()}`} />
+                      <div className="h-full bg-rose-400 transition-all" style={{ width: `${(totalPrim / totalRevenue) * 100}%` }} title={`Primler: ₺${totalPrim.toLocaleString()}`} />
+                    </div>
+                    <div className="flex gap-6 mt-3">
+                      <span className="flex items-center gap-2 text-xs text-gray-500"><span className="w-3 h-3 bg-indigo-500 rounded-sm inline-block" /> Sana kalan %{totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0}</span>
+                      <span className="flex items-center gap-2 text-xs text-gray-500"><span className="w-3 h-3 bg-rose-400 rounded-sm inline-block" /> Satışçı primleri %{totalRevenue > 0 ? ((totalPrim / totalRevenue) * 100).toFixed(1) : 0}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Satışçı Prim Dökümü */}
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Satışçı Prim Dökümü</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">{periodLabels[perfPeriod]} · komisyon oranlarına göre</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-rose-500">₺{totalPrim.toLocaleString()}</p>
+                      <p className="text-xs text-gray-400">toplam prim</p>
+                    </div>
+                  </div>
+                  {memberEarnings.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-10">Henüz satışçı yok.</p>
+                  ) : (
+                    <div className="divide-y divide-gray-50">
+                      {memberEarnings.map((m: any, i: number) => {
+                        const maxPrim = Math.max(...memberEarnings.map((x: any) => x.prim), 1)
+                        return (
+                          <div key={i} className="px-6 py-4">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                <span className="text-blue-600 text-xs font-bold">{m.name.charAt(0)}</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900">{m.name}</p>
+                                <p className="text-xs text-gray-400">{m.branch} · {m.commModel === 'fixed_rate' ? `%${m.commValue} oran` : `₺${m.commValue}/lead`}</p>
+                              </div>
+                              <div className="text-right flex-shrink-0">
+                                <p className="text-sm font-bold text-rose-500">₺{m.prim.toLocaleString()}</p>
+                                <p className="text-xs text-gray-400">prim</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-rose-400 rounded-full" style={{ width: `${(m.prim / maxPrim) * 100}%` }} />
+                              </div>
+                              <div className="flex gap-3 text-xs text-gray-400 flex-shrink-0">
+                                <span>{m.leads} lead</span>
+                                <span className="text-emerald-600 font-medium">{m.sales} satış</span>
+                                <span>₺{m.revenue.toLocaleString()} ciro</span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+
               </div>
             )
           })()}
