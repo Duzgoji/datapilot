@@ -278,8 +278,15 @@ export default function CustomerPage() {
 
   const handleChangePassword = async () => {
     setPasswordMsg(null)
-    if (settingsNewPassword !== settingsNewPassword2) { setPasswordMsg({ type: 'error', text: 'Şifreler eşleşmiyor.' }); return }
-    if (settingsNewPassword.length < 6) { setPasswordMsg({ type: 'error', text: 'En az 6 karakter olmalı.' }); return }
+    if (!settingsOldPassword) { setPasswordMsg({ type: 'error', text: 'Mevcut şifrenizi girin.' }); return }
+    if (settingsNewPassword !== settingsNewPassword2) { setPasswordMsg({ type: 'error', text: 'Yeni şifreler eşleşmiyor.' }); return }
+    if (settingsNewPassword.length < 6) { setPasswordMsg({ type: 'error', text: 'Yeni şifre en az 6 karakter olmalı.' }); return }
+    // Eski şifreyi doğrula
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user?.email) return
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email: user.email, password: settingsOldPassword })
+    if (signInError) { setPasswordMsg({ type: 'error', text: 'Mevcut şifre yanlış.' }); return }
+    // Yeni şifreyi kaydet
     const { error } = await supabase.auth.updateUser({ password: settingsNewPassword })
     if (error) setPasswordMsg({ type: 'error', text: 'Hata: ' + error.message })
     else { setPasswordMsg({ type: 'success', text: 'Şifre güncellendi!' }); setSettingsOldPassword(''); setSettingsNewPassword(''); setSettingsNewPassword2('') }
@@ -479,12 +486,16 @@ export default function CustomerPage() {
 
         {/* Logo */}
         <div className={`flex items-center h-14 border-b border-gray-100 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-xs font-bold">D</span>
-          </div>
-          {!sidebarCollapsed && <span className="font-semibold text-gray-900 text-sm tracking-tight">DataPilot</span>}
+          {profile?.logo_url ? (
+            <img src={profile.logo_url} alt="Logo" className="w-7 h-7 rounded-lg object-cover flex-shrink-0" />
+          ) : (
+            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xs font-bold">{(profile?.company_name || profile?.full_name || 'D').charAt(0)}</span>
+            </div>
+          )}
+          {!sidebarCollapsed && <span className="font-semibold text-gray-900 text-sm tracking-tight truncate">{profile?.company_name || 'DataPilot'}</span>}
           {!sidebarCollapsed && (
-            <button onClick={() => setSidebarCollapsed(true)} className="ml-auto text-gray-300 hover:text-gray-500 transition-colors">
+            <button onClick={() => setSidebarCollapsed(true)} className="ml-auto text-gray-300 hover:text-gray-500 transition-colors flex-shrink-0">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           )}
@@ -949,6 +960,7 @@ export default function CustomerPage() {
               <div className="bg-white rounded-2xl border border-gray-100 p-6">
                 <h3 className="font-semibold text-gray-900 mb-5">Şifre Değiştir</h3>
                 <div className="space-y-4">
+                  <Input label="Mevcut Şifre" type="password" value={settingsOldPassword} onChange={(e: any) => setSettingsOldPassword(e.target.value)} placeholder="Mevcut şifreniz" />
                   <Input label="Yeni Şifre" type="password" value={settingsNewPassword} onChange={(e: any) => setSettingsNewPassword(e.target.value)} placeholder="En az 6 karakter" />
                   <Input label="Yeni Şifre (Tekrar)" type="password" value={settingsNewPassword2} onChange={(e: any) => setSettingsNewPassword2(e.target.value)} placeholder="Şifreyi tekrar girin" />
                 </div>
@@ -960,7 +972,7 @@ export default function CustomerPage() {
                 )}
 
                 <div className="flex justify-end mt-5">
-                  <Btn onClick={handleChangePassword} disabled={!settingsNewPassword || !settingsNewPassword2}>
+                  <Btn onClick={handleChangePassword} disabled={!settingsOldPassword || !settingsNewPassword || !settingsNewPassword2}>
                     Şifreyi Güncelle
                   </Btn>
                 </div>
