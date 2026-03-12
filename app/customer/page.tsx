@@ -150,7 +150,7 @@ export default function CustomerPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['leadler', 'ekip'])
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
@@ -482,7 +482,10 @@ export default function CustomerPage() {
     <div className="min-h-screen bg-gray-50 flex" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
       {/* ── SIDEBAR ── */}
-      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-white border-r border-gray-100 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-300 shadow-sm`}>
+      <aside
+        onMouseEnter={() => setSidebarCollapsed(false)}
+        onMouseLeave={() => setSidebarCollapsed(true)}
+        className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-white border-r border-gray-100 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-200 shadow-sm`}>
 
         {/* Logo */}
         <div className={`flex items-center h-14 border-b border-gray-100 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
@@ -494,16 +497,6 @@ export default function CustomerPage() {
             </div>
           )}
           {!sidebarCollapsed && <span className="font-semibold text-gray-900 text-sm tracking-tight truncate">{profile?.company_name || 'DataPilot'}</span>}
-          {!sidebarCollapsed && (
-            <button onClick={() => setSidebarCollapsed(true)} className="ml-auto text-gray-300 hover:text-gray-500 transition-colors flex-shrink-0">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-          )}
-          {sidebarCollapsed && (
-            <button onClick={() => setSidebarCollapsed(false)} className="text-gray-300 hover:text-gray-500 transition-colors">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-          )}
         </div>
 
         {/* Firma */}
@@ -570,7 +563,7 @@ export default function CustomerPage() {
       </aside>
 
       {/* ── MAIN ── */}
-      <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-60'} flex-1 transition-all duration-300 min-w-0`}>
+      <div className="ml-16 flex-1 transition-all duration-200 min-w-0">
 
         {/* Top bar */}
         <header className="h-14 bg-white border-b border-gray-100 flex items-center px-6 sticky top-0 z-10">
@@ -892,7 +885,7 @@ export default function CustomerPage() {
           {activeTab === 'meta-leadformlar' && <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center"><p className="text-gray-400 text-sm">Lead formları yakında gelecek.</p></div>}
 
           {/* ── PERFORMANS ── */}
-{(activeTab === 'performans-genel' || activeTab === 'performans-karsilastirma') && (() => {
+{activeTab === 'performans-genel' && (() => {
             const now = new Date()
             const months = Array.from({ length: 6 }, (_, i) => {
               const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
@@ -1042,6 +1035,140 @@ export default function CustomerPage() {
                     </div>
                   </div>
                 )}
+              </div>
+            )
+          })()}
+
+          {/* ── PERFORMANS KARŞILAŞTIRMA ── */}
+          {activeTab === 'performans-karsilastirma' && (() => {
+            const now = new Date()
+            const thisMonth = { year: now.getFullYear(), month: now.getMonth() }
+            const lastMonth = { year: now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear(), month: now.getMonth() === 0 ? 11 : now.getMonth() - 1 }
+
+            const filterByMonth = (m: { year: number, month: number }) =>
+              leads.filter(l => { const d = new Date(l.created_at); return d.getFullYear() === m.year && d.getMonth() === m.month })
+
+            const thisLeads = filterByMonth(thisMonth)
+            const lastLeads = filterByMonth(lastMonth)
+            const thisSales = thisLeads.filter(l => l.status === 'procedure_done')
+            const lastSales = lastLeads.filter(l => l.status === 'procedure_done')
+            const thisRevenue = thisSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+            const lastRevenue = lastSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+            const thisConv = thisLeads.length > 0 ? ((thisSales.length / thisLeads.length) * 100).toFixed(1) : '0'
+            const lastConv = lastLeads.length > 0 ? ((lastSales.length / lastLeads.length) * 100).toFixed(1) : '0'
+
+            const diff = (a: number, b: number) => b === 0 ? null : (((a - b) / b) * 100).toFixed(0)
+            const thisMonthLabel = now.toLocaleDateString('tr-TR', { month: 'long' })
+            const lastMonthLabel = new Date(lastMonth.year, lastMonth.month).toLocaleDateString('tr-TR', { month: 'long' })
+
+            // Satışçı karşılaştırması
+            const memberPerf = teamMembers.map((tm: any) => {
+              const mLeads = leads.filter(l => l.assigned_to === tm.user_id)
+              const mSales = mLeads.filter(l => l.status === 'procedure_done')
+              const mRevenue = mSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+              const mThisMonth = mLeads.filter(l => { const d = new Date(l.created_at); return d.getFullYear() === thisMonth.year && d.getMonth() === thisMonth.month })
+              return {
+                name: tm.profiles?.full_name || tm.profiles?.email || '—',
+                branch: tm.branches?.branch_name || '—',
+                leads: mLeads.length, sales: mSales.length, revenue: mRevenue,
+                thisMonth: mThisMonth.length,
+                conv: mLeads.length > 0 ? ((mSales.length / mLeads.length) * 100).toFixed(0) : '0'
+              }
+            }).sort((a: any, b: any) => b.sales - a.sales)
+
+            const metrics = [
+              { label: 'Lead', this: thisLeads.length, last: lastLeads.length, color: 'text-indigo-600', bg: 'bg-indigo-50', format: (v: number) => v.toString() },
+              { label: 'Satış', this: thisSales.length, last: lastSales.length, color: 'text-emerald-600', bg: 'bg-emerald-50', format: (v: number) => v.toString() },
+              { label: 'Ciro', this: thisRevenue, last: lastRevenue, color: 'text-violet-600', bg: 'bg-violet-50', format: (v: number) => '₺' + v.toLocaleString() },
+              { label: 'Dönüşüm', this: parseFloat(thisConv), last: parseFloat(lastConv), color: 'text-amber-600', bg: 'bg-amber-50', format: (v: number) => '%' + v.toFixed(1) },
+            ]
+
+            return (
+              <div className="space-y-5">
+                {/* Ay Karşılaştırması */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <h3 className="font-semibold text-gray-900">Ay Karşılaştırması</h3>
+                    <div className="flex items-center gap-2 ml-auto text-xs">
+                      <span className="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-medium">{thisMonthLabel}</span>
+                      <span className="text-gray-400">vs</span>
+                      <span className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg font-medium">{lastMonthLabel}</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-4">
+                    {metrics.map(m => {
+                      const d = diff(m.this, m.last)
+                      const up = d !== null && parseFloat(d) > 0
+                      const down = d !== null && parseFloat(d) < 0
+                      return (
+                        <div key={m.label} className={`${m.bg} rounded-2xl p-4`}>
+                          <p className="text-xs text-gray-500 mb-2">{m.label}</p>
+                          <p className={`text-2xl font-bold ${m.color}`}>{m.format(m.this)}</p>
+                          <p className="text-xs text-gray-400 mt-1">{m.format(m.last)} geçen ay</p>
+                          {d !== null && (
+                            <div className={`mt-2 inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${up ? 'bg-emerald-100 text-emerald-700' : down ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                              {up ? '↑' : down ? '↓' : '='} {Math.abs(parseFloat(d))}%
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Satışçı Karşılaştırması */}
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-100">
+                    <h3 className="font-semibold text-gray-900">Satışçı Performans Sıralaması</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">Tüm zamanlar · Satış sayısına göre</p>
+                  </div>
+                  {memberPerf.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-10">Henüz satışçı yok.</p>
+                  ) : (
+                    <div className="divide-y divide-gray-50">
+                      {memberPerf.map((m: any, i: number) => {
+                        const maxSales = Math.max(...memberPerf.map((x: any) => x.sales), 1)
+                        return (
+                          <div key={i} className="px-6 py-4 flex items-center gap-4">
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold ${i === 0 ? 'bg-amber-100 text-amber-600' : i === 1 ? 'bg-gray-100 text-gray-500' : i === 2 ? 'bg-orange-50 text-orange-500' : 'bg-gray-50 text-gray-400'}`}>
+                              {i + 1}
+                            </div>
+                            <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                              <span className="text-blue-600 text-xs font-bold">{m.name.charAt(0)}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="text-sm font-medium text-gray-900">{m.name}</p>
+                                <span className="text-xs text-gray-400">{m.branch}</span>
+                              </div>
+                              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden w-full">
+                                <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(m.sales / maxSales) * 100}%` }} />
+                              </div>
+                            </div>
+                            <div className="flex gap-4 flex-shrink-0 text-right">
+                              <div>
+                                <p className="text-sm font-semibold text-indigo-600">{m.leads}</p>
+                                <p className="text-xs text-gray-400">lead</p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-emerald-600">{m.sales}</p>
+                                <p className="text-xs text-gray-400">satış</p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-violet-600">{m.revenue > 0 ? '₺' + (m.revenue / 1000).toFixed(0) + 'K' : '—'}</p>
+                                <p className="text-xs text-gray-400">ciro</p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-amber-600">%{m.conv}</p>
+                                <p className="text-xs text-gray-400">dönüşüm</p>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             )
           })()}
