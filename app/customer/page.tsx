@@ -892,9 +892,159 @@ export default function CustomerPage() {
           {activeTab === 'meta-leadformlar' && <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center"><p className="text-gray-400 text-sm">Lead formları yakında gelecek.</p></div>}
 
           {/* ── PERFORMANS ── */}
-          {(activeTab === 'performans-genel' || activeTab === 'performans-karsilastirma') && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center"><p className="text-gray-400 text-sm">Performans raporları yakında gelecek.</p></div>
-          )}
+{(activeTab === 'performans-genel' || activeTab === 'performans-karsilastirma') && (() => {
+            const now = new Date()
+            const months = Array.from({ length: 6 }, (_, i) => {
+              const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
+              return { label: d.toLocaleDateString('tr-TR', { month: 'short' }), year: d.getFullYear(), month: d.getMonth() }
+            })
+            const monthlyData = months.map(m => {
+              const mLeads = leads.filter(l => { const d = new Date(l.created_at); return d.getFullYear() === m.year && d.getMonth() === m.month })
+              const mSales = mLeads.filter(l => l.status === 'procedure_done')
+              const mRevenue = mSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+              return { ...m, leads: mLeads.length, sales: mSales.length, revenue: mRevenue }
+            })
+            const totalLeads = leads.length
+            const totalSales = leads.filter(l => l.status === 'procedure_done').length
+            const totalRevenue = leads.filter(l => l.status === 'procedure_done').reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+            const convRate = totalLeads > 0 ? ((totalSales / totalLeads) * 100).toFixed(1) : '0'
+            const statusDist = [
+              { key: 'new', label: 'Yeni', color: '#6366f1' },
+              { key: 'called', label: 'Arandı', color: '#f59e0b' },
+              { key: 'appointment_scheduled', label: 'Randevu', color: '#8b5cf6' },
+              { key: 'procedure_done', label: 'Satış', color: '#10b981' },
+              { key: 'cancelled', label: 'İptal', color: '#f87171' },
+            ].map(s => ({ ...s, count: leads.filter(l => l.status === s.key).length }))
+            const branchPerf = branches.map(b => {
+              const bLeads = leads.filter(l => l.branch_id === b.id)
+              const bSales = bLeads.filter(l => l.status === 'procedure_done')
+              const bRevenue = bSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+              return { name: b.branch_name, leads: bLeads.length, sales: bSales.length, revenue: bRevenue, rate: bLeads.length > 0 ? ((bSales.length / bLeads.length) * 100).toFixed(0) : '0' }
+            })
+            const maxLeads = Math.max(...monthlyData.map(m => m.leads), 1)
+            const maxRevenue = Math.max(...monthlyData.map(m => m.revenue), 1)
+            const chartW = 520; const chartH = 140; const barW = 48; const gap = (chartW - barW * 6) / 7
+            return (
+              <div className="space-y-5">
+                <div className="grid grid-cols-4 gap-4">
+                  {[
+                    { label: 'Toplam Lead', value: totalLeads, sub: 'Tüm zamanlar', color: 'text-indigo-600', bg: 'from-indigo-50 to-white', icon: '◈' },
+                    { label: 'Toplam Satış', value: totalSales, sub: convRate + '% dönüşüm', color: 'text-emerald-600', bg: 'from-emerald-50 to-white', icon: '◉' },
+                    { label: 'Toplam Ciro', value: '₺' + totalRevenue.toLocaleString(), sub: 'Onaylı satışlar', color: 'text-violet-600', bg: 'from-violet-50 to-white', icon: '◎' },
+                    { label: 'Ort. Satış', value: totalSales > 0 ? '₺' + Math.round(totalRevenue / totalSales).toLocaleString() : '—', sub: 'Satış başına', color: 'text-amber-600', bg: 'from-amber-50 to-white', icon: '◐' },
+                  ].map(k => (
+                    <div key={k.label} className={'bg-gradient-to-br ' + k.bg + ' rounded-2xl border border-gray-100 p-5'}>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-gray-400 text-lg">{k.icon}</span>
+                        <span className="text-xs text-gray-400">{k.sub}</span>
+                      </div>
+                      <p className={'text-2xl font-bold ' + k.color}>{k.value}</p>
+                      <p className="text-xs text-gray-500 mt-1">{k.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Lead ve Satış Trendi</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">Son 6 ay</p>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-indigo-300 inline-block" /> Lead</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-emerald-400 inline-block" /> Satış</span>
+                    </div>
+                  </div>
+                  <svg width={chartW} height={chartH + 30} viewBox={'0 0 ' + chartW + ' ' + (chartH + 30)}>
+                    {[0, 0.25, 0.5, 0.75, 1].map(r => (
+                      <line key={r} x1={0} y1={chartH * (1 - r)} x2={chartW} y2={chartH * (1 - r)} stroke="#f3f4f6" strokeWidth="1" />
+                    ))}
+                    {monthlyData.map((m, i) => {
+                      const x = gap + i * (barW + gap)
+                      const lH = (m.leads / maxLeads) * chartH
+                      const sH = (m.sales / maxLeads) * chartH
+                      return (
+                        <g key={i}>
+                          <rect x={x} y={chartH - lH} width={barW} height={lH} rx={6} fill="#a5b4fc" />
+                          <rect x={x + 4} y={chartH - sH} width={barW - 8} height={sH} rx={4} fill="#34d399" />
+                          <text x={x + barW / 2} y={chartH + 18} textAnchor="middle" fontSize="11" fill="#9ca3af">{m.label}</text>
+                          {m.leads > 0 && <text x={x + barW / 2} y={chartH - lH - 5} textAnchor="middle" fontSize="10" fill="#6366f1" fontWeight="600">{m.leads}</text>}
+                        </g>
+                      )
+                    })}
+                  </svg>
+                </div>
+                <div className="grid grid-cols-2 gap-5">
+                  <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                    <h3 className="font-semibold text-gray-900 mb-4">Durum Dağılımı</h3>
+                    {totalLeads === 0 ? (
+                      <p className="text-sm text-gray-400 text-center py-6">Henüz lead yok.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {statusDist.map(s => (
+                          <div key={s.key}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-medium text-gray-600">{s.label}</span>
+                              <span className="text-xs text-gray-400">{s.count} · %{totalLeads > 0 ? ((s.count / totalLeads) * 100).toFixed(0) : 0}</span>
+                            </div>
+                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full" style={{ width: (totalLeads > 0 ? (s.count / totalLeads) * 100 : 0) + '%', backgroundColor: s.color }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                    <h3 className="font-semibold text-gray-900 mb-4">Aylık Ciro</h3>
+                    <div className="space-y-2">
+                      {monthlyData.map((m, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <span className="text-xs text-gray-400 w-8 flex-shrink-0">{m.label}</span>
+                          <div className="flex-1 h-6 bg-gray-50 rounded-lg overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-violet-400 to-violet-500 rounded-lg flex items-center px-2"
+                              style={{ width: (maxRevenue > 0 ? (m.revenue / maxRevenue) * 100 : 0) + '%', minWidth: m.revenue > 0 ? '2rem' : '0' }}>
+                              {m.revenue > 0 && <span className="text-white text-xs font-medium whitespace-nowrap">{'₺' + (m.revenue / 1000).toFixed(0) + 'K'}</span>}
+                            </div>
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700 w-16 text-right flex-shrink-0">
+                            {m.revenue > 0 ? '₺' + m.revenue.toLocaleString() : '—'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {branches.length > 1 && (
+                  <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100">
+                      <h3 className="font-semibold text-gray-900">Şube Karşılaştırması</h3>
+                    </div>
+                    <div className="divide-y divide-gray-50">
+                      {branchPerf.sort((a, b) => b.sales - a.sales).map((b, i) => (
+                        <div key={i} className="px-6 py-4 flex items-center gap-4">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                            <span className="text-indigo-600 text-xs font-bold">{b.name.charAt(0)}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900">{b.name}</p>
+                            <div className="flex gap-3 mt-0.5">
+                              <span className="text-xs text-indigo-600">{b.leads} lead</span>
+                              <span className="text-xs text-emerald-600">{b.sales} satış</span>
+                              <span className="text-xs text-gray-400">%{b.rate} dönüşüm</span>
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-sm font-semibold text-gray-900">{b.revenue > 0 ? '₺' + b.revenue.toLocaleString() : '—'}</p>
+                            <p className="text-xs text-gray-400">ciro</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           {/* ── VERİ MERKEZİ ── */}
           {(activeTab === 'veri-yukle' || activeTab === 'veri-setlerim') && (
