@@ -460,8 +460,8 @@ export default function SuperAdminPage() {
                 {filteredCustomers.length === 0 ? (
                   <div className="p-16 text-center"><p className="text-gray-400 text-sm">Firma bulunamadı.</p></div>
                 ) : filteredCustomers.map((c, i) => {
-                  const cBranches = branches.filter(b => b.owner_id === c.id).length
-                  const cLeads = leads.filter(() => false).length
+                  const cBranches = branches.filter(b => b.owner_id === c.id)
+                  const cLeads = leads.filter(l => cBranches.map((b:any) => b.id).includes(l.branch_id)).length
                   const sub = c.subscriptions?.[0]
                   return (
                     <div key={c.id} className={`px-5 py-4 flex items-center gap-4 ${i < filteredCustomers.length - 1 ? 'border-b border-gray-50' : ''}`}>
@@ -475,7 +475,7 @@ export default function SuperAdminPage() {
                         </div>
                         <p className="text-xs text-gray-400">{c.email}</p>
                         <div className="flex gap-3 mt-1.5">
-                          <span className="text-xs text-indigo-600 font-medium">{cBranches} şube</span>
+                          <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
                           {sub && <span className="text-xs text-gray-400">₺{sub.per_branch_fee}/şube · Plan: {sub.plan}</span>}
                           <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('tr-TR')}</span>
                         </div>
