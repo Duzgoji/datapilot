@@ -1167,22 +1167,21 @@ export default function CustomerPage() {
             ]
 
             const PeriodSelect = ({ value, onChange, startDate, endDate, onStartDate, onEndDate }: any) => (
-              <div className="flex flex-col gap-2">
-                <div className="flex gap-1 flex-wrap">
-                  {PERIODS.map(p => (
-                    <button key={p.key} onClick={() => onChange(p.key)}
-                      className={'px-2.5 py-1 rounded-lg text-xs font-medium transition-all ' + (value === p.key ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100')}>
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex flex-col gap-1">
+                {PERIODS.map(p => (
+                  <button key={p.key} onClick={() => onChange(p.key)}
+                    className={'w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all ' + (value === p.key ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-500 hover:bg-gray-50')}>
+                    <span>{p.label}</span>
+                    {value === p.key && <span className="w-2 h-2 bg-indigo-600 rounded-full flex-shrink-0" />}
+                  </button>
+                ))}
                 {value === 'custom' && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-1 px-1">
                     <input type="date" value={startDate} onChange={e => onStartDate(e.target.value)}
-                      className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                     <span className="text-xs text-gray-400">—</span>
                     <input type="date" value={endDate} onChange={e => onEndDate(e.target.value)}
-                      className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                 )}
               </div>
@@ -1193,28 +1192,32 @@ export default function CustomerPage() {
 
                 {/* Dönem Seçici */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white rounded-2xl border-2 border-indigo-200 p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="w-2.5 h-2.5 bg-indigo-600 rounded-full" />
-                      <p className="text-sm font-semibold text-indigo-700">Dönem A</p>
+                  <div className="bg-white rounded-2xl border-2 border-indigo-200 overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-3 bg-indigo-50 border-b border-indigo-100">
+                      <span className="w-2.5 h-2.5 bg-indigo-600 rounded-full flex-shrink-0" />
+                      <p className="text-sm font-semibold text-indigo-700">1. Dönem</p>
                       <span className="ml-auto text-xs text-indigo-500 font-medium">{rangeA.label}</span>
                     </div>
-                    <PeriodSelect value={compPeriodA} onChange={setCompPeriodA} startDate={compStartA} endDate={compEndA} onStartDate={setCompStartA} onEndDate={setCompEndA} />
+                    <div className="p-3">
+                      <PeriodSelect value={compPeriodA} onChange={setCompPeriodA} startDate={compStartA} endDate={compEndA} onStartDate={setCompStartA} onEndDate={setCompEndA} />
+                    </div>
                   </div>
-                  <div className="bg-white rounded-2xl border-2 border-gray-200 p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="w-2.5 h-2.5 bg-gray-400 rounded-full" />
-                      <p className="text-sm font-semibold text-gray-600">Dönem B</p>
+                  <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-100">
+                      <span className="w-2.5 h-2.5 bg-gray-400 rounded-full flex-shrink-0" />
+                      <p className="text-sm font-semibold text-gray-600">2. Dönem</p>
                       <span className="ml-auto text-xs text-gray-400 font-medium">{rangeB.label}</span>
                     </div>
-                    <PeriodSelect value={compPeriodB} onChange={setCompPeriodB} startDate={compStartB} endDate={compEndB} onStartDate={setCompStartB} onEndDate={setCompEndB} />
+                    <div className="p-3">
+                      <PeriodSelect value={compPeriodB} onChange={setCompPeriodB} startDate={compStartB} endDate={compEndB} onStartDate={setCompStartB} onEndDate={setCompEndB} />
+                    </div>
                   </div>
                 </div>
 
                 {/* Karşılaştırma Metrikler */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
                   <div className="flex items-center gap-3 mb-5">
-                    <h3 className="font-semibold text-gray-900">Dönem Karşılaştırması</h3>
+                    <h3 className="font-semibold text-gray-900">Dönem Analizi</h3>
                     <div className="flex items-center gap-2 ml-auto text-xs">
                       <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-indigo-600 rounded-full inline-block" /> {rangeA.label}</span>
                       <span className="text-gray-300">vs</span>
@@ -1245,8 +1248,8 @@ export default function CustomerPage() {
                 {/* Satışçı Karşılaştırması */}
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100">
-                    <h3 className="font-semibold text-gray-900">Satışçı Karşılaştırması</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">{rangeA.label} vs {rangeB.label}</p>
+                    <h3 className="font-semibold text-gray-900">Satışçı Analizi</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">{rangeA.label} vs {rangeB.label} · 1. dönem baz alınır</p>
                   </div>
                   {memberPerf.length === 0 ? (
                     <p className="text-sm text-gray-400 text-center py-10">Henüz satışçı yok.</p>
