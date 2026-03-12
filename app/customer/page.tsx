@@ -236,6 +236,15 @@ export default function CustomerPage() {
   const [logoUploading, setLogoUploading] = useState(false)
 
   const [metaConn, setMetaConn] = useState<any>(null)
+  
+  // Veri Merkezi
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importPreview, setImportPreview] = useState<any[]>([])
+  const [importBranch, setImportBranch] = useState(''')
+  const [importAssign, setImportAssign] = useState(''')
+  const [importLoading, setImportLoading] = useState(false)
+  const [importResult, setImportResult] = useState<{success: number, error: number, errors: string[]} | null>(null)
+  const [importSets, setImportSets] = useState<any[]>([])
 
   const [showReportPanel, setShowReportPanel] = useState(false)
   const [reportPeriod, setReportPeriod] = useState('this_month')
@@ -410,6 +419,90 @@ export default function CustomerPage() {
 
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
   const toggleMenu = (key: string) => setExpandedMenus(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+
+  // ─── VERİ MERKEZİ ─────────────────────────────────────────────────────────
+
+  const downloadTemplate = async () => {
+    const XLSX = await import('xlsx')
+    const headers = [['Ad Soyad', 'Telefon', 'E-posta', 'Kaynak', 'Not', 'Şube Adı']]
+    const examples = [
+      ['Ahmet Yılmaz', '05321234567', 'ahmet@email.com', 'manuel', 'Instagram reklamından geldi', branches[0]?.branch_name || 'Merkez Şube'],
+      ['Fatma Kaya', '05431234567', '', 'referral', '', branches[0]?.branch_name || 'Merkez Şube'],
+    ]
+    const ws = XLSX.utils.aoa_to_sheet([...headers, ...examples])
+    ws['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 12 }, { wch: 30 }, { wch: 20 }]
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Leadler')
+    XLSX.writeFile(wb, 'DataPilot_Lead_Sablonu.xlsx')
+  }
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImportFile(file)
+    setImportResult(null)
+    const XLSX = await import('xlsx')
+    const buffer = await file.arrayBuffer()
+    const wb = XLSX.read(buffer)
+    const ws = wb.Sheets[wb.SheetNames[0]]
+    const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' })
+    setImportPreview(rows.slice(0, 5))
+  }
+
+  const handleImportSubmit = async () => {
+    if (!importFile) return
+    setImportLoading(true)
+    setImportResult(null)
+    const XLSX = await import('xlsx')
+    const buffer = await importFile.arrayBuffer()
+    const wb = XLSX.read(buffer)
+    const ws = wb.Sheets[wb.SheetNames[0]]
+    const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' })
+
+    let success = 0
+    const errors: string[] = []
+
+    const branchMap: Record<string, string> = {}
+    branches.forEach(b => { branchMap[b.branch_name?.toLowerCase()] = b.id })
+
+    const setName = `${importFile.name} — ${new Date().toLocaleDateString('tr-TR')}`
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i]
+      const fullName = row['Ad Soyad'] || row['ad soyad'] || row['Ad'] || ''
+      const phone = String(row['Telefon'] || row['telefon'] || '').trim()
+      if (!fullName && !phone) { errors.push(`Satır ${i + 2}: Ad ve telefon boş`); continue }
+
+      const branchNameRaw = String(row['Şube Adı'] || row['sube adi'] || '').toLowerCase().trim()
+      const branchId = importBranch || branchMap[branchNameRaw] || branches[0]?.id || null
+
+      const source = row['Kaynak'] || row['kaynak'] || 'bulk_import'
+      const note = row['Not'] || row['not'] || ''
+      const email = row['E-posta'] || row['eposta'] || row['email'] || ''
+
+      const leadCode = 'LD' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 100)
+
+      const { error } = await supabase.from('leads').insert({
+        full_name: fullName, phone, email: email || null,
+        source, note: note || null,
+        branch_id: branchId,
+        assigned_to: importAssign || null,
+        status: 'new', lead_code: leadCode,
+        owner_id: profile.id,
+        import_set: setName,
+      })
+      if (error) { errors.push(`Satır ${i + 2}: ${error.message}`); continue }
+      success++
+    }
+
+    setImportResult({ success, error: errors.length, errors })
+    if (success > 0) {
+      setImportSets(prev => [{ name: setName, count: success, date: new Date() }, ...prev])
+      await loadData()
+    }
+    setImportLoading(false)
+  }
+
 
   // ─── COMPUTED ─────────────────────────────────────────────────────────────
 
@@ -1636,9 +1729,214 @@ export default function CustomerPage() {
           })()}
 
           {/* ── VERİ MERKEZİ ── */}
-          {(activeTab === 'veri-yukle' || activeTab === 'veri-setlerim') && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center"><p className="text-gray-400 text-sm">Veri merkezi yakında gelecek.</p></div>
+          {/* ── VERİ YÜKLE ── */}
+          {activeTab === 'veri-yukle' && (
+            <div className="space-y-5 max-w-2xl">
+
+              {/* Başlık */}
+              <div className="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl p-5 text-white relative overflow-hidden">
+                <div className="absolute -right-4 -top-4 w-28 h-28 bg-white/5 rounded-full" />
+                <div className="relative">
+                  <h2 className="text-lg font-bold">Toplu Lead Yükle</h2>
+                  <p className="text-indigo-200 text-sm mt-1">Excel şablonunu indir, leadleri gir, yükle — hepsi otomatik içe aktarılır.</p>
+                  <button onClick={downloadTemplate}
+                    className="mt-4 inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v9M4 7l3.5 3.5L11 7M2 13h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    Şablonu İndir (.xlsx)
+                  </button>
+                </div>
+              </div>
+
+              {/* Nasıl çalışır */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { step: '1', title: 'Şablonu İndir', desc: 'Excel şablonunu bilgisayarına kaydet', color: 'bg-blue-50 border-blue-100', icon: '⬇' },
+                  { step: '2', title: 'Leadleri Gir', desc: 'Şablondaki sütunlara göre doldur', color: 'bg-violet-50 border-violet-100', icon: '✏' },
+                  { step: '3', title: 'Yükle', desc: 'Dosyayı seç, sisteme aktar', color: 'bg-emerald-50 border-emerald-100', icon: '↑' },
+                ].map(s => (
+                  <div key={s.step} className={`${s.color} border rounded-xl p-4`}>
+                    <span className="text-2xl">{s.icon}</span>
+                    <p className="text-sm font-semibold text-gray-900 mt-2">{s.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{s.desc}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Dosya yükle */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+                <h3 className="text-sm font-semibold text-gray-900">Dosya Seç</h3>
+
+                <label className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all ${importFile ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/30'}`}>
+                  <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFile} />
+                  {importFile ? (
+                    <div className="text-center">
+                      <p className="text-2xl mb-1">📗</p>
+                      <p className="text-sm font-semibold text-indigo-700">{importFile.name}</p>
+                      <p className="text-xs text-indigo-400 mt-0.5">{importPreview.length}+ satır okundu · değiştirmek için tıkla</p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <p className="text-3xl mb-2">📂</p>
+                      <p className="text-sm font-medium text-gray-500">Excel veya CSV dosyası seç</p>
+                      <p className="text-xs text-gray-400 mt-1">.xlsx, .xls, .csv desteklenir</p>
+                    </div>
+                  )}
+                </label>
+
+                {/* Önizleme */}
+                {importPreview.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 mb-2">İlk {importPreview.length} satır önizleme</p>
+                    <div className="overflow-x-auto rounded-xl border border-gray-100">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-gray-50 border-b border-gray-100">
+                            {Object.keys(importPreview[0]).slice(0, 6).map(k => (
+                              <th key={k} className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">{k}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {importPreview.map((row, i) => (
+                            <tr key={i} className="border-b border-gray-50 last:border-0">
+                              {Object.values(row).slice(0, 6).map((val: any, j) => (
+                                <td key={j} className="px-3 py-2 text-gray-700 whitespace-nowrap max-w-[120px] truncate">{String(val)}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Ayarlar */}
+                {importFile && (
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Şube (opsiyonel)</label>
+                      <div className="relative">
+                        <select value={importBranch} onChange={e => setImportBranch(e.target.value)}
+                          className="w-full appearance-none px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-9">
+                          <option value="">Dosyadan oku</option>
+                          {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
+                        </select>
+                        <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Satışçı (opsiyonel)</label>
+                      <div className="relative">
+                        <select value={importAssign} onChange={e => setImportAssign(e.target.value)}
+                          className="w-full appearance-none px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-9">
+                          <option value="">Atama yapma</option>
+                          {teamMembers.map(m => <option key={m.user_id} value={m.user_id}>{m.full_name || m.email}</option>)}
+                        </select>
+                        <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sonuç */}
+                {importResult && (
+                  <div className={`rounded-xl p-4 border ${importResult.error === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-xl">{importResult.error === 0 ? '✅' : '⚠️'}</span>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{importResult.success} lead başarıyla aktarıldı</p>
+                        {importResult.error > 0 && <p className="text-xs text-amber-700">{importResult.error} satırda hata oluştu</p>}
+                      </div>
+                    </div>
+                    {importResult.errors.length > 0 && (
+                      <div className="space-y-1 mt-2">
+                        {importResult.errors.slice(0, 5).map((e, i) => (
+                          <p key={i} className="text-xs text-amber-700 bg-amber-100 rounded-lg px-2 py-1">{e}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button onClick={handleImportSubmit} disabled={!importFile || importLoading}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                  {importLoading ? (
+                    <>
+                      <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>
+                      Aktarılıyor...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 10V1M4 4l3.5-3.5L11 4M2 13h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      Leadleri Aktar
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           )}
+
+          {/* ── VERİ SETLERİM ── */}
+          {activeTab === 'veri-setlerim' && (
+            <div className="space-y-4 max-w-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-semibold text-gray-900">Veri Setlerim</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">Yüklediğin tüm toplu lead aktarımları</p>
+                </div>
+                <button onClick={() => setActiveTab('veri-yukle')}
+                  className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+                  Yeni Yükle
+                </button>
+              </div>
+
+              {(() => {
+                const sets = [...new Set(leads.filter(l => l.import_set).map(l => l.import_set))]
+                if (sets.length === 0) return (
+                  <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+                    <p className="text-4xl mb-3">📂</p>
+                    <p className="text-gray-500 text-sm font-medium">Henüz veri yüklenmedi</p>
+                    <p className="text-gray-400 text-xs mt-1">Veri Yükle sekmesinden ilk toplu aktarımını yap</p>
+                    <button onClick={() => setActiveTab('veri-yukle')}
+                      className="mt-4 px-4 py-2 bg-indigo-600 text-white text-sm rounded-xl hover:bg-indigo-700 transition-colors font-medium">
+                      Veri Yükle
+                    </button>
+                  </div>
+                )
+                return (
+                  <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                    {sets.map((setName, i) => {
+                      const setLeads = leads.filter(l => l.import_set === setName)
+                      const setDone = setLeads.filter(l => l.status === 'procedure_done').length
+                      return (
+                        <div key={setName} className={`px-5 py-4 flex items-center gap-4 ${i < sets.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                          <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                            <span className="text-lg">📗</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">{setName}</p>
+                            <div className="flex gap-3 mt-1">
+                              <span className="text-xs text-indigo-600 font-medium">{setLeads.length} lead</span>
+                              <span className="text-xs text-emerald-600 font-medium">{setDone} satış</span>
+                              <span className="text-xs text-gray-400">%{setLeads.length > 0 ? ((setDone/setLeads.length)*100).toFixed(0) : 0} dönüşüm</span>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${setLeads.length > 0 ? (setDone/setLeads.length)*100 : 0}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              })()}
+            </div>
+          )}
+
+
 
           {/* ── AYARLAR ── */}
           {activeTab === 'ayarlar' && (
