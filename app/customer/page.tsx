@@ -202,6 +202,19 @@ export default function CustomerPage() {
   const [appointmentDate, setAppointmentDate] = useState('')
 
   // Report
+  // Settings
+  const [settingsName, setSettingsName] = useState('')
+  const [settingsCompany, setSettingsCompany] = useState('')
+  const [settingsPhone, setSettingsPhone] = useState('')
+  const [settingsSector, setSettingsSector] = useState('')
+  const [settingsOldPassword, setSettingsOldPassword] = useState('')
+  const [settingsNewPassword, setSettingsNewPassword] = useState('')
+  const [settingsNewPassword2, setSettingsNewPassword2] = useState('')
+  const [settingsSaving, setSettingsSaving] = useState(false)
+  const [settingsMsg, setSettingsMsg] = useState<{type:'success'|'error', text:string}|null>(null)
+  const [passwordMsg, setPasswordMsg] = useState<{type:'success'|'error', text:string}|null>(null)
+  const [logoUploading, setLogoUploading] = useState(false)
+
   const [showReportPanel, setShowReportPanel] = useState(false)
   const [reportPeriod, setReportPeriod] = useState('this_month')
   const [reportFormat, setReportFormat] = useState('excel')
@@ -231,6 +244,10 @@ export default function CustomerPage() {
     const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (profileData?.role !== 'customer') { router.push('/login'); return }
     setProfile(profileData)
+    setSettingsName(profileData?.full_name || '')
+    setSettingsCompany(profileData?.company_name || '')
+    setSettingsPhone(profileData?.phone || '')
+    setSettingsSector(profileData?.sector || '')
     const { data: branchesData } = await supabase.from('branches').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
     setBranches(branchesData || [])
     if (branchesData && branchesData.length > 0) {
@@ -241,6 +258,48 @@ export default function CustomerPage() {
       setTeamMembers(membersData || [])
     }
     setLoading(false)
+  }
+
+  // ─── SETTINGS HANDLERS ────────────────────────────────────────────────────
+
+  const handleSaveProfile = async () => {
+    setSettingsSaving(true); setSettingsMsg(null)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { error } = await supabase.from('profiles').update({
+      full_name: settingsName, company_name: settingsCompany,
+      phone: settingsPhone, sector: settingsSector,
+    }).eq('id', user.id)
+    if (error) setSettingsMsg({ type: 'error', text: 'Kaydedilemedi: ' + error.message })
+    else { setSettingsMsg({ type: 'success', text: 'Profil güncellendi!' }); loadData() }
+    setSettingsSaving(false)
+    setTimeout(() => setSettingsMsg(null), 3000)
+  }
+
+  const handleChangePassword = async () => {
+    setPasswordMsg(null)
+    if (settingsNewPassword !== settingsNewPassword2) { setPasswordMsg({ type: 'error', text: 'Şifreler eşleşmiyor.' }); return }
+    if (settingsNewPassword.length < 6) { setPasswordMsg({ type: 'error', text: 'En az 6 karakter olmalı.' }); return }
+    const { error } = await supabase.auth.updateUser({ password: settingsNewPassword })
+    if (error) setPasswordMsg({ type: 'error', text: 'Hata: ' + error.message })
+    else { setPasswordMsg({ type: 'success', text: 'Şifre güncellendi!' }); setSettingsOldPassword(''); setSettingsNewPassword(''); setSettingsNewPassword2('') }
+    setTimeout(() => setPasswordMsg(null), 3000)
+  }
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return
+    setLogoUploading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const ext = file.name.split('.').pop()
+    const path = `logos/${user.id}.${ext}`
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+    if (!uploadError) {
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
+      await supabase.from('profiles').update({ logo_url: urlData.publicUrl }).eq('id', user.id)
+      loadData()
+    }
+    setLogoUploading(false)
   }
 
   // ─── HANDLERS ─────────────────────────────────────────────────────────────
@@ -400,7 +459,9 @@ export default function CustomerPage() {
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
-         <img src="/logo.png" alt="DataPilot" className="h-7 w-auto" />
+        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center mx-auto mb-3">
+          <span className="text-white font-bold">D</span>
+        </div>
         <div className="flex gap-1 justify-center">
           {[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
         </div>
@@ -831,15 +892,107 @@ export default function CustomerPage() {
 
           {/* ── AYARLAR ── */}
           {activeTab === 'ayarlar' && (
-            <div className="max-w-2xl space-y-4">
+            <div className="max-w-2xl space-y-5">
+
+              {/* Logo & Profil Başlık */}
               <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Profil Bilgileri</h3>
+                <h3 className="font-semibold text-gray-900 mb-5">Firma Profili</h3>
+                <div className="flex items-center gap-5 mb-6">
+                  <div className="relative flex-shrink-0">
+                    {profile?.logo_url ? (
+                      <img src={profile.logo_url} alt="Logo" className="w-20 h-20 rounded-2xl object-cover border border-gray-200" />
+                    ) : (
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center border border-indigo-100">
+                        <span className="text-indigo-600 text-2xl font-bold">{(profile?.company_name || profile?.full_name || 'F').charAt(0)}</span>
+                      </div>
+                    )}
+                    <label className={`absolute -bottom-2 -right-2 w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center cursor-pointer hover:bg-indigo-700 transition-colors shadow-sm ${logoUploading ? 'opacity-60 pointer-events-none' : ''}`}>
+                      <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                      {logoUploading ? (
+                        <svg className="animate-spin text-white" width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>
+                      ) : (
+                        <svg className="text-white" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                      )}
+                    </label>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{profile?.company_name || profile?.full_name}</p>
+                    <p className="text-sm text-gray-400 mt-0.5">{profile?.email}</p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG · Max 2MB</p>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
-                  <Input label="Ad Soyad" value={profile?.full_name || ''} readOnly />
-                  <Input label="E-posta" value={profile?.email || ''} readOnly />
-                  <Input label="Firma" value={profile?.company_name || ''} readOnly />
+                  <Input label="Ad Soyad *" value={settingsName} onChange={(e: any) => setSettingsName(e.target.value)} placeholder="Ad Soyad" />
+                  <Input label="E-posta" value={profile?.email || ''} readOnly className="opacity-60" />
+                  <Input label="Firma Adı" value={settingsCompany} onChange={(e: any) => setSettingsCompany(e.target.value)} placeholder="Firma A.Ş." />
+                  <Input label="Telefon" value={settingsPhone} onChange={(e: any) => setSettingsPhone(e.target.value)} placeholder="+90 555 000 0000" />
+                  <div className="col-span-2">
+                    <Input label="Sektör" value={settingsSector} onChange={(e: any) => setSettingsSector(e.target.value)} placeholder="Estetik, Diş, Emlak..." />
+                  </div>
+                </div>
+
+                {settingsMsg && (
+                  <div className={`mt-4 px-4 py-3 rounded-xl text-sm font-medium ${settingsMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                    {settingsMsg.text}
+                  </div>
+                )}
+
+                <div className="flex justify-end mt-5">
+                  <Btn onClick={handleSaveProfile} disabled={settingsSaving}>
+                    {settingsSaving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+                  </Btn>
                 </div>
               </div>
+
+              {/* Şifre Değiştir */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <h3 className="font-semibold text-gray-900 mb-5">Şifre Değiştir</h3>
+                <div className="space-y-4">
+                  <Input label="Yeni Şifre" type="password" value={settingsNewPassword} onChange={(e: any) => setSettingsNewPassword(e.target.value)} placeholder="En az 6 karakter" />
+                  <Input label="Yeni Şifre (Tekrar)" type="password" value={settingsNewPassword2} onChange={(e: any) => setSettingsNewPassword2(e.target.value)} placeholder="Şifreyi tekrar girin" />
+                </div>
+
+                {passwordMsg && (
+                  <div className={`mt-4 px-4 py-3 rounded-xl text-sm font-medium ${passwordMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                    {passwordMsg.text}
+                  </div>
+                )}
+
+                <div className="flex justify-end mt-5">
+                  <Btn onClick={handleChangePassword} disabled={!settingsNewPassword || !settingsNewPassword2}>
+                    Şifreyi Güncelle
+                  </Btn>
+                </div>
+              </div>
+
+              {/* Plan Bilgisi */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-gray-900">Abonelik</h3>
+                  <span className="text-xs bg-indigo-50 text-indigo-600 font-semibold px-3 py-1 rounded-full">Starter</span>
+                </div>
+                <p className="text-sm text-gray-400">Plan yükseltme ve fatura detayları için destek ekibiyle iletişime geçin.</p>
+                <div className="grid grid-cols-3 gap-3 mt-4">
+                  {[
+                    { label: 'Şube', value: `${branches.length}`, max: '1', color: 'text-indigo-600' },
+                    { label: 'Satışçı', value: `${teamMembers.length}`, max: '3', color: 'text-blue-600' },
+                    { label: 'Lead', value: `${leads.length}`, max: '500', color: 'text-emerald-600' },
+                  ].map(item => (
+                    <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
+                      <div className="flex items-end gap-1 mb-1">
+                        <span className={`text-lg font-bold ${item.color}`}>{item.value}</span>
+                        <span className="text-xs text-gray-400 mb-0.5">/ {item.max}</span>
+                      </div>
+                      <p className="text-xs text-gray-400">{item.label}</p>
+                      <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full bg-current ${item.color}`} style={{ width: `${Math.min(100, (parseInt(item.value) / parseInt(item.max)) * 100)}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
           )}
 
