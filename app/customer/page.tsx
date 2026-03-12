@@ -201,6 +201,16 @@ export default function CustomerPage() {
   const [cancelReason, setCancelReason] = useState('')
   const [appointmentDate, setAppointmentDate] = useState('')
 
+  const [perfPeriod, setPerfPeriod] = useState('6month')
+  const [perfStartDate, setPerfStartDate] = useState('')
+  const [perfEndDate, setPerfEndDate] = useState('')
+  const [compPeriodA, setCompPeriodA] = useState('1month')
+  const [compPeriodB, setCompPeriodB] = useState('last_month')
+  const [compStartA, setCompStartA] = useState('')
+  const [compEndA, setCompEndA] = useState('')
+  const [compStartB, setCompStartB] = useState('')
+  const [compEndB, setCompEndB] = useState('')
+
   // Report
   // Settings
   const [settingsName, setSettingsName] = useState('')
@@ -487,24 +497,26 @@ export default function CustomerPage() {
         onMouseLeave={() => setSidebarCollapsed(true)}
         className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-white border-r border-gray-100 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-200 shadow-sm`}>
 
-        {/* Logo */}
+        {/* DataPilot Logo */}
         <div className={`flex items-center h-14 border-b border-gray-100 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-          {profile?.logo_url ? (
-            <img src={profile.logo_url} alt="Logo" className="w-7 h-7 rounded-lg object-cover flex-shrink-0" />
-          ) : (
-            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-xs font-bold">{(profile?.company_name || profile?.full_name || 'D').charAt(0)}</span>
-            </div>
-          )}
-          {!sidebarCollapsed && <span className="font-semibold text-gray-900 text-sm tracking-tight truncate">{profile?.company_name || 'DataPilot'}</span>}
+          <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
+          {!sidebarCollapsed && <span className="font-semibold text-gray-900 text-sm tracking-tight truncate">DataPilot</span>}
         </div>
 
         {/* Firma */}
         {!sidebarCollapsed && (
-          <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-xs text-gray-400 mb-0.5">Firma</p>
-            <p className="text-sm font-semibold text-gray-800 truncate">{profile?.company_name || profile?.full_name}</p>
-            <span className="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">Müşteri</span>
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2.5">
+            {profile?.logo_url ? (
+              <img src={profile.logo_url} alt="Firma" className="w-8 h-8 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+            ) : (
+              <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                <span className="text-indigo-600 text-xs font-bold">{(profile?.company_name || profile?.full_name || 'F').charAt(0)}</span>
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-gray-800 truncate">{profile?.company_name || profile?.full_name}</p>
+              <span className="text-xs text-indigo-600 font-medium">Müşteri</span>
+            </div>
           </div>
         )}
 
@@ -887,19 +899,41 @@ export default function CustomerPage() {
           {/* ── PERFORMANS ── */}
 {activeTab === 'performans-genel' && (() => {
             const now = new Date()
-            const months = Array.from({ length: 6 }, (_, i) => {
-              const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
+
+            // ── Filtre aralığı ──
+            const getPeriodRange = () => {
+              const end = new Date(); end.setHours(23,59,59,999)
+              if (perfPeriod === 'today') { const s = new Date(); s.setHours(0,0,0,0); return { start: s, end } }
+              if (perfPeriod === '7day') { const s = new Date(); s.setDate(s.getDate()-6); s.setHours(0,0,0,0); return { start: s, end } }
+              if (perfPeriod === '1month') { const s = new Date(now.getFullYear(), now.getMonth(), 1); return { start: s, end } }
+              if (perfPeriod === '3month') { const s = new Date(now.getFullYear(), now.getMonth()-2, 1); return { start: s, end } }
+              if (perfPeriod === '6month') { const s = new Date(now.getFullYear(), now.getMonth()-5, 1); return { start: s, end } }
+              if (perfPeriod === '1year') { const s = new Date(now.getFullYear(), 0, 1); return { start: s, end } }
+              if (perfPeriod === 'custom' && perfStartDate && perfEndDate) {
+                const s = new Date(perfStartDate); s.setHours(0,0,0,0)
+                const e = new Date(perfEndDate); e.setHours(23,59,59,999)
+                return { start: s, end: e }
+              }
+              return { start: new Date(now.getFullYear(), now.getMonth()-5, 1), end }
+            }
+            const { start: rangeStart, end: rangeEnd } = getPeriodRange()
+            const filteredLeads = leads.filter(l => { const d = new Date(l.created_at); return d >= rangeStart && d <= rangeEnd })
+
+            // ── Grafik için aylar ──
+            const monthCount = perfPeriod === 'today' || perfPeriod === '7day' ? 1 : perfPeriod === '1month' ? 1 : perfPeriod === '3month' ? 3 : perfPeriod === '1year' ? 12 : 6
+            const months = Array.from({ length: monthCount }, (_, i) => {
+              const d = new Date(now.getFullYear(), now.getMonth() - (monthCount - 1 - i), 1)
               return { label: d.toLocaleDateString('tr-TR', { month: 'short' }), year: d.getFullYear(), month: d.getMonth() }
             })
             const monthlyData = months.map(m => {
-              const mLeads = leads.filter(l => { const d = new Date(l.created_at); return d.getFullYear() === m.year && d.getMonth() === m.month })
+              const mLeads = filteredLeads.filter(l => { const d = new Date(l.created_at); return d.getFullYear() === m.year && d.getMonth() === m.month })
               const mSales = mLeads.filter(l => l.status === 'procedure_done')
               const mRevenue = mSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
               return { ...m, leads: mLeads.length, sales: mSales.length, revenue: mRevenue }
             })
-            const totalLeads = leads.length
-            const totalSales = leads.filter(l => l.status === 'procedure_done').length
-            const totalRevenue = leads.filter(l => l.status === 'procedure_done').reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+            const totalLeads = filteredLeads.length
+            const totalSales = filteredLeads.filter(l => l.status === 'procedure_done').length
+            const totalRevenue = filteredLeads.filter(l => l.status === 'procedure_done').reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
             const convRate = totalLeads > 0 ? ((totalSales / totalLeads) * 100).toFixed(1) : '0'
             const statusDist = [
               { key: 'new', label: 'Yeni', color: '#6366f1' },
@@ -907,21 +941,53 @@ export default function CustomerPage() {
               { key: 'appointment_scheduled', label: 'Randevu', color: '#8b5cf6' },
               { key: 'procedure_done', label: 'Satış', color: '#10b981' },
               { key: 'cancelled', label: 'İptal', color: '#f87171' },
-            ].map(s => ({ ...s, count: leads.filter(l => l.status === s.key).length }))
+            ].map(s => ({ ...s, count: filteredLeads.filter(l => l.status === s.key).length }))
             const branchPerf = branches.map(b => {
-              const bLeads = leads.filter(l => l.branch_id === b.id)
+              const bLeads = filteredLeads.filter(l => l.branch_id === b.id)
               const bSales = bLeads.filter(l => l.status === 'procedure_done')
               const bRevenue = bSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
               return { name: b.branch_name, leads: bLeads.length, sales: bSales.length, revenue: bRevenue, rate: bLeads.length > 0 ? ((bSales.length / bLeads.length) * 100).toFixed(0) : '0' }
             })
             const maxLeads = Math.max(...monthlyData.map(m => m.leads), 1)
             const maxRevenue = Math.max(...monthlyData.map(m => m.revenue), 1)
-            const chartW = 520; const chartH = 140; const barW = 48; const gap = (chartW - barW * 6) / 7
+            const barW = monthCount <= 3 ? 64 : monthCount <= 6 ? 48 : 32
+            const chartW = 520; const chartH = 140; const gap = (chartW - barW * monthCount) / (monthCount + 1)
             return (
               <div className="space-y-5">
+
+                {/* ── Filtre Bar ── */}
+                <div className="bg-white rounded-2xl border border-gray-100 px-5 py-3.5 flex items-center gap-3 flex-wrap">
+                  <span className="text-xs font-medium text-gray-500 flex-shrink-0">Dönem:</span>
+                  <div className="flex gap-1 flex-wrap">
+                    {[
+                      { key: 'today', label: 'Bugün' },
+                      { key: '7day', label: 'Son 7 Gün' },
+                      { key: '1month', label: 'Bu Ay' },
+                      { key: '3month', label: 'Son 3 Ay' },
+                      { key: '6month', label: 'Son 6 Ay' },
+                      { key: '1year', label: 'Bu Yıl' },
+                      { key: 'custom', label: 'Özel' },
+                    ].map(p => (
+                      <button key={p.key} onClick={() => setPerfPeriod(p.key)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${perfPeriod === p.key ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'}`}>
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                  {perfPeriod === 'custom' && (
+                    <div className="flex items-center gap-2 ml-auto">
+                      <input type="date" value={perfStartDate} onChange={e => setPerfStartDate(e.target.value)}
+                        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      <span className="text-xs text-gray-400">—</span>
+                      <input type="date" value={perfEndDate} onChange={e => setPerfEndDate(e.target.value)}
+                        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-4 gap-4">
                   {[
-                    { label: 'Toplam Lead', value: totalLeads, sub: 'Tüm zamanlar', color: 'text-indigo-600', bg: 'from-indigo-50 to-white', icon: '◈' },
+                    { label: 'Toplam Lead', value: totalLeads, sub: 'Seçili dönem', color: 'text-indigo-600', bg: 'from-indigo-50 to-white', icon: '◈' },
                     { label: 'Toplam Satış', value: totalSales, sub: convRate + '% dönüşüm', color: 'text-emerald-600', bg: 'from-emerald-50 to-white', icon: '◉' },
                     { label: 'Toplam Ciro', value: '₺' + totalRevenue.toLocaleString(), sub: 'Onaylı satışlar', color: 'text-violet-600', bg: 'from-violet-50 to-white', icon: '◎' },
                     { label: 'Ort. Satış', value: totalSales > 0 ? '₺' + Math.round(totalRevenue / totalSales).toLocaleString() : '—', sub: 'Satış başına', color: 'text-amber-600', bg: 'from-amber-50 to-white', icon: '◐' },
@@ -1042,69 +1108,129 @@ export default function CustomerPage() {
           {/* ── PERFORMANS KARŞILAŞTIRMA ── */}
           {activeTab === 'performans-karsilastirma' && (() => {
             const now = new Date()
-            const thisMonth = { year: now.getFullYear(), month: now.getMonth() }
-            const lastMonth = { year: now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear(), month: now.getMonth() === 0 ? 11 : now.getMonth() - 1 }
 
-            const filterByMonth = (m: { year: number, month: number }) =>
-              leads.filter(l => { const d = new Date(l.created_at); return d.getFullYear() === m.year && d.getMonth() === m.month })
+            // ── Dönem A/B aralığı hesapla ──
+            const getPRange = (period: string, sDate: string, eDate: string) => {
+              const end = new Date(); end.setHours(23,59,59,999)
+              if (period === 'today') { const s = new Date(); s.setHours(0,0,0,0); return { start: s, end, label: 'Bugün' } }
+              if (period === '7day') { const s = new Date(); s.setDate(s.getDate()-6); s.setHours(0,0,0,0); return { start: s, end, label: 'Son 7 Gün' } }
+              if (period === '1month') { const s = new Date(now.getFullYear(), now.getMonth(), 1); return { start: s, end, label: now.toLocaleDateString('tr-TR', { month: 'long' }) } }
+              if (period === 'last_month') { const lm = now.getMonth()===0?11:now.getMonth()-1; const ly = now.getMonth()===0?now.getFullYear()-1:now.getFullYear(); const s = new Date(ly,lm,1); const e = new Date(ly,lm+1,0); e.setHours(23,59,59,999); return { start: s, end: e, label: new Date(ly,lm).toLocaleDateString('tr-TR',{month:'long'}) } }
+              if (period === '3month') { const s = new Date(now.getFullYear(), now.getMonth()-2, 1); return { start: s, end, label: 'Son 3 Ay' } }
+              if (period === '6month') { const s = new Date(now.getFullYear(), now.getMonth()-5, 1); return { start: s, end, label: 'Son 6 Ay' } }
+              if (period === '1year') { const s = new Date(now.getFullYear(), 0, 1); return { start: s, end, label: 'Bu Yıl' } }
+              if (period === 'custom' && sDate && eDate) { const s = new Date(sDate); s.setHours(0,0,0,0); const e = new Date(eDate); e.setHours(23,59,59,999); return { start: s, end: e, label: sDate + ' – ' + eDate } }
+              return { start: new Date(now.getFullYear(), now.getMonth(), 1), end, label: 'Bu Ay' }
+            }
 
-            const thisLeads = filterByMonth(thisMonth)
-            const lastLeads = filterByMonth(lastMonth)
-            const thisSales = thisLeads.filter(l => l.status === 'procedure_done')
-            const lastSales = lastLeads.filter(l => l.status === 'procedure_done')
-            const thisRevenue = thisSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
-            const lastRevenue = lastSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
-            const thisConv = thisLeads.length > 0 ? ((thisSales.length / thisLeads.length) * 100).toFixed(1) : '0'
-            const lastConv = lastLeads.length > 0 ? ((lastSales.length / lastLeads.length) * 100).toFixed(1) : '0'
-
+            const rangeA = getPRange(compPeriodA, compStartA, compEndA)
+            const rangeB = getPRange(compPeriodB, compStartB, compEndB)
+            const leadsA = leads.filter(l => { const d = new Date(l.created_at); return d >= rangeA.start && d <= rangeA.end })
+            const leadsB = leads.filter(l => { const d = new Date(l.created_at); return d >= rangeB.start && d <= rangeB.end })
+            const salesA = leadsA.filter(l => l.status === 'procedure_done')
+            const salesB = leadsB.filter(l => l.status === 'procedure_done')
+            const revenueA = salesA.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+            const revenueB = salesB.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+            const convA = leadsA.length > 0 ? ((salesA.length / leadsA.length) * 100).toFixed(1) : '0'
+            const convB = leadsB.length > 0 ? ((salesB.length / leadsB.length) * 100).toFixed(1) : '0'
             const diff = (a: number, b: number) => b === 0 ? null : (((a - b) / b) * 100).toFixed(0)
-            const thisMonthLabel = now.toLocaleDateString('tr-TR', { month: 'long' })
-            const lastMonthLabel = new Date(lastMonth.year, lastMonth.month).toLocaleDateString('tr-TR', { month: 'long' })
 
-            // Satışçı karşılaştırması
+            const PERIODS = [
+              { key: 'today', label: 'Bugün' }, { key: '7day', label: 'Son 7 Gün' },
+              { key: '1month', label: 'Bu Ay' }, { key: 'last_month', label: 'Geçen Ay' },
+              { key: '3month', label: 'Son 3 Ay' }, { key: '6month', label: 'Son 6 Ay' },
+              { key: '1year', label: 'Bu Yıl' }, { key: 'custom', label: 'Özel' },
+            ]
+
+            // Satışçı karşılaştırması (dönem A baz alır)
             const memberPerf = teamMembers.map((tm: any) => {
-              const mLeads = leads.filter(l => l.assigned_to === tm.user_id)
-              const mSales = mLeads.filter(l => l.status === 'procedure_done')
-              const mRevenue = mSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
-              const mThisMonth = mLeads.filter(l => { const d = new Date(l.created_at); return d.getFullYear() === thisMonth.year && d.getMonth() === thisMonth.month })
+              const mAll = leads.filter(l => l.assigned_to === tm.user_id)
+              const mA = leadsA.filter(l => l.assigned_to === tm.user_id)
+              const mB = leadsB.filter(l => l.assigned_to === tm.user_id)
+              const mSalesA = mA.filter(l => l.status === 'procedure_done')
+              const mSalesB = mB.filter(l => l.status === 'procedure_done')
               return {
                 name: tm.profiles?.full_name || tm.profiles?.email || '—',
                 branch: tm.branches?.branch_name || '—',
-                leads: mLeads.length, sales: mSales.length, revenue: mRevenue,
-                thisMonth: mThisMonth.length,
-                conv: mLeads.length > 0 ? ((mSales.length / mLeads.length) * 100).toFixed(0) : '0'
+                leadsA: mA.length, leadsB: mB.length,
+                salesA: mSalesA.length, salesB: mSalesB.length,
+                convA: mA.length > 0 ? ((mSalesA.length / mA.length) * 100).toFixed(0) : '0',
+                convB: mB.length > 0 ? ((mSalesB.length / mB.length) * 100).toFixed(0) : '0',
               }
-            }).sort((a: any, b: any) => b.sales - a.sales)
+            }).sort((a: any, b: any) => b.salesA - a.salesA)
 
             const metrics = [
-              { label: 'Lead', this: thisLeads.length, last: lastLeads.length, color: 'text-indigo-600', bg: 'bg-indigo-50', format: (v: number) => v.toString() },
-              { label: 'Satış', this: thisSales.length, last: lastSales.length, color: 'text-emerald-600', bg: 'bg-emerald-50', format: (v: number) => v.toString() },
-              { label: 'Ciro', this: thisRevenue, last: lastRevenue, color: 'text-violet-600', bg: 'bg-violet-50', format: (v: number) => '₺' + v.toLocaleString() },
-              { label: 'Dönüşüm', this: parseFloat(thisConv), last: parseFloat(lastConv), color: 'text-amber-600', bg: 'bg-amber-50', format: (v: number) => '%' + v.toFixed(1) },
+              { label: 'Lead', a: leadsA.length, b: leadsB.length, color: 'text-indigo-600', bgA: 'bg-indigo-50', format: (v: number) => v.toString() },
+              { label: 'Satış', a: salesA.length, b: salesB.length, color: 'text-emerald-600', bgA: 'bg-emerald-50', format: (v: number) => v.toString() },
+              { label: 'Ciro', a: revenueA, b: revenueB, color: 'text-violet-600', bgA: 'bg-violet-50', format: (v: number) => '₺' + v.toLocaleString() },
+              { label: 'Dönüşüm', a: parseFloat(convA), b: parseFloat(convB), color: 'text-amber-600', bgA: 'bg-amber-50', format: (v: number) => '%' + v.toFixed(1) },
             ]
+
+            const PeriodSelect = ({ value, onChange, startDate, endDate, onStartDate, onEndDate }: any) => (
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-1 flex-wrap">
+                  {PERIODS.map(p => (
+                    <button key={p.key} onClick={() => onChange(p.key)}
+                      className={'px-2.5 py-1 rounded-lg text-xs font-medium transition-all ' + (value === p.key ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100')}>
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+                {value === 'custom' && (
+                  <div className="flex items-center gap-2">
+                    <input type="date" value={startDate} onChange={e => onStartDate(e.target.value)}
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <span className="text-xs text-gray-400">—</span>
+                    <input type="date" value={endDate} onChange={e => onEndDate(e.target.value)}
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                  </div>
+                )}
+              </div>
+            )
 
             return (
               <div className="space-y-5">
-                {/* Ay Karşılaştırması */}
+
+                {/* Dönem Seçici */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white rounded-2xl border-2 border-indigo-200 p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="w-2.5 h-2.5 bg-indigo-600 rounded-full" />
+                      <p className="text-sm font-semibold text-indigo-700">Dönem A</p>
+                      <span className="ml-auto text-xs text-indigo-500 font-medium">{rangeA.label}</span>
+                    </div>
+                    <PeriodSelect value={compPeriodA} onChange={setCompPeriodA} startDate={compStartA} endDate={compEndA} onStartDate={setCompStartA} onEndDate={setCompEndA} />
+                  </div>
+                  <div className="bg-white rounded-2xl border-2 border-gray-200 p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="w-2.5 h-2.5 bg-gray-400 rounded-full" />
+                      <p className="text-sm font-semibold text-gray-600">Dönem B</p>
+                      <span className="ml-auto text-xs text-gray-400 font-medium">{rangeB.label}</span>
+                    </div>
+                    <PeriodSelect value={compPeriodB} onChange={setCompPeriodB} startDate={compStartB} endDate={compEndB} onStartDate={setCompStartB} onEndDate={setCompEndB} />
+                  </div>
+                </div>
+
+                {/* Karşılaştırma Metrikler */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                  <div className="flex items-center gap-3 mb-6">
-                    <h3 className="font-semibold text-gray-900">Ay Karşılaştırması</h3>
+                  <div className="flex items-center gap-3 mb-5">
+                    <h3 className="font-semibold text-gray-900">Dönem Karşılaştırması</h3>
                     <div className="flex items-center gap-2 ml-auto text-xs">
-                      <span className="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-medium">{thisMonthLabel}</span>
-                      <span className="text-gray-400">vs</span>
-                      <span className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg font-medium">{lastMonthLabel}</span>
+                      <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-indigo-600 rounded-full inline-block" /> {rangeA.label}</span>
+                      <span className="text-gray-300">vs</span>
+                      <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-gray-300 rounded-full inline-block" /> {rangeB.label}</span>
                     </div>
                   </div>
                   <div className="grid grid-cols-4 gap-4">
                     {metrics.map(m => {
-                      const d = diff(m.this, m.last)
+                      const d = diff(m.a, m.b)
                       const up = d !== null && parseFloat(d) > 0
                       const down = d !== null && parseFloat(d) < 0
                       return (
-                        <div key={m.label} className={`${m.bg} rounded-2xl p-4`}>
+                        <div key={m.label} className={m.bgA + ' rounded-2xl p-4'}>
                           <p className="text-xs text-gray-500 mb-2">{m.label}</p>
-                          <p className={`text-2xl font-bold ${m.color}`}>{m.format(m.this)}</p>
-                          <p className="text-xs text-gray-400 mt-1">{m.format(m.last)} geçen ay</p>
+                          <p className={`text-2xl font-bold ${m.color}`}>{m.format(m.a)}</p>
+                          <p className="text-xs text-gray-400 mt-1">{m.format(m.b)} dönem B</p>
                           {d !== null && (
                             <div className={`mt-2 inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${up ? 'bg-emerald-100 text-emerald-700' : down ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
                               {up ? '↑' : down ? '↓' : '='} {Math.abs(parseFloat(d))}%
@@ -1119,15 +1245,18 @@ export default function CustomerPage() {
                 {/* Satışçı Karşılaştırması */}
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100">
-                    <h3 className="font-semibold text-gray-900">Satışçı Performans Sıralaması</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">Tüm zamanlar · Satış sayısına göre</p>
+                    <h3 className="font-semibold text-gray-900">Satışçı Karşılaştırması</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">{rangeA.label} vs {rangeB.label}</p>
                   </div>
                   {memberPerf.length === 0 ? (
                     <p className="text-sm text-gray-400 text-center py-10">Henüz satışçı yok.</p>
                   ) : (
                     <div className="divide-y divide-gray-50">
                       {memberPerf.map((m: any, i: number) => {
-                        const maxSales = Math.max(...memberPerf.map((x: any) => x.sales), 1)
+                        const maxSales = Math.max(...memberPerf.map((x: any) => x.salesA), 1)
+                        const salesDiff = m.salesB === 0 ? null : (((m.salesA - m.salesB) / m.salesB) * 100).toFixed(0)
+                        const up = salesDiff !== null && parseFloat(salesDiff) > 0
+                        const down = salesDiff !== null && parseFloat(salesDiff) < 0
                         return (
                           <div key={i} className="px-6 py-4 flex items-center gap-4">
                             <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold ${i === 0 ? 'bg-amber-100 text-amber-600' : i === 1 ? 'bg-gray-100 text-gray-500' : i === 2 ? 'bg-orange-50 text-orange-500' : 'bg-gray-50 text-gray-400'}`}>
@@ -1137,29 +1266,30 @@ export default function CustomerPage() {
                               <span className="text-blue-600 text-xs font-bold">{m.name.charAt(0)}</span>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
+                              <div className="flex items-center gap-2 mb-1.5">
                                 <p className="text-sm font-medium text-gray-900">{m.name}</p>
                                 <span className="text-xs text-gray-400">{m.branch}</span>
+                                {salesDiff !== null && (
+                                  <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${up ? 'bg-emerald-100 text-emerald-700' : down ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                                    {up ? '↑' : down ? '↓' : '='} {Math.abs(parseFloat(salesDiff))}%
+                                  </span>
+                                )}
                               </div>
                               <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden w-full">
-                                <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(m.sales / maxSales) * 100}%` }} />
+                                <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(m.salesA / maxSales) * 100}%` }} />
                               </div>
                             </div>
-                            <div className="flex gap-4 flex-shrink-0 text-right">
-                              <div>
-                                <p className="text-sm font-semibold text-indigo-600">{m.leads}</p>
+                            <div className="flex gap-3 flex-shrink-0">
+                              <div className="text-center">
+                                <p className="text-xs text-indigo-500 font-semibold">{m.leadsA} <span className="text-gray-300">/ {m.leadsB}</span></p>
                                 <p className="text-xs text-gray-400">lead</p>
                               </div>
-                              <div>
-                                <p className="text-sm font-semibold text-emerald-600">{m.sales}</p>
+                              <div className="text-center">
+                                <p className="text-xs text-emerald-600 font-semibold">{m.salesA} <span className="text-gray-300">/ {m.salesB}</span></p>
                                 <p className="text-xs text-gray-400">satış</p>
                               </div>
-                              <div>
-                                <p className="text-sm font-semibold text-violet-600">{m.revenue > 0 ? '₺' + (m.revenue / 1000).toFixed(0) + 'K' : '—'}</p>
-                                <p className="text-xs text-gray-400">ciro</p>
-                              </div>
-                              <div>
-                                <p className="text-sm font-semibold text-amber-600">%{m.conv}</p>
+                              <div className="text-center">
+                                <p className="text-xs text-amber-600 font-semibold">%{m.convA} <span className="text-gray-300">/ %{m.convB}</span></p>
                                 <p className="text-xs text-gray-400">dönüşüm</p>
                               </div>
                             </div>
