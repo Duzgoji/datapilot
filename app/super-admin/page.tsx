@@ -145,6 +145,85 @@ export default function SuperAdminPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [generatingInvoices, setGeneratingInvoices] = useState(false)
 
+  // Onboarding sihirbazı
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false)
+  const [onboardingStep, setOnboardingStep] = useState(1)
+  const [obName, setObName] = useState('')
+  const [obEmail, setObEmail] = useState('')
+  const [obPassword, setObPassword] = useState('')
+  const [obCompany, setObCompany] = useState('')
+  const [obSector, setObSector] = useState('')
+  const [obPhone, setObPhone] = useState('')
+  const [obPlan, setObPlan] = useState('starter')
+  const [obMonthlyFee, setObMonthlyFee] = useState('990')
+  const [obPerBranchFee, setObPerBranchFee] = useState('0')
+  const [obBranchName, setObBranchName] = useState('')
+  const [obBranchCity, setObBranchCity] = useState('')
+  const [obCommissionModel, setObCommissionModel] = useState('fixed_rate')
+  const [obInviteLink, setObInviteLink] = useState('')
+  const [obSaving, setObSaving] = useState(false)
+  const [obCreatedUserId, setObCreatedUserId] = useState('')
+
+  const resetOnboarding = () => {
+    setOnboardingStep(1); setObName(''); setObEmail(''); setObPassword(''); setObCompany('')
+    setObSector(''); setObPhone(''); setObPlan('starter'); setObMonthlyFee('990')
+    setObPerBranchFee('0'); setObBranchName(''); setObBranchCity('')
+    setObCommissionModel('fixed_rate'); setObInviteLink(''); setObCreatedUserId('')
+  }
+
+  const handleOnboardingStep1 = () => {
+    if (!obName || !obEmail || !obPassword || !obCompany) { alert('Lütfen zorunlu alanları doldurun.'); return }
+    setOnboardingStep(2)
+  }
+
+  const handleOnboardingStep2 = () => setOnboardingStep(3)
+
+  const handleOnboardingStep3 = async () => {
+    setObSaving(true)
+    try {
+      // 1. Kullanıcı oluştur
+      const { data, error } = await supabase.auth.signUp({
+        email: obEmail, password: obPassword,
+        options: { data: { full_name: obName, role: 'customer' } }
+      })
+      if (error) { alert(error.message); setObSaving(false); return }
+      const userId = data.user?.id
+      if (!userId) { alert('Kullanıcı oluşturulamadı.'); setObSaving(false); return }
+      setObCreatedUserId(userId)
+
+      // 2. Profile upsert
+      await supabase.from('profiles').upsert({
+        id: userId, email: obEmail, full_name: obName, role: 'customer',
+        company_name: obCompany, sector: obSector, phone: obPhone, is_active: true
+      })
+
+      // 3. Subscription
+      await supabase.from('subscriptions').insert({
+        owner_id: userId, plan: obPlan, status: 'active',
+        monthly_fee: parseFloat(obMonthlyFee) || 0,
+        per_branch_fee: parseFloat(obPerBranchFee) || 0,
+      })
+
+      // 4. İlk şube
+      if (obBranchName) {
+        await supabase.from('branches').insert({
+          owner_id: userId, branch_name: obBranchName, city: obBranchCity || null,
+          commission_model: obCommissionModel, is_active: true
+        })
+      }
+
+      // 5. Davet linki
+      const token = Math.random().toString(36).substring(2) + Date.now().toString(36)
+      const { data: { user: curUser } } = await supabase.auth.getUser()
+      await supabase.from('invitations').insert({ email: obEmail, role: 'customer', token, invited_by: curUser?.id })
+      setObInviteLink(`${window.location.origin}/invite?token=${token}`)
+
+      await loadData()
+      setOnboardingStep(4)
+    } catch (err: any) { alert(err.message) }
+    setObSaving(false)
+  }
+
   useEffect(() => {
     loadData()
     const handleClickOutside = (e: MouseEvent) => {
@@ -444,7 +523,7 @@ export default function SuperAdminPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-500">{filteredCustomers.length} firma</p>
-                <Btn size="sm" onClick={() => setShowAddCustomer(true)}>
+                <Btn size="sm" onClick={() => { resetOnboarding(); setShowOnboardingModal(true) }}>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
                   Firma Ekle
                 </Btn>
@@ -495,6 +574,31 @@ export default function SuperAdminPage() {
                 })}
               </div>
             </div>
+          )}
+
+          {/* ── ONBOARDING SİHİRBAZI SEKME ── */}
+          {activeTab === 'firma-onboarding' && (
+            <OnboardingWizard
+              step={onboardingStep} setStep={setOnboardingStep}
+              obName={obName} setObName={setObName}
+              obEmail={obEmail} setObEmail={setObEmail}
+              obPassword={obPassword} setObPassword={setObPassword}
+              obCompany={obCompany} setObCompany={setObCompany}
+              obSector={obSector} setObSector={setObSector}
+              obPhone={obPhone} setObPhone={setObPhone}
+              obPlan={obPlan} setObPlan={setObPlan}
+              obMonthlyFee={obMonthlyFee} setObMonthlyFee={setObMonthlyFee}
+              obPerBranchFee={obPerBranchFee} setObPerBranchFee={setObPerBranchFee}
+              obBranchName={obBranchName} setObBranchName={setObBranchName}
+              obBranchCity={obBranchCity} setObBranchCity={setObBranchCity}
+              obCommissionModel={obCommissionModel} setObCommissionModel={setObCommissionModel}
+              obInviteLink={obInviteLink} obSaving={obSaving}
+              onStep1={handleOnboardingStep1}
+              onStep2={handleOnboardingStep2}
+              onStep3={handleOnboardingStep3}
+              onReset={() => { resetOnboarding(); }}
+              isModal={false}
+            />
           )}
 
           {/* ── FATURALAR ── */}
@@ -939,6 +1043,283 @@ export default function SuperAdminPage() {
         )}
       </Modal>
 
+      {/* ── ONBOARDING MODAL ── */}
+      {showOnboardingModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { if (onboardingStep === 4) { setShowOnboardingModal(false); resetOnboarding() } }} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg z-10 max-h-[90vh] flex flex-col">
+            <div className="flex items-start justify-between p-6 border-b border-gray-100 flex-shrink-0">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Yeni Firma Onboarding</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Adım {Math.min(onboardingStep, 4)} / 4</p>
+              </div>
+              <button onClick={() => { setShowOnboardingModal(false); resetOnboarding() }}
+                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1">
+              <OnboardingWizard
+                step={onboardingStep} setStep={setOnboardingStep}
+                obName={obName} setObName={setObName}
+                obEmail={obEmail} setObEmail={setObEmail}
+                obPassword={obPassword} setObPassword={setObPassword}
+                obCompany={obCompany} setObCompany={setObCompany}
+                obSector={obSector} setObSector={setObSector}
+                obPhone={obPhone} setObPhone={setObPhone}
+                obPlan={obPlan} setObPlan={setObPlan}
+                obMonthlyFee={obMonthlyFee} setObMonthlyFee={setObMonthlyFee}
+                obPerBranchFee={obPerBranchFee} setObPerBranchFee={setObPerBranchFee}
+                obBranchName={obBranchName} setObBranchName={setObBranchName}
+                obBranchCity={obBranchCity} setObBranchCity={setObBranchCity}
+                obCommissionModel={obCommissionModel} setObCommissionModel={setObCommissionModel}
+                obInviteLink={obInviteLink} obSaving={obSaving}
+                onStep1={handleOnboardingStep1}
+                onStep2={handleOnboardingStep2}
+                onStep3={handleOnboardingStep3}
+                onReset={() => { resetOnboarding(); setShowOnboardingModal(false) }}
+                isModal={true}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  )
+}
+
+// ─── ONBOARDING WIZARD COMPONENT ──────────────────────────────────────────────
+
+function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmail, obPassword, setObPassword, obCompany, setObCompany, obSector, setObSector, obPhone, setObPhone, obPlan, setObPlan, obMonthlyFee, setObMonthlyFee, obPerBranchFee, setObPerBranchFee, obBranchName, setObBranchName, obBranchCity, setObBranchCity, obCommissionModel, setObCommissionModel, obInviteLink, obSaving, onStep1, onStep2, onStep3, onReset, isModal }: any) {
+
+  const PLANS = [
+    { key: 'starter', label: 'Starter', price: '₺990', desc: '3 kullanıcı · 1 şube · 500 lead/ay', color: 'border-indigo-500 bg-indigo-50' },
+    { key: 'pro', label: 'Pro', price: '₺2.490', desc: '15 kullanıcı · 5 şube · sınırsız lead', color: 'border-violet-500 bg-violet-50' },
+    { key: 'enterprise', label: 'Enterprise', price: '₺4.990+', desc: 'Sınırsız her şey · AI rapor dahil', color: 'border-amber-500 bg-amber-50' },
+    { key: 'trial', label: 'Deneme', price: 'Ücretsiz', desc: '14 gün · tüm özellikler', color: 'border-gray-300 bg-gray-50' },
+  ]
+
+  const SECTORS = ['Estetik Klinik', 'Diş Kliniği', 'Saç Ekim', 'Güzellik Merkezi', 'Medikal Estetik', 'Dermatoloji', 'Ortopedi', 'Göz Hastalıkları', 'Diğer']
+
+  const stepLabels = ['Firma Bilgileri', 'Plan & Fiyat', 'İlk Şube', 'Tamamlandı']
+
+  const wrapClass = isModal ? 'p-6 space-y-5' : 'space-y-5'
+
+  return (
+    <div className={isModal ? '' : 'max-w-lg'}>
+      {/* Progress steps */}
+      <div className={isModal ? 'px-6 pt-4' : 'mb-6'}>
+        <div className="flex items-center gap-0">
+          {stepLabels.map((label, i) => {
+            const idx = i + 1
+            const done = step > idx
+            const active = step === idx
+            return (
+              <div key={idx} className="flex items-center flex-1 last:flex-none">
+                <div className="flex flex-col items-center">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all
+                    ${done ? 'bg-emerald-500 text-white' : active ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                    {done ? '✓' : idx}
+                  </div>
+                  <p className={`text-xs mt-1 whitespace-nowrap ${active ? 'text-indigo-600 font-medium' : done ? 'text-emerald-600' : 'text-gray-400'}`}>{label}</p>
+                </div>
+                {i < stepLabels.length - 1 && (
+                  <div className={`flex-1 h-0.5 mx-1 mb-4 ${done ? 'bg-emerald-400' : 'bg-gray-100'}`} />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Adım 1: Firma & Kullanıcı */}
+      {step === 1 && (
+        <div className={wrapClass}>
+          <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+            <p className="text-xs font-semibold text-indigo-700 mb-0.5">👤 Hesap Sahibi Bilgileri</p>
+            <p className="text-xs text-indigo-400">Firmanın giriş yapacağı kullanıcı hesabı</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Ad Soyad *</label>
+              <input value={obName} onChange={e => setObName(e.target.value)} placeholder="Ahmet Yılmaz"
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">E-posta *</label>
+              <input type="email" value={obEmail} onChange={e => setObEmail(e.target.value)} placeholder="firma@email.com"
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Telefon</label>
+              <input value={obPhone} onChange={e => setObPhone(e.target.value)} placeholder="05XX XXX XX XX"
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şifre *</label>
+              <input type="password" value={obPassword} onChange={e => setObPassword(e.target.value)} placeholder="min. 6 karakter"
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şirket Adı *</label>
+              <input value={obCompany} onChange={e => setObCompany(e.target.value)} placeholder="Klinik Adı"
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Sektör</label>
+              <div className="relative">
+                <select value={obSector} onChange={e => setObSector(e.target.value)}
+                  className="w-full appearance-none px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-9">
+                  <option value="">Seçiniz</option>
+                  {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+            </div>
+          </div>
+          <button onClick={onStep1}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+            Devam Et
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+        </div>
+      )}
+
+      {/* Adım 2: Plan */}
+      {step === 2 && (
+        <div className={wrapClass}>
+          <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
+            <p className="text-xs font-semibold text-violet-700 mb-0.5">💳 Plan & Fiyatlandırma</p>
+            <p className="text-xs text-violet-400">{obCompany} için abonelik planı seçin</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {PLANS.map(plan => (
+              <button key={plan.key} onClick={() => {
+                setObPlan(plan.key)
+                if (plan.key === 'starter') setObMonthlyFee('990')
+                else if (plan.key === 'pro') setObMonthlyFee('2490')
+                else if (plan.key === 'enterprise') setObMonthlyFee('4990')
+                else setObMonthlyFee('0')
+              }}
+                className={`p-4 rounded-xl border-2 text-left transition-all ${obPlan === plan.key ? plan.color + ' border-2' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                <p className="text-sm font-bold text-gray-900">{plan.label}</p>
+                <p className="text-base font-bold text-indigo-600 mt-1">{plan.price}<span className="text-xs font-normal text-gray-400">/ay</span></p>
+                <p className="text-xs text-gray-400 mt-1">{plan.desc}</p>
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Aylık Ücret (₺)</label>
+              <input type="number" value={obMonthlyFee} onChange={e => setObMonthlyFee(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şube Başı Ücret (₺)</label>
+              <input type="number" value={obPerBranchFee} onChange={e => setObPerBranchFee(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => setStep(1)} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
+              ← Geri
+            </button>
+            <button onClick={onStep2} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
+              Devam Et →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Adım 3: İlk Şube */}
+      {step === 3 && (
+        <div className={wrapClass}>
+          <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+            <p className="text-xs font-semibold text-emerald-700 mb-0.5">🏢 İlk Şube Kurulumu</p>
+            <p className="text-xs text-emerald-400">İsteğe bağlı — sonradan da eklenebilir</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şube Adı</label>
+              <input value={obBranchName} onChange={e => setObBranchName(e.target.value)} placeholder="örn. Merkez Şube"
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şehir</label>
+              <input value={obBranchCity} onChange={e => setObBranchCity(e.target.value)} placeholder="İstanbul"
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Komisyon Modeli</label>
+              <div className="relative">
+                <select value={obCommissionModel} onChange={e => setObCommissionModel(e.target.value)}
+                  className="w-full appearance-none px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-9">
+                  <option value="fixed_rate">Sabit Oran (%)</option>
+                  <option value="per_lead">Lead Başı (₺)</option>
+                </select>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => setStep(2)} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
+              ← Geri
+            </button>
+            <button onClick={onStep3} disabled={obSaving}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
+              {obSaving ? 'Oluşturuluyor...' : '✓ Firmayı Oluştur'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Adım 4: Tamamlandı */}
+      {step === 4 && (
+        <div className={isModal ? 'p-6 space-y-5' : 'space-y-5'}>
+          <div className="text-center py-6">
+            <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 16l7 7L26 9" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">Firma Oluşturuldu! 🎉</h3>
+            <p className="text-sm text-gray-400 mt-1">{obCompany} başarıyla platforma eklendi.</p>
+          </div>
+
+          <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+            {[
+              { label: 'Firma', value: obCompany },
+              { label: 'E-posta', value: obEmail },
+              { label: 'Plan', value: obPlan },
+              obBranchName ? { label: 'İlk Şube', value: obBranchName } : null,
+            ].filter(Boolean).map((item: any) => (
+              <div key={item.label} className="flex items-center justify-between">
+                <span className="text-xs text-gray-400">{item.label}</span>
+                <span className="text-xs font-semibold text-gray-700">{item.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {obInviteLink && (
+            <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+              <p className="text-xs font-semibold text-indigo-700 mb-2">🔗 Davet Linki</p>
+              <div className="flex items-center gap-2">
+                <input readOnly value={obInviteLink}
+                  className="flex-1 text-xs bg-white border border-indigo-200 rounded-lg px-3 py-2 text-gray-600 truncate focus:outline-none" />
+                <button onClick={() => { navigator.clipboard.writeText(obInviteLink) }}
+                  className="px-3 py-2 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap font-medium">
+                  Kopyala
+                </button>
+              </div>
+              <p className="text-xs text-indigo-400 mt-2">Firmaya bu linki gönderin, şifrelerini bu linkten ayarlayabilirler.</p>
+            </div>
+          )}
+
+          <button onClick={onReset}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
+            {isModal ? 'Kapat' : 'Yeni Firma Ekle'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
