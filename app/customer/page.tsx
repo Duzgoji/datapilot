@@ -226,6 +226,16 @@ export default function CustomerPage() {
   const [passwordMsg, setPasswordMsg] = useState<{type:'success'|'error', text:string}|null>(null)
   const [logoUploading, setLogoUploading] = useState(false)
 
+  const [metaConn, setMetaConn] = useState<any>(null)
+  const [metaForms, setMetaForms] = useState<any[]>([])
+  const [metaFormsLoading, setMetaFormsLoading] = useState(false)
+  const [metaFormsError, setMetaFormsError] = useState('')
+  const [selectedForm, setSelectedForm] = useState<any>(null)
+  const [formLeads, setFormLeads] = useState<any[]>([])
+  const [formLeadsLoading, setFormLeadsLoading] = useState(false)
+  const [importingLeads, setImportingLeads] = useState<Set<string>>(new Set())
+  const [importedLeads, setImportedLeads] = useState<Set<string>>(new Set())
+
   const [showReportPanel, setShowReportPanel] = useState(false)
   const [reportPeriod, setReportPeriod] = useState('this_month')
   const [reportFormat, setReportFormat] = useState('excel')
@@ -268,7 +278,70 @@ export default function CustomerPage() {
       const { data: membersData } = await supabase.from('team_members').select('*, profiles(full_name, email), branches(branch_name)').in('branch_id', branchIds)
       setTeamMembers(membersData || [])
     }
+    const { data: metaConnData } = await supabase.from('meta_connections').select('*').eq('owner_id', user.id).single()
+    setMetaConn(metaConnData || null)
     setLoading(false)
+  }
+
+  // ─── META LEAD FORMS ──────────────────────────────────────────────────────
+
+  const loadMetaForms = async () => {
+    if (!metaConn?.access_token || !metaConn?.selected_ad_account_id) return
+    setMetaFormsLoading(true); setMetaFormsError('')
+    try {
+      const adAccountId = metaConn.selected_ad_account_id.replace('act_', '')
+      const res = await fetch(
+        `https://graph.facebook.com/v18.0/act_${adAccountId}/leadgen_forms?fields=id,name,status,leads_count,created_time&access_token=${metaConn.access_token}`
+      )
+      const data = await res.json()
+      if (data.error) { setMetaFormsError(data.error.message); setMetaForms([]) }
+      else setMetaForms(data.data || [])
+    } catch { setMetaFormsError('Formlar yüklenemedi.') }
+    setMetaFormsLoading(false)
+  }
+
+  const loadFormLeads = async (form: any) => {
+    setSelectedForm(form); setFormLeads([]); setFormLeadsLoading(true)
+    try {
+      const res = await fetch(
+        `https://graph.facebook.com/v18.0/${form.id}/leads?fields=id,full_name,phone_number,email,created_time&access_token=${metaConn.access_token}&limit=100`
+      )
+      const data = await res.json()
+      if (data.error) { setFormLeads([]) }
+      else {
+        // Hangi leadler zaten import edilmiş?
+        const existingSources = leads.filter(l => l.source === 'meta').map(l => l.note)
+        const alreadyImported = new Set(existingSources.filter(Boolean))
+        setImportedLeads(alreadyImported as Set<string>)
+        setFormLeads(data.data || [])
+      }
+    } catch { setFormLeads([]) }
+    setFormLeadsLoading(false)
+  }
+
+  const importMetaLead = async (fl: any) => {
+    if (importingLeads.has(fl.id) || importedLeads.has(fl.id)) return
+    setImportingLeads(prev => new Set(prev).add(fl.id))
+    const branchId = branches[0]?.id
+    if (!branchId || !profile?.id) return
+    const fields = fl.field_data || []
+    const getName = () => { const f = fields.find((x: any) => x.name === 'full_name'); return f?.values?.[0] || fl.full_name || 'İsimsiz' }
+    const getPhone = () => { const f = fields.find((x: any) => x.name === 'phone_number'); return f?.values?.[0] || fl.phone_number || '' }
+    const getEmail = () => { const f = fields.find((x: any) => x.name === 'email'); return f?.values?.[0] || fl.email || '' }
+    await supabase.from('leads').insert({
+      owner_id: profile.id,
+      branch_id: branchId,
+      full_name: getName(),
+      phone: getPhone(),
+      email: getEmail(),
+      source: 'meta',
+      status: 'new',
+      note: fl.id, // meta lead id ile duplicate kontrolü
+      created_at: fl.created_time || new Date().toISOString(),
+    })
+    setImportedLeads(prev => new Set(prev).add(fl.id))
+    setImportingLeads(prev => { const n = new Set(prev); n.delete(fl.id); return n })
+    await loadData()
   }
 
   // ─── SETTINGS HANDLERS ────────────────────────────────────────────────────
@@ -500,7 +573,7 @@ export default function CustomerPage() {
 
         {/* DataPilot Logo */}
         <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-          <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
+          <img src="/logo.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
           {!sidebarCollapsed && <span className="font-semibold text-white text-sm tracking-tight truncate">DataPilot</span>}
         </div>
 
@@ -914,7 +987,175 @@ export default function CustomerPage() {
           {/* ── META ── */}
           {activeTab === 'meta-baglanti' && profile?.id && <MetaConnect ownerId={profile.id} />}
           {activeTab === 'meta-kampanyalar' && <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center"><p className="text-gray-400 text-sm">Kampanyalar yakında gelecek.</p></div>}
-          {activeTab === 'meta-leadformlar' && <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center"><p className="text-gray-400 text-sm">Lead formları yakında gelecek.</p></div>}
+          {activeTab === 'meta-leadformlar' && (() => {
+            const notConnected = !metaConn?.access_token
+            const noAccount = !metaConn?.selected_ad_account_id
+
+            if (notConnected) return (
+              <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+                <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">𝑓</div>
+                <p className="text-gray-700 font-semibold mb-1">Meta Bağlantısı Gerekli</p>
+                <p className="text-sm text-gray-400 mb-4">Önce Meta hesabını bağlamalısın.</p>
+                <button onClick={() => setActiveTab('meta-baglanti')} className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-xl font-medium hover:bg-indigo-700 transition-colors">Meta Bağlantısına Git →</button>
+              </div>
+            )
+
+            if (noAccount) return (
+              <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+                <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">⚠</div>
+                <p className="text-gray-700 font-semibold mb-1">Reklam Hesabı Seçilmedi</p>
+                <p className="text-sm text-gray-400 mb-4">Meta bağlantısından bir reklam hesabı seçmelisin.</p>
+                <button onClick={() => setActiveTab('meta-baglanti')} className="px-4 py-2 bg-amber-500 text-white text-sm rounded-xl font-medium hover:bg-amber-600 transition-colors">Hesap Seçmeye Git →</button>
+              </div>
+            )
+
+            return (
+              <div className="space-y-5">
+
+                {/* Bağlı hesap bilgisi */}
+                <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-4">
+                  <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-lg">𝑓</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">{metaConn.selected_ad_account_name || metaConn.selected_ad_account_id}</p>
+                    <p className="text-xs text-gray-400">Bağlı reklam hesabı · {metaForms.length > 0 ? `${metaForms.length} form` : 'Formlar yüklenmedi'}</p>
+                  </div>
+                  <button onClick={loadMetaForms} disabled={metaFormsLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-xs rounded-xl font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50">
+                    {metaFormsLoading ? (
+                      <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Yükleniyor...</>
+                    ) : (
+                      <><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 6.5A5.5 5.5 0 0112 6.5M1 6.5a5.5 5.5 0 0011 0M1 6.5H12M6.5 1a8 8 0 010 11M6.5 1a8 8 0 000 11" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg> Formları Yükle</>
+                    )}
+                  </button>
+                </div>
+
+                {metaFormsError && (
+                  <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600">{metaFormsError}</div>
+                )}
+
+                {/* Form listesi + sağda leadler */}
+                {metaForms.length > 0 && (
+                  <div className="grid grid-cols-5 gap-4">
+
+                    {/* Form listesi */}
+                    <div className="col-span-2 bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                      <div className="px-5 py-3.5 border-b border-gray-100">
+                        <h3 className="text-sm font-semibold text-gray-900">Lead Formları</h3>
+                        <p className="text-xs text-gray-400 mt-0.5">{metaForms.length} form bulundu</p>
+                      </div>
+                      <div className="divide-y divide-gray-50">
+                        {metaForms.map(form => (
+                          <button key={form.id} onClick={() => loadFormLeads(form)}
+                            className={`w-full text-left px-5 py-4 transition-colors hover:bg-indigo-50/40 ${selectedForm?.id === form.id ? 'bg-indigo-50 border-l-2 border-indigo-600' : ''}`}>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-medium truncate ${selectedForm?.id === form.id ? 'text-indigo-700' : 'text-gray-800'}`}>{form.name}</p>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                  {new Date(form.created_time).toLocaleDateString('tr-TR')}
+                                </p>
+                              </div>
+                              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                <span className={`text-xs font-bold ${selectedForm?.id === form.id ? 'text-indigo-600' : 'text-gray-600'}`}>{form.leads_count ?? '—'}</span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full ${form.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+                                  {form.status === 'ACTIVE' ? 'Aktif' : 'Pasif'}
+                                </span>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Lead listesi */}
+                    <div className="col-span-3 bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                      {!selectedForm ? (
+                        <div className="p-16 text-center">
+                          <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl">←</div>
+                          <p className="text-gray-400 text-sm">Soldan bir form seç</p>
+                        </div>
+                      ) : formLeadsLoading ? (
+                        <div className="p-16 flex justify-center">
+                          <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+                        </div>
+                      ) : (
+                        <>
+                          <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+                            <div>
+                              <h3 className="text-sm font-semibold text-gray-900 truncate">{selectedForm.name}</h3>
+                              <p className="text-xs text-gray-400 mt-0.5">{formLeads.length} lead · {importedLeads.size} import edildi</p>
+                            </div>
+                            {formLeads.length > 0 && (
+                              <button
+                                onClick={async () => {
+                                  for (const fl of formLeads) {
+                                    if (!importedLeads.has(fl.id)) await importMetaLead(fl)
+                                  }
+                                }}
+                                className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                                Tümünü İçe Aktar
+                              </button>
+                            )}
+                          </div>
+                          {formLeads.length === 0 ? (
+                            <div className="p-12 text-center"><p className="text-gray-400 text-sm">Bu formda henüz lead yok.</p></div>
+                          ) : (
+                            <div className="divide-y divide-gray-50 max-h-[480px] overflow-y-auto">
+                              {formLeads.map((fl, idx) => {
+                                const isImported = importedLeads.has(fl.id)
+                                const isImporting = importingLeads.has(fl.id)
+                                const avatarColors = ['bg-blue-100 text-blue-600','bg-violet-100 text-violet-600','bg-emerald-100 text-emerald-600','bg-orange-100 text-orange-600']
+                                const ac = avatarColors[idx % avatarColors.length]
+                                const fields = fl.field_data || []
+                                const name = fields.find((x: any) => x.name === 'full_name')?.values?.[0] || fl.full_name || 'İsimsiz'
+                                const phone = fields.find((x: any) => x.name === 'phone_number')?.values?.[0] || fl.phone_number || '—'
+                                return (
+                                  <div key={fl.id} className="px-5 py-3.5 flex items-center gap-3">
+                                    <div className={`w-8 h-8 rounded-lg ${ac} flex items-center justify-center flex-shrink-0`}>
+                                      <span className="text-xs font-bold">{name.charAt(0)}</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
+                                      <p className="text-xs text-gray-400">{phone}</p>
+                                    </div>
+                                    <p className="text-xs text-gray-400 flex-shrink-0 hidden sm:block">
+                                      {new Date(fl.created_time).toLocaleDateString('tr-TR')}
+                                    </p>
+                                    {isImported ? (
+                                      <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium bg-emerald-50 px-2.5 py-1 rounded-lg flex-shrink-0">
+                                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 6l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                        İçe Alındı
+                                      </span>
+                                    ) : (
+                                      <button onClick={() => importMetaLead(fl)} disabled={isImporting}
+                                        className="flex items-center gap-1.5 text-xs text-indigo-600 font-medium bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors flex-shrink-0 disabled:opacity-50">
+                                        {isImporting ? <div className="w-3 h-3 border border-indigo-300 border-t-indigo-600 rounded-full animate-spin" /> : (
+                                          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v7M2 5.5l3.5 3.5L9 5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                        )}
+                                        {isImporting ? '...' : 'İçe Al'}
+                                      </button>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {metaForms.length === 0 && !metaFormsLoading && !metaFormsError && (
+                  <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+                    <p className="text-gray-400 text-sm">Formları görmek için "Formları Yükle" butonuna tıkla.</p>
+                  </div>
+                )}
+
+              </div>
+            )
+          })()}
 
           {/* ── PERFORMANS ── */}
 {activeTab === 'performans-genel' && (() => {
