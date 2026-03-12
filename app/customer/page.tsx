@@ -239,9 +239,14 @@ export default function CustomerPage() {
   
   // Veri Merkezi
   const EMPTY_ROW = () => ({ id: Date.now() + Math.random(), full_name: '', phone: '', email: '', source: 'manuel', branch_id: '', note: '' })
+  const [importTab, setImportTab] = useState<'manuel'|'excel'>('manuel')
   const [bulkRows, setBulkRows] = useState<any[]>([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()])
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkResult, setBulkResult] = useState<{success: number, errors: string[]} | null>(null)
+  const [xlsxFile, setXlsxFile] = useState<File | null>(null)
+  const [xlsxPreview, setXlsxPreview] = useState<any[]>([])
+  const [xlsxLoading, setXlsxLoading] = useState(false)
+  const [xlsxResult, setXlsxResult] = useState<{success: number, errors: string[]} | null>(null)
 
   const [showReportPanel, setShowReportPanel] = useState(false)
   const [reportPeriod, setReportPeriod] = useState('this_month')
@@ -449,6 +454,74 @@ export default function CustomerPage() {
     setBulkLoading(false)
   }
 
+
+  const downloadTemplate = async () => {
+    const XLSX = await import('xlsx')
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Ad Soyad', 'Telefon', 'E-posta', 'Kaynak', 'Not', 'Şube Adı'],
+      ['Ahmet Yılmaz', '05321234567', 'ahmet@email.com', 'manuel', 'Instagram reklamından geldi', branches[0]?.branch_name || 'Merkez Şube'],
+      ['Fatma Kaya', '05431234567', '', 'referral', 'Referans müşteri', branches[0]?.branch_name || 'Merkez Şube'],
+      ['', '', '', '', '', ''],
+      ['Geçerli Kaynak Değerleri:', 'manuel', 'referral', 'website', 'whatsapp', 'instagram_dm'],
+    ])
+    ws['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 14 }, { wch: 30 }, { wch: 20 }]
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Leadler')
+    XLSX.writeFile(wb, 'DataPilot_Lead_Sablonu.xlsx')
+  }
+
+  const handleXlsxFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setXlsxFile(file)
+    setXlsxResult(null)
+    const XLSX = await import('xlsx')
+    const buffer = await file.arrayBuffer()
+    const wb = XLSX.read(buffer)
+    const ws = wb.Sheets[wb.SheetNames[0]]
+    const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' })
+    setXlsxPreview(rows.slice(0, 3))
+  }
+
+  const handleXlsxSubmit = async () => {
+    if (!xlsxFile) return
+    setXlsxLoading(true)
+    setXlsxResult(null)
+    const XLSX = await import('xlsx')
+    const buffer = await xlsxFile.arrayBuffer()
+    const wb = XLSX.read(buffer)
+    const ws = wb.Sheets[wb.SheetNames[0]]
+    const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' })
+    const branchMap: Record<string, string> = {}
+    branches.forEach(b => { branchMap[b.branch_name?.toLowerCase().trim()] = b.id })
+    const setName = `${xlsxFile.name} — ${new Date().toLocaleDateString('tr-TR')}`
+    let success = 0
+    const errors: string[] = []
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i]
+      const fullName = String(row['Ad Soyad'] || row['ad soyad'] || row['Ad'] || '').trim()
+      const phone = String(row['Telefon'] || row['telefon'] || '').trim()
+      if (!fullName && !phone) { errors.push(`Satır ${i + 2}: Ad ve telefon boş, atlandı`); continue }
+      const branchRaw = String(row['Şube Adı'] || row['sube adi'] || '').toLowerCase().trim()
+      const branchId = branchMap[branchRaw] || branches[0]?.id || null
+      const source = String(row['Kaynak'] || row['kaynak'] || 'excel_import').trim()
+      const note = String(row['Not'] || row['not'] || '').trim()
+      const email = String(row['E-posta'] || row['eposta'] || row['email'] || '').trim()
+      const leadCode = 'LD' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 100)
+      const { error } = await supabase.from('leads').insert({
+        full_name: fullName, phone, email: email || null,
+        source, note: note || null,
+        branch_id: branchId, assigned_to: null,
+        status: 'new', lead_code: leadCode,
+        owner_id: profile.id, import_set: setName,
+      })
+      if (error) { errors.push(`Satır ${i + 2}: ${error.message}`); continue }
+      success++
+    }
+    setXlsxResult({ success, errors })
+    if (success > 0) { setXlsxFile(null); setXlsxPreview([]); await loadData() }
+    setXlsxLoading(false)
+  }
 
   // ─── COMPUTED ─────────────────────────────────────────────────────────────
 
@@ -1679,128 +1752,283 @@ export default function CustomerPage() {
           {activeTab === 'veri-yukle' && (
             <div className="space-y-5 max-w-3xl">
 
-              {/* Başlık */}
-              <div className="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl p-5 text-white relative overflow-hidden">
-                <div className="absolute -right-4 -top-4 w-28 h-28 bg-white/5 rounded-full" />
+              {/* Başlık hero */}
+              <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-6 text-white relative overflow-hidden">
+                <div className="absolute -right-6 -top-6 w-36 h-36 bg-white/5 rounded-full" />
+                <div className="absolute -right-2 bottom-0 w-20 h-20 bg-white/5 rounded-full" />
                 <div className="relative">
-                  <h2 className="text-lg font-bold">Toplu Lead Girişi</h2>
-                  <p className="text-indigo-200 text-sm mt-1">Aşağıdaki tabloya leadleri gir, kaynağını seç ve kaydet. Hepsi sisteme otomatik eklenir.</p>
-                </div>
-              </div>
-
-              {/* Tablo */}
-              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-gray-50 border-b border-gray-100">
-                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 w-6">#</th>
-                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 min-w-[160px]">Ad Soyad</th>
-                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 min-w-[140px]">Telefon</th>
-                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 min-w-[130px]">Kaynak</th>
-                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 min-w-[130px]">Şube</th>
-                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 min-w-[160px]">Not</th>
-                        <th className="px-3 py-3 w-8"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {bulkRows.map((row, i) => (
-                        <tr key={row.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                          <td className="px-3 py-2 text-xs text-gray-400 font-medium">{i + 1}</td>
-                          <td className="px-2 py-2">
-                            <input value={row.full_name} onChange={e => setBulkRows(prev => prev.map(r => r.id === row.id ? { ...r, full_name: e.target.value } : r))}
-                              placeholder="Ahmet Yılmaz"
-                              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-                          </td>
-                          <td className="px-2 py-2">
-                            <input value={row.phone} onChange={e => setBulkRows(prev => prev.map(r => r.id === row.id ? { ...r, phone: e.target.value } : r))}
-                              placeholder="05XX XXX XX XX"
-                              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-                          </td>
-                          <td className="px-2 py-2">
-                            <div className="relative">
-                              <select value={row.source} onChange={e => setBulkRows(prev => prev.map(r => r.id === row.id ? { ...r, source: e.target.value } : r))}
-                                className="w-full appearance-none px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-7">
-                                <option value="manuel">Manuel</option>
-                                <option value="referral">Referans</option>
-                                <option value="website">Web Sitesi</option>
-                                <option value="whatsapp">WhatsApp</option>
-                                <option value="instagram_dm">Instagram</option>
-                                <option value="meta_form">Meta Form</option>
-                              </select>
-                              <svg className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            </div>
-                          </td>
-                          <td className="px-2 py-2">
-                            <div className="relative">
-                              <select value={row.branch_id} onChange={e => setBulkRows(prev => prev.map(r => r.id === row.id ? { ...r, branch_id: e.target.value } : r))}
-                                className="w-full appearance-none px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-7">
-                                <option value="">Seç</option>
-                                {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
-                              </select>
-                              <svg className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            </div>
-                          </td>
-                          <td className="px-2 py-2">
-                            <input value={row.note} onChange={e => setBulkRows(prev => prev.map(r => r.id === row.id ? { ...r, note: e.target.value } : r))}
-                              placeholder="Opsiyonel not..."
-                              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-                          </td>
-                          <td className="px-2 py-2">
-                            {bulkRows.length > 1 && (
-                              <button onClick={() => setBulkRows(prev => prev.filter(r => r.id !== row.id))}
-                                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-400 transition-colors">
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Satır ekle */}
-                <div className="px-4 py-3 border-t border-gray-50">
-                  <button onClick={() => setBulkRows(prev => [...prev, EMPTY_ROW()])}
-                    className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-                    Satır Ekle
-                  </button>
-                </div>
-              </div>
-
-              {/* Sonuç */}
-              {bulkResult && (
-                <div className={`rounded-xl p-4 border ${bulkResult.errors.length === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{bulkResult.errors.length === 0 ? '✅' : '⚠️'}</span>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">{bulkResult.success} lead başarıyla kaydedildi</p>
-                      {bulkResult.errors.length > 0 && <p className="text-xs text-amber-700 mt-0.5">{bulkResult.errors.length} satırda hata oluştu</p>}
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="white" strokeWidth="1.25"/><path d="M5 6h6M5 9h4" stroke="white" strokeWidth="1.25" strokeLinecap="round"/></svg>
                     </div>
+                    <span className="text-indigo-200 text-sm font-medium">Veri Merkezi</span>
                   </div>
-                  {bulkResult.errors.map((e, i) => (
-                    <p key={i} className="text-xs text-amber-700 bg-amber-100 rounded-lg px-2 py-1 mt-1">{e}</p>
-                  ))}
+                  <h2 className="text-xl font-bold">Toplu Lead Yükle</h2>
+                  <p className="text-indigo-200 text-sm mt-1">Mevcut müşteri veritabanını sisteme aktar. İki farklı yöntemle yükleyebilirsin.</p>
+                </div>
+              </div>
+
+              {/* Yöntem seçici */}
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => setImportTab('manuel')}
+                  className={`p-4 rounded-2xl border-2 text-left transition-all ${importTab === 'manuel' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white hover:border-indigo-200'}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${importTab === 'manuel' ? 'bg-indigo-100' : 'bg-gray-100'}`}>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="14" rx="2" stroke={importTab === 'manuel' ? '#6366f1' : '#9ca3af'} strokeWidth="1.5"/><path d="M6 7h8M6 10h8M6 13h5" stroke={importTab === 'manuel' ? '#6366f1' : '#9ca3af'} strokeWidth="1.25" strokeLinecap="round"/></svg>
+                  </div>
+                  <p className={`text-sm font-bold ${importTab === 'manuel' ? 'text-indigo-700' : 'text-gray-700'}`}>Manuel Giriş</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Az sayıda lead için — tabloya direkt yaz</p>
+                  {importTab === 'manuel' && <span className="mt-2 inline-block text-xs bg-indigo-600 text-white px-2 py-0.5 rounded-full font-medium">Seçili</span>}
+                </button>
+
+                <button onClick={() => setImportTab('excel')}
+                  className={`p-4 rounded-2xl border-2 text-left transition-all ${importTab === 'excel' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white hover:border-emerald-200'}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${importTab === 'excel' ? 'bg-emerald-100' : 'bg-gray-100'}`}>
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 3h8l4 4v10a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z" stroke={importTab === 'excel' ? '#059669' : '#9ca3af'} strokeWidth="1.5"/><path d="M12 3v4h4" stroke={importTab === 'excel' ? '#059669' : '#9ca3af'} strokeWidth="1.5" strokeLinejoin="round"/><path d="M7 12l2 2 4-4" stroke={importTab === 'excel' ? '#059669' : '#9ca3af'} strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <p className={`text-sm font-bold ${importTab === 'excel' ? 'text-emerald-700' : 'text-gray-700'}`}>Excel / CSV Yükle</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Elinde hazır data var — şablona aktar, yükle</p>
+                  {importTab === 'excel' && <span className="mt-2 inline-block text-xs bg-emerald-600 text-white px-2 py-0.5 rounded-full font-medium">Seçili</span>}
+                </button>
+              </div>
+
+              {/* ── MANUEL GİRİŞ ── */}
+              {importTab === 'manuel' && (
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Lead Tablosu</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Her satıra bir lead gir, kaynağını seç</p>
+                    </div>
+                    <span className="text-xs bg-indigo-50 text-indigo-600 font-medium px-2.5 py-1 rounded-lg">
+                      {bulkRows.filter(r => r.full_name || r.phone).length} lead hazır
+                    </span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-gray-50/70 border-b border-gray-100">
+                          <th className="px-3 py-2.5 text-left text-xs font-semibold text-gray-400 w-7">#</th>
+                          <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[160px]">Ad Soyad</th>
+                          <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[140px]">Telefon</th>
+                          <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[135px]">Kaynak</th>
+                          <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[130px]">Şube</th>
+                          <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[150px]">Not</th>
+                          <th className="px-2 py-2.5 w-8"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {bulkRows.map((row, i) => (
+                          <tr key={row.id} className={`border-b border-gray-50 last:border-0 transition-colors ${row.full_name || row.phone ? 'bg-indigo-50/20' : ''}`}>
+                            <td className="px-3 py-2 text-xs text-gray-300 font-medium">{i + 1}</td>
+                            <td className="px-2 py-2">
+                              <input value={row.full_name} onChange={e => setBulkRows(prev => prev.map(r => r.id === row.id ? { ...r, full_name: e.target.value } : r))}
+                                placeholder="Ad Soyad"
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent placeholder-gray-300" />
+                            </td>
+                            <td className="px-2 py-2">
+                              <input value={row.phone} onChange={e => setBulkRows(prev => prev.map(r => r.id === row.id ? { ...r, phone: e.target.value } : r))}
+                                placeholder="05XX XXX XXXX"
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent placeholder-gray-300" />
+                            </td>
+                            <td className="px-2 py-2">
+                              <div className="relative">
+                                <select value={row.source} onChange={e => setBulkRows(prev => prev.map(r => r.id === row.id ? { ...r, source: e.target.value } : r))}
+                                  className="w-full appearance-none px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 pr-7">
+                                  <option value="manuel">Manuel</option>
+                                  <option value="referral">Referans</option>
+                                  <option value="website">Web Sitesi</option>
+                                  <option value="whatsapp">WhatsApp</option>
+                                  <option value="instagram_dm">Instagram</option>
+                                  <option value="meta_form">Meta Form</option>
+                                </select>
+                                <svg className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              </div>
+                            </td>
+                            <td className="px-2 py-2">
+                              <div className="relative">
+                                <select value={row.branch_id} onChange={e => setBulkRows(prev => prev.map(r => r.id === row.id ? { ...r, branch_id: e.target.value } : r))}
+                                  className="w-full appearance-none px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 pr-7">
+                                  <option value="">Seç</option>
+                                  {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
+                                </select>
+                                <svg className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              </div>
+                            </td>
+                            <td className="px-2 py-2">
+                              <input value={row.note} onChange={e => setBulkRows(prev => prev.map(r => r.id === row.id ? { ...r, note: e.target.value } : r))}
+                                placeholder="Not..."
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent placeholder-gray-300" />
+                            </td>
+                            <td className="px-2 py-2">
+                              {bulkRows.length > 1 && (
+                                <button onClick={() => setBulkRows(prev => prev.filter(r => r.id !== row.id))}
+                                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-gray-200 hover:text-red-400 transition-colors">
+                                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="px-5 py-3 border-t border-gray-50 flex items-center justify-between">
+                    <button onClick={() => setBulkRows(prev => [...prev, EMPTY_ROW()])}
+                      className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+                      Satır Ekle
+                    </button>
+                    <button onClick={() => setBulkRows([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()])}
+                      className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+                      Temizle
+                    </button>
+                  </div>
+
+                  {bulkResult && (
+                    <div className={`mx-5 mb-4 rounded-xl p-4 border ${bulkResult.errors.length === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{bulkResult.errors.length === 0 ? '✅' : '⚠️'}</span>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">{bulkResult.success} lead başarıyla kaydedildi</p>
+                          {bulkResult.errors.length > 0 && <p className="text-xs text-amber-700 mt-0.5">{bulkResult.errors.length} satırda hata</p>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="px-5 pb-5">
+                    <button onClick={handleBulkSave} disabled={bulkLoading || bulkRows.filter(r => r.full_name || r.phone).length === 0}
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                      {bulkLoading ? (
+                        <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>Kaydediliyor...</>
+                      ) : (
+                        <><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 8l4 4 7-7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>{bulkRows.filter(r => r.full_name || r.phone).length} Leadi Kaydet</>
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {/* Kaydet butonu */}
-              <button onClick={handleBulkSave} disabled={bulkLoading}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
-                {bulkLoading ? (
-                  <>
-                    <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>
-                    Kaydediliyor...
-                  </>
-                ) : (
-                  <>
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 8l4 4 7-7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    {bulkRows.filter(r => r.full_name || r.phone).length} Leadi Kaydet
-                  </>
-                )}
-              </button>
+              {/* ── EXCEL YÜKLE ── */}
+              {importTab === 'excel' && (
+                <div className="space-y-4">
+
+                  {/* Adımlar */}
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { step: '1', icon: '⬇️', title: 'Şablonu İndir', desc: 'Excel şablonunu indir', color: 'from-blue-50 to-indigo-50 border-blue-100' },
+                      { step: '2', icon: '✏️', title: 'Doldur', desc: 'Mevcut datanı kopyala yapıştır', color: 'from-violet-50 to-purple-50 border-violet-100' },
+                      { step: '3', icon: '🚀', title: 'Yükle', desc: 'Dosyayı seç ve aktar', color: 'from-emerald-50 to-teal-50 border-emerald-100' },
+                    ].map(s => (
+                      <div key={s.step} className={`bg-gradient-to-br ${s.color} border rounded-xl p-4 text-center`}>
+                        <span className="text-2xl">{s.icon}</span>
+                        <p className="text-xs font-bold text-gray-800 mt-2">{s.title}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{s.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Şablon indir */}
+                  <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">1. Şablonu İndir</p>
+                        <p className="text-xs text-gray-400 mt-0.5">Sütun başlıkları hazır, sadece verilerini yapıştır</p>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {['Ad Soyad', 'Telefon', 'E-posta', 'Kaynak', 'Not', 'Şube Adı'].map(col => (
+                            <span key={col} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-medium">{col}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <button onClick={downloadTemplate}
+                        className="flex-shrink-0 flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        İndir
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Dosya yükle */}
+                  <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+                    <p className="text-sm font-semibold text-gray-900">2. Doldurulmuş Dosyayı Yükle</p>
+
+                    <label className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-all ${xlsxFile ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/30'}`}>
+                      <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleXlsxFile} />
+                      {xlsxFile ? (
+                        <div className="text-center px-4">
+                          <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 7a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#059669" strokeWidth="1.5"/></svg>
+                          </div>
+                          <p className="text-sm font-semibold text-emerald-700">{xlsxFile.name}</p>
+                          <p className="text-xs text-emerald-500 mt-0.5">{xlsxPreview.length > 0 ? `${xlsxPreview.length}+ satır okundu` : 'Okunuyor...'} · değiştirmek için tıkla</p>
+                        </div>
+                      ) : (
+                        <div className="text-center px-4">
+                          <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#9ca3af" strokeWidth="1.5"/><path d="M12 11v5M9.5 13.5l2.5-2.5 2.5 2.5" stroke="#9ca3af" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </div>
+                          <p className="text-sm font-medium text-gray-500">Dosyayı buraya sürükle veya tıkla</p>
+                          <p className="text-xs text-gray-400 mt-1">.xlsx, .xls, .csv — max 10MB</p>
+                        </div>
+                      )}
+                    </label>
+
+                    {/* Önizleme */}
+                    {xlsxPreview.length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-gray-500 mb-2">📋 Önizleme (ilk {xlsxPreview.length} satır)</p>
+                        <div className="overflow-x-auto rounded-xl border border-gray-100 bg-gray-50">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="border-b border-gray-200">
+                                {Object.keys(xlsxPreview[0]).slice(0, 6).map(k => (
+                                  <th key={k} className="px-3 py-2 text-left font-semibold text-gray-500 whitespace-nowrap">{k}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {xlsxPreview.map((row, i) => (
+                                <tr key={i} className="border-b border-gray-100 last:border-0 bg-white">
+                                  {Object.values(row).slice(0, 6).map((val: any, j) => (
+                                    <td key={j} className="px-3 py-2 text-gray-700 whitespace-nowrap max-w-[140px] truncate">{String(val)}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Sonuç */}
+                    {xlsxResult && (
+                      <div className={`rounded-xl p-4 border ${xlsxResult.errors.length === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className="text-xl">{xlsxResult.errors.length === 0 ? '✅' : '⚠️'}</span>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{xlsxResult.success} lead başarıyla aktarıldı</p>
+                            {xlsxResult.errors.length > 0 && <p className="text-xs text-amber-700">{xlsxResult.errors.length} satırda hata oluştu</p>}
+                          </div>
+                        </div>
+                        {xlsxResult.errors.slice(0, 3).map((e, i) => (
+                          <p key={i} className="text-xs text-amber-700 bg-amber-100 rounded-lg px-2 py-1 mt-1">{e}</p>
+                        ))}
+                      </div>
+                    )}
+
+                    <button onClick={handleXlsxSubmit} disabled={!xlsxFile || xlsxLoading}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                      {xlsxLoading ? (
+                        <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>Aktarılıyor...</>
+                      ) : (
+                        <><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 10V1M4 4l3.5-3.5L11 4M2 13h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>Leadleri Sisteme Aktar</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1815,7 +2043,7 @@ export default function CustomerPage() {
                 <button onClick={() => setActiveTab('veri-yukle')}
                   className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1.5">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-                  Yeni Giriş
+                  Yeni Ekle
                 </button>
               </div>
 
@@ -1823,12 +2051,14 @@ export default function CustomerPage() {
                 const sets = [...new Set(leads.filter(l => l.import_set).map(l => l.import_set))]
                 if (sets.length === 0) return (
                   <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
-                    <p className="text-4xl mb-3">📋</p>
-                    <p className="text-gray-500 text-sm font-medium">Henüz toplu giriş yapılmadı</p>
-                    <p className="text-gray-400 text-xs mt-1">Veri Yükle sekmesinden başlayabilirsin</p>
+                    <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#9ca3af" strokeWidth="1.5"/></svg>
+                    </div>
+                    <p className="text-gray-500 text-sm font-medium">Henüz veri seti yok</p>
+                    <p className="text-gray-400 text-xs mt-1">Veri Yükle sekmesinden ilk aktarımını yap</p>
                     <button onClick={() => setActiveTab('veri-yukle')}
                       className="mt-4 px-4 py-2 bg-indigo-600 text-white text-sm rounded-xl hover:bg-indigo-700 transition-colors font-medium">
-                      Veri Gir
+                      Veri Yükle
                     </button>
                   </div>
                 )
@@ -1838,10 +2068,15 @@ export default function CustomerPage() {
                       const setLeads = leads.filter(l => l.import_set === setName)
                       const setDone = setLeads.filter(l => l.status === 'procedure_done').length
                       const conv = setLeads.length > 0 ? ((setDone / setLeads.length) * 100).toFixed(0) : 0
+                      const isExcel = setName.includes('.xlsx') || setName.includes('.xls') || setName.includes('.csv')
                       return (
                         <div key={setName} className={`px-5 py-4 flex items-center gap-4 ${i < sets.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                          <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="#6366f1" strokeWidth="1.5"/><path d="M5 7h8M5 10h5" stroke="#6366f1" strokeWidth="1.25" strokeLinecap="round"/></svg>
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isExcel ? 'bg-emerald-50' : 'bg-indigo-50'}`}>
+                            {isExcel ? (
+                              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 4a1 1 0 011-1h7l3 3v9a1 1 0 01-1 1H4a1 1 0 01-1-1V4z" stroke="#059669" strokeWidth="1.25"/><path d="M10 3v3h3" stroke="#059669" strokeWidth="1.25" strokeLinejoin="round"/><path d="M6 10l2 2 4-3" stroke="#059669" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            ) : (
+                              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="#6366f1" strokeWidth="1.25"/><path d="M5 7h8M5 10h5" stroke="#6366f1" strokeWidth="1.1" strokeLinecap="round"/></svg>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-gray-900 truncate">{setName}</p>
@@ -1851,9 +2086,12 @@ export default function CustomerPage() {
                               <span className="text-xs text-gray-400">%{conv} dönüşüm</span>
                             </div>
                             <div className="w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden mt-1.5">
-                              <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${conv}%` }} />
+                              <div className="h-full bg-emerald-400 rounded-full transition-all" style={{ width: `${conv}%` }} />
                             </div>
                           </div>
+                          <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${isExcel ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                            {isExcel ? 'Excel' : 'Manuel'}
+                          </span>
                         </div>
                       )
                     })}
