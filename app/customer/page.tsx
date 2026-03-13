@@ -710,7 +710,7 @@ export default function CustomerPage() {
 
         {/* DataPilot Logo */}
         <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-          <img src="/logo.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
+          <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
           {!sidebarCollapsed && <span className="font-semibold text-white text-sm tracking-tight truncate">DataPilot</span>}
         </div>
 
