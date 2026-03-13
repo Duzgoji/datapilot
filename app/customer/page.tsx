@@ -168,6 +168,7 @@ export default function CustomerPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterDate, setFilterDate] = useState('all')
+  const [filterSource, setFilterSource] = useState('all')
 
   // Branch
   const [showAddBranch, setShowAddBranch] = useState(false)
@@ -244,6 +245,7 @@ export default function CustomerPage() {
   const [bulkLoading, setBulkLoading] = useState(false)
   const [bulkResult, setBulkResult] = useState<{success: number, errors: string[]} | null>(null)
   const [xlsxFile, setXlsxFile] = useState<File | null>(null)
+  const [xlsxDefaultAgent, setXlsxDefaultAgent] = useState<string>('')
   const [xlsxPreview, setXlsxPreview] = useState<any[]>([])
   const [xlsxLoading, setXlsxLoading] = useState(false)
   const [xlsxResult, setXlsxResult] = useState<{success: number, errors: string[]} | null>(null)
@@ -457,14 +459,16 @@ export default function CustomerPage() {
 
   const downloadTemplate = async () => {
     const XLSX = await import('xlsx')
+    const agentNames = teamMembers.filter(m => m.role === 'agent' || m.role === 'team').map(m => m.profiles?.full_name || '').filter(Boolean)
     const ws = XLSX.utils.aoa_to_sheet([
-      ['Ad Soyad', 'Telefon', 'E-posta', 'Kaynak', 'Not', 'Şube Adı'],
-      ['Ahmet Yılmaz', '05321234567', 'ahmet@email.com', 'manuel', 'Instagram reklamından geldi', branches[0]?.branch_name || 'Merkez Şube'],
-      ['Fatma Kaya', '05431234567', '', 'referral', 'Referans müşteri', branches[0]?.branch_name || 'Merkez Şube'],
-      ['', '', '', '', '', ''],
-      ['Geçerli Kaynak Değerleri:', 'manuel', 'referral', 'website', 'whatsapp', 'instagram_dm'],
+      ['Ad Soyad', 'Telefon', 'E-posta', 'Kaynak', 'Not', 'Şube Adı', 'Satışçı'],
+      ['Ahmet Yılmaz', '05321234567', 'ahmet@email.com', 'manuel', 'Instagram reklamından geldi', branches[0]?.branch_name || 'Merkez Şube', agentNames[0] || ''],
+      ['Fatma Kaya', '05431234567', '', 'referral', 'Referans müşteri', branches[0]?.branch_name || 'Merkez Şube', ''],
+      ['', '', '', '', '', '', ''],
+      ['Geçerli Kaynak Değerleri:', 'manuel', 'referral', 'website', 'whatsapp', 'instagram_dm', ''],
+      ['Satışçı Adları:', ...agentNames.slice(0, 5), ''],
     ])
-    ws['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 14 }, { wch: 30 }, { wch: 20 }]
+    ws['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 14 }, { wch: 30 }, { wch: 20 }, { wch: 20 }]
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Leadler')
     XLSX.writeFile(wb, 'DataPilot_Lead_Sablonu.xlsx')
@@ -494,6 +498,12 @@ export default function CustomerPage() {
     const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' })
     const branchMap: Record<string, string> = {}
     branches.forEach(b => { branchMap[b.branch_name?.toLowerCase().trim()] = b.id })
+    // Satışçı adı → user_id haritası
+    const agentMap: Record<string, string> = {}
+    teamMembers.forEach(m => {
+      const name = m.profiles?.full_name?.toLowerCase().trim()
+      if (name) agentMap[name] = m.user_id
+    })
     const setName = `${xlsxFile.name} — ${new Date().toLocaleDateString('tr-TR')}`
     let success = 0
     const errors: string[] = []
@@ -507,11 +517,14 @@ export default function CustomerPage() {
       const source = String(row['Kaynak'] || row['kaynak'] || 'excel_import').trim()
       const note = String(row['Not'] || row['not'] || '').trim()
       const email = String(row['E-posta'] || row['eposta'] || row['email'] || '').trim()
+      // Satışçı: önce Excel'deki isimden bul, yoksa varsayılan dropdown
+      const agentRaw = String(row['Satışçı'] || row['satisci'] || row['Satışçı Adı'] || '').toLowerCase().trim()
+      const assignedTo = (agentRaw && agentMap[agentRaw]) ? agentMap[agentRaw] : (xlsxDefaultAgent || null)
       const leadCode = 'LD' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 100)
       const { error } = await supabase.from('leads').insert({
         full_name: fullName, phone, email: email || null,
         source, note: note || null,
-        branch_id: branchId, assigned_to: null,
+        branch_id: branchId, assigned_to: assignedTo,
         status: 'new', lead_code: leadCode,
         owner_id: profile.id, import_set: setName,
       })
@@ -543,6 +556,7 @@ export default function CustomerPage() {
   const filteredLeads = leads.filter(l => {
     const matchesSearch = !searchQuery || l.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || l.phone?.includes(searchQuery) || l.lead_code?.toLowerCase().includes(searchQuery.toLowerCase()) || l.email?.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = filterStatus === 'all' || l.status === filterStatus
+    const matchesSource = filterSource === 'all' || l.source === filterSource
     let matchesDate = true
     if (filterDate !== 'all' && l.appointment_at) {
       const d = new Date(l.appointment_at); d.setHours(0, 0, 0, 0)
@@ -550,7 +564,7 @@ export default function CustomerPage() {
       else if (filterDate === 'this_week') matchesDate = d >= today && d <= weekEnd
       else if (filterDate === 'overdue') matchesDate = d < today
     } else if (filterDate !== 'all') { matchesDate = false }
-    return matchesSearch && matchesStatus && matchesDate
+    return matchesSearch && matchesStatus && matchesSource && matchesDate
   })
 
   // ─── REPORT ───────────────────────────────────────────────────────────────
@@ -625,7 +639,7 @@ export default function CustomerPage() {
 
         {/* DataPilot Logo */}
         <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-          <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
+          <img src="/logo.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
           {!sidebarCollapsed && <span className="font-semibold text-white text-sm tracking-tight truncate">DataPilot</span>}
         </div>
 
@@ -875,6 +889,26 @@ export default function CustomerPage() {
                     ))}
                   </div>
                 </div>
+
+                <div>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Kaynak</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {[
+                      { key: 'all', label: 'Tümü', color: filterSource === 'all' ? 'bg-gray-800 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300' },
+                      { key: 'manuel', label: '✏️ Manuel', color: filterSource === 'manuel' ? 'bg-gray-700 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300' },
+                      { key: 'meta_form', label: '🎯 Meta Form', color: filterSource === 'meta_form' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-200' },
+                      { key: 'whatsapp', label: '💬 WhatsApp', color: filterSource === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-green-200' },
+                      { key: 'instagram_dm', label: '📸 Instagram', color: filterSource === 'instagram_dm' ? 'bg-pink-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-pink-200' },
+                      { key: 'referral', label: '🤝 Referans', color: filterSource === 'referral' ? 'bg-amber-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-amber-200' },
+                      { key: 'website', label: '🌐 Web', color: filterSource === 'website' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-indigo-200' },
+                    ].map(f => (
+                      <button key={f.key} onClick={() => setFilterSource(f.key)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${f.color}`}>
+                        {f.label} ({f.key === 'all' ? leads.length : leads.filter(l => l.source === f.key).length})
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Lead table */}
@@ -883,7 +917,7 @@ export default function CustomerPage() {
                   <div className="p-16 text-center">
                     <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">◎</div>
                     <p className="text-gray-500 text-sm font-medium">Sonuç bulunamadı</p>
-                    {(searchQuery || filterStatus !== 'all' || filterDate !== 'all') && <button onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterDate('all') }} className="mt-2 text-xs text-indigo-600 hover:underline">Filtreleri temizle</button>}
+                    {(searchQuery || filterStatus !== 'all' || filterDate !== 'all' || filterSource !== 'all') && <button onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterDate('all'); setFilterSource('all') }} className="mt-2 text-xs text-indigo-600 hover:underline">Filtreleri temizle</button>}
                   </div>
                 ) : filteredLeads.map((lead, i) => (
                   <div key={lead.id} onClick={() => openDetailModal(lead)}
@@ -1954,6 +1988,27 @@ export default function CustomerPage() {
                   <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
                     <p className="text-sm font-semibold text-gray-900">2. Doldurulmuş Dosyayı Yükle</p>
 
+                    {/* Varsayılan satışçı seçici */}
+                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
+                      <div className="flex items-start gap-3">
+                        <span className="text-lg mt-0.5">👤</span>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-gray-800">Varsayılan Satışçı</p>
+                          <p className="text-xs text-gray-500 mt-0.5 mb-2">Excel'de "Satışçı" sütunu doluysa o isim öncelikli atanır. Boş satirlar için buradan seç.</p>
+                          <div className="relative">
+                            <select value={xlsxDefaultAgent} onChange={e => setXlsxDefaultAgent(e.target.value)}
+                              className="w-full appearance-none bg-white border border-amber-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 pr-8">
+                              <option value="">— Atama yapma (satışçısız kaydet) —</option>
+                              {teamMembers.filter(m => m.role === 'agent' || m.role === 'team').map(m => (
+                                <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>
+                              ))}
+                            </select>
+                            <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     <label className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-all ${xlsxFile ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/30'}`}>
                       <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleXlsxFile} />
                       {xlsxFile ? (
@@ -2101,8 +2156,7 @@ export default function CustomerPage() {
             </div>
           )}
 
-
-                    {/* ── AYARLAR ── */}
+          {/* ── AYARLAR ── */}
           {activeTab === 'ayarlar' && (
             <div className="max-w-2xl space-y-5">
 
