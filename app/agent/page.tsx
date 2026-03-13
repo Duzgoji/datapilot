@@ -78,9 +78,10 @@ export default function AgentPage() {
     e.preventDefault()
     setSaving(true)
     try {
+      // Satışçı 'procedure_done' yapamaz — sadece müşteri paneli
+      if (newStatus === 'procedure_done') return
       const updateData: any = { status: newStatus }
       if (newNote) updateData.note = newNote
-      if (newStatus === 'procedure_done' && procedureAmount) updateData.procedure_amount = parseFloat(procedureAmount)
       if (newStatus === 'appointment_scheduled' && appointmentDate) {
         updateData.appointment_at = appointmentTime ? `${appointmentDate}T${appointmentTime}` : appointmentDate
       } else if (newStatus !== 'appointment_scheduled') {
@@ -286,7 +287,7 @@ export default function AgentPage() {
             <div>
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Durum</p>
               <div className="flex gap-1.5 overflow-x-auto pb-1">
-                {[{ key: 'all', label: 'Tumu' }, ...Object.entries(STATUS_CONFIG).map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
+                {[{ key: 'all', label: 'Tumu' }, ...Object.entries(STATUS_CONFIG).filter(([k]) => k !== 'procedure_done').map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
                   <button key={f.key} onClick={() => setFilterStatus(f.key)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${filterStatus === f.key ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}>
                     {f.label} ({f.key === 'all' ? leads.length : leads.filter(l => l.status === f.key).length})
@@ -517,7 +518,7 @@ export default function AgentPage() {
                 <div>
                   <p className="text-xs font-medium text-gray-500 mb-2">Yeni Durum</p>
                   <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(STATUS_CONFIG).map(([key, val]: any) => (
+                    {Object.entries(STATUS_CONFIG).filter(([key]) => key !== 'procedure_done').map(([key, val]: any) => (
                       <button key={key} type="button" onClick={() => setNewStatus(key)}
                         className={`py-2.5 px-3 rounded-xl text-sm font-medium border-2 transition-all flex items-center gap-2 ${newStatus === key ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
                         <span className={`w-2 h-2 rounded-full flex-shrink-0 ${val.dot}`} />{val.label}
@@ -525,16 +526,7 @@ export default function AgentPage() {
                     ))}
                   </div>
                 </div>
-                {newStatus === 'procedure_done' && (
-                  <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-                    <p className="text-xs font-semibold text-emerald-700 mb-2">Satis Tutari</p>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-600 text-sm font-medium">₺</span>
-                      <input type="number" value={procedureAmount} onChange={e => setProcedureAmount(e.target.value)} placeholder="0"
-                        className="w-full pl-8 pr-4 py-2.5 bg-white border border-emerald-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                    </div>
-                  </div>
-                )}
+
                 {newStatus === 'appointment_scheduled' && (
                   <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
                     <p className="text-xs font-semibold text-violet-700 mb-3">📅 Randevu Tarihi</p>
