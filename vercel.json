@@ -1,8 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/sync-ad-spend",
-      "schedule": "0 23 * * *"
-    }
-  ]
-}
