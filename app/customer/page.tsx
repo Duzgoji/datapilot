@@ -240,6 +240,10 @@ export default function CustomerPage() {
   const [logoUploading, setLogoUploading] = useState(false)
 
   const [metaConn, setMetaConn] = useState<any>(null)
+  const [adSpend, setAdSpend] = useState<any[]>([])
+  const [adSpendLoading, setAdSpendLoading] = useState(false)
+  const [adSpendSyncing, setAdSpendSyncing] = useState(false)
+  const [adSpendPeriod, setAdSpendPeriod] = useState<'7'|'30'|'90'>('30')
   
   // Veri Merkezi
   const EMPTY_ROW = () => ({ id: Date.now() + Math.random(), full_name: '', phone: '', email: '', source: 'manuel', branch_id: '', note: '' })
@@ -297,6 +301,15 @@ export default function CustomerPage() {
     }
     const { data: metaConnData } = await supabase.from('meta_connections').select('*').eq('owner_id', user.id).single()
     setMetaConn(metaConnData || null)
+
+    // Ad spend yükle
+    const { data: adSpendData } = await supabase
+      .from('ad_spend')
+      .select('*')
+      .eq('owner_id', user.id)
+      .order('date', { ascending: false })
+      .limit(500)
+    setAdSpend(adSpendData || [])
     setLoading(false)
   }
 
@@ -416,6 +429,29 @@ export default function CustomerPage() {
 
   const handleToggleBranch = async (branch: any) => { await supabase.from('branches').update({ is_active: !branch.is_active }).eq('id', branch.id); loadData() }
   const handleToggleMember = async (member: any) => { await supabase.from('team_members').update({ is_active: !member.is_active }).eq('id', member.id); loadData() }
+  const handleSyncAdSpend = async () => {
+    if (!profile?.id) return
+    setAdSpendSyncing(true)
+    try {
+      await fetch('/api/sync-ad-spend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ owner_id: profile.id }),
+      })
+      // Veriyi yeniden yükle
+      const { data } = await supabase
+        .from('ad_spend')
+        .select('*')
+        .eq('owner_id', profile.id)
+        .order('date', { ascending: false })
+        .limit(500)
+      setAdSpend(data || [])
+    } catch (e) {
+      console.error('Sync error:', e)
+    }
+    setAdSpendSyncing(false)
+  }
+
   const handleAssignLead = async (leadId: string, userId: string) => { await supabase.from('leads').update({ assigned_to: userId }).eq('id', leadId); loadData() }
 
   const handleEditLead = async () => {
@@ -1128,7 +1164,192 @@ export default function CustomerPage() {
 
           {/* ── META ── */}
           {activeTab === 'meta-baglanti' && profile?.id && <MetaConnect ownerId={profile.id} />}
-          {activeTab === 'meta-kampanyalar' && <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center"><p className="text-gray-400 text-sm">Kampanyalar yakında gelecek.</p></div>}
+          {activeTab === 'meta-kampanyalar' && (() => {
+            // Seçilen periyoda göre filtrele
+            const days = parseInt(adSpendPeriod)
+            const since = new Date(); since.setDate(since.getDate() - days)
+            const filtered = adSpend.filter(r => new Date(r.date) >= since)
+
+            // Kampanya bazında topla
+            const campaignMap: Record<string, any> = {}
+            filtered.forEach(r => {
+              if (!campaignMap[r.campaign_id]) {
+                campaignMap[r.campaign_id] = {
+                  campaign_id: r.campaign_id,
+                  campaign_name: r.campaign_name,
+                  spend: 0, impressions: 0, clicks: 0,
+                }
+              }
+              campaignMap[r.campaign_id].spend += r.spend || 0
+              campaignMap[r.campaign_id].impressions += r.impressions || 0
+              campaignMap[r.campaign_id].clicks += r.clicks || 0
+            })
+            const campaigns = Object.values(campaignMap).sort((a: any, b: any) => b.spend - a.spend)
+
+            // Toplamlar
+            const totalSpend = campaigns.reduce((s: number, c: any) => s + c.spend, 0)
+            const totalImpressions = campaigns.reduce((s: number, c: any) => s + c.impressions, 0)
+            const totalClicks = campaigns.reduce((s: number, c: any) => s + c.clicks, 0)
+            const metaLeads = leads.filter(l => l.source === 'meta_form').length
+            const metaSales = leads.filter(l => l.source === 'meta_form' && l.status === 'procedure_done')
+            const metaRevenue = metaSales.reduce((s, l) => s + (l.procedure_amount || 0), 0)
+            const cpl = metaLeads > 0 ? totalSpend / metaLeads : 0
+            const cps = metaSales.length > 0 ? totalSpend / metaSales.length : 0
+            const roi = totalSpend > 0 ? ((metaRevenue - totalSpend) / totalSpend * 100) : 0
+            const lastSync = adSpend.length > 0 ? new Date(adSpend[0].synced_at).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : null
+
+            return (
+              <div className="space-y-5 max-w-4xl">
+
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-semibold text-gray-900">Kampanya Performansı</h2>
+                    {lastSync && <p className="text-xs text-gray-400 mt-0.5">Son güncelleme: {lastSync}</p>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Periyot seçici */}
+                    <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+                      {([['7', '7G'], ['30', '30G'], ['90', '90G']] as const).map(([val, label]) => (
+                        <button key={val} onClick={() => setAdSpendPeriod(val)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${adSpendPeriod === val ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Sync butonu */}
+                    <button onClick={handleSyncAdSpend} disabled={adSpendSyncing || !metaConn?.access_token}
+                      className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-medium rounded-xl transition-colors">
+                      <svg className={adSpendSyncing ? 'animate-spin' : ''} width="13" height="13" viewBox="0 0 13 13" fill="none">
+                        <path d="M11 6.5A4.5 4.5 0 012.5 4M2 2v2.5H4.5M2 6.5a4.5 4.5 0 008.5 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      {adSpendSyncing ? 'Senkronize ediliyor...' : 'Şimdi Güncelle'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Meta bağlı değilse uyarı */}
+                {!metaConn?.access_token && (
+                  <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 flex items-center gap-4">
+                    <span className="text-3xl">⚠️</span>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Meta hesabı bağlı değil</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Kampanya verilerini görmek için Meta hesabını bağla.</p>
+                      <button onClick={() => setActiveTab('meta-baglanti')}
+                        className="mt-2 text-xs text-blue-600 font-medium hover:underline">Meta Bağlantısına Git →</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Veri yoksa */}
+                {metaConn?.access_token && adSpend.length === 0 && (
+                  <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+                    <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0" stroke="#3b82f6" strokeWidth="1.5"/><path d="M12 8v4l3 3" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                    </div>
+                    <p className="text-gray-600 text-sm font-medium">Henüz veri yok</p>
+                    <p className="text-gray-400 text-xs mt-1 mb-4">Meta hesabı bağlı. İlk veriyi çekmek için güncelle.</p>
+                    <button onClick={handleSyncAdSpend} disabled={adSpendSyncing}
+                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-700 transition-colors font-medium">
+                      {adSpendSyncing ? 'Çekiliyor...' : 'Veriyi Çek'}
+                    </button>
+                  </div>
+                )}
+
+                {/* ROI & Özet kartlar */}
+                {adSpend.length > 0 && (
+                  <>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      {[
+                        { label: 'Toplam Harcama', value: `₺${totalSpend.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, sub: `${days} gün`, color: 'text-red-600', bg: 'from-red-50 to-white', border: 'border-red-100', icon: '💸' },
+                        { label: 'Meta Geliri', value: `₺${metaRevenue.toLocaleString()}`, sub: `${metaSales.length} satış`, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100', icon: '💰' },
+                        { label: 'ROI', value: `%${roi.toFixed(1)}`, sub: totalSpend > 0 ? (roi >= 0 ? 'Kârlı' : 'Zararlı') : '—', color: roi >= 0 ? 'text-emerald-600' : 'text-red-600', bg: roi >= 0 ? 'from-emerald-50 to-white' : 'from-red-50 to-white', border: roi >= 0 ? 'border-emerald-100' : 'border-red-100', icon: roi >= 0 ? '📈' : '📉' },
+                        { label: 'Lead Başı Maliyet', value: cpl > 0 ? `₺${cpl.toFixed(0)}` : '—', sub: `${metaLeads} meta lead`, color: 'text-blue-600', bg: 'from-blue-50 to-white', border: 'border-blue-100', icon: '🎯' },
+                      ].map(card => (
+                        <div key={card.label} className={`bg-gradient-to-br ${card.bg} border ${card.border} rounded-2xl p-4`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-xs text-gray-500">{card.label}</p>
+                            <span className="text-lg">{card.icon}</span>
+                          </div>
+                          <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* İkincil metrikler */}
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { label: 'Toplam Gösterim', value: totalImpressions.toLocaleString(), icon: '👁' },
+                        { label: 'Toplam Tıklama', value: totalClicks.toLocaleString(), icon: '🖱' },
+                        { label: 'Satış Başı Maliyet', value: cps > 0 ? `₺${cps.toFixed(0)}` : '—', icon: '🏷' },
+                      ].map(m => (
+                        <div key={m.label} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3">
+                          <span className="text-2xl">{m.icon}</span>
+                          <div>
+                            <p className="text-xs text-gray-400">{m.label}</p>
+                            <p className="text-sm font-semibold text-gray-900">{m.value}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Kampanya tablosu */}
+                    {campaigns.length > 0 && (
+                      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                        <div className="px-5 py-4 border-b border-gray-50">
+                          <p className="text-sm font-semibold text-gray-900">Kampanya Detayı</p>
+                          <p className="text-xs text-gray-400 mt-0.5">Son {days} gün · {campaigns.length} kampanya</p>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="bg-gray-50 border-b border-gray-100">
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400">Kampanya</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">Harcama</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">Gösterim</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">Tıklama</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">CTR</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">Pay</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {campaigns.map((c: any, i: number) => {
+                                const ctr = c.impressions > 0 ? (c.clicks / c.impressions * 100).toFixed(2) : '0.00'
+                                const share = totalSpend > 0 ? (c.spend / totalSpend * 100).toFixed(0) : 0
+                                return (
+                                  <tr key={c.campaign_id} className={`border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors`}>
+                                    <td className="px-4 py-3">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" style={{ opacity: 1 - i * 0.15 }} />
+                                        <p className="text-sm text-gray-800 font-medium truncate max-w-[180px]">{c.campaign_name}</p>
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3 text-right text-sm font-semibold text-red-600">₺{c.spend.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                                    <td className="px-4 py-3 text-right text-sm text-gray-600">{c.impressions.toLocaleString()}</td>
+                                    <td className="px-4 py-3 text-right text-sm text-gray-600">{c.clicks.toLocaleString()}</td>
+                                    <td className="px-4 py-3 text-right text-sm text-gray-600">%{ctr}</td>
+                                    <td className="px-4 py-3 text-right">
+                                      <div className="flex items-center justify-end gap-2">
+                                        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                          <div className="h-full bg-blue-400 rounded-full" style={{ width: `${share}%` }} />
+                                        </div>
+                                        <span className="text-xs text-gray-400 w-8 text-right">%{share}</span>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )
+          })()}
           {activeTab === 'meta-leadformlar' && (() => {
             const notConnected = !metaConn?.access_token
             const metaLeads = leads.filter(l => l.source === 'meta')
