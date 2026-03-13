@@ -205,6 +205,9 @@ export default function CustomerPage() {
   const [newStatus, setNewStatus] = useState('')
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [detailLead, setDetailLead] = useState<any>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editLead, setEditLead] = useState<any>(null)
+  const [editLoading, setEditLoading] = useState(false)
   const [leadHistory, setLeadHistory] = useState<any[]>([])
   const [statusNote, setStatusNote] = useState('')
   const [procedureType, setProcedureType] = useState('')
@@ -414,6 +417,38 @@ export default function CustomerPage() {
   const handleToggleBranch = async (branch: any) => { await supabase.from('branches').update({ is_active: !branch.is_active }).eq('id', branch.id); loadData() }
   const handleToggleMember = async (member: any) => { await supabase.from('team_members').update({ is_active: !member.is_active }).eq('id', member.id); loadData() }
   const handleAssignLead = async (leadId: string, userId: string) => { await supabase.from('leads').update({ assigned_to: userId }).eq('id', leadId); loadData() }
+
+  const handleEditLead = async () => {
+    if (!editLead) return
+    setEditLoading(true)
+    await supabase.from('leads').update({
+      full_name: editLead.full_name,
+      phone: editLead.phone,
+      email: editLead.email || null,
+      source: editLead.source,
+      note: editLead.note || null,
+      branch_id: editLead.branch_id || null,
+      assigned_to: editLead.assigned_to || null,
+    }).eq('id', editLead.id)
+    setEditLoading(false)
+    setShowEditModal(false)
+    setEditLead(null)
+    await loadData()
+  }
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletingLeadId, setDeletingLeadId] = useState<string | null>(null)
+
+  const handleDeleteLead = async () => {
+    if (!deletingLeadId) return
+    await supabase.from('lead_history').delete().eq('lead_id', deletingLeadId)
+    await supabase.from('leads').delete().eq('id', deletingLeadId)
+    setShowDeleteConfirm(false)
+    setDeletingLeadId(null)
+    setShowDetailModal(false)
+    setDetailLead(null)
+    await loadData()
+  }
 
   const openDetailModal = async (lead: any) => {
     setDetailLead(lead); setShowDetailModal(true)
@@ -922,8 +957,15 @@ export default function CustomerPage() {
                 ) : filteredLeads.map((lead, i) => (
                   <div key={lead.id} onClick={() => openDetailModal(lead)}
                     className={`px-5 py-4 flex items-center gap-4 cursor-pointer hover:bg-gray-50/70 transition-colors ${i < filteredLeads.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center flex-shrink-0">
-                      <span className="text-indigo-600 text-sm font-semibold">{(lead.full_name || 'İ').charAt(0)}</span>
+                    {/* Avatar + kaynak ikonu */}
+                    <div className="relative flex-shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center">
+                        <span className="text-indigo-600 text-sm font-semibold">{(lead.full_name || 'İ').charAt(0)}</span>
+                      </div>
+                      {/* Kaynak ikonu - sağ alt köşe */}
+                      <span className="absolute -bottom-1 -right-1 text-xs leading-none" title={SOURCE_CONFIG[lead.source]?.label || lead.source}>
+                        {lead.source === 'meta_form' ? '🎯' : lead.source === 'whatsapp' ? '💬' : lead.source === 'instagram_dm' ? '📸' : lead.source === 'referral' ? '🤝' : lead.source === 'website' ? '🌐' : '✏️'}
+                      </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
@@ -931,17 +973,31 @@ export default function CustomerPage() {
                         <SourceBadge source={lead.source} />
                       </div>
                       <p className="text-xs text-gray-400">{lead.phone}{lead.email && ` · ${lead.email}`}</p>
+                      {/* Atanan satışçı */}
+                      {lead.assigned_to ? (
+                        <p className="text-xs text-indigo-500 mt-0.5 font-medium truncate">
+                          👤 {teamMembers.find(m => m.user_id === lead.assigned_to)?.profiles?.full_name || 'Atanmış'}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-amber-500 mt-0.5">⚠ Atanmamış</p>
+                      )}
                       {lead.appointment_at && <p className="text-xs text-violet-600 mt-0.5 font-medium">📅 {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>}
                     </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <div className="text-right hidden sm:block">
                         {lead.procedure_amount > 0 && <p className="text-sm font-semibold text-emerald-600">₺{lead.procedure_amount.toLocaleString()}</p>}
                         <p className="text-xs text-gray-400">{new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
                       </div>
                       <Badge status={lead.status} />
+                      {/* Düzenle */}
+                      <button onClick={e => { e.stopPropagation(); setEditLead({...lead}); setShowEditModal(true) }}
+                        className="p-2 hover:bg-blue-50 rounded-lg text-gray-300 hover:text-blue-500 transition-colors" title="Düzenle">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8.5 1.5l3 3-7 7H1.5v-3l7-7z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </button>
+                      {/* Durum güncelle */}
                       <button onClick={e => { e.stopPropagation(); setSelectedLead(lead); setNewStatus(lead.status) }}
-                        className="p-2 hover:bg-indigo-50 rounded-lg text-gray-400 hover:text-indigo-600 transition-colors">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 1.5l3 3-8 8H1.5v-3l8-8z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        className="p-2 hover:bg-indigo-50 rounded-lg text-gray-400 hover:text-indigo-600 transition-colors" title="Durum güncelle">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 7l3 3L12 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </button>
                     </div>
                   </div>
@@ -2464,9 +2520,21 @@ export default function CustomerPage() {
                 </div>
               )}
             </div>
-            <Btn className="w-full" onClick={() => { setShowDetailModal(false); setSelectedLead(detailLead); setNewStatus(detailLead.status) }}>
-              Durumu Güncelle
-            </Btn>
+            <div className="flex gap-2">
+              <button onClick={() => { setDeletingLeadId(detailLead.id); setShowDeleteConfirm(true) }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-red-100 text-red-400 hover:bg-red-50 hover:text-red-600 text-xs font-medium transition-colors">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 3h9M4 3V2h4v1M5 5.5v3M7 5.5v3M2.5 3l.5 7h6l.5-7" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Sil
+              </button>
+              <button onClick={() => { setShowDetailModal(false); setEditLead({...detailLead}); setShowEditModal(true) }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-blue-100 text-blue-500 hover:bg-blue-50 hover:text-blue-700 text-xs font-medium transition-colors">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 1.5l2.5 2.5-6.5 6.5H1.5V8L8 1.5z" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Düzenle
+              </button>
+              <Btn className="flex-1" onClick={() => { setShowDetailModal(false); setSelectedLead(detailLead); setNewStatus(detailLead.status) }}>
+                Durumu Güncelle
+              </Btn>
+            </div>
           </div>
         )}
       </Modal>
@@ -2525,6 +2593,101 @@ export default function CustomerPage() {
               </div>
             )}
             {memberTab === 'loglar' && <p className="text-gray-400 text-sm text-center py-8">Loglar yakında eklenecek.</p>}
+          </div>
+        )}
+      </Modal>
+
+      {/* ── SİLME ONAY ── */}
+      <Modal open={showDeleteConfirm} onClose={() => { setShowDeleteConfirm(false); setDeletingLeadId(null) }} title="Lead'i Sil" subtitle="Bu işlem geri alınamaz">
+        <div className="p-6 space-y-4">
+          <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex gap-3">
+            <span className="text-2xl flex-shrink-0">⚠️</span>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">Emin misiniz?</p>
+              <p className="text-xs text-gray-500 mt-1">Bu lead ve tüm işlem geçmişi kalıcı olarak silinecek. Bu işlem geri alınamaz.</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Btn variant="secondary" className="flex-1" onClick={() => { setShowDeleteConfirm(false); setDeletingLeadId(null) }}>Vazgeç</Btn>
+            <button onClick={handleDeleteLead}
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+              Evet, Sil
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── LEAD DÜZENLE ── */}
+      <Modal open={showEditModal} onClose={() => { setShowEditModal(false); setEditLead(null) }} title="Lead Düzenle" subtitle={editLead?.lead_code}>
+        {editLead && (
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Ad Soyad</label>
+                <input value={editLead.full_name || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, full_name: e.target.value }))}
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Ad Soyad" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Telefon</label>
+                <input value={editLead.phone || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, phone: e.target.value }))}
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="05XX XXX XXXX" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">E-posta</label>
+                <input value={editLead.email || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="ornek@email.com" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Kaynak</label>
+                <div className="relative">
+                  <select value={editLead.source || 'manuel'} onChange={e => setEditLead((prev: any) => ({ ...prev, source: e.target.value }))}
+                    className="w-full appearance-none px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 pr-8">
+                    <option value="manuel">✏️ Manuel</option>
+                    <option value="meta_form">🎯 Meta Form</option>
+                    <option value="whatsapp">💬 WhatsApp</option>
+                    <option value="instagram_dm">📸 Instagram</option>
+                    <option value="referral">🤝 Referans</option>
+                    <option value="website">🌐 Web Sitesi</option>
+                  </select>
+                  <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Şube</label>
+                <div className="relative">
+                  <select value={editLead.branch_id || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, branch_id: e.target.value }))}
+                    className="w-full appearance-none px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 pr-8">
+                    <option value="">Şube seç</option>
+                    {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
+                  </select>
+                  <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Atanan Satışçı</label>
+                <div className="relative">
+                  <select value={editLead.assigned_to || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, assigned_to: e.target.value || null }))}
+                    className="w-full appearance-none px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 pr-8">
+                    <option value="">— Atanmamış —</option>
+                    {teamMembers.filter(m => m.role === 'agent' || m.role === 'team').map(m => (
+                      <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>
+                    ))}
+                  </select>
+                  <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Not</label>
+                <textarea value={editLead.note || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, note: e.target.value }))} rows={3}
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none" placeholder="Not ekle..." />
+              </div>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Btn variant="secondary" className="flex-1" onClick={() => { setShowEditModal(false); setEditLead(null) }}>İptal</Btn>
+              <Btn className="flex-1" onClick={handleEditLead} disabled={editLoading}>
+                {editLoading ? 'Kaydediliyor...' : 'Kaydet'}
+              </Btn>
+            </div>
           </div>
         )}
       </Modal>
