@@ -90,9 +90,7 @@ function DashboardMockup() {
         <div className="bg-[#0f1422] flex">
           {/* Sidebar */}
           <div className="w-14 bg-[#0a0e1a] flex flex-col items-center py-4 gap-4 border-r border-white/5 flex-shrink-0">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mb-2">
-              <span className="text-white font-bold text-sm">D</span>
-            </div>
+           <img src="/logo.png" alt="DataPilot" className="h-8 w-auto" />
             {['▣', '◈', '◉', '⊞', '◎'].map((icon, i) => (
               <div key={i} className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs cursor-pointer transition-all
                 ${i === 0 ? 'bg-blue-600/20 text-blue-400' : 'text-white/20 hover:text-white/40'}`}>
