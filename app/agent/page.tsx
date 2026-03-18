@@ -101,7 +101,10 @@ export default function AgentPage() {
   }
 
   const openUpdateModal = (lead: any) => {
-    setSelectedLead(lead); setNewStatus(lead.status); setNewNote(lead.note || '')
+    setSelectedLead(lead)
+    // procedure_done agent tarafından seçilemez, varsayılan olarak 'called' göster
+    setNewStatus(lead.status === 'procedure_done' ? 'called' : lead.status)
+    setNewNote(lead.note || '')
     setProcedureAmount(lead.procedure_amount?.toString() || '')
     setShowUpdateModal(true)
   }
@@ -287,7 +290,7 @@ export default function AgentPage() {
             <div>
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Durum</p>
               <div className="flex gap-1.5 overflow-x-auto pb-1">
-                {[{ key: 'all', label: 'Tumu' }, ...Object.entries(STATUS_CONFIG).filter(([k]) => k !== 'procedure_done').map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
+                {[{ key: 'all', label: 'Tümü' }, ...Object.entries(STATUS_CONFIG).filter(([k]) => k !== 'procedure_done').map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
                   <button key={f.key} onClick={() => setFilterStatus(f.key)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${filterStatus === f.key ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}>
                     {f.label} ({f.key === 'all' ? leads.length : leads.filter(l => l.status === f.key).length})
@@ -300,10 +303,10 @@ export default function AgentPage() {
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Randevu Tarihi</p>
               <div className="flex gap-1.5 overflow-x-auto pb-1">
                 {[
-                  { key: 'all', label: 'Tumu' },
-                  { key: 'today', label: 'Bugun', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d.getTime() === today.getTime() }).length },
+                  { key: 'all', label: 'Tümü' },
+                  { key: 'today', label: 'Bugün', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d.getTime() === today.getTime() }).length },
                   { key: 'this_week', label: 'Bu Hafta', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d >= today && d <= weekEnd }).length },
-                  { key: 'overdue', label: 'Gecmis', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d < today }).length },
+                  { key: 'overdue', label: 'Geçmiş', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d < today }).length },
                 ].map(f => (
                   <button key={f.key} onClick={() => setFilterDate(f.key)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${filterDate === f.key ? 'bg-violet-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}>
@@ -315,7 +318,7 @@ export default function AgentPage() {
 
             {(searchQuery || filterStatus !== 'all' || filterDate !== 'all') && (
               <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-400">{filteredLeads.length} sonuc</p>
+                <p className="text-xs text-gray-400">{filteredLeads.length} sonuç</p>
                 <button onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterDate('all') }} className="text-xs text-indigo-600 hover:underline">Temizle</button>
               </div>
             )}
@@ -359,6 +362,7 @@ export default function AgentPage() {
             </div>
           </div>
         )}
+
         {/* PERFORMANS */}
         {activeTab === 'performans' && (() => {
           const now = new Date()
@@ -370,7 +374,6 @@ export default function AgentPage() {
           const thisMonthRevenue = thisMonthSales.reduce((s, l) => s + (l.procedure_amount || 0), 0)
           const thisMonthCommission = thisMonthRevenue * ((teamMember?.commission_rate || 0) / 100)
 
-          // Son 6 ay trend
           const months = Array.from({ length: 6 }, (_, i) => {
             const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
             const mLeads = leads.filter(l => { const ld = new Date(l.created_at); return ld.getMonth() === d.getMonth() && ld.getFullYear() === d.getFullYear() })
@@ -384,16 +387,13 @@ export default function AgentPage() {
           })
           const maxLeads = Math.max(...months.map(m => m.leads), 1)
 
-          // Durum dağılımı
-          const statusDist = Object.entries(STATUS_CONFIG).map(([key, val]: any) => ({
+          const statusDist = Object.entries(STATUS_CONFIG).filter(([key]) => key !== 'procedure_done').map(([key, val]: any) => ({
             key, label: val.label, count: leads.filter(l => l.status === key).length,
             dot: val.dot,
           })).filter(s => s.count > 0)
 
           return (
             <div className="space-y-4">
-
-              {/* Bu ay özet */}
               <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-5 text-white relative overflow-hidden">
                 <div className="absolute -right-4 -top-4 w-28 h-28 bg-white/5 rounded-full" />
                 <div className="relative">
@@ -407,7 +407,6 @@ export default function AgentPage() {
                 </div>
               </div>
 
-              {/* 6 aylık trend grafik */}
               <div className="bg-white rounded-2xl border border-gray-100 p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Son 6 Ay Trendi</h3>
                 <div className="flex items-end gap-2 h-28">
@@ -415,9 +414,9 @@ export default function AgentPage() {
                     <div key={i} className="flex-1 flex flex-col items-center gap-1">
                       <div className="w-full flex flex-col items-center gap-0.5" style={{ height: '88px', justifyContent: 'flex-end' }}>
                         <div className="w-full bg-emerald-400 rounded-t-md transition-all"
-                          style={{ height: `${m.leads > 0 ? Math.max((m.leads / maxLeads) * 72, 4) : 2}px` }} title={`${m.leads} lead`} />
+                          style={{ height: `${m.leads > 0 ? Math.max((m.leads / maxLeads) * 72, 4) : 2}px` }} />
                         <div className="w-full bg-indigo-500 rounded-t-md transition-all"
-                          style={{ height: `${m.sales > 0 ? Math.max((m.sales / maxLeads) * 72, 4) : 0}px`, marginTop: '2px' }} title={`${m.sales} satış`} />
+                          style={{ height: `${m.sales > 0 ? Math.max((m.sales / maxLeads) * 72, 4) : 0}px`, marginTop: '2px' }} />
                       </div>
                       <p className="text-xs text-gray-400">{m.label}</p>
                     </div>
@@ -429,7 +428,6 @@ export default function AgentPage() {
                 </div>
               </div>
 
-              {/* Durum dağılımı */}
               <div className="bg-white rounded-2xl border border-gray-100 p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Durum Dağılımı</h3>
                 <div className="space-y-3">
@@ -452,7 +450,6 @@ export default function AgentPage() {
                 </div>
               </div>
 
-              {/* Toplam prim özeti */}
               <div className="bg-gradient-to-br from-amber-50 to-white rounded-2xl border border-amber-100 p-5">
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Toplam Hakediş</h3>
                 <div className="flex items-end gap-2 mb-3">
@@ -468,7 +465,6 @@ export default function AgentPage() {
                   <span>₺{totalRevenue.toLocaleString()} toplam ciro</span>
                 </div>
               </div>
-
             </div>
           )
         })()}
@@ -546,13 +542,13 @@ export default function AgentPage() {
                 )}
                 <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1.5">Not</label>
-                  <textarea value={newNote} onChange={e => setNewNote(e.target.value)} rows={3} placeholder="Gorusme notu..."
+                  <textarea value={newNote} onChange={e => setNewNote(e.target.value)} rows={3} placeholder="Görüşme notu..."
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
                 </div>
                 <div className="flex gap-3">
                   <button type="button" onClick={() => setShowUpdateModal(false)}
                     className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
-                    Iptal
+                    İptal
                   </button>
                   <button type="submit" disabled={saving || !newStatus}
                     className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
