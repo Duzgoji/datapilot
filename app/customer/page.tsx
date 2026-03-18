@@ -170,6 +170,12 @@ export default function CustomerPage() {
   const [paymentNote, setPaymentNote] = useState('')
   const [paymentSaving, setPaymentSaving] = useState(false)
   const [showPaymentHistory, setShowPaymentHistory] = useState(false)
+  const [showPaymentReport, setShowPaymentReport] = useState(false)
+  const [paymentReportMember, setPaymentReportMember] = useState('all')
+  const [paymentReportPeriod, setPaymentReportPeriod] = useState('this_month')
+  const [paymentReportStart, setPaymentReportStart] = useState('')
+  const [paymentReportEnd, setPaymentReportEnd] = useState('')
+  const [paymentReportLoading, setPaymentReportLoading] = useState(false)
   const [historyMember, setHistoryMember] = useState<any>(null)
 
   // Filters
@@ -1146,10 +1152,16 @@ const handlePayCommission = async () => {
   <div className="space-y-4">
     <div className="flex items-center justify-between">
       <p className="text-sm text-gray-500">{teamMembers.length} ekip üyesi</p>
-      <Btn size="sm" onClick={() => setShowAddMember(true)}>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-        Üye Ekle
-      </Btn>
+      <div className="flex gap-2">
+  <Btn variant="secondary" size="sm" onClick={() => setShowPaymentReport(true)}>
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 10h10M2 7h6M2 4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+    Ödeme Raporu
+  </Btn>
+  <Btn size="sm" onClick={() => setShowAddMember(true)}>
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+    Üye Ekle
+  </Btn>
+</div>
     </div>
  
     {teamMembers.length === 0 ? (
@@ -1296,9 +1308,7 @@ const handlePayCommission = async () => {
     )}
   </div>
 )}
- 
-// ─── EKLE: Ödeme Yap Modal (diğer modal'ların yanına) ────────────────────────
- 
+  
 <Modal open={showPaymentModal} onClose={() => { setShowPaymentModal(false); setPaymentMember(null); setPaymentAmount(''); setPaymentNote('') }}
   title="Ödeme Yap" subtitle={paymentMember?.profiles?.full_name}>
   {paymentMember && (
@@ -1360,8 +1370,6 @@ const handlePayCommission = async () => {
     </div>
   )}
 </Modal>
- 
-// ─── EKLE: Ödeme Geçmişi Modal ───────────────────────────────────────────────
  
 <Modal open={showPaymentHistory} onClose={() => { setShowPaymentHistory(false); setHistoryMember(null) }}
   title="Ödeme Geçmişi" subtitle={historyMember?.profiles?.full_name} size="md">
@@ -3190,7 +3198,254 @@ const handlePayCommission = async () => {
           </div>
         )}
       </Modal>
+        {/* ── ÖDEME RAPORU ── */}
+      <Modal open={showPaymentReport} onClose={() => setShowPaymentReport(false)} title="Ödeme Raporu" subtitle="Hakediş ve ödeme geçmişi" size="xl">
+        <div className="p-6 space-y-5">
 
+          {/* Filtreler */}
+          <div className="grid grid-cols-2 gap-4">
+            <Select label="Satışçı" value={paymentReportMember} onChange={(e: any) => setPaymentReportMember(e.target.value)}>
+              <option value="all">Tüm Satışçılar</option>
+              {teamMembers.map(m => <option key={m.id} value={m.id}>{m.profiles?.full_name}</option>)}
+            </Select>
+            <Select label="Dönem" value={paymentReportPeriod} onChange={(e: any) => setPaymentReportPeriod(e.target.value)}>
+              <option value="all">Tüm Zamanlar</option>
+              <option value="this_month">Bu Ay</option>
+              <option value="last_month">Geçen Ay</option>
+              <option value="this_year">Bu Yıl</option>
+              <option value="custom">Özel Tarih</option>
+            </Select>
+          </div>
+
+          {paymentReportPeriod === 'custom' && (
+            <div className="grid grid-cols-2 gap-3 bg-indigo-50 rounded-xl p-4">
+              <Input label="Başlangıç" type="date" value={paymentReportStart} onChange={(e: any) => setPaymentReportStart(e.target.value)} />
+              <Input label="Bitiş" type="date" value={paymentReportEnd} onChange={(e: any) => setPaymentReportEnd(e.target.value)} />
+            </div>
+          )}
+
+          {/* Tablo */}
+          {(() => {
+            const now = new Date()
+            let start: Date | null = null
+            let end: Date | null = null
+
+            if (paymentReportPeriod === 'this_month') {
+              start = new Date(now.getFullYear(), now.getMonth(), 1)
+              end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+            } else if (paymentReportPeriod === 'last_month') {
+              start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+              end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
+            } else if (paymentReportPeriod === 'this_year') {
+              start = new Date(now.getFullYear(), 0, 1)
+              end = new Date(now.getFullYear(), 11, 31, 23, 59, 59)
+            } else if (paymentReportPeriod === 'custom' && paymentReportStart && paymentReportEnd) {
+              start = new Date(paymentReportStart)
+              end = new Date(paymentReportEnd + 'T23:59:59')
+            }
+
+            const filteredPayments = commissionPayments.filter(p => {
+              const matchesMember = paymentReportMember === 'all' || p.team_member_id === paymentReportMember
+              const d = new Date(p.paid_at)
+              const matchesDate = !start || !end || (d >= start && d <= end)
+              return matchesMember && matchesDate
+            })
+
+            // Her satışçı için özet
+            const memberSummaries = teamMembers
+              .filter(m => paymentReportMember === 'all' || m.id === paymentReportMember)
+              .map(m => {
+                const mSales = leads.filter(l => l.assigned_to === m.user_id && l.status === 'procedure_done')
+                const mRevenue = mSales.reduce((s, l) => s + (l.procedure_amount || 0), 0)
+                const totalEarned = mRevenue * ((m.commission_rate || 0) / 100)
+                const allPaid = commissionPayments.filter(p => p.team_member_id === m.id).reduce((s, p) => s + (p.amount || 0), 0)
+                const periodPaid = filteredPayments.filter(p => p.team_member_id === m.id).reduce((s, p) => s + (p.amount || 0), 0)
+                const remaining = totalEarned - allPaid
+                const memberPayments = filteredPayments.filter(p => p.team_member_id === m.id)
+                return { member: m, totalEarned, allPaid, periodPaid, remaining, memberPayments }
+              })
+
+            const totalPeriodPaid = memberSummaries.reduce((s, ms) => s + ms.periodPaid, 0)
+            const totalRemaining = memberSummaries.reduce((s, ms) => s + Math.max(0, ms.remaining), 0)
+
+            const downloadPaymentExcel = async () => {
+              setPaymentReportLoading(true)
+              const XLSX = await import('xlsx')
+              const rows: any[] = []
+              memberSummaries.forEach(ms => {
+                if (ms.memberPayments.length === 0) {
+                  rows.push({
+                    'Satışçı': ms.member.profiles?.full_name || '',
+                    'Şube': ms.member.branches?.branch_name || '',
+                    'Ödeme Tarihi': '—',
+                    'Ödeme Tutarı': 0,
+                    'Not': '',
+                    'Toplam Hakediş': ms.totalEarned,
+                    'Toplam Ödenen': ms.allPaid,
+                    'Kalan Borç': Math.max(0, ms.remaining),
+                  })
+                } else {
+                  ms.memberPayments.forEach((p, i) => {
+                    rows.push({
+                      'Satışçı': i === 0 ? (ms.member.profiles?.full_name || '') : '',
+                      'Şube': i === 0 ? (ms.member.branches?.branch_name || '') : '',
+                      'Ödeme Tarihi': new Date(p.paid_at).toLocaleDateString('tr-TR'),
+                      'Ödeme Tutarı': p.amount,
+                      'Not': p.note || '',
+                      'Toplam Hakediş': i === 0 ? ms.totalEarned : '',
+                      'Toplam Ödenen': i === 0 ? ms.allPaid : '',
+                      'Kalan Borç': i === 0 ? Math.max(0, ms.remaining) : '',
+                    })
+                  })
+                }
+              })
+              const ws = XLSX.utils.json_to_sheet(rows)
+              ws['!cols'] = [20, 15, 14, 14, 25, 16, 14, 12].map(w => ({ wch: w }))
+              const wb = XLSX.utils.book_new()
+              XLSX.utils.book_append_sheet(wb, ws, 'Ödeme Raporu')
+              XLSX.writeFile(wb, `DataPilot_Odeme_Raporu_${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.xlsx`)
+              setPaymentReportLoading(false)
+            }
+
+            const downloadPaymentPDF = async () => {
+              setPaymentReportLoading(true)
+              const { default: jsPDF } = await import('jspdf')
+              const { default: autoTable } = await import('jspdf-autotable')
+              const doc = new jsPDF({ orientation: 'landscape' })
+              doc.setFontSize(16); doc.setFont('helvetica', 'bold')
+              doc.text('DataPilot — Odeme Raporu', 14, 18)
+              doc.setFontSize(9); doc.setFont('helvetica', 'normal')
+              doc.text(`Toplam Odenen: TL${totalPeriodPaid.toLocaleString()}  |  Kalan Borc: TL${totalRemaining.toLocaleString()}  |  ${memberSummaries.length} satisci`, 14, 26)
+              const tableRows: any[] = []
+              memberSummaries.forEach(ms => {
+                if (ms.memberPayments.length === 0) {
+                  tableRows.push([ms.member.profiles?.full_name || '', ms.member.branches?.branch_name || '', '—', '—', `TL${ms.totalEarned.toLocaleString()}`, `TL${ms.allPaid.toLocaleString()}`, `TL${Math.max(0, ms.remaining).toLocaleString()}`])
+                } else {
+                  ms.memberPayments.forEach((p, i) => {
+                    tableRows.push([
+                      i === 0 ? (ms.member.profiles?.full_name || '') : '',
+                      i === 0 ? (ms.member.branches?.branch_name || '') : '',
+                      new Date(p.paid_at).toLocaleDateString('tr-TR'),
+                      `TL${p.amount.toLocaleString()}`,
+                      i === 0 ? `TL${ms.totalEarned.toLocaleString()}` : '',
+                      i === 0 ? `TL${ms.allPaid.toLocaleString()}` : '',
+                      i === 0 ? `TL${Math.max(0, ms.remaining).toLocaleString()}` : '',
+                    ])
+                  })
+                }
+              })
+              autoTable(doc, {
+                startY: 32,
+                head: [['Satisci', 'Sube', 'Odeme Tarihi', 'Tutar', 'Toplam Hakedis', 'Toplam Odenen', 'Kalan Borc']],
+                body: tableRows,
+                styles: { fontSize: 8, cellPadding: 3 },
+                headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [249, 250, 251] },
+              })
+              doc.save(`DataPilot_Odeme_Raporu_${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.pdf`)
+              setPaymentReportLoading(false)
+            }
+
+            return (
+              <>
+                {/* Özet Kartlar */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-center">
+                    <p className="text-xs text-gray-400 mb-1">Dönem Ödenen</p>
+                    <p className="text-xl font-bold text-emerald-600">₺{totalPeriodPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+                  </div>
+                  <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-center">
+                    <p className="text-xs text-gray-400 mb-1">Toplam Kalan Borç</p>
+                    <p className="text-xl font-bold text-amber-600">₺{totalRemaining.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+                  </div>
+                  <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 text-center">
+                    <p className="text-xs text-gray-400 mb-1">İşlem Sayısı</p>
+                    <p className="text-xl font-bold text-indigo-600">{filteredPayments.length}</p>
+                  </div>
+                </div>
+
+                {/* Satışçı Bazlı Tablo */}
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  <div className="px-5 py-3 border-b border-gray-50 bg-gray-50/50">
+                    <div className="grid grid-cols-7 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      <div className="col-span-2">Satışçı</div>
+                      <div className="text-right">Hakediş</div>
+                      <div className="text-right">Ödenen</div>
+                      <div className="text-right">Kalan</div>
+                      <div className="col-span-2">Son Ödeme</div>
+                    </div>
+                  </div>
+                  {memberSummaries.length === 0 ? (
+                    <div className="p-12 text-center">
+                      <p className="text-gray-400 text-sm">Seçilen kriterlere göre sonuç bulunamadı.</p>
+                    </div>
+                  ) : memberSummaries.map((ms, i) => (
+                    <div key={ms.member.id} className={`${i < memberSummaries.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                      {/* Satışçı Özet Satırı */}
+                      <div className="px-5 py-3 grid grid-cols-7 gap-2 items-center hover:bg-gray-50/50 transition-colors">
+                        <div className="col-span-2 flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                            <span className="text-indigo-600 text-xs font-bold">{ms.member.profiles?.full_name?.charAt(0)}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">{ms.member.profiles?.full_name}</p>
+                            <p className="text-xs text-gray-400 truncate">{ms.member.branches?.branch_name}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-rose-500">₺{ms.totalEarned.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-emerald-600">₺{ms.allPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-sm font-semibold ${ms.remaining > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
+                            ₺{Math.max(0, ms.remaining).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                          </p>
+                        </div>
+                        <div className="col-span-2 text-xs text-gray-400">
+                          {ms.memberPayments.length > 0
+                            ? new Date(ms.memberPayments[ms.memberPayments.length - 1].paid_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+                            : '— Ödeme yok'}
+                        </div>
+                      </div>
+
+                      {/* Ödeme Detayları */}
+                      {ms.memberPayments.length > 0 && (
+                        <div className="bg-gray-50/50 border-t border-gray-50 px-5 py-2 space-y-1.5">
+                          {ms.memberPayments.map((p) => (
+                            <div key={p.id} className="flex items-center gap-3 py-1">
+                              <div className="w-5 h-5 bg-emerald-100 rounded-md flex items-center justify-center flex-shrink-0 ml-9">
+                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 5l3 3 5-4" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              </div>
+                              <p className="text-xs text-gray-500 w-28 flex-shrink-0">
+                                {new Date(p.paid_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </p>
+                              <p className="text-xs font-semibold text-emerald-600 w-24 flex-shrink-0">₺{p.amount.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+                              {p.note && <p className="text-xs text-gray-400 truncate">{p.note}</p>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* İndir Butonları */}
+                <div className="flex gap-3">
+                  <Btn variant="secondary" className="flex-1" onClick={() => setShowPaymentReport(false)}>Kapat</Btn>
+                  <Btn variant="success" className="flex-1" onClick={downloadPaymentExcel} disabled={paymentReportLoading}>
+                    {paymentReportLoading ? 'Hazırlanıyor...' : '📗 Excel İndir'}
+                  </Btn>
+                  <Btn className="flex-1" onClick={downloadPaymentPDF} disabled={paymentReportLoading}>
+                    {paymentReportLoading ? 'Hazırlanıyor...' : '📕 PDF İndir'}
+                  </Btn>
+                </div>
+              </>
+            )
+          })()}
+        </div>
+      </Modal>
       {/* ── RAPOR ── */}
       <Modal open={showReportPanel} onClose={() => setShowReportPanel(false)} title="Rapor İndir" subtitle="Filtreleri ayarlayın ve indirin">
         <div className="p-6 space-y-5">
