@@ -90,7 +90,9 @@ function DashboardMockup() {
         <div className="bg-[#0f1422] flex">
           {/* Sidebar */}
           <div className="w-14 bg-[#0a0e1a] flex flex-col items-center py-4 gap-4 border-r border-white/5 flex-shrink-0">
-           <img src="/logo.png" alt="DataPilot" className="h-8 w-auto" />
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mb-2">
+              <span className="text-white font-bold text-sm">D</span>
+            </div>
             {['▣', '◈', '◉', '⊞', '◎'].map((icon, i) => (
               <div key={i} className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs cursor-pointer transition-all
                 ${i === 0 ? 'bg-blue-600/20 text-blue-400' : 'text-white/20 hover:text-white/40'}`}>
@@ -234,11 +236,8 @@ export default function LandingPage() {
       {/* ─── NAVBAR ─── */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100/80">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-md shadow-blue-200">
-              <span className="text-white font-bold text-sm">D</span>
-            </div>
-            <span className="font-bold text-gray-900 text-lg tracking-tight">DataPilot</span>
+          <div className="flex items-center">
+            <img src="/logo.png" alt="DataPilot" className="h-9 w-auto" />
           </div>
           <div className="hidden md:flex items-center gap-8">
             {[['#ozellikler', 'Özellikler'], ['#paketler', 'Fiyatlar'], ['#sss', 'SSS'], ['#iletisim', 'İletişim']].map(([href, label]) => (
@@ -529,10 +528,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-md shadow-blue-900">
-                  <span className="text-white font-bold text-sm">D</span>
-                </div>
-                <span className="text-white font-bold tracking-tight">DataPilot</span>
+                <img src="/logo2.png" alt="DataPilot" className="h-8 w-auto" />
               </div>
               <p className="text-sm leading-relaxed">Akıllı lead yönetim platformu.<br />İşinizi büyütün.</p>
             </div>
