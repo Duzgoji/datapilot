@@ -1966,199 +1966,259 @@ const handlePayCommission = async () => {
           {activeTab === 'performans-karsilastirma' && (() => {
             const now = new Date()
 
-            // ── Dönem A/B aralığı hesapla ──
-            const getPRange = (period: string, sDate: string, eDate: string) => {
-              const end = new Date(); end.setHours(23,59,59,999)
-              if (period === 'today') { const s = new Date(); s.setHours(0,0,0,0); return { start: s, end, label: 'Bugün' } }
-              if (period === '7day') { const s = new Date(); s.setDate(s.getDate()-6); s.setHours(0,0,0,0); return { start: s, end, label: 'Son 7 Gün' } }
-              if (period === '1month') { const s = new Date(now.getFullYear(), now.getMonth(), 1); return { start: s, end, label: now.toLocaleDateString('tr-TR', { month: 'long' }) } }
-              if (period === 'last_month') { const lm = now.getMonth()===0?11:now.getMonth()-1; const ly = now.getMonth()===0?now.getFullYear()-1:now.getFullYear(); const s = new Date(ly,lm,1); const e = new Date(ly,lm+1,0); e.setHours(23,59,59,999); return { start: s, end: e, label: new Date(ly,lm).toLocaleDateString('tr-TR',{month:'long'}) } }
-              if (period === '3month') { const s = new Date(now.getFullYear(), now.getMonth()-2, 1); return { start: s, end, label: 'Son 3 Ay' } }
-              if (period === '6month') { const s = new Date(now.getFullYear(), now.getMonth()-5, 1); return { start: s, end, label: 'Son 6 Ay' } }
-              if (period === '1year') { const s = new Date(now.getFullYear(), 0, 1); return { start: s, end, label: 'Bu Yıl' } }
-              if (period === 'custom' && sDate && eDate) { const s = new Date(sDate); s.setHours(0,0,0,0); const e = new Date(eDate); e.setHours(23,59,59,999); return { start: s, end: e, label: sDate + ' – ' + eDate } }
-              return { start: new Date(now.getFullYear(), now.getMonth(), 1), end, label: 'Bu Ay' }
+            const getPeriods = (key: string) => {
+              if (key === 'week') {
+                const thisStart = new Date(now); thisStart.setDate(now.getDate() - now.getDay() + 1); thisStart.setHours(0,0,0,0)
+                const thisEnd = new Date(now); thisEnd.setHours(23,59,59,999)
+                const lastStart = new Date(thisStart); lastStart.setDate(lastStart.getDate() - 7)
+                const lastEnd = new Date(thisStart); lastEnd.setDate(lastEnd.getDate() - 1); lastEnd.setHours(23,59,59,999)
+                return { current: { start: thisStart, end: thisEnd, label: 'Bu Hafta' }, previous: { start: lastStart, end: lastEnd, label: 'Geçen Hafta' } }
+              }
+              if (key === 'month') {
+                const thisStart = new Date(now.getFullYear(), now.getMonth(), 1)
+                const thisEnd = new Date(now); thisEnd.setHours(23,59,59,999)
+                const lastStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+                const lastEnd = new Date(now.getFullYear(), now.getMonth(), 0); lastEnd.setHours(23,59,59,999)
+                return { current: { start: thisStart, end: thisEnd, label: 'Bu Ay' }, previous: { start: lastStart, end: lastEnd, label: 'Geçen Ay' } }
+              }
+              if (key === 'quarter') {
+                const qMonth = Math.floor(now.getMonth() / 3) * 3
+                const thisStart = new Date(now.getFullYear(), qMonth, 1)
+                const thisEnd = new Date(now); thisEnd.setHours(23,59,59,999)
+                const lastStart = new Date(now.getFullYear(), qMonth - 3, 1)
+                const lastEnd = new Date(now.getFullYear(), qMonth, 0); lastEnd.setHours(23,59,59,999)
+                return { current: { start: thisStart, end: thisEnd, label: 'Bu Çeyrek' }, previous: { start: lastStart, end: lastEnd, label: 'Geçen Çeyrek' } }
+              }
+              // year
+              const thisStart = new Date(now.getFullYear(), 0, 1)
+              const thisEnd = new Date(now); thisEnd.setHours(23,59,59,999)
+              const lastStart = new Date(now.getFullYear() - 1, 0, 1)
+              const lastEnd = new Date(now.getFullYear() - 1, 11, 31); lastEnd.setHours(23,59,59,999)
+              return { current: { start: thisStart, end: thisEnd, label: 'Bu Yıl' }, previous: { start: lastStart, end: lastEnd, label: 'Geçen Yıl' } }
             }
 
-            const rangeA = getPRange(compPeriodA, compStartA, compEndA)
-            const rangeB = getPRange(compPeriodB, compStartB, compEndB)
-            const leadsA = leads.filter(l => { const d = new Date(l.created_at); return d >= rangeA.start && d <= rangeA.end })
-            const leadsB = leads.filter(l => { const d = new Date(l.created_at); return d >= rangeB.start && d <= rangeB.end })
-            const salesA = leadsA.filter(l => l.status === 'procedure_done')
-            const salesB = leadsB.filter(l => l.status === 'procedure_done')
-            const revenueA = salesA.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
-            const revenueB = salesB.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
-            const convA = leadsA.length > 0 ? ((salesA.length / leadsA.length) * 100).toFixed(1) : '0'
-            const convB = leadsB.length > 0 ? ((salesB.length / leadsB.length) * 100).toFixed(1) : '0'
-            const diff = (a: number, b: number) => b === 0 ? null : (((a - b) / b) * 100).toFixed(0)
+            const { current, previous } = getPeriods(compPeriodA)
 
-            const PERIODS = [
-              { key: 'today', label: 'Bugün' }, { key: '7day', label: 'Son 7 Gün' },
-              { key: '1month', label: 'Bu Ay' }, { key: 'last_month', label: 'Geçen Ay' },
-              { key: '3month', label: 'Son 3 Ay' }, { key: '6month', label: 'Son 6 Ay' },
-              { key: '1year', label: 'Bu Yıl' }, { key: 'custom', label: 'Özel' },
-            ]
+            const currentLeads = leads.filter(l => { const d = new Date(l.created_at); return d >= current.start && d <= current.end })
+            const previousLeads = leads.filter(l => { const d = new Date(l.created_at); return d >= previous.start && d <= previous.end })
 
-            // Satışçı karşılaştırması (dönem A baz alır)
-            const memberPerf = teamMembers.map((tm: any) => {
-              const mAll = leads.filter(l => l.assigned_to === tm.user_id)
-              const mA = leadsA.filter(l => l.assigned_to === tm.user_id)
-              const mB = leadsB.filter(l => l.assigned_to === tm.user_id)
-              const mSalesA = mA.filter(l => l.status === 'procedure_done')
-              const mSalesB = mB.filter(l => l.status === 'procedure_done')
-              return {
-                name: tm.profiles?.full_name || tm.profiles?.email || '—',
-                branch: tm.branches?.branch_name || '—',
-                leadsA: mA.length, leadsB: mB.length,
-                salesA: mSalesA.length, salesB: mSalesB.length,
-                convA: mA.length > 0 ? ((mSalesA.length / mA.length) * 100).toFixed(0) : '0',
-                convB: mB.length > 0 ? ((mSalesB.length / mB.length) * 100).toFixed(0) : '0',
-              }
-            }).sort((a: any, b: any) => b.salesA - a.salesA)
+            const calc = (ls: any[]) => {
+              const sales = ls.filter(l => l.status === 'procedure_done')
+              const revenue = sales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+              const conv = ls.length > 0 ? ((sales.length / ls.length) * 100) : 0
+              return { leads: ls.length, sales: sales.length, revenue, conv }
+            }
+
+            const cur = calc(currentLeads)
+            const prev = calc(previousLeads)
+
+            const diff = (a: number, b: number) => {
+              if (b === 0) return null
+              return ((a - b) / b * 100)
+            }
 
             const metrics = [
-              { label: 'Lead', a: leadsA.length, b: leadsB.length, color: 'text-indigo-600', bgA: 'bg-indigo-50', format: (v: number) => v.toString() },
-              { label: 'Satış', a: salesA.length, b: salesB.length, color: 'text-emerald-600', bgA: 'bg-emerald-50', format: (v: number) => v.toString() },
-              { label: 'Ciro', a: revenueA, b: revenueB, color: 'text-violet-600', bgA: 'bg-violet-50', format: (v: number) => '₺' + v.toLocaleString() },
-              { label: 'Dönüşüm', a: parseFloat(convA), b: parseFloat(convB), color: 'text-amber-600', bgA: 'bg-amber-50', format: (v: number) => '%' + v.toFixed(1) },
+              { label: 'Lead', cur: cur.leads, prev: prev.leads, format: (v: number) => v.toString(), color: 'indigo', icon: '◈' },
+              { label: 'Satış', cur: cur.sales, prev: prev.sales, format: (v: number) => v.toString(), color: 'emerald', icon: '◉' },
+              { label: 'Ciro', cur: cur.revenue, prev: prev.revenue, format: (v: number) => '₺' + v.toLocaleString(), color: 'violet', icon: '◎' },
+              { label: 'Dönüşüm', cur: cur.conv, prev: prev.conv, format: (v: number) => '%' + v.toFixed(1), color: 'amber', icon: '◐' },
             ]
 
-            const PeriodSelect = ({ value, onChange, startDate, endDate, onStartDate, onEndDate }: any) => (
-              <div className="flex flex-col gap-1">
-                {PERIODS.map(p => (
-                  <button key={p.key} onClick={() => onChange(p.key)}
-                    className={'w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all ' + (value === p.key ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-500 hover:bg-gray-50')}>
-                    <span>{p.label}</span>
-                    {value === p.key && <span className="w-2 h-2 bg-indigo-600 rounded-full flex-shrink-0" />}
-                  </button>
-                ))}
-                {value === 'custom' && (
-                  <div className="flex items-center gap-2 mt-1 px-1">
-                    <input type="date" value={startDate} onChange={e => onStartDate(e.target.value)}
-                      className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                    <span className="text-xs text-gray-400">—</span>
-                    <input type="date" value={endDate} onChange={e => onEndDate(e.target.value)}
-                      className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                  </div>
-                )}
-              </div>
-            )
+            const colorMap: any = {
+              indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-100' },
+              emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-100' },
+              violet: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-100' },
+              amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-100' },
+            }
+
+            // Satışçı karşılaştırması
+            const memberPerf = teamMembers.map((tm: any) => {
+              const mCur = currentLeads.filter(l => l.assigned_to === tm.user_id)
+              const mPrev = previousLeads.filter(l => l.assigned_to === tm.user_id)
+              const mCurSales = mCur.filter(l => l.status === 'procedure_done')
+              const mPrevSales = mPrev.filter(l => l.status === 'procedure_done')
+              const mCurRevenue = mCurSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+              const mPrevRevenue = mPrevSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+              const salesDiff = diff(mCurSales.length, mPrevSales.length)
+              return {
+                name: tm.profiles?.full_name || '—',
+                branch: tm.branches?.branch_name || '—',
+                curLeads: mCur.length, prevLeads: mPrev.length,
+                curSales: mCurSales.length, prevSales: mPrevSales.length,
+                curRevenue: mCurRevenue, prevRevenue: mPrevRevenue,
+                salesDiff,
+              }
+            }).sort((a: any, b: any) => b.curSales - a.curSales)
 
             return (
               <div className="space-y-5">
 
                 {/* Dönem Seçici */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white rounded-2xl border-2 border-indigo-200 overflow-hidden">
-                    <div className="flex items-center gap-2 px-4 py-3 bg-indigo-50 border-b border-indigo-100">
-                      <span className="w-2.5 h-2.5 bg-indigo-600 rounded-full flex-shrink-0" />
-                      <p className="text-sm font-semibold text-indigo-700">1. Dönem</p>
-                      <span className="ml-auto text-xs text-indigo-500 font-medium">{rangeA.label}</span>
-                    </div>
-                    <div className="p-3">
-                      <PeriodSelect value={compPeriodA} onChange={setCompPeriodA} startDate={compStartA} endDate={compEndA} onStartDate={setCompStartA} onEndDate={setCompEndA} />
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
-                    <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-100">
-                      <span className="w-2.5 h-2.5 bg-gray-400 rounded-full flex-shrink-0" />
-                      <p className="text-sm font-semibold text-gray-600">2. Dönem</p>
-                      <span className="ml-auto text-xs text-gray-400 font-medium">{rangeB.label}</span>
-                    </div>
-                    <div className="p-3">
-                      <PeriodSelect value={compPeriodB} onChange={setCompPeriodB} startDate={compStartB} endDate={compEndB} onStartDate={setCompStartB} onEndDate={setCompEndB} />
-                    </div>
+                <div className="bg-white rounded-2xl border border-gray-100 p-4">
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Karşılaştırma Dönemi</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {[
+                      { key: 'week', label: 'Haftalık', sub: 'Bu hafta vs geçen hafta' },
+                      { key: 'month', label: 'Aylık', sub: 'Bu ay vs geçen ay' },
+                      { key: 'quarter', label: 'Çeyreklik', sub: 'Bu çeyrek vs geçen çeyrek' },
+                      { key: 'year', label: 'Yıllık', sub: 'Bu yıl vs geçen yıl' },
+                    ].map(p => (
+                      <button key={p.key} onClick={() => setCompPeriodA(p.key)}
+                        className={`flex-1 min-w-[120px] px-4 py-3 rounded-xl border-2 text-left transition-all ${compPeriodA === p.key ? 'border-indigo-500 bg-indigo-50' : 'border-gray-100 hover:border-indigo-200 bg-white'}`}>
+                        <p className={`text-sm font-bold ${compPeriodA === p.key ? 'text-indigo-700' : 'text-gray-700'}`}>{p.label}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{p.sub}</p>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* Karşılaştırma Metrikler */}
-                <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                  <div className="flex items-center gap-3 mb-5">
-                    <h3 className="font-semibold text-gray-900">Dönem Analizi</h3>
-                    <div className="flex items-center gap-2 ml-auto text-xs">
-                      <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-indigo-600 rounded-full inline-block" /> {rangeA.label}</span>
-                      <span className="text-gray-300">vs</span>
-                      <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-gray-300 rounded-full inline-block" /> {rangeB.label}</span>
-                    </div>
+                {/* Dönem Etiketleri */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold">
+                    <span className="w-2 h-2 bg-white rounded-full" />
+                    {current.label}
                   </div>
-                  <div className="grid grid-cols-4 gap-4">
-                    {metrics.map(m => {
-                      const d = diff(m.a, m.b)
-                      const up = d !== null && parseFloat(d) > 0
-                      const down = d !== null && parseFloat(d) < 0
-                      return (
-                        <div key={m.label} className={m.bgA + ' rounded-2xl p-4'}>
-                          <p className="text-xs text-gray-500 mb-2">{m.label}</p>
-                          <p className={`text-2xl font-bold ${m.color}`}>{m.format(m.a)}</p>
-                          <p className="text-xs text-gray-400 mt-1">{m.format(m.b)} dönem B</p>
+                  <span className="text-gray-400 font-bold text-lg">vs</span>
+                  <div className="flex items-center gap-2 bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-sm font-semibold">
+                    <span className="w-2 h-2 bg-gray-400 rounded-full" />
+                    {previous.label}
+                  </div>
+                </div>
+
+                {/* Metrik Kartları */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {metrics.map(m => {
+                    const d = diff(m.cur, m.prev)
+                    const up = d !== null && d > 0
+                    const down = d !== null && d < 0
+                    const c = colorMap[m.color]
+                    return (
+                      <div key={m.label} className={`${c.bg} border ${c.border} rounded-2xl p-5`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className={`text-lg ${c.text}`}>{m.icon}</span>
                           {d !== null && (
-                            <div className={`mt-2 inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${up ? 'bg-emerald-100 text-emerald-700' : down ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-                              {up ? '↑' : down ? '↓' : '='} {Math.abs(parseFloat(d))}%
-                            </div>
+                            <span className={`text-xs font-bold px-2 py-1 rounded-full ${up ? 'bg-emerald-100 text-emerald-700' : down ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                              {up ? '↑' : down ? '↓' : '='} %{Math.abs(d).toFixed(0)}
+                            </span>
                           )}
                         </div>
-                      )
-                    })}
+                        <p className={`text-2xl font-bold ${c.text}`}>{m.format(m.cur)}</p>
+                        <p className="text-xs font-medium text-gray-600 mt-1">{m.label}</p>
+                        <p className="text-xs text-gray-400 mt-1">{previous.label}: {m.format(m.prev)}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Görsel Bar Karşılaştırması */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                  <h3 className="font-semibold text-gray-900 mb-5">Detaylı Karşılaştırma</h3>
+                  <div className="space-y-5">
+                    {[
+                      { label: 'Lead', cur: cur.leads, prev: prev.leads, max: Math.max(cur.leads, prev.leads, 1), curColor: 'bg-indigo-500', prevColor: 'bg-indigo-200', format: (v: number) => v.toString() },
+                      { label: 'Satış', cur: cur.sales, prev: prev.sales, max: Math.max(cur.sales, prev.sales, 1), curColor: 'bg-emerald-500', prevColor: 'bg-emerald-200', format: (v: number) => v.toString() },
+                      { label: 'Ciro', cur: cur.revenue, prev: prev.revenue, max: Math.max(cur.revenue, prev.revenue, 1), curColor: 'bg-violet-500', prevColor: 'bg-violet-200', format: (v: number) => '₺' + v.toLocaleString() },
+                    ].map(m => (
+                      <div key={m.label}>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm font-medium text-gray-700">{m.label}</p>
+                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <span className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${m.curColor}`} />{current.label}: <strong className="text-gray-700">{m.format(m.cur)}</strong></span>
+                            <span className="flex items-center gap-1.5"><span className={`w-2.5 h-2.5 rounded-sm ${m.prevColor}`} />{previous.label}: <strong className="text-gray-700">{m.format(m.prev)}</strong></span>
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-400 w-20 text-right flex-shrink-0">{current.label}</span>
+                            <div className="flex-1 h-7 bg-gray-50 rounded-lg overflow-hidden">
+                              <div className={`h-full ${m.curColor} rounded-lg flex items-center px-3 transition-all`}
+                                style={{ width: `${(m.cur / m.max) * 100}%`, minWidth: m.cur > 0 ? '2rem' : '0' }}>
+                                {m.cur > 0 && <span className="text-white text-xs font-bold whitespace-nowrap">{m.format(m.cur)}</span>}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-400 w-20 text-right flex-shrink-0">{previous.label}</span>
+                            <div className="flex-1 h-7 bg-gray-50 rounded-lg overflow-hidden">
+                              <div className={`h-full ${m.prevColor} rounded-lg flex items-center px-3 transition-all`}
+                                style={{ width: `${(m.prev / m.max) * 100}%`, minWidth: m.prev > 0 ? '2rem' : '0' }}>
+                                {m.prev > 0 && <span className="text-gray-600 text-xs font-medium whitespace-nowrap">{m.format(m.prev)}</span>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 {/* Satışçı Karşılaştırması */}
-                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-100">
-                    <h3 className="font-semibold text-gray-900">Satışçı Analizi</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">{rangeA.label} vs {rangeB.label} · 1. dönem baz alınır</p>
-                  </div>
-                  {memberPerf.length === 0 ? (
-                    <p className="text-sm text-gray-400 text-center py-10">Henüz satışçı yok.</p>
-                  ) : (
+                {teamMembers.length > 0 && (
+                  <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Satışçı Performansı</h3>
+                        <p className="text-xs text-gray-400 mt-0.5">{current.label} vs {previous.label}</p>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-gray-400">
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 bg-indigo-500 rounded-sm" /> {current.label}</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 bg-gray-200 rounded-sm" /> {previous.label}</span>
+                      </div>
+                    </div>
                     <div className="divide-y divide-gray-50">
                       {memberPerf.map((m: any, i: number) => {
-                        const maxSales = Math.max(...memberPerf.map((x: any) => x.salesA), 1)
-                        const salesDiff = m.salesB === 0 ? null : (((m.salesA - m.salesB) / m.salesB) * 100).toFixed(0)
-                        const up = salesDiff !== null && parseFloat(salesDiff) > 0
-                        const down = salesDiff !== null && parseFloat(salesDiff) < 0
+                        const maxSales = Math.max(...memberPerf.map((x: any) => Math.max(x.curSales, x.prevSales)), 1)
+                        const up = m.salesDiff !== null && m.salesDiff > 0
+                        const down = m.salesDiff !== null && m.salesDiff < 0
                         return (
-                          <div key={i} className="px-6 py-4 flex items-center gap-4">
-                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold ${i === 0 ? 'bg-amber-100 text-amber-600' : i === 1 ? 'bg-gray-100 text-gray-500' : i === 2 ? 'bg-orange-50 text-orange-500' : 'bg-gray-50 text-gray-400'}`}>
-                              {i + 1}
-                            </div>
-                            <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                              <span className="text-blue-600 text-xs font-bold">{m.name.charAt(0)}</span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1.5">
+                          <div key={i} className="px-6 py-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold
+                                ${i === 0 ? 'bg-amber-100 text-amber-600' : i === 1 ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 text-gray-400'}`}>
+                                {i + 1}
+                              </div>
+                              <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                                <span className="text-indigo-600 text-xs font-bold">{m.name.charAt(0)}</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-gray-900">{m.name}</p>
-                                <span className="text-xs text-gray-400">{m.branch}</span>
-                                {salesDiff !== null && (
-                                  <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${up ? 'bg-emerald-100 text-emerald-700' : down ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-                                    {up ? '↑' : down ? '↓' : '='} {Math.abs(parseFloat(salesDiff))}%
+                                <p className="text-xs text-gray-400">{m.branch}</p>
+                              </div>
+                              <div className="flex items-center gap-3 flex-shrink-0">
+                                {m.salesDiff !== null && (
+                                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${up ? 'bg-emerald-100 text-emerald-700' : down ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                                    {up ? '↑' : down ? '↓' : '='} %{Math.abs(m.salesDiff).toFixed(0)}
                                   </span>
                                 )}
-                              </div>
-                              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden w-full">
-                                <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(m.salesA / maxSales) * 100}%` }} />
+                                <div className="text-right">
+                                  <p className="text-sm font-bold text-emerald-600">{m.curSales} <span className="text-gray-300 font-normal">/ {m.prevSales}</span></p>
+                                  <p className="text-xs text-gray-400">satış</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-sm font-semibold text-indigo-600">{m.curLeads} <span className="text-gray-300 font-normal">/ {m.prevLeads}</span></p>
+                                  <p className="text-xs text-gray-400">lead</p>
+                                </div>
                               </div>
                             </div>
-                            <div className="flex gap-3 flex-shrink-0">
-                              <div className="text-center">
-                                <p className="text-xs text-indigo-500 font-semibold">{m.leadsA} <span className="text-gray-300">/ {m.leadsB}</span></p>
-                                <p className="text-xs text-gray-400">lead</p>
+                            <div className="space-y-1 ml-14">
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                  <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(m.curSales / maxSales) * 100}%` }} />
+                                </div>
                               </div>
-                              <div className="text-center">
-                                <p className="text-xs text-emerald-600 font-semibold">{m.salesA} <span className="text-gray-300">/ {m.salesB}</span></p>
-                                <p className="text-xs text-gray-400">satış</p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-xs text-amber-600 font-semibold">%{m.convA} <span className="text-gray-300">/ %{m.convB}</span></p>
-                                <p className="text-xs text-gray-400">dönüşüm</p>
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                  <div className="h-full bg-gray-200 rounded-full" style={{ width: `${(m.prevSales / maxSales) * 100}%` }} />
+                                </div>
                               </div>
                             </div>
                           </div>
                         )
                       })}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
+
               </div>
             )
           })()}
