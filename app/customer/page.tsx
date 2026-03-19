@@ -1025,54 +1025,150 @@ const handlePayCommission = async () => {
                     <p className="text-gray-500 text-sm font-medium">Sonuç bulunamadı</p>
                     {(searchQuery || filterStatus !== 'all' || filterDate !== 'all' || filterSource !== 'all') && <button onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterDate('all'); setFilterSource('all') }} className="mt-2 text-xs text-indigo-600 hover:underline">Filtreleri temizle</button>}
                   </div>
-                ) : filteredLeads.map((lead, i) => (
-                  <div key={lead.id} onClick={() => openDetailModal(lead)}
-                    className={`px-5 py-4 flex items-center gap-4 cursor-pointer hover:bg-gray-50/70 transition-colors ${i < filteredLeads.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                    {/* Avatar + kaynak ikonu */}
-                    <div className="relative flex-shrink-0">
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center">
-                        <span className="text-indigo-600 text-sm font-semibold">{(lead.full_name || 'İ').charAt(0)}</span>
+                // ─── BUNU BUL VE DEĞİŞTİR ────────────────────────────────────────────────────
+// leadler-liste sekmesinde şu satırı bul:
+//   ) : filteredLeads.map((lead, i) => (
+//     <div key={lead.id} onClick={() => openDetailModal(lead)}
+//       className={`px-5 py-4 flex items-center gap-4 cursor-pointer ...`}>
+//
+// O bloktan kapanış parantezine kadar olan tüm kısmı sil,
+// yerine aşağıdaki kodu yapıştır:
+// ─────────────────────────────────────────────────────────────────────────────
+
+                ) : filteredLeads.map((lead, i) => {
+                  const assignedMember = teamMembers.find(m => m.user_id === lead.assigned_to)
+                  const daysSinceCreated = Math.floor((Date.now() - new Date(lead.created_at).getTime()) / (1000 * 60 * 60 * 24))
+                  const isStale = daysSinceCreated >= 3 && (lead.status === 'new' || lead.status === 'called')
+                  const hasAppointmentSoon = lead.appointment_at && (() => {
+                    const d = new Date(lead.appointment_at); d.setHours(0,0,0,0)
+                    const diff = Math.floor((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                    return diff >= 0 && diff <= 1
+                  })()
+                  const isAppointmentOverdue = lead.appointment_at && new Date(lead.appointment_at) < new Date() && lead.status === 'appointment_scheduled'
+
+                  return (
+                    <div key={lead.id}
+                      className={`px-5 py-3.5 flex items-start gap-4 cursor-pointer transition-colors group ${i < filteredLeads.length - 1 ? 'border-b border-gray-50' : ''} ${isStale ? 'bg-amber-50/30 hover:bg-amber-50/50' : 'hover:bg-gray-50/70'}`}
+                      onClick={() => openDetailModal(lead)}>
+
+                      {/* Avatar + kaynak ikonu */}
+                      <div className="relative flex-shrink-0 mt-0.5">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center">
+                          <span className="text-indigo-600 text-sm font-semibold">{(lead.full_name || 'İ').charAt(0)}</span>
+                        </div>
+                        <span className="absolute -bottom-1 -right-1 text-xs leading-none">
+                          {lead.source === 'meta_form' ? '🎯' : lead.source === 'whatsapp' ? '💬' : lead.source === 'instagram_dm' ? '📸' : lead.source === 'referral' ? '🤝' : lead.source === 'website' ? '🌐' : '✏️'}
+                        </span>
                       </div>
-                      {/* Kaynak ikonu - sağ alt köşe */}
-                      <span className="absolute -bottom-1 -right-1 text-xs leading-none" title={SOURCE_CONFIG[lead.source]?.label || lead.source}>
-                        {lead.source === 'meta_form' ? '🎯' : lead.source === 'whatsapp' ? '💬' : lead.source === 'instagram_dm' ? '📸' : lead.source === 'referral' ? '🤝' : lead.source === 'website' ? '🌐' : '✏️'}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
-                        <SourceBadge source={lead.source} />
+
+                      {/* Ana bilgi */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className="text-sm font-semibold text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
+                          <SourceBadge source={lead.source} />
+                          {isStale && (
+                            <span className="flex items-center gap-1 text-xs text-amber-600 font-medium bg-amber-100 px-1.5 py-0.5 rounded-md flex-shrink-0">
+                              ⏳ {daysSinceCreated}g
+                            </span>
+                          )}
+                          {hasAppointmentSoon && (
+                            <span className="text-xs text-violet-600 font-medium bg-violet-100 px-1.5 py-0.5 rounded-md flex-shrink-0">
+                              📅 Yakın
+                            </span>
+                          )}
+                          {isAppointmentOverdue && (
+                            <span className="text-xs text-red-500 font-medium bg-red-50 px-1.5 py-0.5 rounded-md flex-shrink-0">
+                              ⚠ Geçti
+                            </span>
+                          )}
+                        </div>
+
+                        {/* İletişim bilgileri */}
+                        <div className="flex items-center gap-3 mb-1">
+                          <a href={`tel:${lead.phone}`} onClick={e => e.stopPropagation()}
+                            className="text-xs text-gray-500 hover:text-indigo-600 transition-colors flex items-center gap-1">
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M9 7.5L7.5 9C3.91 7.59 1.41 5.09 0 1.5L1.5 0l2 2-1 1.5C3.07 4.43 4.57 5.93 5 6.5L6.5 5.5 9 7.5z" fill="currentColor"/></svg>
+                            {lead.phone}
+                          </a>
+                          {lead.email && (
+                            <a href={`mailto:${lead.email}`} onClick={e => e.stopPropagation()}
+                              className="text-xs text-gray-400 hover:text-indigo-600 transition-colors truncate max-w-[160px]">
+                              {lead.email}
+                            </a>
+                          )}
+                        </div>
+
+                        {/* Satışçı & tarih bilgisi */}
+                        <div className="flex items-center gap-3">
+                          {assignedMember ? (
+                            <span className="text-xs text-indigo-500 font-medium flex items-center gap-1">
+                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="3.5" r="2" stroke="currentColor" strokeWidth="1.2"/><path d="M1 9c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                              {assignedMember.profiles?.full_name}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-amber-500 font-medium">⚠ Atanmamış</span>
+                          )}
+                          <span className="text-xs text-gray-300">·</span>
+                          <span className="text-xs text-gray-400">{new Date(lead.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}</span>
+                          {lead.appointment_at && (
+                            <>
+                              <span className="text-xs text-gray-300">·</span>
+                              <span className={`text-xs font-medium ${isAppointmentOverdue ? 'text-red-500' : 'text-violet-600'}`}>
+                                📅 {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Not varsa */}
+                        {lead.note && (
+                          <p className="text-xs text-gray-400 mt-1 truncate max-w-sm">💬 {lead.note}</p>
+                        )}
                       </div>
-                      <p className="text-xs text-gray-400">{lead.phone}{lead.email && ` · ${lead.email}`}</p>
-                      {/* Atanan satışçı */}
-                      {lead.assigned_to ? (
-                        <p className="text-xs text-indigo-500 mt-0.5 font-medium truncate">
-                          👤 {teamMembers.find(m => m.user_id === lead.assigned_to)?.profiles?.full_name || 'Atanmış'}
-                        </p>
-                      ) : (
-                        <p className="text-xs text-amber-500 mt-0.5">⚠ Atanmamış</p>
-                      )}
-                      {lead.appointment_at && <p className="text-xs text-violet-600 mt-0.5 font-medium">📅 {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <div className="text-right hidden sm:block">
-                        {lead.procedure_amount > 0 && <p className="text-sm font-semibold text-emerald-600">₺{lead.procedure_amount.toLocaleString()}</p>}
-                        <p className="text-xs text-gray-400">{new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+
+                      {/* Sağ: badge + tutar + aksiyonlar */}
+                      <div className="flex flex-col items-end gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-1.5">
+                          <Badge status={lead.status} />
+                          {lead.procedure_amount > 0 && (
+                            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">
+                              ₺{lead.procedure_amount.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Quick Action Butonları — sadece hover'da görünür */}
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {/* Ara */}
+                          <a href={`tel:${lead.phone}`}
+                            className="p-1.5 hover:bg-green-50 rounded-lg text-gray-300 hover:text-green-500 transition-colors"
+                            title="Ara">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 9.5L9.5 11.5C6.2 10.1 2.9 6.8 1.5 3.5L3.5 1.5l2.5 2.5L4.5 5.5C5.3 6.7 6.3 7.7 7.5 8.5L9 7l2.5 2.5z" fill="currentColor"/></svg>
+                          </a>
+                          {/* WhatsApp */}
+                          <a href={`https://wa.me/90${lead.phone?.replace(/\D/g, '').replace(/^0/, '')}`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="p-1.5 hover:bg-green-50 rounded-lg text-gray-300 hover:text-green-600 transition-colors"
+                            title="WhatsApp">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1C3.46 1 1 3.46 1 6.5c0 .97.25 1.88.69 2.67L1 12l2.9-.67A5.48 5.48 0 006.5 12C9.54 12 12 9.54 12 6.5S9.54 1 6.5 1zm2.7 7.5c-.11.3-.63.58-.87.61-.21.03-.48.04-.77-.05-.18-.05-.41-.13-.7-.26C5.47 8.32 4.5 7.1 4.42 7s-.6-.8-.6-1.52c0-.72.37-1.07.5-1.22.13-.15.28-.18.38-.18h.27c.09 0 .21-.03.33.25l.43 1.05c.04.09.07.19.01.3L5.5 5.9c-.07.1-.1.13-.05.23.25.45.54.86.9 1.2.42.4.87.67 1.4.85.1.03.2 0 .26-.07l.35-.42c.07-.1.16-.11.26-.07l1 .47c.1.04.17.1.2.19.03.1 0 .31-.1.57z" fill="currentColor"/></svg>
+                          </a>
+                          {/* Düzenle */}
+                          <button onClick={() => { setEditLead({...lead}); setShowEditModal(true) }}
+                            className="p-1.5 hover:bg-blue-50 rounded-lg text-gray-300 hover:text-blue-500 transition-colors"
+                            title="Düzenle">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8.5 1.5l3 3-7 7H1.5v-3l7-7z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </button>
+                          {/* Durum güncelle */}
+                          <button onClick={() => { setSelectedLead(lead); setNewStatus(lead.status) }}
+                            className="p-1.5 hover:bg-indigo-50 rounded-lg text-gray-300 hover:text-indigo-600 transition-colors"
+                            title="Durum güncelle">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 7l3 3L12 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </button>
+                        </div>
                       </div>
-                      <Badge status={lead.status} />
-                      {/* Düzenle */}
-                      <button onClick={e => { e.stopPropagation(); setEditLead({...lead}); setShowEditModal(true) }}
-                        className="p-2 hover:bg-blue-50 rounded-lg text-gray-300 hover:text-blue-500 transition-colors" title="Düzenle">
-                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8.5 1.5l3 3-7 7H1.5v-3l7-7z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </button>
-                      {/* Durum güncelle */}
-                      <button onClick={e => { e.stopPropagation(); setSelectedLead(lead); setNewStatus(lead.status) }}
-                        className="p-2 hover:bg-indigo-50 rounded-lg text-gray-400 hover:text-indigo-600 transition-colors" title="Durum güncelle">
-                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 7l3 3L12 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </button>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
