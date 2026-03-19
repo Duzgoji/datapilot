@@ -328,37 +328,109 @@ export default function AgentPage() {
                 <div className="p-12 text-center">
                   <p className="text-gray-400 text-sm">Sonuç bulunamadı.</p>
                 </div>
+              // ─── BUNU BUL ────────────────────────────────────────────────────────────────
+// leadler sekmesinde şu satırı bul:
+//   ) : filteredLeads.map((lead, i) => {
+//     const avatarColors = [...]
+//     return (
+//     <div key={lead.id} onClick={() => openUpdateModal(lead)}
+//       className={`px-4 py-4 flex items-center gap-3 ...`}>
+//
+// O bloktan kapanış parantezine kadar sil, yerine aşağıdakini yapıştır:
+// ─────────────────────────────────────────────────────────────────────────────
+
               ) : filteredLeads.map((lead, i) => {
+                const daysSinceCreated = Math.floor((Date.now() - new Date(lead.created_at).getTime()) / (1000 * 60 * 60 * 24))
+                const isStale = daysSinceCreated >= 3 && (lead.status === 'new' || lead.status === 'called')
+                const hasAppointmentSoon = lead.appointment_at && (() => {
+                  const d = new Date(lead.appointment_at); d.setHours(0,0,0,0)
+                  const diff = Math.floor((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                  return diff >= 0 && diff <= 1
+                })()
+                const isAppointmentOverdue = lead.appointment_at && new Date(lead.appointment_at) < new Date() && lead.status === 'appointment_scheduled'
                 const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600','from-violet-100 to-purple-100 text-violet-600','from-emerald-100 to-teal-100 text-emerald-600','from-orange-100 to-amber-100 text-orange-600','from-pink-100 to-rose-100 text-rose-600']
                 const ac = avatarColors[i % avatarColors.length]
+
                 return (
-                <div key={lead.id} onClick={() => openUpdateModal(lead)}
-                  className={`px-4 py-4 flex items-center gap-3 cursor-pointer hover:bg-indigo-50/30 transition-colors ${i < filteredLeads.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                  <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${ac} flex items-center justify-center flex-shrink-0`}>
-                    <span className="text-sm font-semibold">{(lead.full_name || 'İ').charAt(0)}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
-                      <span className={`text-xs font-medium px-1.5 py-0.5 rounded-md flex-shrink-0 ${SOURCE_CONFIG[lead.source]?.badge || 'bg-gray-100 text-gray-500'}`}>
-                        {SOURCE_CONFIG[lead.source]?.label || lead.source}
-                      </span>
+                  <div key={lead.id}
+                    className={`px-4 py-3.5 flex items-start gap-3 cursor-pointer transition-colors group ${i < filteredLeads.length - 1 ? 'border-b border-gray-50' : ''} ${isStale ? 'bg-amber-50/30' : 'hover:bg-indigo-50/30'}`}
+                    onClick={() => openUpdateModal(lead)}>
+
+                    {/* Avatar */}
+                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${ac} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <span className="text-sm font-semibold">{(lead.full_name || 'İ').charAt(0)}</span>
                     </div>
-                    <p className="text-xs text-gray-400">{lead.phone}{lead.email && ` · ${lead.email}`}</p>
-                    <p className="text-xs text-gray-300 mt-0.5">{lead.lead_code} · {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
-                    {lead.appointment_at && (
-                      <p className="text-xs text-violet-600 mt-1 font-medium">
-                        📅 {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    )}
-                    {lead.note && <p className="text-xs text-gray-500 mt-1 bg-gray-50 rounded-lg px-2 py-1 truncate">💬 {lead.note}</p>}
+
+                    {/* Bilgi */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                        <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
+                        <span className={`text-xs font-medium px-1.5 py-0.5 rounded-md flex-shrink-0 ${SOURCE_CONFIG[lead.source]?.badge || 'bg-gray-100 text-gray-500'}`}>
+                          {SOURCE_CONFIG[lead.source]?.label || lead.source}
+                        </span>
+                        {isStale && (
+                          <span className="text-xs text-amber-600 font-medium bg-amber-100 px-1.5 py-0.5 rounded-md flex-shrink-0">
+                            ⏳ {daysSinceCreated}g
+                          </span>
+                        )}
+                        {hasAppointmentSoon && (
+                          <span className="text-xs text-violet-600 font-medium bg-violet-100 px-1.5 py-0.5 rounded-md flex-shrink-0">
+                            📅 Yakın
+                          </span>
+                        )}
+                        {isAppointmentOverdue && (
+                          <span className="text-xs text-red-500 font-medium bg-red-50 px-1.5 py-0.5 rounded-md flex-shrink-0">
+                            ⚠ Geçti
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-gray-400">{lead.phone}{lead.email && ` · ${lead.email}`}</p>
+                      <p className="text-xs text-gray-300 mt-0.5">{lead.lead_code} · {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+
+                      {lead.appointment_at && (
+                        <p className={`text-xs mt-1 font-medium ${isAppointmentOverdue ? 'text-red-500' : 'text-violet-600'}`}>
+                          📅 {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      )}
+                      {lead.note && <p className="text-xs text-gray-500 mt-1 bg-gray-50 rounded-lg px-2 py-1 truncate">💬 {lead.note}</p>}
+                    </div>
+
+                    {/* Sağ: badge + quick actions */}
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center gap-1.5">
+                        <Badge status={lead.status} />
+                        {lead.procedure_amount > 0 && (
+                          <span className="text-xs font-bold text-emerald-600">₺{lead.procedure_amount.toLocaleString()}</span>
+                        )}
+                      </div>
+
+                      {/* Quick Actions — hover'da görünür */}
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {/* Ara */}
+                        <a href={`tel:${lead.phone}`}
+                          className="p-1.5 hover:bg-green-50 rounded-lg text-gray-300 hover:text-green-500 transition-colors"
+                          title="Ara">
+                          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 9.5L9.5 11.5C6.2 10.1 2.9 6.8 1.5 3.5L3.5 1.5l2.5 2.5L4.5 5.5C5.3 6.7 6.3 7.7 7.5 8.5L9 7l2.5 2.5z" fill="currentColor"/></svg>
+                        </a>
+                        {/* WhatsApp */}
+                        <a href={`https://wa.me/90${lead.phone?.replace(/\D/g, '').replace(/^0/, '')}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="p-1.5 hover:bg-green-50 rounded-lg text-gray-300 hover:text-green-600 transition-colors"
+                          title="WhatsApp">
+                          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1C3.46 1 1 3.46 1 6.5c0 .97.25 1.88.69 2.67L1 12l2.9-.67A5.48 5.48 0 006.5 12C9.54 12 12 9.54 12 6.5S9.54 1 6.5 1zm2.7 7.5c-.11.3-.63.58-.87.61-.21.03-.48.04-.77-.05-.18-.05-.41-.13-.7-.26C5.47 8.32 4.5 7.1 4.42 7s-.6-.8-.6-1.52c0-.72.37-1.07.5-1.22.13-.15.28-.18.38-.18h.27c.09 0 .21-.03.33.25l.43 1.05c.04.09.07.19.01.3L5.5 5.9c-.07.1-.1.13-.05.23.25.45.54.86.9 1.2.42.4.87.67 1.4.85.1.03.2 0 .26-.07l.35-.42c.07-.1.16-.11.26-.07l1 .47c.1.04.17.1.2.19.03.1 0 .31-.1.57z" fill="currentColor"/></svg>
+                        </a>
+                        {/* Durum güncelle */}
+                        <button onClick={() => openUpdateModal(lead)}
+                          className="p-1.5 hover:bg-indigo-50 rounded-lg text-gray-300 hover:text-indigo-600 transition-colors"
+                          title="Durum güncelle">
+                          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 7l3 3L12 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                    <Badge status={lead.status} />
-                    {lead.procedure_amount > 0 && <span className="text-xs font-semibold text-emerald-600">₺{lead.procedure_amount.toLocaleString()}</span>}
-                  </div>
-                </div>
-              )})}
+                )
+              })}
             </div>
           </div>
         )}
