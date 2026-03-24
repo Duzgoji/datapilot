@@ -1088,7 +1088,6 @@ export default function SuperAdminPage() {
               </div>
             </div>
           )}
-
           {/* ── FATURA ABONELİKLER ── */}
           {activeTab === 'fatura-abonelikler' && (
             <div className="space-y-4">
@@ -1107,17 +1106,19 @@ export default function SuperAdminPage() {
               </div>
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-                  <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <div className="grid grid-cols-6 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     <div className="col-span-2">Firma</div>
                     <div>Plan</div>
-                    <div className="text-right">Aylık</div>
+                    <div className="text-right">Aylık (₺)</div>
+                    <div className="text-right">Şube</div>
                     <div className="text-right">Durum</div>
                   </div>
                 </div>
                 {customers.map((c, i) => {
                   const sub = c.subscriptions?.[0]
+                  const cBranchCount = branches.filter((b: any) => b.owner_id === c.id).length
                   return (
-                    <div key={c.id} className={`px-5 py-3.5 grid grid-cols-5 gap-2 items-center ${i < customers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                    <div key={c.id} className={`px-5 py-3.5 grid grid-cols-6 gap-2 items-center ${i < customers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
                       <div className="col-span-2 flex items-center gap-2 min-w-0">
                         <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
                           <span className="text-indigo-600 text-xs font-bold">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
@@ -1128,20 +1129,54 @@ export default function SuperAdminPage() {
                         </div>
                       </div>
                       <div>
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                          sub?.plan === 'enterprise' ? 'bg-amber-50 text-amber-700' :
-                          sub?.plan === 'pro' ? 'bg-violet-50 text-violet-700' :
-                          sub?.plan === 'starter' ? 'bg-indigo-50 text-indigo-700' :
-                          'bg-gray-100 text-gray-500'
-                        }`}>{sub?.plan || 'trial'}</span>
+                        <select
+                          value={sub?.plan || 'trial'}
+                          onChange={async (e) => {
+                            if (sub?.id) {
+                              await supabase.from('subscriptions').update({ plan: e.target.value }).eq('id', sub.id)
+                            } else {
+                              await supabase.from('subscriptions').insert({ owner_id: c.id, plan: e.target.value, status: 'active', monthly_fee: 0, per_branch_fee: 0 })
+                            }
+                            loadData()
+                          }}
+                          className={`text-xs font-semibold px-2 py-1 rounded-lg border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                            sub?.plan === 'enterprise' ? 'bg-amber-50 text-amber-700' :
+                            sub?.plan === 'pro' ? 'bg-violet-50 text-violet-700' :
+                            sub?.plan === 'starter' ? 'bg-indigo-50 text-indigo-700' :
+                            'bg-gray-100 text-gray-500'
+                          }`}>
+                          <option value="trial">trial</option>
+                          <option value="starter">starter</option>
+                          <option value="pro">pro</option>
+                          <option value="enterprise">enterprise</option>
+                        </select>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-gray-900">₺{(sub?.monthly_fee || 0).toLocaleString()}</p>
+                        <input
+                          type="number"
+                          defaultValue={sub?.monthly_fee || 0}
+                          onBlur={async (e) => {
+                            if (sub?.id) {
+                              await supabase.from('subscriptions').update({ monthly_fee: parseFloat(e.target.value) || 0 }).eq('id', sub.id)
+                              loadData()
+                            }
+                          }}
+                          className="w-20 text-right text-sm font-semibold text-gray-900 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-indigo-500 focus:outline-none transition-colors"
+                        />
                       </div>
                       <div className="text-right">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.is_active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                        <span className="text-sm text-gray-500">{cBranchCount}</span>
+                      </div>
+                      <div className="text-right">
+                        <button
+                          onClick={() => handleToggleActive(c)}
+                          className={`text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
+                            c.is_active !== false
+                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                          }`}>
                           {c.is_active !== false ? 'Aktif' : 'Pasif'}
-                        </span>
+                        </button>
                       </div>
                     </div>
                   )
