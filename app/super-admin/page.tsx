@@ -13,10 +13,15 @@ const menuStructure = [
     ]
   },
   {
+    key: 'reklamcilar', label: 'Reklamcılar', icon: '◇', children: [
+      { key: 'reklamci-listesi', label: 'Reklamcı Listesi' },
+      { key: 'reklamci-ekle', label: 'Reklamcı Ekle' },
+    ]
+  },
+  {
     key: 'kullanicilar', label: 'Kullanıcılar', icon: '◉', children: [
       { key: 'kullanici-listesi', label: 'Tüm Kullanıcılar' },
       { key: 'kullanici-roller', label: 'Roller & İzinler' },
-      { key: 'kullanici-oturumlar', label: 'Oturumlar' },
     ]
   },
   {
@@ -24,19 +29,11 @@ const menuStructure = [
       { key: 'fatura-planlar', label: 'Planlar' },
       { key: 'fatura-abonelikler', label: 'Abonelikler' },
       { key: 'fatura-faturalar', label: 'Faturalar' },
-      { key: 'fatura-kullanim', label: 'Kullanım' },
     ]
   },
   {
     key: 'guvenlik', label: 'Güvenlik', icon: '◐', children: [
       { key: 'guvenlik-loglar', label: 'Denetim Logları' },
-      { key: 'guvenlik-politikalar', label: 'Politikalar' },
-    ]
-  },
-  {
-    key: 'sistem', label: 'Sistem', icon: '◫', children: [
-      { key: 'sistem-durum', label: 'Sistem Durumu' },
-      { key: 'sistem-loglar', label: 'Loglar' },
     ]
   },
   {
@@ -116,8 +113,8 @@ export default function SuperAdminPage() {
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(['firmalar'])
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(['firmalar', 'reklamcilar'])
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   const [customers, setCustomers] = useState<any[]>([])
@@ -126,7 +123,9 @@ export default function SuperAdminPage() {
   const [invoices, setInvoices] = useState<any[]>([])
   const [allUsers, setAllUsers] = useState<any[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
+  const [advertisers, setAdvertisers] = useState<any[]>([])
 
+  // Firma modals
   const [showAddCustomer, setShowAddCustomer] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
   const [showCustomerDetail, setShowCustomerDetail] = useState(false)
@@ -145,7 +144,20 @@ export default function SuperAdminPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [generatingInvoices, setGeneratingInvoices] = useState(false)
 
-  // Onboarding sihirbazı
+  // Reklamcı state
+  const [advName, setAdvName] = useState('')
+  const [advEmail, setAdvEmail] = useState('')
+  const [advPassword, setAdvPassword] = useState('')
+  const [advCompany, setAdvCompany] = useState('')
+  const [advPhone, setAdvPhone] = useState('')
+  const [advMonthlyFee, setAdvMonthlyFee] = useState('990')
+  const [advPerClientFee, setAdvPerClientFee] = useState('0')
+  const [advSaving, setAdvSaving] = useState(false)
+  const [advSuccess, setAdvSuccess] = useState('')
+  const [selectedAdvertiser, setSelectedAdvertiser] = useState<any>(null)
+  const [advSearchQuery, setAdvSearchQuery] = useState('')
+
+  // Onboarding
   const [showOnboardingModal, setShowOnboardingModal] = useState(false)
   const [onboardingStep, setOnboardingStep] = useState(1)
   const [obName, setObName] = useState('')
@@ -162,26 +174,22 @@ export default function SuperAdminPage() {
   const [obCommissionModel, setObCommissionModel] = useState('fixed_rate')
   const [obInviteLink, setObInviteLink] = useState('')
   const [obSaving, setObSaving] = useState(false)
-  const [obCreatedUserId, setObCreatedUserId] = useState('')
 
   const resetOnboarding = () => {
     setOnboardingStep(1); setObName(''); setObEmail(''); setObPassword(''); setObCompany('')
     setObSector(''); setObPhone(''); setObPlan('starter'); setObMonthlyFee('990')
     setObPerBranchFee('0'); setObBranchName(''); setObBranchCity('')
-    setObCommissionModel('fixed_rate'); setObInviteLink(''); setObCreatedUserId('')
+    setObCommissionModel('fixed_rate'); setObInviteLink('')
   }
 
   const handleOnboardingStep1 = () => {
     if (!obName || !obEmail || !obPassword || !obCompany) { alert('Lütfen zorunlu alanları doldurun.'); return }
     setOnboardingStep(2)
   }
-
   const handleOnboardingStep2 = () => setOnboardingStep(3)
-
   const handleOnboardingStep3 = async () => {
     setObSaving(true)
     try {
-      // API route üzerinden oluştur (mevcut super admin oturumunu bozmaz)
       const res = await fetch('/api/create-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -195,14 +203,10 @@ export default function SuperAdminPage() {
       })
       const result = await res.json()
       if (result.error) { alert(result.error); setObSaving(false); return }
-      setObCreatedUserId(result.userId)
-
-      // Davet linki
       const token = Math.random().toString(36).substring(2) + Date.now().toString(36)
       const { data: { user: curUser } } = await supabase.auth.getUser()
       await supabase.from('invitations').insert({ email: obEmail, role: 'customer', token, invited_by: curUser?.id })
       setObInviteLink(`${window.location.origin}/invite?token=${token}`)
-
       await loadData()
       setOnboardingStep(4)
     } catch (err: any) { alert(err.message) }
@@ -236,14 +240,16 @@ export default function SuperAdminPage() {
     setAllUsers(usersData || [])
     const { data: teamMembersData } = await supabase.from('team_members').select('user_id, branch_id')
     setTeamMembers(teamMembersData || [])
+    const { data: advertisersData } = await supabase.from('profiles').select('*, advertiser_clients(*)').eq('role', 'advertiser').order('created_at', { ascending: false })
+    setAdvertisers(advertisersData || [])
     setLoading(false)
   }
 
-  const teamMembersBelongTo = (userId: string, branchIds: string[]) => {
-    return teamMembers.some(tm => tm.user_id === userId && branchIds.includes(tm.branch_id))
-  }
+  const teamMembersBelongTo = (userId: string, branchIds: string[]) =>
+    teamMembers.some(tm => tm.user_id === userId && branchIds.includes(tm.branch_id))
 
-  const toggleMenu = (key: string) => setExpandedMenus(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+  const toggleMenu = (key: string) => setExpandedMenus(prev =>
+    prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
 
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true)
@@ -262,8 +268,8 @@ export default function SuperAdminPage() {
     setSaving(false); loadData()
   }
 
-  const handleToggleActive = async (customer: any) => {
-    await supabase.from('profiles').update({ is_active: !customer.is_active }).eq('id', customer.id); loadData()
+  const handleToggleActive = async (user: any) => {
+    await supabase.from('profiles').update({ is_active: !user.is_active }).eq('id', user.id); loadData()
   }
 
   const handleGenerateInvoices = async () => {
@@ -282,6 +288,34 @@ export default function SuperAdminPage() {
     await supabase.from('invoices').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', invoiceId); loadData()
   }
 
+  const handleAddAdvertiser = async (e: React.FormEvent) => {
+    e.preventDefault(); setAdvSaving(true)
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: advEmail, password: advPassword,
+        options: { data: { full_name: advName, role: 'advertiser' } }
+      })
+      if (error) { alert(error.message); setAdvSaving(false); return }
+      if (data.user) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id, email: advEmail, full_name: advName,
+          role: 'advertiser', company_name: advCompany, phone: advPhone, is_active: true
+        })
+        await supabase.from('advertiser_subscriptions').insert({
+          advertiser_id: data.user.id,
+          monthly_fee: parseFloat(advMonthlyFee) || 0,
+          per_client_fee: parseFloat(advPerClientFee) || 0,
+          status: 'active'
+        })
+        setAdvSuccess(advEmail)
+        setAdvName(''); setAdvEmail(''); setAdvPassword(''); setAdvCompany(''); setAdvPhone('')
+        setAdvMonthlyFee('990'); setAdvPerClientFee('0')
+        loadData()
+      }
+    } catch (err: any) { alert(err.message) }
+    setAdvSaving(false)
+  }
+
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
 
   const resetForm = () => {
@@ -293,6 +327,12 @@ export default function SuperAdminPage() {
     c.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const filteredAdvertisers = advertisers.filter(a =>
+    a.full_name?.toLowerCase().includes(advSearchQuery.toLowerCase()) ||
+    a.company_name?.toLowerCase().includes(advSearchQuery.toLowerCase()) ||
+    a.email?.toLowerCase().includes(advSearchQuery.toLowerCase())
   )
 
   const pendingInvoicesTotal = invoices.filter(i => i.status === 'pending').reduce((sum, i) => sum + (i.total_amount || 0), 0)
@@ -323,54 +363,57 @@ export default function SuperAdminPage() {
     <div className="min-h-screen bg-gray-50 flex" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
       {/* ── SIDEBAR ── */}
-      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-white border-r border-gray-100 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-300 shadow-sm`}>
-        <div className={`flex items-center h-14 border-b border-gray-100 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-xs font-bold">D</span>
-          </div>
-          {!sidebarCollapsed && <span className="font-semibold text-gray-900 text-sm tracking-tight">DataPilot</span>}
-          {!sidebarCollapsed ? (
-            <button onClick={() => setSidebarCollapsed(true)} className="ml-auto text-gray-300 hover:text-gray-500">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-          ) : (
-            <button onClick={() => setSidebarCollapsed(false)} className="text-gray-300 hover:text-gray-500">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-          )}
+      <aside
+        onMouseEnter={() => setSidebarCollapsed(false)}
+        onMouseLeave={() => setSidebarCollapsed(true)}
+        className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-gray-950 border-r border-gray-800 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-200 shadow-xl`}>
+
+        {/* Logo */}
+        <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+          <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
+          {!sidebarCollapsed && <span className="font-semibold text-white text-sm tracking-tight truncate">DataPilot</span>}
         </div>
 
+        {/* Rol badge */}
         {!sidebarCollapsed && (
-          <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-xs text-gray-400 mb-0.5">Rol</p>
-            <span className="text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">Super Admin</span>
+          <div className="px-4 py-3 border-b border-gray-800">
+            <span className="text-xs font-semibold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-full border border-rose-500/20">
+              Super Admin
+            </span>
           </div>
         )}
 
+        {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-2 px-2">
           {menuStructure.map(item => (
             <div key={item.key}>
               <button
                 onClick={() => { if (item.children) toggleMenu(item.key); else setActiveTab(item.key) }}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all mb-0.5 ${
-                  activeTab === item.key && !item.children ? 'bg-indigo-600 text-white font-medium shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  activeTab === item.key && !item.children
+                    ? 'bg-indigo-600 text-white font-medium shadow-lg shadow-indigo-900/50'
+                    : item.key === 'reklamcilar'
+                    ? 'text-amber-400 hover:bg-amber-500/10 hover:text-amber-300'
+                    : 'text-gray-400 hover:bg-white/10 hover:text-white'
                 }`}>
                 <span className="text-base flex-shrink-0">{item.icon}</span>
                 {!sidebarCollapsed && (
                   <>
                     <span className="flex-1 text-left">{item.label}</span>
                     {item.children && (
-                      <svg className={`w-3.5 h-3.5 transition-transform text-gray-400 ${expandedMenus.includes(item.key) ? 'rotate-180' : ''}`} viewBox="0 0 14 14" fill="none"><path d="M4 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <svg className={`w-3.5 h-3.5 transition-transform text-gray-600 ${expandedMenus.includes(item.key) ? 'rotate-90' : ''}`} viewBox="0 0 14 14" fill="none"><path d="M4 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     )}
                   </>
                 )}
               </button>
               {item.children && expandedMenus.includes(item.key) && !sidebarCollapsed && (
-                <div className="ml-3 pl-3 border-l border-gray-100 mb-1">
+                <div className={`ml-3 pl-3 mb-1 border-l ${item.key === 'reklamcilar' ? 'border-amber-800' : 'border-gray-700'}`}>
                   {item.children.map(child => (
                     <button key={child.key} onClick={() => setActiveTab(child.key)}
                       className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all mb-0.5 ${
-                        activeTab === child.key ? 'text-indigo-600 font-medium bg-indigo-50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
+                        activeTab === child.key
+                          ? item.key === 'reklamcilar' ? 'text-amber-400 font-medium bg-amber-500/10' : 'text-indigo-400 font-medium bg-indigo-500/10'
+                          : 'text-gray-500 hover:text-gray-200 hover:bg-white/5'
                       }`}>
                       {child.label}
                     </button>
@@ -381,26 +424,33 @@ export default function SuperAdminPage() {
           ))}
         </nav>
 
-        {!sidebarCollapsed && (
-          <div className="p-3 border-t border-gray-100">
+        {/* Bottom */}
+        {!sidebarCollapsed ? (
+          <div className="p-3 border-t border-gray-800">
             <div className="flex items-center gap-2.5 px-2 py-1.5">
-              <div className="w-7 h-7 rounded-lg bg-rose-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-rose-600 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
+              <div className="w-7 h-7 rounded-lg bg-rose-500/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-rose-400 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-gray-800 truncate">{profile?.full_name}</p>
-                <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
+                <p className="text-xs font-medium text-gray-300 truncate">{profile?.full_name}</p>
+                <p className="text-xs text-gray-600 truncate">{profile?.email}</p>
               </div>
+            </div>
+          </div>
+        ) : (
+          <div className="p-3 border-t border-gray-800">
+            <div className="w-7 h-7 rounded-lg bg-rose-500/20 flex items-center justify-center mx-auto">
+              <span className="text-rose-400 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
             </div>
           </div>
         )}
       </aside>
 
       {/* ── MAIN ── */}
-      <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-60'} flex-1 transition-all duration-300 min-w-0`}>
+      <div className="ml-16 flex-1 transition-all duration-200 min-w-0">
 
         {/* Top bar */}
-        <header className="h-14 bg-white border-b border-gray-100 flex items-center px-6 sticky top-0 z-10">
+        <header className="h-14 bg-white/80 backdrop-blur-sm border-b border-gray-100 flex items-center px-6 sticky top-0 z-10 shadow-sm">
           <div className="flex items-center gap-1.5 text-sm text-gray-400">
             <span>DataPilot</span>
             {getPageTitle().split(' › ').map((part, i, arr) => (
@@ -437,37 +487,39 @@ export default function SuperAdminPage() {
           </div>
         </header>
 
-        <main className="p-6">
+        <main className="p-6" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
 
           {/* ── DASHBOARD ── */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
-              <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-6 text-white relative overflow-hidden">
+              <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-indigo-950 rounded-2xl p-6 text-white relative overflow-hidden">
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-                <div className="flex items-start justify-between">
+                <div className="absolute -right-8 -top-8 w-40 h-40 bg-indigo-500/10 rounded-full" />
+                <div className="flex items-start justify-between relative">
                   <div>
-                    <p className="text-indigo-200 text-sm">Hoş geldin,</p>
+                    <p className="text-gray-400 text-sm">Hoş geldin,</p>
                     <h1 className="text-2xl font-bold mt-0.5">{profile?.full_name}</h1>
-                    <p className="text-indigo-300 text-sm mt-1">Platform genel durumu</p>
+                    <p className="text-gray-500 text-sm mt-1">Platform genel durumu · {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}</p>
                   </div>
-                  <span className="bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full">Super Admin</span>
+                  <span className="bg-rose-500/20 text-rose-400 text-xs font-semibold px-3 py-1.5 rounded-full border border-rose-500/20">Super Admin</span>
                 </div>
-                <div className="flex gap-8 mt-5 pt-5 border-t border-indigo-500/40">
-                  <div><p className="text-3xl font-bold">{customers.length}</p><p className="text-indigo-300 text-xs mt-0.5">Firma</p></div>
-                  <div><p className="text-3xl font-bold">{branches.length}</p><p className="text-indigo-300 text-xs mt-0.5">Şube</p></div>
-                  <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Lead</p></div>
-                  <div><p className="text-3xl font-bold">{allUsers.length}</p><p className="text-indigo-300 text-xs mt-0.5">Kullanıcı</p></div>
+                <div className="flex gap-8 mt-5 pt-5 border-t border-white/10 relative">
+                  <div><p className="text-3xl font-bold">{customers.length}</p><p className="text-gray-500 text-xs mt-0.5">Firma</p></div>
+                  <div><p className="text-3xl font-bold">{advertisers.length}</p><p className="text-amber-400 text-xs mt-0.5">Reklamcı</p></div>
+                  <div><p className="text-3xl font-bold">{branches.length}</p><p className="text-gray-500 text-xs mt-0.5">Şube</p></div>
+                  <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-gray-500 text-xs mt-0.5">Lead</p></div>
+                  <div><p className="text-3xl font-bold">{allUsers.length}</p><p className="text-gray-500 text-xs mt-0.5">Kullanıcı</p></div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: 'Aktif Firma', value: customers.filter(c => c.is_active !== false).length, sub: `${customers.filter(c => c.is_active === false).length} pasif`, color: 'text-indigo-600', bg: 'bg-indigo-50', icon: '◈' },
-                  { label: 'Toplam Lead', value: leads.length, sub: `${leads.filter(l => l.status === 'procedure_done').length} satış`, color: 'text-emerald-600', bg: 'bg-emerald-50', icon: '◎' },
-                  { label: 'Bekleyen Fatura', value: `₺${pendingInvoicesTotal.toLocaleString()}`, sub: `${invoices.filter(i => i.status === 'pending').length} fatura`, color: 'text-amber-600', bg: 'bg-amber-50', icon: '◐' },
-                  { label: 'Tahsil Edilen', value: `₺${paidInvoicesTotal.toLocaleString()}`, sub: 'Bu ay', color: 'text-rose-600', bg: 'bg-rose-50', icon: '◉' },
+                  { label: 'Aktif Firma', value: customers.filter(c => c.is_active !== false).length, sub: `${customers.filter(c => c.is_active === false).length} pasif`, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', icon: '◈' },
+                  { label: 'Reklamcı', value: advertisers.length, sub: `${advertisers.filter(a => a.is_active !== false).length} aktif`, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', icon: '◇' },
+                  { label: 'Bekleyen Fatura', value: `₺${pendingInvoicesTotal.toLocaleString()}`, sub: `${invoices.filter(i => i.status === 'pending').length} fatura`, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100', icon: '◐' },
+                  { label: 'Tahsil Edilen', value: `₺${paidInvoicesTotal.toLocaleString()}`, sub: 'Tüm zamanlar', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', icon: '◉' },
                 ].map(card => (
-                  <div key={card.label} className="bg-white rounded-2xl p-5 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
+                  <div key={card.label} className={`bg-gradient-to-br from-white to-${card.bg.replace('bg-','')} rounded-2xl p-5 border ${card.border} hover:shadow-sm transition-all`}>
                     <div className={`w-9 h-9 ${card.bg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
                     <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
                     <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
@@ -476,29 +528,61 @@ export default function SuperAdminPage() {
                 ))}
               </div>
 
-              {/* Son firmalar */}
-              <div className="bg-white rounded-2xl border border-gray-100">
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-900 text-sm">Son Firmalar</h3>
-                  <button onClick={() => setActiveTab('firma-listesi')} className="text-xs text-indigo-600 font-medium">Tümünü gör →</button>
-                </div>
-                {customers.slice(0, 5).map((c, i) => {
-                  const cBranches = branches.filter(b => b.owner_id === c.id).length
-                  return (
+              <div className="grid grid-cols-2 gap-5">
+                {/* Son firmalar */}
+                <div className="bg-white rounded-2xl border border-gray-100">
+                  <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h3 className="font-semibold text-gray-900 text-sm">Son Firmalar</h3>
+                    <button onClick={() => setActiveTab('firma-listesi')} className="text-xs text-indigo-600 font-medium">Tümü →</button>
+                  </div>
+                  {customers.slice(0, 5).map((c, i) => (
                     <div key={c.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < Math.min(customers.length, 5) - 1 ? 'border-b border-gray-50' : ''}`}>
-                      <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                        <span className="text-indigo-600 font-semibold text-sm">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
+                      <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                        <span className="text-indigo-600 font-semibold text-xs">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{c.company_name || c.full_name}</p>
-                        <p className="text-xs text-gray-400">{c.email} · {cBranches} şube</p>
+                        <p className="text-xs text-gray-400 truncate">{c.email}</p>
                       </div>
-                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${c.is_active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${c.is_active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
                         {c.is_active !== false ? 'Aktif' : 'Pasif'}
                       </span>
                     </div>
-                  )
-                })}
+                  ))}
+                </div>
+
+                {/* Son reklamcılar */}
+                <div className="bg-white rounded-2xl border border-amber-100">
+                  <div className="px-5 py-4 border-b border-amber-100 flex items-center justify-between">
+                    <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
+                      <span className="w-2 h-2 bg-amber-400 rounded-full" />
+                      Reklamcılar
+                    </h3>
+                    <button onClick={() => setActiveTab('reklamci-listesi')} className="text-xs text-amber-600 font-medium">Tümü →</button>
+                  </div>
+                  {advertisers.length === 0 ? (
+                    <div className="p-10 text-center">
+                      <p className="text-gray-400 text-sm">Henüz reklamcı yok.</p>
+                      <button onClick={() => setActiveTab('reklamci-ekle')} className="mt-2 text-xs text-amber-600 font-medium hover:underline">Reklamcı Ekle →</button>
+                    </div>
+                  ) : advertisers.slice(0, 5).map((a, i) => {
+                    const clientCount = a.advertiser_clients?.length || 0
+                    return (
+                      <div key={a.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < Math.min(advertisers.length, 5) - 1 ? 'border-b border-gray-50' : ''}`}>
+                        <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+                          <span className="text-amber-600 font-semibold text-xs">{(a.company_name || a.full_name || 'R').charAt(0)}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{a.company_name || a.full_name}</p>
+                          <p className="text-xs text-gray-400">{clientCount} müşteri</p>
+                        </div>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${a.is_active !== false ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                          {a.is_active !== false ? 'Aktif' : 'Pasif'}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             </div>
           )}
@@ -513,22 +597,19 @@ export default function SuperAdminPage() {
                   Firma Ekle
                 </Btn>
               </div>
-
               <div className="relative">
                 <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
                 <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Firma adı veya e-posta ara..."
                   className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
-
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 {filteredCustomers.length === 0 ? (
                   <div className="p-16 text-center"><p className="text-gray-400 text-sm">Firma bulunamadı.</p></div>
                 ) : filteredCustomers.map((c, i) => {
                   const cBranches = branches.filter(b => b.owner_id === c.id)
-                  const cLeads = leads.filter(l => cBranches.map((b:any) => b.id).includes(l.branch_id)).length
                   const sub = c.subscriptions?.[0]
                   return (
-                    <div key={c.id} className={`px-5 py-4 flex items-center gap-4 ${i < filteredCustomers.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                    <div key={c.id} className={`px-5 py-4 flex items-center gap-4 hover:bg-gray-50/70 transition-colors ${i < filteredCustomers.length - 1 ? 'border-b border-gray-50' : ''}`}>
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center flex-shrink-0">
                         <span className="text-indigo-600 font-bold">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
                       </div>
@@ -538,9 +619,9 @@ export default function SuperAdminPage() {
                           {c.sector && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">{c.sector}</span>}
                         </div>
                         <p className="text-xs text-gray-400">{c.email}</p>
-                        <div className="flex gap-3 mt-1.5">
+                        <div className="flex gap-3 mt-1">
                           <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
-                          {sub && <span className="text-xs text-gray-400">₺{sub.per_branch_fee}/şube · Plan: {sub.plan}</span>}
+                          {sub && <span className="text-xs text-gray-400">₺{sub.monthly_fee}/ay · Plan: {sub.plan}</span>}
                           <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('tr-TR')}</span>
                         </div>
                       </div>
@@ -561,29 +642,160 @@ export default function SuperAdminPage() {
             </div>
           )}
 
-          {/* ── ONBOARDING SİHİRBAZI SEKME ── */}
+          {/* ── ONBOARDING SEKME ── */}
           {activeTab === 'firma-onboarding' && (
             <OnboardingWizard
               step={onboardingStep} setStep={setOnboardingStep}
-              obName={obName} setObName={setObName}
-              obEmail={obEmail} setObEmail={setObEmail}
-              obPassword={obPassword} setObPassword={setObPassword}
-              obCompany={obCompany} setObCompany={setObCompany}
-              obSector={obSector} setObSector={setObSector}
-              obPhone={obPhone} setObPhone={setObPhone}
-              obPlan={obPlan} setObPlan={setObPlan}
-              obMonthlyFee={obMonthlyFee} setObMonthlyFee={setObMonthlyFee}
+              obName={obName} setObName={setObName} obEmail={obEmail} setObEmail={setObEmail}
+              obPassword={obPassword} setObPassword={setObPassword} obCompany={obCompany} setObCompany={setObCompany}
+              obSector={obSector} setObSector={setObSector} obPhone={obPhone} setObPhone={setObPhone}
+              obPlan={obPlan} setObPlan={setObPlan} obMonthlyFee={obMonthlyFee} setObMonthlyFee={setObMonthlyFee}
               obPerBranchFee={obPerBranchFee} setObPerBranchFee={setObPerBranchFee}
               obBranchName={obBranchName} setObBranchName={setObBranchName}
               obBranchCity={obBranchCity} setObBranchCity={setObBranchCity}
               obCommissionModel={obCommissionModel} setObCommissionModel={setObCommissionModel}
               obInviteLink={obInviteLink} obSaving={obSaving}
-              onStep1={handleOnboardingStep1}
-              onStep2={handleOnboardingStep2}
-              onStep3={handleOnboardingStep3}
-              onReset={() => { resetOnboarding(); }}
-              isModal={false}
+              onStep1={handleOnboardingStep1} onStep2={handleOnboardingStep2} onStep3={handleOnboardingStep3}
+              onReset={() => resetOnboarding()} isModal={false}
             />
+          )}
+
+          {/* ── REKLAMCI LİSTESİ ── */}
+          {activeTab === 'reklamci-listesi' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-500">{filteredAdvertisers.length} reklamcı</p>
+                <Btn size="sm" onClick={() => setActiveTab('reklamci-ekle')} className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+                  Reklamcı Ekle
+                </Btn>
+              </div>
+              <div className="relative">
+                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                <input value={advSearchQuery} onChange={e => setAdvSearchQuery(e.target.value)} placeholder="Reklamcı ara..."
+                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+              </div>
+
+              {filteredAdvertisers.length === 0 ? (
+                <div className="bg-white rounded-2xl border border-amber-100 p-16 text-center">
+                  <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">◇</div>
+                  <p className="text-gray-500 text-sm font-medium">Henüz reklamcı yok</p>
+                  <p className="text-gray-400 text-xs mt-1">Reklamcı ekleyerek başlayın</p>
+                  <button onClick={() => setActiveTab('reklamci-ekle')} className="mt-4 text-xs text-amber-600 font-medium hover:underline">Reklamcı Ekle →</button>
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                  {filteredAdvertisers.map((a, i) => {
+                    const clientCount = a.advertiser_clients?.length || 0
+                    const sub = (a as any).advertiser_subscriptions?.[0]
+                    return (
+                      <div key={a.id} className={`px-5 py-4 flex items-center gap-4 hover:bg-amber-50/30 transition-colors ${i < filteredAdvertisers.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center flex-shrink-0">
+                          <span className="text-amber-600 font-bold">{(a.company_name || a.full_name || 'R').charAt(0)}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="text-sm font-semibold text-gray-900 truncate">{a.company_name || a.full_name}</p>
+                            <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full flex-shrink-0 font-medium">Reklamcı</span>
+                          </div>
+                          <p className="text-xs text-gray-400">{a.email}</p>
+                          <div className="flex gap-3 mt-1">
+                            <span className="text-xs text-amber-600 font-medium">{clientCount} müşteri</span>
+                            {sub && <span className="text-xs text-gray-400">₺{sub.monthly_fee}/ay + ₺{sub.per_client_fee}/müşteri</span>}
+                            <span className="text-xs text-gray-400">{new Date(a.created_at).toLocaleDateString('tr-TR')}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button onClick={() => setSelectedAdvertiser(a)}
+                            className="text-xs text-amber-600 font-medium hover:text-amber-700 px-3 py-1.5 hover:bg-amber-50 rounded-lg transition-colors">
+                            Detay
+                          </button>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" checked={a.is_active !== false} onChange={() => handleToggleActive(a)} className="sr-only peer" />
+                            <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-amber-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                          </label>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── REKLAMCI EKLE ── */}
+          {activeTab === 'reklamci-ekle' && (
+            <div className="max-w-lg space-y-5">
+              <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl p-5 text-white relative overflow-hidden">
+                <div className="absolute -right-4 -top-4 w-28 h-28 bg-white/10 rounded-full" />
+                <div className="relative">
+                  <p className="text-amber-100 text-xs mb-1">Reklamcı Paneli</p>
+                  <h2 className="text-lg font-bold">Yeni Reklamcı Ekle</h2>
+                  <p className="text-amber-100 text-sm mt-1">Reklamcı hesabı oluşturun ve fiyatlandırmasını belirleyin.</p>
+                </div>
+              </div>
+
+              {advSuccess && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
+                  <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7l3.5 3.5 7.5-7" stroke="#059669" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-emerald-800">Reklamcı oluşturuldu!</p>
+                    <p className="text-xs text-emerald-600">{advSuccess} hesabı aktif.</p>
+                  </div>
+                  <button onClick={() => setAdvSuccess('')} className="text-emerald-400 hover:text-emerald-600">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                  </button>
+                </div>
+              )}
+
+              <form onSubmit={handleAddAdvertiser} className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Hesap Bilgileri</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                      <Input label="Ad Soyad *" value={advName} onChange={(e: any) => setAdvName(e.target.value)} required placeholder="Ahmet Yılmaz" />
+                    </div>
+                    <Input label="E-posta *" type="email" value={advEmail} onChange={(e: any) => setAdvEmail(e.target.value)} required placeholder="reklamci@email.com" />
+                    <Input label="Şifre *" type="password" value={advPassword} onChange={(e: any) => setAdvPassword(e.target.value)} required placeholder="min. 6 karakter" />
+                    <Input label="Firma/Ajans Adı" value={advCompany} onChange={(e: any) => setAdvCompany(e.target.value)} placeholder="Ajans Adı" />
+                    <Input label="Telefon" value={advPhone} onChange={(e: any) => setAdvPhone(e.target.value)} placeholder="05XX XXX XXXX" />
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Fiyatlandırma</p>
+                  <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-4">
+                    <p className="text-xs text-amber-700 font-medium">💡 Reklamcı gelir modeli</p>
+                    <p className="text-xs text-amber-600 mt-1">Sabit aylık ücret + sisteme eklediği her müşteri başına ayrı ücret alınır.</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Aylık Sabit Ücret (₺)</label>
+                      <input type="number" value={advMonthlyFee} onChange={e => setAdvMonthlyFee(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Müşteri Başı Ücret (₺)</label>
+                      <input type="number" value={advPerClientFee} onChange={e => setAdvPerClientFee(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                    </div>
+                  </div>
+                  <div className="mt-3 bg-gray-50 rounded-xl p-3 flex items-center justify-between">
+                    <p className="text-xs text-gray-500">Örnek hesap (5 müşteri ile):</p>
+                    <p className="text-sm font-bold text-gray-900">
+                      ₺{((parseFloat(advMonthlyFee) || 0) + (parseFloat(advPerClientFee) || 0) * 5).toLocaleString()}/ay
+                    </p>
+                  </div>
+                </div>
+
+                <button type="submit" disabled={advSaving}
+                  className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                  {advSaving ? 'Oluşturuluyor...' : '✓ Reklamcı Hesabı Oluştur'}
+                </button>
+              </form>
+            </div>
           )}
 
           {/* ── FATURALAR ── */}
@@ -591,11 +803,11 @@ export default function SuperAdminPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 {[
-                  { label: 'Bekleyen', value: `₺${pendingInvoicesTotal.toLocaleString()}`, count: invoices.filter(i => i.status === 'pending').length, color: 'text-amber-600', bg: 'bg-amber-50' },
-                  { label: 'Ödendi', value: `₺${paidInvoicesTotal.toLocaleString()}`, count: invoices.filter(i => i.status === 'paid').length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                  { label: 'Toplam', value: `₺${(pendingInvoicesTotal + paidInvoicesTotal).toLocaleString()}`, count: invoices.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                  { label: 'Bekleyen', value: `₺${pendingInvoicesTotal.toLocaleString()}`, count: invoices.filter(i => i.status === 'pending').length, color: 'text-amber-600', bg: 'from-amber-50 to-white', border: 'border-amber-100' },
+                  { label: 'Ödendi', value: `₺${paidInvoicesTotal.toLocaleString()}`, count: invoices.filter(i => i.status === 'paid').length, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100' },
+                  { label: 'Toplam', value: `₺${(pendingInvoicesTotal + paidInvoicesTotal).toLocaleString()}`, count: invoices.length, color: 'text-indigo-600', bg: 'from-indigo-50 to-white', border: 'border-indigo-100' },
                 ].map(card => (
-                  <div key={card.label} className="bg-white rounded-2xl border border-gray-100 p-5">
+                  <div key={card.label} className={`bg-gradient-to-br ${card.bg} rounded-2xl border ${card.border} p-5`}>
                     <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
                     <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
                     <p className="text-xs text-gray-400">{card.count} fatura</p>
@@ -633,16 +845,15 @@ export default function SuperAdminPage() {
             </div>
           )}
 
-          {/* ── KULLANICILAR HİYERARŞİ ── */}
+          {/* ── KULLANICILAR ── */}
           {activeTab === 'kullanici-listesi' && !selectedFirmaUser && (
             <div className="space-y-3">
-              {/* Özet bar */}
               <div className="grid grid-cols-4 gap-3">
                 {[
-                  { label: 'Toplam Firma', value: customers.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                  { label: 'Satışçı', value: allUsers.filter(u => ['team','agent'].includes(u.role)).length, color: 'text-blue-600', bg: 'bg-blue-50' },
-                  { label: 'Aktif', value: allUsers.filter(u => u.is_active !== false).length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                  { label: 'Pasif', value: allUsers.filter(u => u.is_active === false).length, color: 'text-gray-500', bg: 'bg-gray-100' },
+                  { label: 'Toplam Firma', value: customers.length, color: 'text-indigo-600' },
+                  { label: 'Reklamcı', value: advertisers.length, color: 'text-amber-600' },
+                  { label: 'Satışçı', value: allUsers.filter(u => ['team','agent'].includes(u.role)).length, color: 'text-blue-600' },
+                  { label: 'Aktif', value: allUsers.filter(u => u.is_active !== false).length, color: 'text-emerald-600' },
                 ].map(c => (
                   <div key={c.label} className="bg-white rounded-xl border border-gray-100 px-4 py-3">
                     <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
@@ -651,56 +862,24 @@ export default function SuperAdminPage() {
                 ))}
               </div>
 
-              {/* Admin kullanıcılar */}
-              {allUsers.filter(u => u.role === 'super_admin').length > 0 && (
-                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                  <div className="px-5 py-3 bg-rose-50 border-b border-rose-100 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-rose-400 rounded-full" />
-                    <p className="text-xs font-semibold text-rose-700">Platform Adminleri</p>
-                  </div>
-                  {allUsers.filter(u => u.role === 'super_admin').map((u, i, arr) => (
-                    <div key={u.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                      <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center flex-shrink-0">
-                        <span className="text-rose-600 text-xs font-bold">{(u.full_name || u.email || 'A').charAt(0)}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{u.full_name || '-'}</p>
-                        <p className="text-xs text-gray-400">{u.email}</p>
-                      </div>
-                      <span className="text-xs bg-rose-50 text-rose-600 font-medium px-2 py-0.5 rounded-full">Super Admin</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Firmalar + bağlı kullanıcılar */}
               <div className="space-y-2">
                 {customers.map(customer => {
                   const cBranches = branches.filter(b => b.owner_id === customer.id)
                   const branchIds = cBranches.map(b => b.id)
-                  const cMembers = allUsers.filter(u =>
-                    ['team', 'agent'].includes(u.role) && teamMembersBelongTo(u.id, branchIds)
-                  )
+                  const cMembers = allUsers.filter(u => ['team', 'agent'].includes(u.role) && teamMembersBelongTo(u.id, branchIds))
                   const cLeads = leads.filter(l => branchIds.includes(l.branch_id))
-                  const cSales = cLeads.filter(l => l.status === 'procedure_done')
-                  const cRevenue = cSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+                  const cRevenue = cLeads.filter(l => l.status === 'procedure_done').reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
 
                   return (
                     <div key={customer.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                      {/* Firma header — tıklanabilir */}
-                      <button
-                        onClick={() => setSelectedFirmaUser(customer)}
+                      <button onClick={() => setSelectedFirmaUser(customer)}
                         className="w-full px-5 py-4 flex items-center gap-4 hover:bg-gray-50/70 transition-colors text-left">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center flex-shrink-0">
                           <span className="text-indigo-600 font-bold">{(customer.company_name || customer.full_name || 'F').charAt(0)}</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <p className="text-sm font-semibold text-gray-900">{customer.company_name || customer.full_name}</p>
-                            {customer.sector && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{customer.sector}</span>}
-                          </div>
-                          <p className="text-xs text-gray-400">{customer.email}</p>
-                          <div className="flex gap-3 mt-1.5">
+                          <p className="text-sm font-semibold text-gray-900">{customer.company_name || customer.full_name}</p>
+                          <div className="flex gap-3 mt-1">
                             <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
                             <span className="text-xs text-blue-600 font-medium">{cMembers.length} satışçı</span>
                             <span className="text-xs text-gray-400">{cLeads.length} lead</span>
@@ -714,8 +893,6 @@ export default function SuperAdminPage() {
                           <svg className="text-gray-300" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                         </div>
                       </button>
-
-                      {/* Satışçılar — firma altında özet */}
                       {cMembers.length > 0 && (
                         <div className="border-t border-gray-50 px-5 py-2 bg-gray-50/50 flex gap-2 flex-wrap">
                           {cMembers.slice(0, 4).map(m => (
@@ -734,7 +911,7 @@ export default function SuperAdminPage() {
             </div>
           )}
 
-          {/* ── FİRMA DETAY — KULLANICI HİYERARŞİ ── */}
+          {/* ── FİRMA DETAY ── */}
           {activeTab === 'kullanici-listesi' && selectedFirmaUser && (() => {
             const customer = selectedFirmaUser
             const cBranches = branches.filter(b => b.owner_id === customer.id)
@@ -743,39 +920,29 @@ export default function SuperAdminPage() {
             const cSales = cLeads.filter((l: any) => l.status === 'procedure_done')
             const cRevenue = cSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
             const cMembers = allUsers.filter(u => ['team', 'agent'].includes(u.role) && teamMembersBelongTo(u.id, branchIds))
-
             const filteredMembers = firmaUserFilter === 'all' ? cMembers
               : firmaUserFilter === 'active' ? cMembers.filter(m => m.is_active !== false)
               : cMembers.filter(m => m.is_active === false)
 
             return (
               <div className="space-y-4">
-                {/* Geri butonu */}
                 <button onClick={() => { setSelectedFirmaUser(null); setFirmaUserFilter('all') }}
                   className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  Tüm Firmalar
+                  Tüm Kullanıcılar
                 </button>
-
-                {/* Firma başlık */}
                 <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-5 text-white relative overflow-hidden">
                   <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 relative">
                     <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
                       <span className="text-white text-xl font-bold">{(customer.company_name || customer.full_name || 'F').charAt(0)}</span>
                     </div>
                     <div>
                       <h2 className="text-lg font-bold">{customer.company_name || customer.full_name}</h2>
-                      <p className="text-indigo-200 text-xs">{customer.email}{customer.sector && ` · ${customer.sector}`}</p>
-                    </div>
-                    <div className="ml-auto">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" checked={customer.is_active !== false} onChange={() => handleToggleActive(customer)} className="sr-only peer" />
-                        <div className="w-10 h-6 bg-white/30 rounded-full peer peer-checked:bg-white transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:bg-indigo-600 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                      </label>
+                      <p className="text-indigo-200 text-xs">{customer.email}</p>
                     </div>
                   </div>
-                  <div className="flex gap-6 mt-4 pt-4 border-t border-indigo-500/40">
+                  <div className="flex gap-6 mt-4 pt-4 border-t border-indigo-500/40 relative">
                     <div><p className="text-2xl font-bold">{cBranches.length}</p><p className="text-indigo-300 text-xs mt-0.5">Şube</p></div>
                     <div><p className="text-2xl font-bold">{cMembers.length}</p><p className="text-indigo-300 text-xs mt-0.5">Satışçı</p></div>
                     <div><p className="text-2xl font-bold">{cLeads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Lead</p></div>
@@ -784,38 +951,6 @@ export default function SuperAdminPage() {
                   </div>
                 </div>
 
-                {/* Şubeler */}
-                <div className="bg-white rounded-2xl border border-gray-100">
-                  <div className="px-5 py-3.5 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-900">Şubeler ({cBranches.length})</p>
-                  </div>
-                  {cBranches.length === 0 ? (
-                    <p className="text-xs text-gray-400 text-center py-8">Şube yok.</p>
-                  ) : cBranches.map((branch: any, i: number) => {
-                    const bLeads = cLeads.filter((l: any) => l.branch_id === branch.id)
-                    const bSales = bLeads.filter((l: any) => l.status === 'procedure_done').length
-                    return (
-                      <div key={branch.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < cBranches.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                          <span className="text-indigo-600 text-xs font-bold">{branch.branch_name?.charAt(0)}</span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{branch.branch_name}</p>
-                          <div className="flex gap-3 mt-0.5">
-                            <span className="text-xs text-gray-400">{bLeads.length} lead</span>
-                            <span className="text-xs text-emerald-600">{bSales} satış</span>
-                            <span className="text-xs text-gray-400">%{branch.commission_value} komisyon</span>
-                          </div>
-                        </div>
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${branch.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
-                          {branch.is_active ? 'Aktif' : 'Pasif'}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Satışçılar */}
                 <div className="bg-white rounded-2xl border border-gray-100">
                   <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
                     <p className="text-sm font-semibold text-gray-900">Satışçılar ({cMembers.length})</p>
@@ -833,57 +968,29 @@ export default function SuperAdminPage() {
                   ) : filteredMembers.map((member: any, i: number) => {
                     const mLeads = cLeads.filter((l: any) => l.assigned_to === member.id)
                     const mSales = mLeads.filter((l: any) => l.status === 'procedure_done')
-                    const mRevenue = mSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
-                    const conversion = mLeads.length > 0 ? ((mSales.length / mLeads.length) * 100).toFixed(0) : '0'
                     return (
-                      <div key={member.id} className={`px-5 py-4 flex items-center gap-4 ${i < filteredMembers.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center flex-shrink-0">
+                      <div key={member.id} className={`px-5 py-3.5 flex items-center gap-4 ${i < filteredMembers.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                        <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
                           <span className="text-blue-600 font-semibold text-sm">{(member.full_name || 'U').charAt(0)}</span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900">{member.full_name || '-'}</p>
                           <p className="text-xs text-gray-400">{member.email}</p>
-                          <div className="flex gap-3 mt-1.5">
+                          <div className="flex gap-3 mt-1">
                             <span className="text-xs text-blue-600 font-medium">{mLeads.length} lead</span>
                             <span className="text-xs text-emerald-600 font-medium">{mSales.length} satış</span>
-                            <span className="text-xs text-gray-400">%{conversion} dönüşüm</span>
-                            {mRevenue > 0 && <span className="text-xs text-gray-500">₺{mRevenue.toLocaleString()}</span>}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${member.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
-                            {member.is_active !== false ? 'Aktif' : 'Pasif'}
-                          </span>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" checked={member.is_active !== false}
-                              onChange={async () => { await supabase.from('profiles').update({ is_active: !member.is_active }).eq('id', member.id); loadData() }}
-                              className="sr-only peer" />
-                            <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                          </label>
-                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                          <input type="checkbox" checked={member.is_active !== false}
+                            onChange={async () => { await supabase.from('profiles').update({ is_active: !member.is_active }).eq('id', member.id); loadData() }}
+                            className="sr-only peer" />
+                          <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                        </label>
                       </div>
                     )
                   })}
                 </div>
-
-                {/* Abonelik */}
-                {customer.subscriptions?.[0] && (
-                  <div className="bg-white rounded-2xl border border-gray-100 p-5">
-                    <p className="text-sm font-semibold text-gray-900 mb-3">Abonelik</p>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { label: 'Plan', value: customer.subscriptions[0].plan, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                        { label: 'Aylık Ücret', value: `₺${customer.subscriptions[0].monthly_fee}`, color: 'text-gray-800', bg: 'bg-gray-50' },
-                        { label: 'Şube Başı', value: `₺${customer.subscriptions[0].per_branch_fee}`, color: 'text-gray-800', bg: 'bg-gray-50' },
-                      ].map(item => (
-                        <div key={item.label} className={`${item.bg} rounded-xl p-3.5`}>
-                          <p className="text-xs text-gray-400 mb-1">{item.label}</p>
-                          <p className={`text-sm font-semibold ${item.color}`}>{item.value}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             )
           })()}
@@ -892,7 +999,7 @@ export default function SuperAdminPage() {
           {activeTab === 'destek-impersonation' && (
             <div className="space-y-4">
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-                <div className="text-amber-500 flex-shrink-0 mt-0.5">⚠️</div>
+                <span className="text-amber-500 flex-shrink-0 mt-0.5">⚠️</span>
                 <div>
                   <p className="text-sm font-semibold text-amber-800">Dikkat</p>
                   <p className="text-xs text-amber-700 mt-0.5">Kimlik taklidi yetkisi yalnızca destek amaçlıdır. Tüm işlemler loglanır.</p>
@@ -913,7 +1020,7 @@ export default function SuperAdminPage() {
           )}
 
           {/* ── BOŞLAR ── */}
-          {!['dashboard', 'firma-listesi', 'fatura-faturalar', 'kullanici-listesi', 'destek-impersonation'].includes(activeTab) && (
+          {!['dashboard','firma-listesi','firma-onboarding','reklamci-listesi','reklamci-ekle','fatura-faturalar','kullanici-listesi','destek-impersonation'].includes(activeTab) && (
             <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
               <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">◌</div>
               <p className="text-gray-500 text-sm font-medium">{getPageTitle()}</p>
@@ -924,52 +1031,48 @@ export default function SuperAdminPage() {
         </main>
       </div>
 
-      {/* ── FİRMA EKLE MODAL ── */}
-      <Modal open={showAddCustomer} onClose={resetForm} title="Yeni Firma Ekle" subtitle="Müşteri hesabı oluşturun" size="lg">
-        {inviteLink ? (
+      {/* ── REKLAMCI DETAY MODAL ── */}
+      <Modal open={!!selectedAdvertiser} onClose={() => setSelectedAdvertiser(null)}
+        title={selectedAdvertiser?.company_name || selectedAdvertiser?.full_name || 'Reklamcı Detayı'}
+        subtitle={selectedAdvertiser?.email} size="lg">
+        {selectedAdvertiser && (
           <div className="p-6 space-y-4">
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-              <p className="text-sm font-semibold text-emerald-800 mb-1">✓ Firma oluşturuldu!</p>
-              <p className="text-xs text-emerald-700">Davet linki:</p>
-              <p className="text-xs font-mono bg-white border border-emerald-200 rounded-lg px-3 py-2 mt-2 break-all">{inviteLink}</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Ad Soyad', value: selectedAdvertiser.full_name },
+                { label: 'E-posta', value: selectedAdvertiser.email },
+                { label: 'Telefon', value: selectedAdvertiser.phone || '-' },
+                { label: 'Kayıt Tarihi', value: new Date(selectedAdvertiser.created_at).toLocaleDateString('tr-TR') },
+              ].map(item => (
+                <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
+                  <p className="text-xs text-gray-400 mb-1">{item.label}</p>
+                  <p className="text-sm font-medium text-gray-900">{item.value}</p>
+                </div>
+              ))}
             </div>
-            <div className="flex gap-3">
-              <Btn variant="secondary" className="flex-1" onClick={() => navigator.clipboard.writeText(inviteLink)}>Kopyala</Btn>
-              <Btn className="flex-1" onClick={resetForm}>Tamam</Btn>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleAddCustomer} className="p-6 space-y-4">
-            <div>
-              <p className="text-xs font-medium text-gray-500 mb-2">Kullanıcı Tipi</p>
-              <div className="grid grid-cols-2 gap-2">
-                {[{ key: 'customer', label: '🏢 Müşteri Firma' }, { key: 'advertiser', label: '📣 Reklamcı' }].map(t => (
-                  <button key={t.key} type="button" onClick={() => setNewUserType(t.key)}
-                    className={`py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${newUserType === t.key ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
-                    {t.label}
-                  </button>
-                ))}
+            <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+              <p className="text-xs font-semibold text-amber-700 mb-3">Abonelik</p>
+              <div className="flex gap-6">
+                <div>
+                  <p className="text-xs text-amber-500">Müşteri Sayısı</p>
+                  <p className="text-lg font-bold text-amber-700">{selectedAdvertiser.advertiser_clients?.length || 0}</p>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input label="Ad Soyad *" value={newName} onChange={(e: any) => setNewName(e.target.value)} required placeholder="Ad Soyad" />
-              <Input label="E-posta *" type="email" value={newEmail} onChange={(e: any) => setNewEmail(e.target.value)} required placeholder="firma@email.com" />
-              <Input label="Şifre *" type="password" value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)} required placeholder="En az 6 karakter" />
-              <Input label="Firma Adı" value={newCompany} onChange={(e: any) => setNewCompany(e.target.value)} placeholder="Firma Adı A.Ş." />
-              <Input label="Sektör" value={newSector} onChange={(e: any) => setNewSector(e.target.value)} placeholder="Estetik, Emlak..." />
-              <Input label="Aylık Sabit Ücret (₺)" type="number" value={newMonthlyFee} onChange={(e: any) => setNewMonthlyFee(e.target.value)} placeholder="0" />
-              <Input label="Şube Başı Ücret (₺)" type="number" value={newPerBranchFee} onChange={(e: any) => setNewPerBranchFee(e.target.value)} placeholder="0" />
+            <div className="flex gap-3">
+              <Btn variant="danger" className="flex-1" onClick={() => { handleToggleActive(selectedAdvertiser); setSelectedAdvertiser(null) }}>
+                {selectedAdvertiser.is_active !== false ? 'Pasife Al' : 'Aktife Al'}
+              </Btn>
+              <Btn className="flex-1" onClick={() => setSelectedAdvertiser(null)}>Kapat</Btn>
             </div>
-            <div className="flex gap-3 pt-2">
-              <Btn type="button" variant="secondary" className="flex-1" onClick={resetForm}>İptal</Btn>
-              <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Oluşturuluyor...' : 'Firma Oluştur'}</Btn>
-            </div>
-          </form>
+          </div>
         )}
       </Modal>
 
       {/* ── FİRMA DETAY MODAL ── */}
-      <Modal open={showCustomerDetail} onClose={() => setShowCustomerDetail(false)} title={selectedCustomer?.company_name || selectedCustomer?.full_name || 'Firma Detayı'} subtitle={selectedCustomer?.email} size="lg">
+      <Modal open={showCustomerDetail} onClose={() => setShowCustomerDetail(false)}
+        title={selectedCustomer?.company_name || selectedCustomer?.full_name || 'Firma Detayı'}
+        subtitle={selectedCustomer?.email} size="lg">
         {selectedCustomer && (
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -1002,22 +1105,6 @@ export default function SuperAdminPage() {
                 </div>
               </div>
             )}
-            <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Şubeler ({branches.filter(b => b.owner_id === selectedCustomer.id).length})</p>
-              {branches.filter(b => b.owner_id === selectedCustomer.id).length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-4">Şube yok.</p>
-              ) : branches.filter(b => b.owner_id === selectedCustomer.id).map(branch => (
-                <div key={branch.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 mb-2">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{branch.branch_name}</p>
-                    <p className="text-xs text-gray-400">{branch.contact_name}</p>
-                  </div>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${branch.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
-                    {branch.is_active ? 'Aktif' : 'Pasif'}
-                  </span>
-                </div>
-              ))}
-            </div>
             <div className="flex gap-3">
               <Btn variant="danger" className="flex-1" onClick={() => { handleToggleActive(selectedCustomer); setShowCustomerDetail(false) }}>
                 {selectedCustomer.is_active !== false ? 'Pasife Al' : 'Aktife Al'}
@@ -1046,22 +1133,16 @@ export default function SuperAdminPage() {
             <div className="overflow-y-auto flex-1">
               <OnboardingWizard
                 step={onboardingStep} setStep={setOnboardingStep}
-                obName={obName} setObName={setObName}
-                obEmail={obEmail} setObEmail={setObEmail}
-                obPassword={obPassword} setObPassword={setObPassword}
-                obCompany={obCompany} setObCompany={setObCompany}
-                obSector={obSector} setObSector={setObSector}
-                obPhone={obPhone} setObPhone={setObPhone}
-                obPlan={obPlan} setObPlan={setObPlan}
-                obMonthlyFee={obMonthlyFee} setObMonthlyFee={setObMonthlyFee}
+                obName={obName} setObName={setObName} obEmail={obEmail} setObEmail={setObEmail}
+                obPassword={obPassword} setObPassword={setObPassword} obCompany={obCompany} setObCompany={setObCompany}
+                obSector={obSector} setObSector={setObSector} obPhone={obPhone} setObPhone={setObPhone}
+                obPlan={obPlan} setObPlan={setObPlan} obMonthlyFee={obMonthlyFee} setObMonthlyFee={setObMonthlyFee}
                 obPerBranchFee={obPerBranchFee} setObPerBranchFee={setObPerBranchFee}
                 obBranchName={obBranchName} setObBranchName={setObBranchName}
                 obBranchCity={obBranchCity} setObBranchCity={setObBranchCity}
                 obCommissionModel={obCommissionModel} setObCommissionModel={setObCommissionModel}
                 obInviteLink={obInviteLink} obSaving={obSaving}
-                onStep1={handleOnboardingStep1}
-                onStep2={handleOnboardingStep2}
-                onStep3={handleOnboardingStep3}
+                onStep1={handleOnboardingStep1} onStep2={handleOnboardingStep2} onStep3={handleOnboardingStep3}
                 onReset={() => { resetOnboarding(); setShowOnboardingModal(false) }}
                 isModal={true}
               />
@@ -1074,7 +1155,7 @@ export default function SuperAdminPage() {
   )
 }
 
-// ─── ONBOARDING WIZARD COMPONENT ──────────────────────────────────────────────
+// ─── ONBOARDING WIZARD ────────────────────────────────────────────────────────
 
 function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmail, obPassword, setObPassword, obCompany, setObCompany, obSector, setObSector, obPhone, setObPhone, obPlan, setObPlan, obMonthlyFee, setObMonthlyFee, obPerBranchFee, setObPerBranchFee, obBranchName, setObBranchName, obBranchCity, setObBranchCity, obCommissionModel, setObCommissionModel, obInviteLink, obSaving, onStep1, onStep2, onStep3, onReset, isModal }: any) {
 
@@ -1086,39 +1167,30 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
   ]
 
   const SECTORS = ['Estetik Klinik', 'Diş Kliniği', 'Saç Ekim', 'Güzellik Merkezi', 'Medikal Estetik', 'Dermatoloji', 'Ortopedi', 'Göz Hastalıkları', 'Diğer']
-
   const stepLabels = ['Firma Bilgileri', 'Plan & Fiyat', 'İlk Şube', 'Tamamlandı']
-
   const wrapClass = isModal ? 'p-6 space-y-5' : 'space-y-5'
 
   return (
     <div className={isModal ? '' : 'max-w-lg'}>
-      {/* Progress steps */}
       <div className={isModal ? 'px-6 pt-4' : 'mb-6'}>
         <div className="flex items-center gap-0">
           {stepLabels.map((label, i) => {
-            const idx = i + 1
-            const done = step > idx
-            const active = step === idx
+            const idx = i + 1; const done = step > idx; const active = step === idx
             return (
               <div key={idx} className="flex items-center flex-1 last:flex-none">
                 <div className="flex flex-col items-center">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all
-                    ${done ? 'bg-emerald-500 text-white' : active ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${done ? 'bg-emerald-500 text-white' : active ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
                     {done ? '✓' : idx}
                   </div>
                   <p className={`text-xs mt-1 whitespace-nowrap ${active ? 'text-indigo-600 font-medium' : done ? 'text-emerald-600' : 'text-gray-400'}`}>{label}</p>
                 </div>
-                {i < stepLabels.length - 1 && (
-                  <div className={`flex-1 h-0.5 mx-1 mb-4 ${done ? 'bg-emerald-400' : 'bg-gray-100'}`} />
-                )}
+                {i < stepLabels.length - 1 && <div className={`flex-1 h-0.5 mx-1 mb-4 ${done ? 'bg-emerald-400' : 'bg-gray-100'}`} />}
               </div>
             )
           })}
         </div>
       </div>
 
-      {/* Adım 1: Firma & Kullanıcı */}
       {step === 1 && (
         <div className={wrapClass}>
           <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
@@ -1163,15 +1235,12 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
               </div>
             </div>
           </div>
-          <button onClick={onStep1}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
-            Devam Et
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <button onClick={onStep1} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+            Devam Et <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
         </div>
       )}
 
-      {/* Adım 2: Plan */}
       {step === 2 && (
         <div className={wrapClass}>
           <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
@@ -1207,17 +1276,12 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
             </div>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => setStep(1)} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
-              ← Geri
-            </button>
-            <button onClick={onStep2} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
-              Devam Et →
-            </button>
+            <button onClick={() => setStep(1)} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">← Geri</button>
+            <button onClick={onStep2} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-semibold transition-colors">Devam Et →</button>
           </div>
         </div>
       )}
 
-      {/* Adım 3: İlk Şube */}
       {step === 3 && (
         <div className={wrapClass}>
           <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
@@ -1248,9 +1312,7 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
             </div>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => setStep(2)} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
-              ← Geri
-            </button>
+            <button onClick={() => setStep(2)} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">← Geri</button>
             <button onClick={onStep3} disabled={obSaving}
               className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
               {obSaving ? 'Oluşturuluyor...' : '✓ Firmayı Oluştur'}
@@ -1259,7 +1321,6 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
         </div>
       )}
 
-      {/* Adım 4: Tamamlandı */}
       {step === 4 && (
         <div className={isModal ? 'p-6 space-y-5' : 'space-y-5'}>
           <div className="text-center py-6">
@@ -1269,7 +1330,6 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
             <h3 className="text-lg font-bold text-gray-900">Firma Oluşturuldu! 🎉</h3>
             <p className="text-sm text-gray-400 mt-1">{obCompany} başarıyla platforma eklendi.</p>
           </div>
-
           <div className="bg-gray-50 rounded-xl p-4 space-y-2">
             {[
               { label: 'Firma', value: obCompany },
@@ -1283,24 +1343,20 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
               </div>
             ))}
           </div>
-
           {obInviteLink && (
             <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
               <p className="text-xs font-semibold text-indigo-700 mb-2">🔗 Davet Linki</p>
               <div className="flex items-center gap-2">
                 <input readOnly value={obInviteLink}
                   className="flex-1 text-xs bg-white border border-indigo-200 rounded-lg px-3 py-2 text-gray-600 truncate focus:outline-none" />
-                <button onClick={() => { navigator.clipboard.writeText(obInviteLink) }}
-                  className="px-3 py-2 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap font-medium">
+                <button onClick={() => navigator.clipboard.writeText(obInviteLink)}
+                  className="px-3 py-2 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 transition-colors font-medium">
                   Kopyala
                 </button>
               </div>
-              <p className="text-xs text-indigo-400 mt-2">Firmaya bu linki gönderin, şifrelerini bu linkten ayarlayabilirler.</p>
             </div>
           )}
-
-          <button onClick={onReset}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
+          <button onClick={onReset} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
             {isModal ? 'Kapat' : 'Yeni Firma Ekle'}
           </button>
         </div>
