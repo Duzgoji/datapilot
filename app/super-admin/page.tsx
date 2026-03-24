@@ -155,6 +155,11 @@ export default function SuperAdminPage() {
   const [advSaving, setAdvSaving] = useState(false)
   const [advSuccess, setAdvSuccess] = useState('')
   const [selectedAdvertiser, setSelectedAdvertiser] = useState<any>(null)
+  const [advDetailTab, setAdvDetailTab] = useState('genel')
+  const [advInvoiceAmount, setAdvInvoiceAmount] = useState('')
+  const [advInvoiceNote, setAdvInvoiceNote] = useState('')
+  const [advInvoiceDue, setAdvInvoiceDue] = useState('')
+  const [advInvoiceSaving, setAdvInvoiceSaving] = useState(false)
   const [advSearchQuery, setAdvSearchQuery] = useState('')
 
   // Onboarding
@@ -660,7 +665,7 @@ export default function SuperAdminPage() {
             />
           )}
 
-          {/* ── REKLAMCI LİSTESİ ── */}
+       {/* ── REKLAMCI LİSTESİ ── */}
           {activeTab === 'reklamci-listesi' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -676,45 +681,91 @@ export default function SuperAdminPage() {
                   className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
               </div>
 
+              {/* Platform Özet */}
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { label: 'Toplam Reklamcı', value: advertisers.length, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
+                  { label: 'Aktif', value: advertisers.filter(a => a.is_active !== false).length, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+                  { label: 'Toplam Müşteri', value: advertisers.reduce((s, a) => s + (a.advertiser_clients?.length || 0), 0), color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
+                  { label: 'Aylık Gelir', value: `₺${advertisers.reduce((s, a) => { const sub = (a as any).advertiser_subscriptions?.[0]; return s + (sub?.monthly_fee || 0) + ((a.advertiser_clients?.length || 0) * (sub?.per_client_fee || 0)) }, 0).toLocaleString()}`, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
+                ].map(card => (
+                  <div key={card.label} className={`${card.bg} border ${card.border} rounded-2xl p-4`}>
+                    <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
+                    <p className="text-xs text-gray-500 mt-1">{card.label}</p>
+                  </div>
+                ))}
+              </div>
+
               {filteredAdvertisers.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-amber-100 p-16 text-center">
                   <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">◇</div>
                   <p className="text-gray-500 text-sm font-medium">Henüz reklamcı yok</p>
-                  <p className="text-gray-400 text-xs mt-1">Reklamcı ekleyerek başlayın</p>
                   <button onClick={() => setActiveTab('reklamci-ekle')} className="mt-4 text-xs text-amber-600 font-medium hover:underline">Reklamcı Ekle →</button>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                  {filteredAdvertisers.map((a, i) => {
+                <div className="space-y-3">
+                  {filteredAdvertisers.map((a) => {
                     const clientCount = a.advertiser_clients?.length || 0
                     const sub = (a as any).advertiser_subscriptions?.[0]
+                    const monthlyIncome = (sub?.monthly_fee || 0) + clientCount * (sub?.per_client_fee || 0)
+                    const advInvoices = (invoices as any[]).filter(inv => inv.owner_id === a.id)
+                    const pendingAdv = advInvoices.filter(inv => inv.status === 'pending').reduce((s: number, inv: any) => s + (inv.total_amount || 0), 0)
+                    const paidAdv = advInvoices.filter(inv => inv.status === 'paid').reduce((s: number, inv: any) => s + (inv.total_amount || 0), 0)
+
                     return (
-                      <div key={a.id} className={`px-5 py-4 flex items-center gap-4 hover:bg-amber-50/30 transition-colors ${i < filteredAdvertisers.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center flex-shrink-0">
-                          <span className="text-amber-600 font-bold">{(a.company_name || a.full_name || 'R').charAt(0)}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <p className="text-sm font-semibold text-gray-900 truncate">{a.company_name || a.full_name}</p>
-                            <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full flex-shrink-0 font-medium">Reklamcı</span>
+                      <div key={a.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-sm transition-all">
+                        {/* Üst satır */}
+                        <div className="px-5 py-4 flex items-center gap-4 border-b border-gray-50">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center flex-shrink-0">
+                            <span className="text-amber-600 font-bold">{(a.company_name || a.full_name || 'R').charAt(0)}</span>
                           </div>
-                          <p className="text-xs text-gray-400">{a.email}</p>
-                          <div className="flex gap-3 mt-1">
-                            <span className="text-xs text-amber-600 font-medium">{clientCount} müşteri</span>
-                            {sub && <span className="text-xs text-gray-400">₺{sub.monthly_fee}/ay + ₺{sub.per_client_fee}/müşteri</span>}
-                            <span className="text-xs text-gray-400">{new Date(a.created_at).toLocaleDateString('tr-TR')}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <p className="text-sm font-semibold text-gray-900 truncate">{a.company_name || a.full_name}</p>
+                              <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full flex-shrink-0 font-medium border border-amber-200">Reklamcı</span>
+                            </div>
+                            <p className="text-xs text-gray-400">{a.email} · {a.phone || '-'}</p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <button onClick={() => setSelectedAdvertiser(a)}
+                              className="text-xs text-amber-600 font-medium hover:text-amber-700 px-3 py-1.5 hover:bg-amber-50 rounded-lg transition-colors border border-amber-200">
+                              Detay & Fatura
+                            </button>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input type="checkbox" checked={a.is_active !== false} onChange={() => handleToggleActive(a)} className="sr-only peer" />
+                              <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-amber-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                            </label>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <button onClick={() => setSelectedAdvertiser(a)}
-                            className="text-xs text-amber-600 font-medium hover:text-amber-700 px-3 py-1.5 hover:bg-amber-50 rounded-lg transition-colors">
-                            Detay
-                          </button>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" checked={a.is_active !== false} onChange={() => handleToggleActive(a)} className="sr-only peer" />
-                            <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-amber-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                          </label>
+
+                        {/* Mali özet */}
+                        <div className="px-5 py-3 grid grid-cols-4 gap-3">
+                          <div className="text-center">
+                            <p className="text-base font-bold text-amber-600">{clientCount}</p>
+                            <p className="text-xs text-gray-400">Müşteri</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-base font-bold text-indigo-600">₺{(monthlyIncome).toLocaleString()}</p>
+                            <p className="text-xs text-gray-400">Aylık Gelir</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-base font-bold text-rose-500">₺{pendingAdv.toLocaleString()}</p>
+                            <p className="text-xs text-gray-400">Bekleyen</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-base font-bold text-emerald-600">₺{paidAdv.toLocaleString()}</p>
+                            <p className="text-xs text-gray-400">Tahsil</p>
+                          </div>
                         </div>
+
+                        {/* Fiyat bilgisi */}
+                        {sub && (
+                          <div className="px-5 pb-3 flex items-center gap-3">
+                            <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">₺{sub.monthly_fee}/ay sabit</span>
+                            <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">₺{sub.per_client_fee}/müşteri</span>
+                            <span className="text-xs text-gray-400">kayıt: {new Date(a.created_at).toLocaleDateString('tr-TR')}</span>
+                          </div>
+                        )}
                       </div>
                     )
                   })}
@@ -725,7 +776,7 @@ export default function SuperAdminPage() {
 
           {/* ── REKLAMCI EKLE ── */}
           {activeTab === 'reklamci-ekle' && (
-            <div className="max-w-lg space-y-5">
+            <div className="max-w-lg mx-auto space-y-5">
               <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl p-5 text-white relative overflow-hidden">
                 <div className="absolute -right-4 -top-4 w-28 h-28 bg-white/10 rounded-full" />
                 <div className="relative">
@@ -996,6 +1047,110 @@ export default function SuperAdminPage() {
           })()}
 
           {/* ── KİMLİK TAKLİDİ ── */}
+          {/* ── FATURA PLANLAR ── */}
+          {activeTab === 'fatura-planlar' && (
+            <div className="space-y-4 max-w-3xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-semibold text-gray-900">Abonelik Planları</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">Platform'da sunulan paketler</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { key: 'trial', label: 'Deneme', price: '₺0', period: '14 gün', color: 'border-gray-200', badge: 'bg-gray-100 text-gray-600', features: ['Tüm özellikler açık', '1 şube', '3 kullanıcı', '500 lead/ay', 'Destek yok'] },
+                  { key: 'starter', label: 'Starter', price: '₺990', period: '/ay', color: 'border-indigo-200', badge: 'bg-indigo-50 text-indigo-700', features: ['1 şube', '3 kullanıcı', '500 lead/ay', 'Email destek', 'Meta entegrasyon'] },
+                  { key: 'pro', label: 'Pro', price: '₺2.490', period: '/ay', color: 'border-violet-200', badge: 'bg-violet-50 text-violet-700', features: ['5 şube', '15 kullanıcı', 'Sınırsız lead', 'Öncelikli destek', 'Tüm entegrasyonlar'] },
+                  { key: 'enterprise', label: 'Enterprise', price: '₺4.990+', period: '/ay', color: 'border-amber-200', badge: 'bg-amber-50 text-amber-700', features: ['Sınırsız şube', 'Sınırsız kullanıcı', 'Sınırsız lead', '7/24 destek', 'AI rapor dahil', 'Özel entegrasyon'] },
+                ].map(plan => (
+                  <div key={plan.key} className={`bg-white rounded-2xl border-2 ${plan.color} p-5`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${plan.badge}`}>{plan.label}</span>
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-gray-900">{plan.price}</p>
+                        <p className="text-xs text-gray-400">{plan.period}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      {plan.features.map(f => (
+                        <div key={f} className="flex items-center gap-2">
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 6l3 3 6-6" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          <span className="text-xs text-gray-600">{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                      <span className="text-xs text-gray-400">{customers.filter(c => c.subscriptions?.[0]?.plan === plan.key).length} firma</span>
+                      <span className="text-xs font-semibold text-gray-500">aktif</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── FATURA ABONELİKLER ── */}
+          {activeTab === 'fatura-abonelikler' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { label: 'Toplam Abonelik', value: customers.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                  { label: 'Trial', value: customers.filter(c => c.subscriptions?.[0]?.plan === 'trial').length, color: 'text-gray-600', bg: 'bg-gray-100' },
+                  { label: 'Starter', value: customers.filter(c => c.subscriptions?.[0]?.plan === 'starter').length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                  { label: 'Pro+', value: customers.filter(c => ['pro','enterprise'].includes(c.subscriptions?.[0]?.plan)).length, color: 'text-violet-600', bg: 'bg-violet-50' },
+                ].map(c => (
+                  <div key={c.label} className="bg-white rounded-xl border border-gray-100 px-4 py-3">
+                    <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{c.label}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+                  <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    <div className="col-span-2">Firma</div>
+                    <div>Plan</div>
+                    <div className="text-right">Aylık</div>
+                    <div className="text-right">Durum</div>
+                  </div>
+                </div>
+                {customers.map((c, i) => {
+                  const sub = c.subscriptions?.[0]
+                  return (
+                    <div key={c.id} className={`px-5 py-3.5 grid grid-cols-5 gap-2 items-center ${i < customers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                      <div className="col-span-2 flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                          <span className="text-indigo-600 text-xs font-bold">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{c.company_name || c.full_name}</p>
+                          <p className="text-xs text-gray-400 truncate">{c.email}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          sub?.plan === 'enterprise' ? 'bg-amber-50 text-amber-700' :
+                          sub?.plan === 'pro' ? 'bg-violet-50 text-violet-700' :
+                          sub?.plan === 'starter' ? 'bg-indigo-50 text-indigo-700' :
+                          'bg-gray-100 text-gray-500'
+                        }`}>{sub?.plan || 'trial'}</span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-gray-900">₺{(sub?.monthly_fee || 0).toLocaleString()}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.is_active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                          {c.is_active !== false ? 'Aktif' : 'Pasif'}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── KİMLİK TAKLİDİ ── */}
           {activeTab === 'destek-impersonation' && (
             <div className="space-y-4">
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
@@ -1008,9 +1163,14 @@ export default function SuperAdminPage() {
               <div className="bg-white rounded-2xl border border-gray-100">
                 {customers.map((c, i) => (
                   <div key={c.id} className={`px-5 py-3.5 flex items-center justify-between ${i < customers.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{c.company_name || c.full_name}</p>
-                      <p className="text-xs text-gray-400">{c.email}</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                        <span className="text-indigo-600 text-xs font-bold">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{c.company_name || c.full_name}</p>
+                        <p className="text-xs text-gray-400">{c.email}</p>
+                      </div>
                     </div>
                     <Btn variant="secondary" size="sm">Giriş Yap</Btn>
                   </div>
@@ -1019,8 +1179,63 @@ export default function SuperAdminPage() {
             </div>
           )}
 
+          {/* ── DESTEK TALEPLERİ ── */}
+          {activeTab === 'destek-talepler' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: 'Açık Talepler', value: 0, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
+                  { label: 'İşlemde', value: 0, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
+                  { label: 'Çözüldü', value: 0, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+                ].map(c => (
+                  <div key={c.label} className={`${c.bg} border ${c.border} rounded-2xl p-4 text-center`}>
+                    <p className={`text-2xl font-bold ${c.color}`}>{c.value}</p>
+                    <p className="text-xs text-gray-500 mt-1">{c.label}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+                <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl">◌</div>
+                <p className="text-gray-500 text-sm font-medium">Destek talep sistemi</p>
+                <p className="text-gray-400 text-xs mt-1">Müşterilerden gelen talepler burada görünecek.</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── GÜVENLİK LOGLAR ── */}
+          {activeTab === 'guvenlik-loglar' && (
+            <div className="space-y-4">
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 text-sm">Denetim Logları</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">Son 30 günlük işlem geçmişi</p>
+                  </div>
+                  <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full font-medium">
+                    {allUsers.length} kullanıcı
+                  </span>
+                </div>
+                {/* Son kayıt olan kullanıcıları log gibi göster */}
+                {allUsers.slice(0, 10).map((u, i) => (
+                  <div key={u.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < Math.min(allUsers.length, 10) - 1 ? 'border-b border-gray-50' : ''}`}>
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${u.role === 'super_admin' ? 'bg-rose-400' : u.role === 'customer' ? 'bg-indigo-400' : u.role === 'advertiser' ? 'bg-amber-400' : 'bg-blue-400'}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{u.full_name || u.email}</p>
+                      <p className="text-xs text-gray-400">{u.email} · {u.role}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+                        {u.is_active !== false ? 'Aktif' : 'Pasif'}
+                      </span>
+                      <p className="text-xs text-gray-400 mt-0.5">{new Date(u.created_at).toLocaleDateString('tr-TR')}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {/* ── BOŞLAR ── */}
-          {!['dashboard','firma-listesi','firma-onboarding','reklamci-listesi','reklamci-ekle','fatura-faturalar','kullanici-listesi','destek-impersonation'].includes(activeTab) && (
+         {!['dashboard','firma-listesi','firma-onboarding','reklamci-listesi','reklamci-ekle','fatura-faturalar','fatura-planlar','fatura-abonelikler','kullanici-listesi','destek-impersonation','destek-talepler','guvenlik-loglar'].includes(activeTab) && (
             <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
               <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">◌</div>
               <p className="text-gray-500 text-sm font-medium">{getPageTitle()}</p>
@@ -1031,42 +1246,217 @@ export default function SuperAdminPage() {
         </main>
       </div>
 
-      {/* ── REKLAMCI DETAY MODAL ── */}
-      <Modal open={!!selectedAdvertiser} onClose={() => setSelectedAdvertiser(null)}
-        title={selectedAdvertiser?.company_name || selectedAdvertiser?.full_name || 'Reklamcı Detayı'}
-        subtitle={selectedAdvertiser?.email} size="lg">
-        {selectedAdvertiser && (
-          <div className="p-6 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: 'Ad Soyad', value: selectedAdvertiser.full_name },
-                { label: 'E-posta', value: selectedAdvertiser.email },
-                { label: 'Telefon', value: selectedAdvertiser.phone || '-' },
-                { label: 'Kayıt Tarihi', value: new Date(selectedAdvertiser.created_at).toLocaleDateString('tr-TR') },
-              ].map(item => (
-                <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
-                  <p className="text-xs text-gray-400 mb-1">{item.label}</p>
-                  <p className="text-sm font-medium text-gray-900">{item.value}</p>
-                </div>
-              ))}
-            </div>
-            <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
-              <p className="text-xs font-semibold text-amber-700 mb-3">Abonelik</p>
-              <div className="flex gap-6">
-                <div>
-                  <p className="text-xs text-amber-500">Müşteri Sayısı</p>
-                  <p className="text-lg font-bold text-amber-700">{selectedAdvertiser.advertiser_clients?.length || 0}</p>
-                </div>
+    {/* ── REKLAMCI DETAY MODAL ── */}
+      <Modal open={!!selectedAdvertiser} onClose={() => { setSelectedAdvertiser(null); setAdvDetailTab('genel') }}
+        title={selectedAdvertiser?.company_name || selectedAdvertiser?.full_name || 'Reklamcı'}
+        subtitle={selectedAdvertiser?.email} size="xl">
+        {selectedAdvertiser && (() => {
+
+          const sub = (selectedAdvertiser as any).advertiser_subscriptions?.[0]
+          const clientCount = selectedAdvertiser.advertiser_clients?.length || 0
+          const monthlyIncome = (sub?.monthly_fee || 0) + clientCount * (sub?.per_client_fee || 0)
+          const advInvoices = (invoices as any[]).filter(inv => inv.owner_id === selectedAdvertiser.id)
+          const pendingTotal = advInvoices.filter(inv => inv.status === 'pending').reduce((s: number, inv: any) => s + (inv.total_amount || 0), 0)
+          const paidTotal = advInvoices.filter(inv => inv.status === 'paid').reduce((s: number, inv: any) => s + (inv.total_amount || 0), 0)
+        
+          return (
+            <div className="p-6 space-y-5">
+              {/* Tab bar */}
+              <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+                {[
+                  { key: 'genel', label: 'Genel Bilgi' },
+                  { key: 'mali', label: 'Mali Durum' },
+                  { key: 'fatura', label: 'Fatura Kes' },
+                  { key: 'gecmis', label: 'Geçmiş' },
+                ].map(tab => (
+                  <button key={tab.key} onClick={() => setAdvDetailTab(tab.key)}
+                    className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${advDetailTab === tab.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                    {tab.label}
+                  </button>
+                ))}
               </div>
+
+              {/* GENEL BİLGİ */}
+              {advDetailTab === 'genel' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: 'Ad Soyad', value: selectedAdvertiser.full_name },
+                      { label: 'E-posta', value: selectedAdvertiser.email },
+                      { label: 'Telefon', value: selectedAdvertiser.phone || '-' },
+                      { label: 'Firma', value: selectedAdvertiser.company_name || '-' },
+                      { label: 'Kayıt Tarihi', value: new Date(selectedAdvertiser.created_at).toLocaleDateString('tr-TR') },
+                      { label: 'Durum', value: selectedAdvertiser.is_active !== false ? 'Aktif' : 'Pasif' },
+                    ].map(item => (
+                      <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
+                        <p className="text-xs text-gray-400 mb-1">{item.label}</p>
+                        <p className="text-sm font-medium text-gray-900">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {sub && (
+                    <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+                      <p className="text-xs font-semibold text-amber-700 mb-3">Abonelik Planı</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div><p className="text-xs text-amber-500">Aylık Sabit</p><p className="text-sm font-bold text-amber-800">₺{sub.monthly_fee}</p></div>
+                        <div><p className="text-xs text-amber-500">Müşteri Başı</p><p className="text-sm font-bold text-amber-800">₺{sub.per_client_fee}</p></div>
+                        <div><p className="text-xs text-amber-500">Aktif Müşteri</p><p className="text-sm font-bold text-amber-800">{clientCount}</p></div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    <Btn variant="danger" className="flex-1" onClick={() => handleToggleActive(selectedAdvertiser)}>
+                      {selectedAdvertiser.is_active !== false ? 'Pasife Al' : 'Aktife Al'}
+                    </Btn>
+                    <Btn variant="secondary" className="flex-1" onClick={() => { setSelectedAdvertiser(null); setAdvDetailTab('genel') }}>Kapat</Btn>
+                  </div>
+                </div>
+              )}
+
+              {/* MALİ DURUM */}
+              {advDetailTab === 'mali' && (
+                <div className="space-y-4">
+                  {/* Özet kartlar */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
+                      <p className="text-xs text-gray-400 mb-1">Aylık Gelir (Tahmin)</p>
+                      <p className="text-2xl font-bold text-indigo-600">₺{monthlyIncome.toLocaleString()}</p>
+                      <p className="text-xs text-gray-400 mt-1">₺{sub?.monthly_fee || 0} sabit + {clientCount} müşteri × ₺{sub?.per_client_fee || 0}</p>
+                    </div>
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+                      <p className="text-xs text-gray-400 mb-1">Yıllık Gelir (Tahmin)</p>
+                      <p className="text-2xl font-bold text-emerald-600">₺{(monthlyIncome * 12).toLocaleString()}</p>
+                      <p className="text-xs text-gray-400 mt-1">Mevcut plan üzerinden</p>
+                    </div>
+                    <div className="bg-rose-50 border border-rose-100 rounded-xl p-4">
+                      <p className="text-xs text-gray-400 mb-1">Bekleyen Fatura</p>
+                      <p className="text-2xl font-bold text-rose-500">₺{pendingTotal.toLocaleString()}</p>
+                      <p className="text-xs text-gray-400 mt-1">{advInvoices.filter(i => i.status === 'pending').length} fatura</p>
+                    </div>
+                    <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+                      <p className="text-xs text-gray-400 mb-1">Toplam Tahsil</p>
+                      <p className="text-2xl font-bold text-gray-700">₺{paidTotal.toLocaleString()}</p>
+                      <p className="text-xs text-gray-400 mt-1">{advInvoices.filter(i => i.status === 'paid').length} fatura</p>
+                    </div>
+                  </div>
+
+                  {/* Gelir dağılımı çubuğu */}
+                  {(pendingTotal + paidTotal) > 0 && (
+                    <div className="bg-white border border-gray-100 rounded-xl p-4">
+                      <p className="text-xs font-semibold text-gray-500 mb-3">Tahsilat Durumu</p>
+                      <div className="h-3 bg-gray-100 rounded-full overflow-hidden flex">
+                        <div className="h-full bg-emerald-500 transition-all" style={{ width: `${((paidTotal / (paidTotal + pendingTotal)) * 100)}%` }} />
+                        <div className="h-full bg-rose-400 transition-all" style={{ width: `${((pendingTotal / (paidTotal + pendingTotal)) * 100)}%` }} />
+                      </div>
+                      <div className="flex gap-4 mt-2">
+                        <span className="flex items-center gap-1.5 text-xs text-gray-500"><span className="w-2.5 h-2.5 bg-emerald-500 rounded-sm" />Tahsil %{(paidTotal + pendingTotal) > 0 ? ((paidTotal / (paidTotal + pendingTotal)) * 100).toFixed(0) : 0}</span>
+                        <span className="flex items-center gap-1.5 text-xs text-gray-500"><span className="w-2.5 h-2.5 bg-rose-400 rounded-sm" />Bekleyen %{(paidTotal + pendingTotal) > 0 ? ((pendingTotal / (paidTotal + pendingTotal)) * 100).toFixed(0) : 0}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <Btn className="w-full" onClick={() => setAdvDetailTab('fatura')}>
+                    + Yeni Fatura Kes
+                  </Btn>
+                </div>
+              )}
+
+              {/* FATURA KES */}
+              {advDetailTab === 'fatura' && (
+                <div className="space-y-4">
+                  <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
+                    <p className="text-xs font-semibold text-amber-700 mb-1">Fatura Bilgisi</p>
+                    <p className="text-xs text-amber-600">Aylık plan: <strong>₺{sub?.monthly_fee || 0}</strong> sabit + <strong>{clientCount}</strong> müşteri × <strong>₺{sub?.per_client_fee || 0}</strong> = <strong>₺{monthlyIncome.toLocaleString()}</strong></p>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Fatura Tutarı (₺) *</label>
+                      <input type="number" value={advInvoiceAmount} onChange={e => setAdvInvoiceAmount(e.target.value)}
+                        placeholder={monthlyIncome.toString()}
+                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                      <button onClick={() => setAdvInvoiceAmount(monthlyIncome.toString())}
+                        className="mt-1 text-xs text-amber-600 hover:underline">Aylık tutarı otomatik doldur (₺{monthlyIncome.toLocaleString()})</button>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Vade Tarihi</label>
+                      <input type="date" value={advInvoiceDue} onChange={e => setAdvInvoiceDue(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Not (opsiyonel)</label>
+                      <textarea value={advInvoiceNote} onChange={e => setAdvInvoiceNote(e.target.value)} rows={2}
+                        placeholder="Örn: Mart 2025 aylık hizmet bedeli"
+                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none" />
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Btn variant="secondary" className="flex-1" onClick={() => setAdvDetailTab('mali')}>İptal</Btn>
+                    <button onClick={async () => {
+                      if (!advInvoiceAmount) return
+                      setAdvInvoiceSaving(true)
+                      await supabase.from('invoices').insert({
+                        owner_id: selectedAdvertiser.id,
+                        total_amount: parseFloat(advInvoiceAmount),
+                        status: 'pending',
+                        due_date: advInvoiceDue || null,
+                        note: advInvoiceNote || null,
+                        branch_count: clientCount,
+                        per_branch_fee: sub?.per_client_fee || 0,
+                      })
+                      setAdvInvoiceAmount(''); setAdvInvoiceNote(''); setAdvInvoiceDue('')
+                      setAdvInvoiceSaving(false)
+                      await loadData()
+                      setAdvDetailTab('gecmis')
+                    }} disabled={advInvoiceSaving || !advInvoiceAmount}
+                      className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                      {advInvoiceSaving ? 'Kaydediliyor...' : '✓ Fatura Kes'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* GEÇMİŞ */}
+              {advDetailTab === 'gecmis' && (
+                <div className="space-y-3">
+                  {advInvoices.length === 0 ? (
+                    <div className="text-center py-10">
+                      <p className="text-gray-400 text-sm">Henüz fatura yok.</p>
+                      <button onClick={() => setAdvDetailTab('fatura')} className="mt-2 text-xs text-amber-600 hover:underline font-medium">Fatura Kes →</button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {advInvoices.map((inv: any) => (
+                        <div key={inv.id} className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${inv.status === 'paid' ? 'bg-emerald-100' : 'bg-rose-100'}`}>
+                            {inv.status === 'paid'
+                              ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7l3.5 3.5 7.5-7" stroke="#059669" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                              : <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 4v4M7 10v.5" stroke="#e11d48" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                            }
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
+                            {inv.note && <p className="text-xs text-gray-500 truncate">{inv.note}</p>}
+                            <p className="text-xs text-gray-400">
+                              {inv.due_date ? `Vade: ${new Date(inv.due_date).toLocaleDateString('tr-TR')}` : new Date(inv.created_at).toLocaleDateString('tr-TR')}
+                            </p>
+                          </div>
+                          {inv.status === 'pending' ? (
+                            <button onClick={async () => { await handleMarkPaid(inv.id); await loadData() }}
+                              className="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium px-3 py-1.5 rounded-lg transition-colors border border-emerald-200">
+                              Ödendi
+                            </button>
+                          ) : (
+                            <span className="text-xs bg-emerald-50 text-emerald-600 font-medium px-2.5 py-1 rounded-full">✓ Ödendi</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            <div className="flex gap-3">
-              <Btn variant="danger" className="flex-1" onClick={() => { handleToggleActive(selectedAdvertiser); setSelectedAdvertiser(null) }}>
-                {selectedAdvertiser.is_active !== false ? 'Pasife Al' : 'Aktife Al'}
-              </Btn>
-              <Btn className="flex-1" onClick={() => setSelectedAdvertiser(null)}>Kapat</Btn>
-            </div>
-          </div>
-        )}
+          )
+        })()}
       </Modal>
 
       {/* ── FİRMA DETAY MODAL ── */}
