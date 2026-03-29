@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 
-export default function MetaConnect({ ownerId }: { ownerId: string }) {
+export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: string, autoSelect?: boolean }) {
   const [connection, setConnection] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [selectedAccount, setSelectedAccount] = useState('')
@@ -13,14 +13,24 @@ export default function MetaConnect({ ownerId }: { ownerId: string }) {
     if (ownerId) loadConnection()
   }, [ownerId])
 
-  const loadConnection = async () => {
+ const loadConnection = async () => {
     const { data } = await supabase
       .from('meta_connections')
       .select('*')
       .eq('owner_id', ownerId)
-      .single()
+      .maybeSingle()
     setConnection(data)
-    if (data?.selected_ad_account_id) setSelectedAccount(data.selected_ad_account_id)
+    if (data?.selected_ad_account_id) {
+      setSelectedAccount(data.selected_ad_account_id)
+    } else if (data?.ad_accounts?.length > 0 && autoSelect) {
+      // Otomatik ilk hesabı seç
+      const firstAccount = data.ad_accounts[0]
+      setSelectedAccount(firstAccount.id)
+      await supabase.from('meta_connections').update({
+        selected_ad_account_id: firstAccount.id,
+        selected_ad_account_name: firstAccount.name,
+      }).eq('owner_id', ownerId)
+    }
     setLoading(false)
   }
 

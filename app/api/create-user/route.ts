@@ -30,12 +30,49 @@ export async function POST(req: Request) {
 
     const userId = data.user.id
 
-    // 2. Profile upsert
+   // 2. Profile upsert
     await supabaseAdmin.from('profiles').upsert({
-      id: userId, email, full_name, role: 'customer',
+      id: userId, email, full_name, role: body.role || 'customer',
       company_name, sector: sector || null, phone: phone || null, is_active: true
     })
 
+    // 3b. Eğer advertiser için müşteri ekleme ise — customers tablosuna yaz
+    if (body.advertiser_id) {
+      const { data: customerData } = await supabaseAdmin.from('customers').insert({
+        name: company_name,
+        owner_id: userId,
+        advertiser_id: body.advertiser_id,
+        created_by: body.created_by || null,
+        status: 'active'
+      }).select().single()
+
+      if (customerData) {
+        // advertiser_clients
+        const { data: clientData } = await supabaseAdmin.from('advertiser_clients').insert({
+          advertiser_id: body.advertiser_id,
+          client_id: userId,
+          customer_id: customerData.id,
+          commission_model: body.commission_model || 'fixed',
+          monthly_fee: parseFloat(body.commission_monthly_fee) || 0,
+          commission_rate: parseFloat(body.commission_rate) || 0,
+        }).select().single()
+
+        // customer_finance — otomatik oluştur
+        await supabaseAdmin.from('customer_finance').insert({
+          customer_id: customerData.id,
+          service_fee: parseFloat(body.commission_monthly_fee) || 0,
+          ad_budget: 0,
+          commission_rate: parseFloat(body.commission_rate) || 0,
+          notes: null,
+        })
+
+        return NextResponse.json({ 
+          userId, 
+          customerId: customerData.id,
+          clientId: clientData?.id 
+        })
+      }
+    }
     // 3. Subscription
     await supabaseAdmin.from('subscriptions').insert({
       owner_id: userId,

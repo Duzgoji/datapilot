@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import MetaConnect from '@/components/MetaConnect'
 
@@ -41,6 +41,7 @@ const menuStructure = [
       { key: 'veri-setlerim', label: 'Veri Setlerim' },
     ]
   },
+  { key: 'faturalarim', label: 'Faturalarım', icon: '◧' },
   { key: 'ayarlar', label: 'Ayarlar', icon: '◌' },
 ]
 
@@ -272,6 +273,7 @@ export default function CustomerPage() {
   const [xlsxResult, setXlsxResult] = useState<{success: number, errors: string[]} | null>(null)
 
   const [showReportPanel, setShowReportPanel] = useState(false)
+  const [customerInvoices, setCustomerInvoices] = useState<any[]>([])
   const [reportPeriod, setReportPeriod] = useState('this_month')
   const [reportFormat, setReportFormat] = useState('excel')
   const [reportStatus, setReportStatus] = useState('all')
@@ -306,13 +308,13 @@ export default function CustomerPage() {
     setSettingsSector(profileData?.sector || '')
     const { data: branchesData } = await supabase.from('branches').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
     setBranches(branchesData || [])
-    if (branchesData && branchesData.length > 0) {
-      const branchIds = branchesData.map((b: any) => b.id)
-      const { data: leadsData } = await supabase.from('leads').select('*').in('branch_id', branchIds).order('created_at', { ascending: false })
-      setLeads(leadsData || [])
-      const { data: membersData } = await supabase.from('team_members').select('*, profiles(full_name, email), branches(branch_name)').in('branch_id', branchIds)
-      setTeamMembers(membersData || [])
-    }
+    const branchIds = (branchesData || []).map((b: any) => b.id)
+const { data: leadsData } = await supabase.from('leads').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
+setLeads(leadsData || [])
+if (branchIds.length > 0) {
+  const { data: membersData } = await supabase.from('team_members').select('*, profiles(full_name, email), branches(branch_name)').in('branch_id', branchIds)
+  setTeamMembers(membersData || [])
+}
     const { data: metaConnData } = await supabase.from('meta_connections').select('*').eq('owner_id', user.id).single()
     setMetaConn(metaConnData || null)
 
@@ -329,6 +331,18 @@ export default function CustomerPage() {
   .eq('owner_id', user.id)
   .order('paid_at', { ascending: false })
    setCommissionPayments(paymentsData || [])
+   const { data: customerData } = await supabase
+  .from('customers')
+  .select('id')
+  .eq('owner_id', user.id)
+  .maybeSingle()
+
+const { data: invoicesData } = await supabase
+  .from('invoices')
+  .select('*')
+  .eq('customer_id', customerData?.id || '')
+  .order('created_at', { ascending: false })
+setCustomerInvoices(invoicesData || [])
     setLoading(false)
   }
 
@@ -419,11 +433,19 @@ export default function CustomerPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const leadCode = 'DP-' + Date.now().toString().slice(-6)
+    const { data: customerData } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('owner_id', user.id)
+      .single()
+
     const { error } = await supabase.from('leads').insert({
-      lead_code: leadCode, branch_id: leadBranch, owner_id: user.id,
+      lead_code: leadCode, branch_id: leadBranch !== '' ? leadBranch : null, owner_id: user.id,
       assigned_to: leadAssignTo || null, full_name: leadName, phone: leadPhone,
       email: leadEmail || null, source: leadSource, note: leadNote || null, status: 'new',
+      customer_id: customerData?.id || null,
     })
+    if (error) { alert(error.message); setSaving(false); return }
     if (!error) {
       setLeadName(''); setLeadPhone(''); setLeadEmail(''); setLeadBranch(''); setLeadSource('manual'); setLeadAssignTo(''); setLeadNote('')
       setShowAddLead(false); await loadData()
@@ -493,6 +515,8 @@ const handlePayCommission = async () => {
     if (!editLead) return
     setEditLoading(true)
     await supabase.from('leads').update({
+      procedure_type: editLead.procedure_type || null,
+      procedure_amount: editLead.procedure_amount || 0,
       full_name: editLead.full_name,
       phone: editLead.phone,
       email: editLead.email || null,
@@ -898,12 +922,12 @@ const handlePayCommission = async () => {
               {/* Stat cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: 'Aktif Lead', value: leads.filter(l => l.status === 'new' || l.status === 'called').length, sub: 'Yeni + Arandı', color: 'text-blue-600', border: 'border-blue-100', gradient: 'from-blue-50 to-white', iconBg: 'bg-blue-100', icon: '◎' },
-                  { label: 'Randevu', value: leads.filter(l => l.status === 'appointment_scheduled').length, sub: 'Bekleyen randevu', color: 'text-violet-600', border: 'border-violet-100', gradient: 'from-violet-50 to-white', iconBg: 'bg-violet-100', icon: '◐' },
-                  { label: 'Toplam Satış', value: totalSales, sub: `₺${totalRevenue.toLocaleString()}`, color: 'text-emerald-600', border: 'border-emerald-100', gradient: 'from-emerald-50 to-white', iconBg: 'bg-emerald-100', icon: '◉' },
-                  { label: 'Şubeler', value: branches.length, sub: `${teamMembers.length} ekip üyesi`, color: 'text-orange-600', border: 'border-orange-100', gradient: 'from-orange-50 to-white', iconBg: 'bg-orange-100', icon: '◈' },
-                ].map(card => (
-                  <div key={card.label} className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-5 border ${card.border} hover:shadow-md transition-all`}>
+                 { label: 'Aktif Lead', value: leads.filter(l => l.status === 'new' || l.status === 'called').length, sub: 'Yeni + Arandı', color: 'text-blue-600', border: 'border-blue-100', gradient: 'from-blue-50 to-white', iconBg: 'bg-blue-100', icon: '◎', tab: 'leadler-liste' },
+{ label: 'Randevu', value: leads.filter(l => l.status === 'appointment_scheduled').length, sub: 'Bekleyen randevu', color: 'text-violet-600', border: 'border-violet-100', gradient: 'from-violet-50 to-white', iconBg: 'bg-violet-100', icon: '◐', tab: 'leadler-liste' },
+{ label: 'Toplam Satış', value: totalSales, sub: `₺${totalRevenue.toLocaleString()}`, color: 'text-emerald-600', border: 'border-emerald-100', gradient: 'from-emerald-50 to-white', iconBg: 'bg-emerald-100', icon: '◉', tab: 'leadler-liste' },
+{ label: 'Şubeler', value: branches.length, sub: `${teamMembers.length} ekip üyesi`, color: 'text-orange-600', border: 'border-orange-100', gradient: 'from-orange-50 to-white', iconBg: 'bg-orange-100', icon: '◈', tab: 'ekip-sube' },
+                ].map((card: any) => (
+  <div key={card.label} onClick={() => setActiveTab(card.tab)} className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-5 border ${card.border} hover:shadow-md transition-all cursor-pointer`}>
                     <div className={`w-9 h-9 ${card.iconBg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
                     <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
                     <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
@@ -932,7 +956,9 @@ const handlePayCommission = async () => {
                       <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
                       <p className="text-xs text-gray-400">{lead.phone}</p>
                     </div>
+                    <button onClick={e => { e.stopPropagation(); setSelectedLead(lead); setNewStatus(lead.status) }}>
                     <Badge status={lead.status} />
+                    </button>
                   </div>
                   )
                 })}
@@ -1647,16 +1673,14 @@ const handlePayCommission = async () => {
                         { label: 'Meta Geliri', value: `₺${metaRevenue.toLocaleString()}`, sub: `${metaSales.length} satış`, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100', icon: '💰' },
                         { label: 'ROI', value: `%${roi.toFixed(1)}`, sub: totalSpend > 0 ? (roi >= 0 ? 'Kârlı' : 'Zararlı') : '—', color: roi >= 0 ? 'text-emerald-600' : 'text-red-600', bg: roi >= 0 ? 'from-emerald-50 to-white' : 'from-red-50 to-white', border: roi >= 0 ? 'border-emerald-100' : 'border-red-100', icon: roi >= 0 ? '📈' : '📉' },
                         { label: 'Lead Başı Maliyet', value: cpl > 0 ? `₺${cpl.toFixed(0)}` : '—', sub: `${metaLeads} meta lead`, color: 'text-blue-600', bg: 'from-blue-50 to-white', border: 'border-blue-100', icon: '🎯' },
-                      ].map(card => (
-                        <div key={card.label} className={`bg-gradient-to-br ${card.bg} border ${card.border} rounded-2xl p-4`}>
-                          <div className="flex items-center justify-between mb-2">
-                            <p className="text-xs text-gray-500">{card.label}</p>
-                            <span className="text-lg">{card.icon}</span>
-                          </div>
-                          <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
-                        </div>
-                      ))}
+                     ].map((card: any) => (
+                        <div key={card.label} className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-5 border ${card.border} hover:shadow-md transition-all`}>
+                        <div className={`w-9 h-9 ${card.iconBg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
+                         <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+                         <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
+                         <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
+                    </div>
+))}
                     </div>
 
                     {/* İkincil metrikler */}
@@ -2874,7 +2898,82 @@ const handlePayCommission = async () => {
               })()}
             </div>
           )}
+          {/* ── FATURALARIM ── */}
+{activeTab === 'faturalarim' && (
+  <div className="space-y-5 max-w-3xl">
+    <div>
+      <h2 className="text-base font-semibold text-gray-900">Faturalarım</h2>
+      <p className="text-xs text-gray-400 mt-0.5">Hesabınıza kesilen faturalar</p>
+    </div>
 
+    {customerInvoices.length === 0 ? (
+      <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+        <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">◧</div>
+        <p className="text-gray-500 text-sm font-medium">Henüz fatura yok</p>
+      </div>
+    ) : (
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+          <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            <div className="col-span-2">Fatura</div>
+            <div className="text-right">Tutar</div>
+            <div className="text-center">Durum</div>
+            <div className="text-right">İşlem</div>
+          </div>
+        </div>
+        {customerInvoices.map((inv, i) => {
+          const statusMap: any = {
+            pending: { label: 'Bekliyor', color: 'bg-amber-50 text-amber-700 border border-amber-200' },
+            awaiting_approval: { label: 'Onay Bekliyor', color: 'bg-blue-50 text-blue-700 border border-blue-200' },
+            paid: { label: 'Ödendi', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+            overdue: { label: 'Gecikmiş', color: 'bg-red-50 text-red-700 border border-red-200' },
+          }
+          const st = statusMap[inv.status] || statusMap.pending
+          const issuedBy = inv.issued_by_role === 'superadmin' ? 'DataPilot' : 'Reklamcı'
+          return (
+            <div key={inv.id} className={`px-5 py-4 grid grid-cols-5 gap-2 items-center hover:bg-gray-50/50 transition-colors ${i < customerInvoices.length - 1 ? 'border-b border-gray-50' : ''}`}>
+              <div className="col-span-2">
+                <p className="text-sm font-semibold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs text-gray-400">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</span>
+                  <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${inv.issued_by_role === 'superadmin' ? 'bg-violet-50 text-violet-600' : 'bg-amber-50 text-amber-600'}`}>
+                    {issuedBy}
+                  </span>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-bold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
+              </div>
+              <div className="text-center">
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${st.color}`}>{st.label}</span>
+              </div>
+              <div className="text-right">
+                {inv.status === 'pending' && (
+                  <button
+                    onClick={async () => {
+                      await supabase.from('invoices').update({ status: 'awaiting_approval' }).eq('id', inv.id)
+                      const { data: customerData } = await supabase.from('customers').select('id').eq('owner_id', profile.id).maybeSingle()
+                      const { data: invoicesData } = await supabase.from('invoices').select('*').eq('customer_id', customerData?.id || '').order('created_at', { ascending: false })
+                      setCustomerInvoices(invoicesData || [])
+                    }}
+                    className="text-xs text-blue-600 font-medium px-3 py-1.5 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200">
+                    Ödeme Yaptım
+                  </button>
+                )}
+                {inv.status === 'awaiting_approval' && (
+                  <span className="text-xs text-gray-400">Onay bekleniyor...</span>
+                )}
+                {inv.status === 'paid' && (
+                  <span className="text-xs text-emerald-600 font-medium">✓ Onaylandı</span>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )}
+  </div>
+)}
           {/* ── AYARLAR ── */}
           {activeTab === 'ayarlar' && (
             <div className="max-w-2xl space-y-5">
@@ -3049,7 +3148,7 @@ const handlePayCommission = async () => {
             <Input label="Ad Soyad *" value={leadName} onChange={(e: any) => setLeadName(e.target.value)} required placeholder="Ad Soyad" />
             <Input label="Telefon *" value={leadPhone} onChange={(e: any) => setLeadPhone(e.target.value)} required placeholder="05xx xxx xx xx" />
             <Input label="E-posta" type="email" value={leadEmail} onChange={(e: any) => setLeadEmail(e.target.value)} placeholder="ornek@email.com" />
-            <Select label="Şube *" value={leadBranch} onChange={(e: any) => setLeadBranch(e.target.value)} required>
+           <Select label="Şube" value={leadBranch} onChange={(e: any) => setLeadBranch(e.target.value)}>
               <option value="">Şube seçin...</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
             </Select>
@@ -3344,6 +3443,23 @@ const handlePayCommission = async () => {
                 <textarea value={editLead.note || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, note: e.target.value }))} rows={3}
                   className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none" placeholder="Not ekle..." />
               </div>
+                {editLead.status === 'procedure_done' && (
+                <div className="col-span-2 border-t border-gray-100 pt-3">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Satış Detayları</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">İşlem Tipi</label>
+                      <input value={editLead.procedure_type || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, procedure_type: e.target.value }))}
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Örn: Yıllık üyelik" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Satış Tutarı (₺)</label>
+                      <input type="number" value={editLead.procedure_amount || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, procedure_amount: parseFloat(e.target.value) || 0 }))}
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="0" />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex gap-2 pt-1">
               <Btn variant="secondary" className="flex-1" onClick={() => { setShowEditModal(false); setEditLead(null) }}>İptal</Btn>

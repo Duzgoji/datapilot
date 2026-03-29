@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -37,6 +37,7 @@ export default function LoginPage() {
       else if (role === 'customer') router.push('/customer')
       else if (role === 'agent' || role === 'team') router.push('/agent')
       else if (role === 'manager') router.push('/customer')
+      else if (role === 'advertiser') router.push('/advertiser')
       else router.push('/customer')
     }
 
