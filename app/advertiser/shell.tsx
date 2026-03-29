@@ -469,7 +469,7 @@ export function AdvertiserShell({ children }: { children: React.ReactNode }) {
   className="min-h-[calc(100vh-56px)]"
   style={{ background: 'linear-gradient(160deg, #f9f9fb 0%, #f4f2fd 50%, #fdf8ed 100%)' }}
 >
-  <main className="p-6 max-w-6xl mx-auto">
+  <main className="p-6 max-w-6xl mx-auto w-full">
     {children}
   </main>
 </div> 

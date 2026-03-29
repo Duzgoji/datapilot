@@ -73,12 +73,13 @@ export default function CustomerWorkspacePage() {
     key, count: leads.filter(l => l.status === key).length
   }))
 
-  const quickLinks = [
-    { href: `/advertiser/customers/${customerId}/leads`, label: 'Lead Listesi', icon: '◈', color: 'indigo', count: leads.length },
-    { href: `/advertiser/customers/${customerId}/finance`, label: 'Finans & Hakediş', icon: '◉', color: 'emerald', count: null },
-    { href: `/advertiser/customers/${customerId}/meta`, label: 'Meta Bağlantı', icon: '◇', color: 'blue', count: null },
-    { href: `/advertiser/customers/${customerId}/settings`, label: 'Ayarlar', icon: '◌', color: 'gray', count: null },
-  ]
+ const quickLinks = [
+  { href: `/advertiser/customers/${customerId}/leads`, label: 'Lead Listesi', icon: '◈', color: 'indigo', count: leads.length },
+  { href: `/advertiser/customers/${customerId}/finance`, label: 'Finans & Hakediş', icon: '◉', color: 'emerald', count: null },
+  { href: `/advertiser/customers/${customerId}/meta`, label: 'Meta Bağlantı', icon: '◇', color: 'blue', count: null },
+  { href: `/advertiser/customers/${customerId}/whatsapp`, label: 'WhatsApp', icon: '◎', color: 'green', count: null },
+  { href: `/advertiser/customers/${customerId}/settings`, label: 'Ayarlar', icon: '◌', color: 'gray', count: null },
+]
 
   return (
     <div className="space-y-5 max-w-5xl">
@@ -125,7 +126,7 @@ export default function CustomerWorkspacePage() {
       </div>
 
       {/* Hızlı linkler */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-5 gap-3">
         {quickLinks.map(link => (
           <Link key={link.href} href={link.href}
             className="bg-white rounded-2xl border border-gray-100 p-4 hover:shadow-md hover:border-amber-200 transition-all group">
