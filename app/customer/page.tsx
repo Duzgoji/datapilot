@@ -903,8 +903,8 @@ const handlePayCommission = async () => {
         </header>
 
         {/* Content */}
-        <main className="p-6 min-h-screen" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
-
+       <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
+        <main className="p-6 max-w-6xl mx-auto">
           {/* ── DASHBOARD ── */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
@@ -1578,7 +1578,6 @@ const handlePayCommission = async () => {
 </Modal>
 
 {/* ── WHATSAPP ── */}
-
 {activeTab === 'whatsapp-leadler' && (
   <div className="space-y-4">
     <div>
@@ -3124,6 +3123,7 @@ const handlePayCommission = async () => {
           )}
 
         </main>
+        </div>
       </div>
 
       {/* ─────────────────── MODALS ─────────────────────── */}
