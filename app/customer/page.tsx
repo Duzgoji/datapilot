@@ -1578,6 +1578,7 @@ const handlePayCommission = async () => {
 </Modal>
 
 {/* ── WHATSAPP ── */}
+{activeTab === 'whatsapp-baglanti' && profile?.id && <WhatsAppConnect ownerId={profile.id} />}
 {activeTab === 'whatsapp-leadler' && (
   <div className="space-y-4">
     <div>
