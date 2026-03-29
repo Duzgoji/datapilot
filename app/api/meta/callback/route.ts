@@ -15,12 +15,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/customer?error=meta_auth_failed`)
   }
 
-  let ownerId = state
+   let ownerId = state
   let returnPath = '/customer'
-    try {
-    const decoded = JSON.parse(decodeURIComponent(escape(Buffer.from(state, 'base64').toString('binary'))))
-    ownerId = decoded.ownerId
-    returnPath = decoded.returnPath || '/customer'
+  try {
+    if (state.includes('|')) {
+      const parts = state.split('|')
+      ownerId = parts[0]
+      returnPath = parts.slice(1).join('|')
+    }
+    console.log('STATE PARSED:', { ownerId, returnPath })
   } catch {
     ownerId = state
   }

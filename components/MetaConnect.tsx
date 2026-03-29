@@ -34,16 +34,15 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
     setLoading(false)
   }
 
- const handleConnect = () => {
+  const handleConnect = () => {
   const currentPath = window.location.pathname
-  const stateData = JSON.stringify({ ownerId, returnPath: currentPath })
-  const encoded = btoa(unescape(encodeURIComponent(stateData)))
+  const stateParam = `${ownerId}|${currentPath}`
   const params = new URLSearchParams({
     client_id: process.env.NEXT_PUBLIC_META_APP_ID!,
     redirect_uri: process.env.NEXT_PUBLIC_META_REDIRECT_URI!,
     scope: 'ads_read,leads_retrieval,pages_read_engagement',
     response_type: 'code',
-    state: encoded,
+    state: stateParam,
   })
   window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?${params}`
 }
