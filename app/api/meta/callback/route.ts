@@ -17,8 +17,8 @@ export async function GET(request: NextRequest) {
 
   let ownerId = state
   let returnPath = '/customer'
-  try {
-    const decoded = JSON.parse(Buffer.from(state, 'base64').toString())
+    try {
+    const decoded = JSON.parse(decodeURIComponent(escape(Buffer.from(state, 'base64').toString('binary'))))
     ownerId = decoded.ownerId
     returnPath = decoded.returnPath || '/customer'
   } catch {
