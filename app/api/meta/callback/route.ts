@@ -11,11 +11,18 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const state = searchParams.get('state')
 
-  console.log('META CALLBACK - code:', code ? 'VAR' : 'YOK', '| state:', state)
-
   if (!code || !state) {
-    console.log('CODE VEYA STATE YOK, yönlendiriliyor')
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/customer?error=meta_auth_failed`)
+  }
+
+  let ownerId = state
+  let returnPath = '/customer'
+  try {
+    const decoded = JSON.parse(Buffer.from(state, 'base64').toString())
+    ownerId = decoded.ownerId
+    returnPath = decoded.returnPath || '/customer'
+  } catch {
+    ownerId = state
   }
 
   try {
@@ -27,11 +34,9 @@ export async function GET(request: NextRequest) {
       `&code=${code}`
     )
     const tokenData = await tokenRes.json()
-    console.log('TOKEN DATA:', JSON.stringify(tokenData))
 
     if (!tokenData.access_token) {
-      console.log('TOKEN ALINAMADI')
-      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/customer?error=token_failed`)
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}${returnPath}?error=token_failed`)
     }
 
     const longTokenRes = await fetch(
@@ -42,16 +47,14 @@ export async function GET(request: NextRequest) {
       `&fb_exchange_token=${tokenData.access_token}`
     )
     const longTokenData = await longTokenRes.json()
-    console.log('LONG TOKEN DATA:', JSON.stringify(longTokenData))
 
     const adAccountsRes = await fetch(
       `https://graph.facebook.com/v18.0/me/adaccounts?fields=id,name,account_id&access_token=${longTokenData.access_token}`
     )
     const adAccountsData = await adAccountsRes.json()
-    console.log('AD ACCOUNTS:', JSON.stringify(adAccountsData))
 
-    const { error: dbError } = await supabase.from('meta_connections').upsert({
-      owner_id: state,
+    await supabase.from('meta_connections').upsert({
+      owner_id: ownerId,
       access_token: longTokenData.access_token,
       token_expires_at: new Date(Date.now() + (longTokenData.expires_in || 5184000) * 1000).toISOString(),
       ad_accounts: adAccountsData.data || [],
@@ -59,11 +62,8 @@ export async function GET(request: NextRequest) {
       is_active: true,
     }, { onConflict: 'owner_id' })
 
-    console.log('DB ERROR:', dbError)
-
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/customer?meta=connected`)
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}${returnPath}?meta=connected`)
   } catch (error) {
-    console.log('CATCH ERROR:', error)
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/customer?error=meta_failed`)
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}${returnPath}?error=meta_failed`)
   }
 }
