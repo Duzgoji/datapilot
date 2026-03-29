@@ -4,18 +4,24 @@ import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import MetaConnect from '@/components/MetaConnect'
+import WhatsAppConnect from '@/components/WhatsAppConnect'
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 
 const menuStructure = [
   { key: 'dashboard', label: 'Dashboard', icon: '⬡' },
   {
-    key: 'meta', label: 'Meta Reklam', icon: '◈', children: [
-      { key: 'meta-kampanyalar', label: 'Kampanyalar' },
-      { key: 'meta-leadformlar', label: 'Lead Formları' },
-      { key: 'meta-baglanti', label: 'Bağlantı' },
-    ]
-  },
+  key: 'meta', label: 'Meta Reklam', icon: '◈', children: [
+    { key: 'meta-kampanyalar', label: 'Kampanyalar' },
+    { key: 'meta-leadformlar', label: 'Lead Formları' },
+    { key: 'meta-baglanti', label: 'Bağlantı' },
+  ]
+},
+{
+  key: 'whatsapp', label: 'WhatsApp', icon: '◎', children: [
+    { key: 'whatsapp-baglanti', label: 'Bağlantı' },
+  ]
+},
   {
     key: 'leadler', label: 'Leadler', icon: '◎', children: [
       { key: 'leadler-liste', label: 'Lead Listesi' },
@@ -1571,6 +1577,7 @@ const handlePayCommission = async () => {
 </Modal>
 
           {/* ── META ── */}
+          {activeTab === 'whatsapp-baglanti' && profile?.id && <WhatsAppConnect ownerId={profile.id} />}
           {activeTab === 'meta-baglanti' && profile?.id && <MetaConnect ownerId={profile.id} />}
           {activeTab === 'meta-kampanyalar' && (() => {
             // Seçilen periyoda göre filtrele
