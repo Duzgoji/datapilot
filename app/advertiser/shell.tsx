@@ -21,6 +21,7 @@ const Icon = {
   search: () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="5" cy="5" r="3.5" stroke="currentColor" strokeWidth="1.25"/><path d="M8 8l2.5 2.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round"/></svg>,
   plus: () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
   chevronRight: () => <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  whatsapp: () => <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1C3.9 1 1 3.9 1 7.5c0 1.1.3 2.2.8 3.1L1 14l3.5-.8c.9.5 1.9.8 3 .8 3.6 0 6.5-2.9 6.5-6.5S11.1 1 7.5 1zm3 9.1c-.1.3-.6.6-.9.6-.2 0-.5 0-.8-.1-.2-.1-.4-.1-.7-.3-1.4-.6-2.3-1.8-2.4-1.9-.1-.1-.6-.8-.6-1.5s.4-1.1.5-1.2c.1-.1.3-.2.4-.2h.3c.1 0 .2 0 .3.3l.4 1c0 .1.1.2 0 .3l-.2.3c-.1.1-.1.1-.1.2.3.5.6.9 1 1.2.4.4.9.7 1.4.9.1 0 .2 0 .3-.1l.3-.4c.1-.1.2-.1.3-.1l1 .5c.1 0 .2.1.2.2 0 .1 0 .3-.1.5z" fill="currentColor"/></svg>,
   logout: () => <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M5 11H2.5A1.5 1.5 0 011 9.5v-6A1.5 1.5 0 012.5 2H5M9 9.5l3-3-3-3M12 6.5H5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>,
   dot: (color: string) => <span className={`w-1.5 h-1.5 rounded-full ${color} flex-shrink-0`} />,
 }
@@ -197,7 +198,7 @@ function Sidebar({ onAddNew }: { onAddNew: () => void }) {
     { href: `/advertiser/customers/${activeCustomerId}/finance`, label: 'Finans & Hakediş', IconComp: Icon.finance },
     { href: `/advertiser/customers/${activeCustomerId}/meta`, label: 'Meta Bağlantı', IconComp: Icon.meta },
     { href: `/advertiser/customers/${activeCustomerId}/settings`, label: 'Ayarlar', IconComp: Icon.ayarlar },
-    { href: `/advertiser/customers/${activeCustomer.id}/whatsapp`, label: 'WhatsApp' },
+    { href: `/advertiser/customers/${activeCustomerId}/whatsapp`, label: 'WhatsApp', IconComp: Icon.whatsapp },
   ] : []
 
   const isActive = (href: string, exact?: boolean) => {
