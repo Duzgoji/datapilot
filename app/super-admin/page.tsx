@@ -492,7 +492,8 @@ export default function SuperAdminPage() {
           </div>
         </header>
 
-        <main className="p-6" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
+        <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
+      <main className="p-6 max-w-6xl mx-auto">
 
           {/* ── DASHBOARD ── */}
           {activeTab === 'dashboard' && (
@@ -1279,6 +1280,7 @@ export default function SuperAdminPage() {
           )}
 
         </main>
+        </div>
       </div>
 
     {/* ── REKLAMCI DETAY MODAL ── */}
@@ -1312,7 +1314,7 @@ export default function SuperAdminPage() {
               </div>
 
               {/* GENEL BİLGİ */}
-              {advDetailTab === 'genell' && (
+              {advDetailTab === 'genel' && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     {[
