@@ -1292,7 +1292,7 @@ export default function SuperAdminPage() {
         subtitle={selectedAdvertiser?.email} size="xl">
         {selectedAdvertiser && (() => {
 
-          const sub = (selectedAdvertiser as any).advertiser_subscriptions?.[0]
+          const sub = advSubs.find(s => s.advertiser_id === selectedAdvertiser.id)
           const clientCount = selectedAdvertiser.advertiser_clients?.length || 0
           const monthlyIncome = (sub?.monthly_fee || 0) + clientCount * (sub?.per_client_fee || 0)
           const advInvoices = (invoices as any[]).filter(inv => inv.owner_id === selectedAdvertiser.id)
