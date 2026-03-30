@@ -84,18 +84,18 @@ export default function FaturalarPage() {
   const totalPaid = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.total_amount || 0), 0)
   const totalOverdue = invoices.filter(i => i.status === 'overdue').reduce((s, i) => s + (i.total_amount || 0), 0)
 
-  const markAsPaid = async (inv: any) => {
-    await supabase.from('invoices').update({ status: 'paid' }).eq('id', inv.id)
-    await supabase.from('payment_logs').insert({
-      customer_id: inv.customer_id,
-      invoice_id: inv.id,
-      amount: inv.total_amount,
-      type: 'payment',
-      note: 'Fatura ödendi',
-    })
-    await loadAll()
-  }
-
+const markAsPaid = async (inv: any) => {
+  await supabase.from('invoices').update({ status: 'paid' }).eq('id', inv.id)
+  const { data, error } = await supabase.from('payment_logs').insert({
+    customer_id: inv.customer_id,
+    invoice_id: inv.id,
+    amount: inv.total_amount,
+    type: 'payment',
+    note: 'Fatura ödendi',
+  })
+  console.log('PAYMENT LOG:', data, error)
+  await loadAll()
+}
   const markAsOverdue = async (inv: any) => {
     await supabase.from('invoices').update({ status: 'overdue' }).eq('id', inv.id)
     await loadAll()
