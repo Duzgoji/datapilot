@@ -245,7 +245,7 @@ export default function SuperAdminPage() {
     setAllUsers(usersData || [])
     const { data: teamMembersData } = await supabase.from('team_members').select('user_id, branch_id')
     setTeamMembers(teamMembersData || [])
-    const { data: advertisersData } = await supabase.from('profiles').select('*, advertiser_clients(*)').eq('role', 'advertiser').order('created_at', { ascending: false })
+    const { data: advertisersData } = await supabase.from('profiles').select('*, advertiser_clients(*), advertiser_subscriptions(*)').eq('role', 'advertiser').order('created_at', { ascending: false })
     setAdvertisers(advertisersData || [])
     setLoading(false)
   }
