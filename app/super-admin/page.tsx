@@ -161,6 +161,7 @@ export default function SuperAdminPage() {
   const [advInvoiceDue, setAdvInvoiceDue] = useState('')
   const [advInvoiceSaving, setAdvInvoiceSaving] = useState(false)
   const [advSearchQuery, setAdvSearchQuery] = useState('')
+  const [advSubs, setAdvSubs] = useState<any[]>([])
 
   // Onboarding
   const [showOnboardingModal, setShowOnboardingModal] = useState(false)
@@ -248,6 +249,8 @@ export default function SuperAdminPage() {
     const { data: advertisersData } = await supabase.from('profiles').select('*, advertiser_clients(*), advertiser_subscriptions(*)').eq('role', 'advertiser').order('created_at', { ascending: false })
     setAdvertisers(advertisersData || [])
     setLoading(false)
+    const { data: advSubsData } = await supabase.from('advertiser_subscriptions').select('*')
+    setAdvSubs(advSubsData || [])
   }
 
   const teamMembersBelongTo = (userId: string, branchIds: string[]) =>
@@ -688,7 +691,7 @@ export default function SuperAdminPage() {
                   { label: 'Toplam Reklamcı', value: advertisers.length, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
                   { label: 'Aktif', value: advertisers.filter(a => a.is_active !== false).length, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
                   { label: 'Toplam Müşteri', value: advertisers.reduce((s, a) => s + (a.advertiser_clients?.length || 0), 0), color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
-                  { label: 'Aylık Gelir', value: `₺${advertisers.reduce((s, a) => { const sub = (a as any).advertiser_subscriptions?.[0]; return s + (sub?.monthly_fee || 0) + ((a.advertiser_clients?.length || 0) * (sub?.per_client_fee || 0)) }, 0).toLocaleString()}`, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
+                  { label: 'Aylık Gelir', value: `₺${advertisers.reduce((s, a) => { const sub = advSubs.find(s => s.advertiser_id === a.id); return s + (sub?.monthly_fee || 0) + ((a.advertiser_clients?.length || 0) * (sub?.per_client_fee || 0)) }, 0).toLocaleString()}`, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
                 ].map(card => (
                   <div key={card.label} className={`${card.bg} border ${card.border} rounded-2xl p-4`}>
                     <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
@@ -707,7 +710,7 @@ export default function SuperAdminPage() {
                 <div className="space-y-3">
                   {filteredAdvertisers.map((a) => {
                     const clientCount = a.advertiser_clients?.length || 0
-                    const sub = (a as any).advertiser_subscriptions?.[0]
+                    const sub = advSubs.find(s => s.advertiser_id === a.id)
                     const monthlyIncome = (sub?.monthly_fee || 0) + clientCount * (sub?.per_client_fee || 0)
                     const advInvoices = (invoices as any[]).filter(inv => inv.owner_id === a.id)
                     const pendingAdv = advInvoices.filter(inv => inv.status === 'pending').reduce((s: number, inv: any) => s + (inv.total_amount || 0), 0)
