@@ -131,6 +131,8 @@ export default function SuperAdminPage() {
   const [showCustomerDetail, setShowCustomerDetail] = useState(false)
   const [selectedFirmaUser, setSelectedFirmaUser] = useState<any>(null)
   const [firmaUserFilter, setFirmaUserFilter] = useState('all')
+  /** Firma listesinde platform müşterileri vs reklamcı üzerinden eklenenler */
+  const [firmaSourceFilter, setFirmaSourceFilter] = useState<'all' | 'platform' | 'advertiser'>('all')
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -334,6 +336,24 @@ export default function SuperAdminPage() {
     c.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.email?.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  const advertiserLinkedProfileIds = new Set<string>()
+  advertisers.forEach((a: any) => {
+    (a.advertiser_clients || []).forEach((ac: any) => {
+      if (ac.client_id) advertiserLinkedProfileIds.add(ac.client_id)
+    })
+  })
+
+  const getAdvertiserForCustomerProfile = (profileId: string) => {
+    for (const a of advertisers) {
+      const found = (a.advertiser_clients || []).find((ac: any) => ac.client_id === profileId)
+      if (found) return a.company_name || a.full_name || a.email
+    }
+    return null
+  }
+
+  const directCustomers = filteredCustomers.filter(c => !advertiserLinkedProfileIds.has(c.id))
+  const viaAdvertiserCustomers = filteredCustomers.filter(c => advertiserLinkedProfileIds.has(c.id))
 
   const filteredAdvertisers = advertisers.filter(a =>
     a.full_name?.toLowerCase().includes(advSearchQuery.toLowerCase()) ||
@@ -597,8 +617,16 @@ export default function SuperAdminPage() {
           {/* ── FİRMA LİSTESİ ── */}
           {activeTab === 'firma-listesi' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">{filteredCustomers.length} firma</p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm text-gray-500">
+                    Toplam <span className="font-semibold text-gray-800">{filteredCustomers.length}</span> firma
+                    <span className="text-gray-400 mx-1.5">·</span>
+                    <span className="text-indigo-600 font-medium">{directCustomers.length}</span> platform
+                    <span className="text-gray-400 mx-1.5">·</span>
+                    <span className="text-amber-600 font-medium">{viaAdvertiserCustomers.length}</span> reklamcı
+                  </p>
+                </div>
                 <Btn size="sm" onClick={() => { resetOnboarding(); setShowOnboardingModal(true) }}>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
                   Firma Ekle
@@ -609,43 +637,134 @@ export default function SuperAdminPage() {
                 <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Firma adı veya e-posta ara..."
                   className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
-              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                {filteredCustomers.length === 0 ? (
-                  <div className="p-16 text-center"><p className="text-gray-400 text-sm">Firma bulunamadı.</p></div>
-                ) : filteredCustomers.map((c, i) => {
-                  const cBranches = branches.filter(b => b.owner_id === c.id)
-                  const sub = c.subscriptions?.[0]
-                  return (
-                    <div key={c.id} className={`px-5 py-4 flex items-center gap-4 hover:bg-gray-50/70 transition-colors ${i < filteredCustomers.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center flex-shrink-0">
-                        <span className="text-indigo-600 font-bold">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
+              <div className="flex flex-wrap gap-2">
+                {([
+                  { key: 'all', label: 'Tümü' },
+                  { key: 'platform', label: 'Platform (doğrudan)' },
+                  { key: 'advertiser', label: 'Reklamcı müşterisi' },
+                ] as const).map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setFirmaSourceFilter(key)}
+                    className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                      firmaSourceFilter === key
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {filteredCustomers.length === 0 ? (
+                <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+                  <p className="text-gray-400 text-sm">Firma bulunamadı.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {(firmaSourceFilter === 'all' || firmaSourceFilter === 'platform') && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2 px-0.5">
+                        <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">Platform</span>
+                        <span className="text-xs text-gray-400">DataPilot üzerinden doğrudan kayıtlı müşteriler</span>
+                        <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-medium">{directCustomers.length}</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <p className="text-sm font-semibold text-gray-900 truncate">{c.company_name || c.full_name}</p>
-                          {c.sector && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">{c.sector}</span>}
-                        </div>
-                        <p className="text-xs text-gray-400">{c.email}</p>
-                        <div className="flex gap-3 mt-1">
-                          <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
-                          {sub && <span className="text-xs text-gray-400">₺{sub.monthly_fee}/ay · Plan: {sub.plan}</span>}
-                          <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('tr-TR')}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button onClick={() => { setSelectedCustomer(c); setShowCustomerDetail(true) }}
-                          className="text-xs text-indigo-600 font-medium hover:text-indigo-700 px-3 py-1.5 hover:bg-indigo-50 rounded-lg transition-colors">
-                          Detay
-                        </button>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" checked={c.is_active !== false} onChange={() => handleToggleActive(c)} className="sr-only peer" />
-                          <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                        </label>
+                      <div className="bg-white rounded-2xl border border-indigo-100 overflow-hidden">
+                        {directCustomers.length === 0 ? (
+                          <div className="p-8 text-center text-sm text-gray-400">Bu kategoride firma yok.</div>
+                        ) : directCustomers.map((c, i) => {
+                          const cBranches = branches.filter(b => b.owner_id === c.id)
+                          const sub = c.subscriptions?.[0]
+                          return (
+                            <div key={c.id} className={`px-5 py-4 flex items-center gap-4 hover:bg-gray-50/70 transition-colors ${i < directCustomers.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center flex-shrink-0">
+                                <span className="text-indigo-600 font-bold">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                  <p className="text-sm font-semibold text-gray-900 truncate">{c.company_name || c.full_name}</p>
+                                  <span className="text-[10px] font-semibold uppercase tracking-wide bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-100">Platform</span>
+                                  {c.sector && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">{c.sector}</span>}
+                                </div>
+                                <p className="text-xs text-gray-400">{c.email}</p>
+                                <div className="flex gap-3 mt-1 flex-wrap">
+                                  <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
+                                  {sub && <span className="text-xs text-gray-400">₺{sub.monthly_fee}/ay · Plan: {sub.plan}</span>}
+                                  <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('tr-TR')}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <button onClick={() => { setSelectedCustomer(c); setShowCustomerDetail(true) }}
+                                  className="text-xs text-indigo-600 font-medium hover:text-indigo-700 px-3 py-1.5 hover:bg-indigo-50 rounded-lg transition-colors">
+                                  Detay
+                                </button>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                  <input type="checkbox" checked={c.is_active !== false} onChange={() => handleToggleActive(c)} className="sr-only peer" />
+                                  <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                                </label>
+                              </div>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
-                  )
-                })}
-              </div>
+                  )}
+
+                  {(firmaSourceFilter === 'all' || firmaSourceFilter === 'advertiser') && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2 px-0.5 flex-wrap">
+                        <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Reklamcı</span>
+                        <span className="text-xs text-gray-400">Bir reklamcı hesabı üzerinden eklenen müşteri hesapları</span>
+                        <span className="text-xs bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full font-medium">{viaAdvertiserCustomers.length}</span>
+                      </div>
+                      <div className="bg-white rounded-2xl border border-amber-100 overflow-hidden">
+                        {viaAdvertiserCustomers.length === 0 ? (
+                          <div className="p-8 text-center text-sm text-gray-400">Bu kategoride firma yok.</div>
+                        ) : viaAdvertiserCustomers.map((c, i) => {
+                          const cBranches = branches.filter(b => b.owner_id === c.id)
+                          const sub = c.subscriptions?.[0]
+                          const advName = getAdvertiserForCustomerProfile(c.id)
+                          return (
+                            <div key={c.id} className={`px-5 py-4 flex items-center gap-4 hover:bg-amber-50/40 transition-colors ${i < viaAdvertiserCustomers.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center flex-shrink-0">
+                                <span className="text-amber-700 font-bold">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                  <p className="text-sm font-semibold text-gray-900 truncate">{c.company_name || c.full_name}</p>
+                                  <span className="text-[10px] font-semibold uppercase tracking-wide bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">Reklamcı</span>
+                                  {c.sector && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">{c.sector}</span>}
+                                </div>
+                                {advName && (
+                                  <p className="text-xs text-amber-700 font-medium mt-0.5">Reklamcı: {advName}</p>
+                                )}
+                                <p className="text-xs text-gray-400">{c.email}</p>
+                                <div className="flex gap-3 mt-1 flex-wrap">
+                                  <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
+                                  {sub && <span className="text-xs text-gray-400">₺{sub.monthly_fee}/ay · Plan: {sub.plan}</span>}
+                                  <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('tr-TR')}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <button onClick={() => { setSelectedCustomer(c); setShowCustomerDetail(true) }}
+                                  className="text-xs text-indigo-600 font-medium hover:text-indigo-700 px-3 py-1.5 hover:bg-indigo-50 rounded-lg transition-colors">
+                                  Detay
+                                </button>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                  <input type="checkbox" checked={c.is_active !== false} onChange={() => handleToggleActive(c)} className="sr-only peer" />
+                                  <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                                </label>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
