@@ -73,6 +73,17 @@ export async function POST(req: Request) {
         })
       }
     }
+    // 3. Eğer advertiser ise advertiser_subscriptions oluştur
+    if (body.role === 'advertiser') {
+      await supabaseAdmin.from('advertiser_subscriptions').insert({
+        advertiser_id: userId,
+        monthly_fee: parseFloat(body.adv_monthly_fee) || 0,
+        per_client_fee: parseFloat(body.adv_per_client_fee) || 0,
+        status: 'active'
+      })
+      return NextResponse.json({ userId })
+    }
+
     // 3. Subscription
     await supabaseAdmin.from('subscriptions').insert({
       owner_id: userId,

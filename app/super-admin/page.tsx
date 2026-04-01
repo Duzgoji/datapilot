@@ -299,27 +299,23 @@ export default function SuperAdminPage() {
   const handleAddAdvertiser = async (e: React.FormEvent) => {
     e.preventDefault(); setAdvSaving(true)
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: advEmail, password: advPassword,
-        options: { data: { full_name: advName, role: 'advertiser' } }
+      const res = await fetch('/api/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: advEmail, password: advPassword, full_name: advName,
+          company_name: advCompany, phone: advPhone,
+          role: 'advertiser',
+          adv_monthly_fee: advMonthlyFee,
+          adv_per_client_fee: advPerClientFee,
+        })
       })
-      if (error) { alert(error.message); setAdvSaving(false); return }
-      if (data.user) {
-        await supabase.from('profiles').upsert({
-          id: data.user.id, email: advEmail, full_name: advName,
-          role: 'advertiser', company_name: advCompany, phone: advPhone, is_active: true
-        })
-        await supabase.from('advertiser_subscriptions').insert({
-          advertiser_id: data.user.id,
-          monthly_fee: parseFloat(advMonthlyFee) || 0,
-          per_client_fee: parseFloat(advPerClientFee) || 0,
-          status: 'active'
-        })
-        setAdvSuccess(advEmail)
-        setAdvName(''); setAdvEmail(''); setAdvPassword(''); setAdvCompany(''); setAdvPhone('')
-        setAdvMonthlyFee('990'); setAdvPerClientFee('0')
-        loadData()
-      }
+      const result = await res.json()
+      if (result.error) { alert(result.error); setAdvSaving(false); return }
+      setAdvSuccess(advEmail)
+      setAdvName(''); setAdvEmail(''); setAdvPassword(''); setAdvCompany(''); setAdvPhone('')
+      setAdvMonthlyFee('990'); setAdvPerClientFee('0')
+      loadData()
     } catch (err: any) { alert(err.message) }
     setAdvSaving(false)
   }
