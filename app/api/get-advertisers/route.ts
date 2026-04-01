@@ -8,21 +8,29 @@ const supabaseAdmin = createClient(
 
 export async function GET() {
   try {
-    // Tüm profillerin role değerlerini kontrol et
-    const { data: allProfiles, error: allError } = await supabaseAdmin
+    const { data: advertisers, error } = await supabaseAdmin
       .from('profiles')
-      .select('id, email, role')
-      .order('created_at', { ascending: false })
-
-    const { data, error } = await supabaseAdmin
-      .from('profiles')
-      .select('*, advertiser_clients!advertiser_id(*), advertiser_subscriptions(*)')
+      .select('*')
       .eq('role', 'advertiser')
       .order('created_at', { ascending: false })
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!advertisers || advertisers.length === 0) return NextResponse.json({ data: [] })
 
-    return NextResponse.json({ data: data || [] })
+    const ids = advertisers.map(a => a.id)
+
+    const [{ data: clients }, { data: subs }] = await Promise.all([
+      supabaseAdmin.from('advertiser_clients').select('*').in('advertiser_id', ids),
+      supabaseAdmin.from('advertiser_subscriptions').select('*').in('advertiser_id', ids),
+    ])
+
+    const data = advertisers.map(a => ({
+      ...a,
+      advertiser_clients: clients?.filter(c => c.advertiser_id === a.id) || [],
+      advertiser_subscriptions: subs?.filter(s => s.advertiser_id === a.id) || [],
+    }))
+
+    return NextResponse.json({ data })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
