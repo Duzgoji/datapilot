@@ -156,6 +156,7 @@ export default function SuperAdminPage() {
   const [advSuccess, setAdvSuccess] = useState('')
   const [selectedAdvertiser, setSelectedAdvertiser] = useState<any>(null)
   const [advDetailTab, setAdvDetailTab] = useState('genel')
+  const [expandedAdvertiser, setExpandedAdvertiser] = useState<string | null>(null)
   const [advInvoiceAmount, setAdvInvoiceAmount] = useState('')
   const [advInvoiceNote, setAdvInvoiceNote] = useState('')
   const [advInvoiceDue, setAdvInvoiceDue] = useState('')
@@ -725,8 +726,11 @@ export default function SuperAdminPage() {
 
                     return (
                       <div key={a.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-sm transition-all">
-                        {/* Üst satır */}
-                        <div className="px-5 py-4 flex items-center gap-4 border-b border-gray-50">
+                        {/* Üst satır — tıklanabilir */}
+                        <div
+                          className="px-5 py-4 flex items-center gap-4 cursor-pointer select-none"
+                          onClick={() => setExpandedAdvertiser(expandedAdvertiser === a.id ? null : a.id)}
+                        >
                           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center flex-shrink-0">
                             <span className="text-amber-600 font-bold">{(a.company_name || a.full_name || 'R').charAt(0)}</span>
                           </div>
@@ -737,7 +741,7 @@ export default function SuperAdminPage() {
                             </div>
                             <p className="text-xs text-gray-400">{a.email} · {a.phone || '-'}</p>
                           </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
                             <button onClick={() => setSelectedAdvertiser(a)}
                               className="text-xs text-amber-600 font-medium hover:text-amber-700 px-3 py-1.5 hover:bg-amber-50 rounded-lg transition-colors border border-amber-200">
                               Detay & Fatura
@@ -746,35 +750,41 @@ export default function SuperAdminPage() {
                               <input type="checkbox" checked={a.is_active !== false} onChange={() => handleToggleActive(a)} className="sr-only peer" />
                               <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-amber-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                             </label>
+                            <svg className={`w-4 h-4 text-gray-400 transition-transform ${expandedAdvertiser === a.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                           </div>
                         </div>
 
-                        {/* Mali özet */}
-                        <div className="px-5 py-3 grid grid-cols-4 gap-3">
-                          <div className="text-center">
-                            <p className="text-base font-bold text-amber-600">{clientCount}</p>
-                            <p className="text-xs text-gray-400">Müşteri</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-base font-bold text-indigo-600">₺{(monthlyIncome).toLocaleString()}</p>
-                            <p className="text-xs text-gray-400">Aylık Gelir</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-base font-bold text-rose-500">₺{pendingAdv.toLocaleString()}</p>
-                            <p className="text-xs text-gray-400">Bekleyen</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-base font-bold text-emerald-600">₺{paidAdv.toLocaleString()}</p>
-                            <p className="text-xs text-gray-400">Tahsil</p>
-                          </div>
-                        </div>
+                        {/* Açılır detay */}
+                        {expandedAdvertiser === a.id && (
+                          <div className="border-t border-gray-50">
+                            {/* Mali özet */}
+                            <div className="px-5 py-3 grid grid-cols-4 gap-3">
+                              <div className="text-center">
+                                <p className="text-base font-bold text-amber-600">{clientCount}</p>
+                                <p className="text-xs text-gray-400">Müşteri</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-base font-bold text-indigo-600">₺{(monthlyIncome).toLocaleString()}</p>
+                                <p className="text-xs text-gray-400">Aylık Gelir</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-base font-bold text-rose-500">₺{pendingAdv.toLocaleString()}</p>
+                                <p className="text-xs text-gray-400">Bekleyen</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-base font-bold text-emerald-600">₺{paidAdv.toLocaleString()}</p>
+                                <p className="text-xs text-gray-400">Tahsil</p>
+                              </div>
+                            </div>
 
-                        {/* Fiyat bilgisi */}
-                        {sub && (
-                          <div className="px-5 pb-3 flex items-center gap-3">
-                            <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">₺{sub.monthly_fee}/ay sabit</span>
-                            <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">₺{sub.per_client_fee}/müşteri</span>
-                            <span className="text-xs text-gray-400">kayıt: {new Date(a.created_at).toLocaleDateString('tr-TR')}</span>
+                            {/* Fiyat bilgisi */}
+                            {sub && (
+                              <div className="px-5 pb-3 flex items-center gap-3">
+                                <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">₺{sub.monthly_fee}/ay sabit</span>
+                                <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">₺{sub.per_client_fee}/müşteri</span>
+                                <span className="text-xs text-gray-400">kayıt: {new Date(a.created_at).toLocaleDateString('tr-TR')}</span>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
