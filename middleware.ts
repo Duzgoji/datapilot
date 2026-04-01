@@ -93,17 +93,13 @@ export async function middleware(request: NextRequest) {
     return redirectTo('/login', request)
   }
 
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  if (profileError) {
-    return redirectTo('/login', request)
-  }
-
-  const role = profile?.role as string | undefined
+  const role = (profile?.role || user.user_metadata?.role) as string | undefined
   if (!role) {
     return redirectTo('/login', request)
   }
