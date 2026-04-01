@@ -2,11 +2,9 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,41 +15,53 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      })
 
-    if (signInError) {
-      setError('E-posta veya şifre hatalı.')
-      setLoading(false)
-      return
-    }
+      if (signInError) {
+        setError('E-posta veya şifre hatalı.')
+        return
+      }
 
-    if (data.user) {
-      const { data: profile, error: profileError } = await supabase
+      const user = data.user ?? data.session?.user
+      if (!user) {
+        setError('Oturum başlatılamadı. Sayfayı yenileyip tekrar deneyin.')
+        return
+      }
+
+      const { data: profile } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', data.user.id)
+        .eq('id', user.id)
         .single()
 
-      const role = profile?.role || data.user.user_metadata?.role
-      if (profileError || !role) {
+      const role = (profile?.role || user.user_metadata?.role) as string | undefined
+      if (!role) {
         setError('Hesap rolü bulunamadı. Lütfen yönetici ile iletişime geçin.')
-        setLoading(false)
         return
       }
 
-      if (role === 'super_admin') router.push('/super-admin')
-      else if (role === 'customer') router.push('/customer')
-      else if (role === 'agent' || role === 'team') router.push('/agent')
-      else if (role === 'manager') router.push('/manager')
-      else if (role === 'advertiser') router.push('/advertiser')
+      let path = '/customer'
+      if (role === 'super_admin') path = '/super-admin'
+      else if (role === 'customer') path = '/customer'
+      else if (role === 'agent' || role === 'team') path = '/agent'
+      else if (role === 'manager') path = '/manager'
+      else if (role === 'advertiser') path = '/advertiser'
       else {
         setError('Bu hesap için panel tanımı bulunamadı.')
-        setLoading(false)
         return
       }
-    }
 
-    setLoading(false)
+      await supabase.auth.getSession()
+      window.location.assign(path)
+    } catch {
+      setError('Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
