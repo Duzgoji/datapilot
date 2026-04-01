@@ -8,15 +8,28 @@ const supabaseAdmin = createClient(
 
 export async function GET() {
   try {
+    // Tüm profillerin role değerlerini kontrol et
+    const { data: allProfiles, error: allError } = await supabaseAdmin
+      .from('profiles')
+      .select('id, email, role')
+      .order('created_at', { ascending: false })
+
+    // Sadece advertiser olanlar
     const { data, error } = await supabaseAdmin
       .from('profiles')
       .select('*, advertiser_clients(*), advertiser_subscriptions(*)')
       .eq('role', 'advertiser')
       .order('created_at', { ascending: false })
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-    return NextResponse.json({ data: data || [] })
+    return NextResponse.json({
+      data: data || [],
+      error: error?.message || null,
+      debug: {
+        allProfilesCount: allProfiles?.length,
+        allProfilesError: allError?.message,
+        roleValues: allProfiles?.map(p => ({ email: p.email, role: p.role })),
+      }
+    })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
