@@ -670,10 +670,20 @@ export default function SuperAdminPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-500">{filteredAdvertisers.length} reklamcı</p>
-                <Btn size="sm" onClick={() => setActiveTab('reklamci-ekle')} className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-                  Reklamcı Ekle
-                </Btn>
+                <div className="flex gap-2">
+                  <Btn size="sm" variant="secondary" onClick={async () => {
+                    if (!confirm('Auth\'daki tüm reklamcılar profiles tablosuna senkronize edilecek. Devam?')) return
+                    const res = await fetch('/api/sync-advertisers', { method: 'POST' })
+                    const result = await res.json()
+                    if (result.error) { alert('Hata: ' + result.error); return }
+                    alert(`${result.synced} reklamcı senkronize edildi.`)
+                    loadData()
+                  }}>Eskilerini Senkronize Et</Btn>
+                  <Btn size="sm" onClick={() => setActiveTab('reklamci-ekle')} className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+                    Reklamcı Ekle
+                  </Btn>
+                </div>
               </div>
               <div className="relative">
                 <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
