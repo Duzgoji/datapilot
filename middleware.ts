@@ -29,10 +29,34 @@ function redirectTo(path: string, request: NextRequest) {
 }
 
 function extractAccessToken(request: NextRequest): string | null {
-  for (const cookie of request.cookies.getAll()) {
-    if (!cookie.name.includes('auth-token')) continue
+  const allCookies = request.cookies.getAll()
+  const authCandidates: string[] = []
 
-    let value = cookie.value
+  // Regular auth cookie.
+  for (const cookie of allCookies) {
+    if (cookie.name.includes('auth-token') && !/\.\d+$/.test(cookie.name)) {
+      authCandidates.push(cookie.value)
+    }
+  }
+
+  // Chunked auth cookies: sb-...-auth-token.0, .1, ...
+  const chunkGroups = new Map<string, Array<{ index: number; value: string }>>()
+  for (const cookie of allCookies) {
+    const match = cookie.name.match(/^(.*auth-token)\.(\d+)$/)
+    if (!match) continue
+    const base = match[1]
+    const index = Number(match[2])
+    const list = chunkGroups.get(base) || []
+    list.push({ index, value: cookie.value })
+    chunkGroups.set(base, list)
+  }
+  for (const [, chunks] of chunkGroups) {
+    chunks.sort((a, b) => a.index - b.index)
+    authCandidates.push(chunks.map((c) => c.value).join(''))
+  }
+
+  for (const rawValue of authCandidates) {
+    let value = rawValue
     try {
       value = decodeURIComponent(value)
     } catch {
