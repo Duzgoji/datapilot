@@ -26,19 +26,29 @@ export default function LoginPage() {
     }
 
     if (data.user) {
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', data.user.id)
         .single()
 
-      const role = profile?.role
+      const role = profile?.role || data.user.user_metadata?.role
+      if (profileError || !role) {
+        setError('Hesap rolü bulunamadı. Lütfen yönetici ile iletişime geçin.')
+        setLoading(false)
+        return
+      }
+
       if (role === 'super_admin') router.push('/super-admin')
       else if (role === 'customer') router.push('/customer')
       else if (role === 'agent' || role === 'team') router.push('/agent')
-      else if (role === 'manager') router.push('/customer')
+      else if (role === 'manager') router.push('/manager')
       else if (role === 'advertiser') router.push('/advertiser')
-      else router.push('/customer')
+      else {
+        setError('Bu hesap için panel tanımı bulunamadı.')
+        setLoading(false)
+        return
+      }
     }
 
     setLoading(false)
