@@ -55,7 +55,21 @@ export default function LoginPage() {
         return
       }
 
-      await supabase.auth.getSession()
+      const deadline = Date.now() + 3000
+      let sessionReady = false
+      while (Date.now() < deadline) {
+        const { data: s } = await supabase.auth.getSession()
+        if (s.session?.access_token) {
+          sessionReady = true
+          break
+        }
+        await new Promise((r) => setTimeout(r, 50))
+      }
+      if (!sessionReady) {
+        setError('Oturum kaydedilemedi. Çerezleri temizleyip tekrar deneyin.')
+        return
+      }
+
       window.location.assign(path)
     } catch {
       setError('Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.')

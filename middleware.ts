@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -24,56 +24,12 @@ const ROUTE_ACCESS: Array<{ prefix: string; roles: string[] }> = [
   { prefix: '/agent', roles: ['agent', 'team'] },
 ]
 
-function redirectTo(path: string, request: NextRequest) {
-  return NextResponse.redirect(new URL(path, request.url))
-}
-
-function extractAccessToken(request: NextRequest): string | null {
-  const allCookies = request.cookies.getAll()
-  const authCandidates: string[] = []
-
-  // Regular auth cookie.
-  for (const cookie of allCookies) {
-    if (cookie.name.includes('auth-token') && !/\.\d+$/.test(cookie.name)) {
-      authCandidates.push(cookie.value)
-    }
-  }
-
-  // Chunked auth cookies: sb-...-auth-token.0, .1, ...
-  const chunkGroups = new Map<string, Array<{ index: number; value: string }>>()
-  for (const cookie of allCookies) {
-    const match = cookie.name.match(/^(.*auth-token)\.(\d+)$/)
-    if (!match) continue
-    const base = match[1]
-    const index = Number(match[2])
-    const list = chunkGroups.get(base) || []
-    list.push({ index, value: cookie.value })
-    chunkGroups.set(base, list)
-  }
-  for (const [, chunks] of chunkGroups) {
-    chunks.sort((a, b) => a.index - b.index)
-    authCandidates.push(chunks.map((c) => c.value).join(''))
-  }
-
-  for (const rawValue of authCandidates) {
-    let value = rawValue
-    try {
-      value = decodeURIComponent(value)
-    } catch {
-      // Use raw cookie value if decode fails.
-    }
-
-    try {
-      const parsed = JSON.parse(value)
-      if (typeof parsed === 'string') return parsed
-      if (Array.isArray(parsed) && typeof parsed[0] === 'string') return parsed[0]
-      if (parsed && typeof parsed.access_token === 'string') return parsed.access_token
-    } catch {
-      if (value && value.split('.').length === 3) return value
-    }
-  }
-
-  return null
+function redirectTo(path: string, request: NextRequest, fromResponse: NextResponse) {
+  const res = NextResponse.redirect(new URL(path, request.url))
+  fromResponse.cookies.getAll().forEach((c) => {
+    res.cookies.set(c.name, c.value)
+  })
+  return res
 }
 
 function getRequiredRoles(pathname: string): string[] | null {
@@ -85,7 +41,6 @@ function extractAdvertiserCustomerId(pathname: string): string | null {
   if (!pathname.startsWith('/advertiser/customers/')) return null
 
   const parts = pathname.split('/').filter(Boolean)
-  // /advertiser/customers/:customerId(/...)
   if (parts.length < 3) return null
 
   const customerId = parts[2]
@@ -93,28 +48,37 @@ function extractAdvertiserCustomerId(pathname: string): string | null {
 }
 
 export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({ request })
+
   const { pathname } = request.nextUrl
   const requiredRoles = getRequiredRoles(pathname)
-  if (!requiredRoles) return NextResponse.next()
+  if (!requiredRoles) return response
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    return redirectTo('/login', request)
+    return redirectTo('/login', request, response)
   }
 
-  const accessToken = extractAccessToken(request)
-  if (!accessToken) {
-    return redirectTo('/login', request)
-  }
-
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${accessToken}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
+  const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+        response = NextResponse.next({ request })
+        cookiesToSet.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options)
+        )
+      },
+    },
   })
 
-  const { data: authData } = await supabase.auth.getUser(accessToken)
-  const user = authData?.user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   if (!user) {
-    return redirectTo('/login', request)
+    return redirectTo('/login', request, response)
   }
 
   const { data: profile } = await supabase
@@ -125,11 +89,11 @@ export async function middleware(request: NextRequest) {
 
   const role = (profile?.role || user.user_metadata?.role) as string | undefined
   if (!role) {
-    return redirectTo('/login', request)
+    return redirectTo('/login', request, response)
   }
 
   if (!requiredRoles.includes(role)) {
-    return redirectTo(ROLE_HOME[role] || '/login', request)
+    return redirectTo(ROLE_HOME[role] || '/login', request, response)
   }
 
   const customerId = extractAdvertiserCustomerId(pathname)
@@ -146,11 +110,11 @@ export async function middleware(request: NextRequest) {
       .maybeSingle()
 
     if (membershipError || !membership) {
-      return redirectTo('/advertiser/customers', request)
+      return redirectTo('/advertiser/customers', request, response)
     }
   }
 
-  return NextResponse.next()
+  return response
 }
 
 export const config = {
@@ -160,5 +124,5 @@ export const config = {
     '/agent/:path*',
     '/manager/:path*',
     '/super-admin/:path*',
-  ]
+  ],
 }
