@@ -797,7 +797,12 @@ export default function SuperAdminPage() {
                 <div className="flex gap-2">
                   <Btn size="sm" variant="secondary" onClick={async () => {
                     if (!confirm('Auth\'daki tüm reklamcılar profiles tablosuna senkronize edilecek. Devam?')) return
-                    const res = await fetch('/api/sync-advertisers', { method: 'POST' })
+                   const session = await supabase.auth.getSession()
+const token = session.data.session?.access_token
+const res = await fetch('/api/sync-advertisers', { 
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${token}` }
+})
                     const result = await res.json()
                     if (result.error) { alert('Hata: ' + result.error); return }
                     alert(`${result.synced} reklamcı senkronize edildi.`)
