@@ -8,6 +8,24 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: Request) {
   try {
+    // Auth kontrolü — sadece super_admin çağırabilir
+const authHeader = req.headers.get('authorization')
+if (!authHeader) {
+  return NextResponse.json({ error: 'Yetkisiz erişim.' }, { status: 401 })
+}
+
+const token = authHeader.replace('Bearer ', '')
+const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+if (authError || !user) {
+  return NextResponse.json({ error: 'Geçersiz token.' }, { status: 401 })
+}
+
+const { data: callerProfile } = await supabaseAdmin
+  .from('profiles').select('role').eq('id', user.id).single()
+
+if (!callerProfile || !['super_admin', 'advertiser'].includes(callerProfile.role)) {
+  return NextResponse.json({ error: 'Bu işlem için yetkiniz yok.' }, { status: 403 })
+}
     const body = await req.json()
     const {
       email, password, full_name, company_name, sector, phone,

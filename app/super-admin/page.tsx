@@ -305,7 +305,10 @@ export default function SuperAdminPage() {
     try {
       const res = await fetch('/api/create-user', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+},
         body: JSON.stringify({
           email: advEmail, password: advPassword, full_name: advName,
           company_name: advCompany, phone: advPhone,

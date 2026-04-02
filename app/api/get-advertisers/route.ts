@@ -6,8 +6,19 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader) return NextResponse.json({ error: 'Yetkisiz erişim.' }, { status: 401 })
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user } } = await supabaseAdmin.auth.getUser(token)
+    if (!user) return NextResponse.json({ error: 'Geçersiz token.' }, { status: 401 })
+    const { data: callerProfile } = await supabaseAdmin
+      .from('profiles').select('role').eq('id', user.id).single()
+    if (!callerProfile || callerProfile.role !== 'super_admin') {
+      return NextResponse.json({ error: 'Yetkisiz erişim.' }, { status: 403 })
+    }
+
     const { data: advertisers, error } = await supabaseAdmin
       .from('profiles')
       .select('*')

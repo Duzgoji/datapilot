@@ -84,8 +84,13 @@ export default function CustomersPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const res = await fetch('/api/create-user', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+      const session = await supabase.auth.getSession()
+const token = session.data.session?.access_token
+const res = await fetch('/api/create-user', {
+  method: 'POST', headers: { 
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  },
         body: JSON.stringify({
           email, password, full_name: name, company_name: name,
           phone, sector, role: 'customer',
