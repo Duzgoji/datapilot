@@ -249,7 +249,10 @@ export default function SuperAdminPage() {
     setAllUsers(usersData || [])
     const { data: teamMembersData } = await supabase.from('team_members').select('user_id, branch_id')
     setTeamMembers(teamMembersData || [])
-    const advRes = await fetch('/api/get-advertisers')
+    const { data: { session } } = await supabase.auth.getSession()
+const advRes = await fetch('/api/get-advertisers', {
+  headers: { 'Authorization': `Bearer ${session?.access_token}` }
+})
     const advJson = await advRes.json()
     setAdvertisers(advJson.data || [])
     setLoading(false)
