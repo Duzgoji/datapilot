@@ -95,9 +95,9 @@ export async function requireAdvertiserWorkspaceAccess(
 
   const supabase = await createServerSupabaseClient()
   const { data: membership, error } = await supabase
-    .from('workspace_members')
-    .select('user_id')
-    .eq('user_id', profile.id)
+    .from('advertiser_clients')
+    .select('advertiser_id')
+    .eq('advertiser_id', profile.id)
     .eq('customer_id', customerId)
     .maybeSingle()
 

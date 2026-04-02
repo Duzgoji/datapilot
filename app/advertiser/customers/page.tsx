@@ -116,7 +116,7 @@ const res = await fetch('/api/create-user', {
   c.name?.toLowerCase().includes(search.toLowerCase()) ||
   c.owner?.email?.toLowerCase().includes(search.toLowerCase()) ||
   String(c.customer_number).includes(search)
-  
+
   )
 
   return (
@@ -175,6 +175,7 @@ const res = await fetch('/api/create-user', {
             const metaConn = metaConnections.find(m => m.owner_id === c.owner_id)
             const client = advertiserClients.find(ac => ac.customer_id === c.id)
             const earned = getHakedis(c)
+            console.log('Customer ID:', c.id, 'Number:', c.customer_number)
             return (
               <Link key={c.id} href={`/advertiser/customers/${c.id}`}
                 className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-amber-200 transition-all group">
