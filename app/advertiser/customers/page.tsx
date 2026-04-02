@@ -113,8 +113,10 @@ const res = await fetch('/api/create-user', {
   }
 
   const filtered = customers.filter(c =>
-    c.name?.toLowerCase().includes(search.toLowerCase()) ||
-    c.owner?.email?.toLowerCase().includes(search.toLowerCase())
+  c.name?.toLowerCase().includes(search.toLowerCase()) ||
+  c.owner?.email?.toLowerCase().includes(search.toLowerCase()) ||
+  String(c.customer_number).includes(search)
+  
   )
 
   return (
@@ -187,7 +189,7 @@ const res = await fetch('/api/create-user', {
                       </span>
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5 truncate">{c.owner?.email}</p>
-                    <p className="text-xs text-gray-300 font-mono truncate">{c.id}</p>
+                    <p className="text-xs text-gray-300 font-mono">#{String(c.customer_number).padStart(4, '0')}</p>
                   </div>
                   <svg className="text-gray-300 group-hover:text-amber-400 transition-colors flex-shrink-0" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </div>

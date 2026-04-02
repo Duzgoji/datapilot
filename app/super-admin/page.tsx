@@ -237,7 +237,7 @@ export default function SuperAdminPage() {
     const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (profileData?.role !== 'super_admin') { router.push('/login'); return }
     setProfile(profileData)
-    const { data: customersData } = await supabase.from('profiles').select('*, subscriptions(*)').eq('role', 'customer').order('created_at', { ascending: false })
+    const { data: customersData } = await supabase.from('profiles').select('*, subscriptions(*), customers(customer_number)').eq('role', 'customer').order('created_at', { ascending: false })
     setCustomers(customersData || [])
     const { data: branchesData } = await supabase.from('branches').select('*')
     setBranches(branchesData || [])
@@ -576,6 +576,7 @@ const advRes = await fetch('/api/get-advertisers', {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{c.company_name || c.full_name}</p>
                         <p className="text-xs text-gray-400 truncate">{c.email}</p>
+                        {c.customers?.[0]?.customer_number && <p className="text-xs text-gray-300 font-mono">#{String(c.customers[0].customer_number).padStart(4, '0')}</p>}
                       </div>
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${c.is_active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
                         {c.is_active !== false ? 'Aktif' : 'Pasif'}
