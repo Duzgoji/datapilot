@@ -37,15 +37,6 @@ function getRequiredRoles(pathname: string): string[] | null {
   return match ? match.roles : null
 }
 
-function extractAdvertiserCustomerId(pathname: string): string | null {
-  if (!pathname.startsWith('/advertiser/customers/')) return null
-
-  const parts = pathname.split('/').filter(Boolean)
-  if (parts.length < 3) return null
-
-  const customerId = parts[2]
-  return customerId || null
-}
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
@@ -94,24 +85,6 @@ export async function middleware(request: NextRequest) {
 
   if (!requiredRoles.includes(role)) {
     return redirectTo(ROLE_HOME[role] || '/login', request, response)
-  }
-
-  const customerId = extractAdvertiserCustomerId(pathname)
-  if (
-    customerId &&
-    role !== 'superadmin' &&
-    role !== 'super_admin'
-  ) {
-    const { data: membership, error: membershipError } = await supabase
-      .from('workspace_members')
-      .select('user_id')
-      .eq('user_id', user.id)
-      .eq('customer_id', customerId)
-      .maybeSingle()
-
-    if (membershipError || !membership) {
-      return redirectTo('/advertiser/customers', request, response)
-    }
   }
 
   return response
