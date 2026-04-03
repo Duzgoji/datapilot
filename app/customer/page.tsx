@@ -1606,11 +1606,6 @@ const handlePayCommission = async () => {
     <h2 className="text-base font-semibold text-gray-900">Satış Süreci Takibi</h2>
     <p className="text-xs text-gray-400 mt-0.5">Potansiyel müşterilerinizi aşamalara göre takip edin</p>
   </div>
-    <div>
-      <h2 className="text-base font-semibold text-gray-900">Satış Süreci Takibi</h2>
-      <p className="text-xs text-gray-400 mt-0.5">Potansiyel müşterilerinizi aşamalara göre takip edin</p>
-    </div>
-
     {/* Özet satırı */}
     <div className="flex gap-3 flex-wrap">
       {statusColumns.map(status => {
@@ -1632,7 +1627,7 @@ const handlePayCommission = async () => {
         const colLeads = leads.filter(l => l.status === status)
         const config = STATUS_CONFIG[status]
         return (
-          <div key={status} className="w-60 flex-shrink-0 bg-gray-50 rounded-2xl p-3 border border-gray-100">
+         <div key={status} className="w-72 flex-shrink-0 bg-gray-50 rounded-2xl p-3 border border-gray-100">
             {/* Kolon başlığı */}
             <div className="flex items-center justify-between mb-3 px-1">
               <div className="flex items-center gap-2">
