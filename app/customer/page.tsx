@@ -1015,7 +1015,7 @@ const handlePayCommission = async () => {
               {/* Filters */}
               <div className="space-y-2">
                 <div>
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Durum</p>
+                 <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Duruma göre filtrele</p>
                   <div className="flex gap-1.5 flex-wrap">
                     {[{ key: 'all', label: 'Tümü' }, ...Object.entries(STATUS_CONFIG).map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
                       <button key={f.key} onClick={() => setFilterStatus(f.key)}
@@ -1612,10 +1612,10 @@ const handlePayCommission = async () => {
 </Modal>
 
 {activeTab === 'pipeline' && (
-  <div className="space-y-5 -mx-6 -mr-6">
+  <div className="space-y-5">
   <div className="px-6">
     <h2 className="text-base font-semibold text-gray-900">Satış Süreci Takibi</h2>
-    <p className="text-xs text-gray-400 mt-0.5">Potansiyel müşterilerinizi aşamalara göre takip edin</p>
+    <p className="text-xs text-gray-400 mt-0.5">Potansiyel müşterilerinizin satış sürecindeki konumunu görün ve süreci yönetin</p>
   </div>
     {/* Özet satırı */}
     <div className="flex gap-3 flex-wrap">
@@ -1633,7 +1633,7 @@ const handlePayCommission = async () => {
     </div>
 
     {/* Kolonlar */}
-    <div className="flex gap-4 overflow-x-auto pb-4 px-6">
+    <div className="flex gap-4 overflow-x-auto pb-4">
       {statusColumns.map(status => {
         const colLeads = leads.filter(l => l.status === status)
         const config = STATUS_CONFIG[status]
