@@ -217,7 +217,7 @@ export default function CustomerPage() {
   const [leadSource, setLeadSource] = useState('manual')
   const [leadAssignTo, setLeadAssignTo] = useState('')
   const [leadNote, setLeadNote] = useState('')
-
+  const [expandedMembers, setExpandedMembers] = useState<string[]>([])
   // Lead detail/update
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [newStatus, setNewStatus] = useState('')
@@ -1316,7 +1316,7 @@ const handlePayCommission = async () => {
           return (
             <div key={member.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-sm transition-all">
               {/* Üst: Satışçı Bilgisi */}
-              <div className="px-5 py-4 flex items-center gap-4 border-b border-gray-50">
+              <div className="px-5 py-4 flex items-center gap-4 border-b border-gray-50 cursor-pointer" onClick={() => setExpandedMembers(prev => prev.includes(member.id) ? prev.filter(id => id !== member.id) : [...prev, member.id])}>
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${ap} flex items-center justify-center flex-shrink-0`}>
                   <span className="font-bold text-sm">{member.profiles?.full_name?.charAt(0)}</span>
                 </div>
@@ -1346,65 +1346,87 @@ const handlePayCommission = async () => {
                   </label>
                 </div>
               </div>
- 
-              {/* Orta: Performans İstatistikleri */}
-              <div className="px-5 py-3 grid grid-cols-4 gap-3 border-b border-gray-50">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-blue-600">{memberLeads.length}</p>
-                  <p className="text-xs text-gray-400">Potansiyel Müşteri</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-emerald-600">{memberSales.length}</p>
-                  <p className="text-xs text-gray-400">Satış</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-violet-600">₺{(memberRevenue/1000).toFixed(memberRevenue >= 10000 ? 0 : 1)}K</p>
-                  <p className="text-xs text-gray-400">Ciro</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-gray-700">
-                    %{memberLeads.length > 0 ? ((memberSales.length / memberLeads.length) * 100).toFixed(0) : 0}
-                  </p>
-                  <p className="text-xs text-gray-400">Dönüşüm</p>
-                </div>
-              </div>
- 
-              {/* Alt: Hakediş Sistemi */}
-              <div className="px-5 py-4">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Hakediş Durumu</p>
-                  {remaining > 0 && (
-                    <button
-                      onClick={() => { setPaymentMember(member); setPaymentAmount(remaining.toFixed(0)); setShowPaymentModal(true) }}
-                      className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-sm shadow-emerald-200">
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M3 4l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      Ödeme Yap
-                    </button>
-                  )}
-                  {remaining <= 0 && totalEarned > 0 && (
-                    <span className="flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-50 px-2.5 py-1 rounded-full">
-                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 5.5l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      Tamamı Ödendi
-                    </span>
-                  )}
-                </div>
- 
-                <div className="grid grid-cols-3 gap-3 mb-3">
-                  <div className="bg-rose-50 rounded-xl p-3 border border-rose-100">
-                    <p className="text-xs text-gray-400 mb-1">Toplam Hakediş</p>
-                    <p className="text-base font-bold text-rose-600">₺{totalEarned.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
-                  </div>
-                  <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
-                    <p className="text-xs text-gray-400 mb-1">Ödenen</p>
-                    <p className="text-base font-bold text-emerald-600">₺{totalPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
-                  </div>
-                  <div className={`rounded-xl p-3 border ${remaining > 0 ? 'bg-amber-50 border-amber-100' : 'bg-gray-50 border-gray-100'}`}>
-                    <p className="text-xs text-gray-400 mb-1">Kalan Borç</p>
-                    <p className={`text-base font-bold ${remaining > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
-                      ₺{Math.max(0, remaining).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
-                    </p>
-                  </div>
-                </div>
+            
+              {expandedMembers.includes(member.id) && (
+  <>
+    <div className="px-5 py-3 grid grid-cols-4 gap-3 border-b border-gray-50">
+      <div className="text-center">
+        <p className="text-lg font-bold text-blue-600">{memberLeads.length}</p>
+        <p className="text-xs text-gray-400">Potansiyel Müşteri</p>
+      </div>
+      <div className="text-center">
+        <p className="text-lg font-bold text-emerald-600">{memberSales.length}</p>
+        <p className="text-xs text-gray-400">Satış</p>
+      </div>
+      <div className="text-center">
+        <p className="text-lg font-bold text-violet-600">₺{(memberRevenue/1000).toFixed(memberRevenue >= 10000 ? 0 : 1)}K</p>
+        <p className="text-xs text-gray-400">Ciro</p>
+      </div>
+      <div className="text-center">
+        <p className="text-lg font-bold text-gray-700">
+          %{memberLeads.length > 0 ? ((memberSales.length / memberLeads.length) * 100).toFixed(0) : 0}
+        </p>
+        <p className="text-xs text-gray-400">Dönüşüm</p>
+      </div>
+    </div>
+
+    <div className="px-5 py-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Hakediş Durumu</p>
+        {remaining > 0 && (
+          <button
+            onClick={() => { setPaymentMember(member); setPaymentAmount(remaining.toFixed(0)); setShowPaymentModal(true) }}
+            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-sm shadow-emerald-200">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M3 4l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Ödeme Yap
+          </button>
+        )}
+        {remaining <= 0 && totalEarned > 0 && (
+          <span className="flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-50 px-2.5 py-1 rounded-full">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 5.5l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Tamamı Ödendi
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 mb-3">
+        <div className="bg-rose-50 rounded-xl p-3 border border-rose-100">
+          <p className="text-xs text-gray-400 mb-1">Toplam Hakediş</p>
+          <p className="text-base font-bold text-rose-600">₺{totalEarned.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+        </div>
+        <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+          <p className="text-xs text-gray-400 mb-1">Ödenen</p>
+          <p className="text-base font-bold text-emerald-600">₺{totalPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+        </div>
+        <div className={`rounded-xl p-3 border ${remaining > 0 ? 'bg-amber-50 border-amber-100' : 'bg-gray-50 border-gray-100'}`}>
+          <p className="text-xs text-gray-400 mb-1">Kalan Borç</p>
+          <p className={`text-base font-bold ${remaining > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
+            ₺{Math.max(0, remaining).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+          </p>
+        </div>
+      </div>
+
+      {totalEarned > 0 && (
+        <div>
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all"
+              style={{ width: `${Math.min(100, (totalPaid / totalEarned) * 100)}%` }}
+            />
+          </div>
+          <div className="flex justify-between mt-1">
+            <p className="text-xs text-gray-400">%{totalEarned > 0 ? ((totalPaid / totalEarned) * 100).toFixed(0) : 0} ödendi</p>
+            <p className="text-xs text-gray-400">%{member.commission_rate} prim oranı</p>
+          </div>
+        </div>
+      )}
+
+      {totalEarned === 0 && (
+        <p className="text-xs text-gray-300 text-center py-1">Henüz satış yok — hakediş hesaplanamıyor</p>
+      )}
+    </div>
+  </>
+)}
  
                 {/* İlerleme Çubuğu */}
                 {totalEarned > 0 && (
@@ -1426,7 +1448,6 @@ const handlePayCommission = async () => {
                   <p className="text-xs text-gray-300 text-center py-1">Henüz satış yok — hakediş hesaplanamıyor</p>
                 )}
               </div>
-            </div>
           )
         })}
       </div>
