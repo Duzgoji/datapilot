@@ -567,7 +567,7 @@ export default function AgentPage() {
       {showUpdateModal && selectedLead && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowUpdateModal(false)} />
-          <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md z-10 max-h-[92vh] flex flex-col">
+          <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl z-10 max-h-[92vh] flex flex-col">
             <div className="flex items-start justify-between px-5 pt-5 pb-4 border-b border-gray-100 flex-shrink-0">
               <div>
                 <h2 className="text-base font-semibold text-gray-900">{selectedLead.full_name || 'Potansiyel Müşteri'}</h2>
@@ -579,6 +579,34 @@ export default function AgentPage() {
             </div>
             <div className="overflow-y-auto flex-1">
               <form onSubmit={handleUpdateLead} className="p-5 space-y-4">
+                {/* Temel bilgiler */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-400 mb-1">Kaynak</p>
+                  <p className="text-sm font-medium text-gray-900">{SOURCE_CONFIG[selectedLead?.source]?.label || selectedLead?.source || '-'}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-400 mb-1">Tarih</p>
+                  <p className="text-sm font-medium text-gray-900">{selectedLead?.created_at ? new Date(selectedLead.created_at).toLocaleDateString('tr-TR') : '-'}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-400 mb-1">Mevcut Durum</p>
+                  <p className="text-sm font-medium text-gray-900">{STATUS_CONFIG[selectedLead?.status]?.label || '-'}</p>
+                </div>
+              </div>
+
+              {/* Quick actions */}
+              <div className="flex gap-2">
+                <a href={`tel:${selectedLead?.phone}`}
+                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
+                  📞 Ara
+                </a>
+                <a href={`https://wa.me/90${selectedLead?.phone?.replace(/\D/g, '').replace(/^0/, '')}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
+                  💬 WhatsApp
+                </a>
+              </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-400">Mevcut:</span>
                   <Badge status={selectedLead.status} />
