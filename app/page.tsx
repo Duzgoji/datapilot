@@ -33,7 +33,7 @@ const plans = [
     period: '/ay',
     desc: 'Küçük ekipler için ideal başlangıç paketi',
     highlight: false,
-    features: ['3 kullanıcı', '1 şube', '500 lead/ay', 'Meta entegrasyonu', 'Excel yükleme', 'Temel raporlar']
+    features: ['3 kullanıcı', '1 şube', '500 potansiyel müşteri/ay', 'Meta entegrasyonu', 'Excel yükleme', 'Temel raporlar']
   },
   {
     name: 'Pro',
@@ -41,7 +41,7 @@ const plans = [
     period: '/ay',
     desc: 'Büyüyen işletmeler için güçlü özellikler',
     highlight: true,
-    features: ['15 kullanıcı', '5 şube', 'Sınırsız lead', 'Meta entegrasyonu', 'Excel yükleme', 'AI analitik & raporlar', 'Öncelikli destek']
+    features: ['15 kullanıcı', '5 şube', 'Sınırsız potansiyel müşteri', 'Meta entegrasyonu', 'Excel yükleme', 'AI analitik & raporlar', 'Öncelikli destek']
   },
   {
     name: 'Enterprise',
@@ -49,15 +49,15 @@ const plans = [
     period: '',
     desc: 'Büyük kurumlar için özelleştirilebilir çözüm',
     highlight: false,
-    features: ['Sınırsız kullanıcı', 'Sınırsız şube', 'Sınırsız lead', 'Tüm entegrasyonlar', 'Özel AI modeli', 'Dedicated destek', 'SLA garantisi']
+    features: ['Sınırsız kullanıcı', 'Sınırsız şube', 'Sınırsız potansiyel müşteri', 'Tüm entegrasyonlar', 'Özel AI modeli', 'Dedicated destek', 'SLA garantisi']
   },
 ]
 
 const features = [
-  { icon: '📣', title: 'Meta Entegrasyonu', desc: 'Facebook ve Instagram reklamlarından gelen leadleri anında ve otomatik olarak sisteme çekin.' },
+  { icon: '📣', title: 'Meta Entegrasyonu', desc: 'Facebook ve Instagram reklamlarından gelen potansiyel müşterileri anında ve otomatik olarak sisteme çekin.' },
   { icon: '🤖', title: 'AI Analitik', desc: 'Yapay zeka destekli raporlarla satış performansınızı anlayın, eksiklerinizi görün.' },
-  { icon: '👥', title: 'Ekip Yönetimi', desc: 'Şubelerinizi ve satışçılarınızı tek panelden yönetin, leadleri otomatik dağıtın.' },
-  { icon: '📂', title: 'Veri Merkezi', desc: 'Excel dosyalarınızı yükleyin, otomatik olarak leadlere dönüştürün.' },
+  { icon: '👥', title: 'Ekip Yönetimi', desc: 'Şubelerinizi ve satışçılarınızı tek panelden yönetin, potansiyel müşterileri otomatik dağıtın.' },
+  { icon: '📂', title: 'Veri Merkezi', desc: 'Excel dosyalarınızı yükleyin, otomatik olarak potansiyel müşterilere dönüştürün.' },
   { icon: '📊', title: 'Gelişmiş Raporlar', desc: 'Günlük, haftalık ve aylık raporlarla işinizin nabzını tutun.' },
   { icon: '🔒', title: 'Güvenli & Hızlı', desc: 'SSL şifreli bağlantı, güvenli veri saklama ve yüksek performanslı altyapı.' },
 ]
@@ -284,7 +284,7 @@ export default function LandingPage() {
             {' '}yönetin
           </h1>
           <p className="text-slate-400 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
-            Meta reklamlarından gelen leadleri otomatik toplayın, ekibinize dağıtın ve satışa dönüştürün.
+            Meta reklamlarından gelen potansiyel müşterileri otomatik toplayın, ekibinize dağıtın ve satışa dönüştürün.
           </p>
 
           {/* CTA buttons */}
@@ -530,7 +530,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-2 mb-4">
                 <img src="/logo2.png" alt="DataPilot" className="h-8 w-auto" />
               </div>
-              <p className="text-sm leading-relaxed">Akıllı lead yönetim platformu.<br />İşinizi büyütün.</p>
+              <p className="text-sm leading-relaxed">Akıllı potansiyel müşteri yönetim platformu.<br />İşinizi büyütün.</p>
             </div>
             <div>
               <h4 className="text-slate-300 font-semibold text-sm mb-4">Ürün</h4>
