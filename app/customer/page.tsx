@@ -906,7 +906,7 @@ const handlePayCommission = async () => {
 
         {/* Content */}
        <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
-       <main className="p-6 max-w-none">
+       <main className="p-6">
           {/* ── DASHBOARD ── */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
@@ -979,7 +979,7 @@ const handlePayCommission = async () => {
           {activeTab === 'leadler-liste' && (
            <div className="space-y-4">
   {/* Başlık */}
-  <div className="flex items-center justify-between">
+ <div className="flex items-center justify-between gap-4 flex-wrap">
     <div>
       <h2 className="text-base font-semibold text-gray-900">Potansiyel Müşteri Listesi</h2>
       <p className="text-xs text-gray-400 mt-0.5">Potansiyel müşterilerinizi filtreleyin, arayın ve yönetin</p>
@@ -990,9 +990,9 @@ const handlePayCommission = async () => {
     </button>
   </div>
   {/* Actions bar */}
-  <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">{filteredLeads.length} / {leads.length} potansiyel müşteri</p>
-                <div className="flex gap-2">
+  <div className="flex items-center justify-between gap-4 flex-wrap">
+  <p className="text-sm text-gray-500">{filteredLeads.length} / {leads.length} potansiyel müşteri</p>
+  <div className="flex gap-2 flex-shrink-0">
                   <Btn variant="secondary" size="sm" onClick={() => setShowReportPanel(true)}>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 10h10M2 7h6M2 4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
                     Rapor İndir
