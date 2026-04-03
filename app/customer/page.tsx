@@ -906,7 +906,7 @@ const handlePayCommission = async () => {
 
         {/* Content */}
        <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
-        <main className="p-6 max-w-6xl mx-auto">
+       <main className="p-6 max-w-none">
           {/* ── DASHBOARD ── */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
@@ -977,9 +977,20 @@ const handlePayCommission = async () => {
 
           {/* ── LEAD LİSTESİ ── */}
           {activeTab === 'leadler-liste' && (
-            <div className="space-y-4">
-              {/* Actions bar */}
-              <div className="flex items-center justify-between">
+           <div className="space-y-4">
+  {/* Başlık */}
+  <div className="flex items-center justify-between">
+    <div>
+      <h2 className="text-base font-semibold text-gray-900">Potansiyel Müşteri Listesi</h2>
+      <p className="text-xs text-gray-400 mt-0.5">Potansiyel müşterilerinizi filtreleyin, arayın ve yönetin</p>
+    </div>
+    <button onClick={() => setActiveTab('pipeline')}
+      className="text-xs text-indigo-600 font-medium px-3 py-1.5 hover:bg-indigo-50 rounded-lg border border-indigo-200 transition-colors">
+      Süreçte Gör →
+    </button>
+  </div>
+  {/* Actions bar */}
+  <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-500">{filteredLeads.length} / {leads.length} potansiyel müşteri</p>
                 <div className="flex gap-2">
                   <Btn variant="secondary" size="sm" onClick={() => setShowReportPanel(true)}>
@@ -1345,7 +1356,7 @@ const handlePayCommission = async () => {
                   <button onClick={() => { setSelectedMember(member); setMemberTab('leads') }}
                     className="text-xs text-indigo-600 font-medium hover:text-indigo-700 px-3 py-1.5 hover:bg-indigo-50 rounded-lg transition-colors">
                     Detay
-                  </button>
+                </button>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" checked={member.is_active !== false} onChange={() => handleToggleMember(member)} className="sr-only peer" />
                     <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
@@ -1601,7 +1612,7 @@ const handlePayCommission = async () => {
 </Modal>
 
 {activeTab === 'pipeline' && (
-  <div className="space-y-5 -mx-6">
+  <div className="space-y-5 -mx-6 -mr-6">
   <div className="px-6">
     <h2 className="text-base font-semibold text-gray-900">Satış Süreci Takibi</h2>
     <p className="text-xs text-gray-400 mt-0.5">Potansiyel müşterilerinizi aşamalara göre takip edin</p>
