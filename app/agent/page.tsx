@@ -250,7 +250,7 @@ export default function AgentPage() {
               </div>
               {leads.length === 0 ? (
                 <div className="p-12 text-center">
-                  <p className="text-gray-400 text-sm">Henüz lead atanmadı.</p>
+                  <p className="text-gray-400 text-sm">Henüz potansiyel müşteri atanmadı.</p>
                 </div>
               ) : leads.slice(0, 5).map((lead, i) => {
                 const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600','from-violet-100 to-purple-100 text-violet-600','from-emerald-100 to-teal-100 text-emerald-600','from-orange-100 to-amber-100 text-orange-600','from-pink-100 to-rose-100 text-rose-600']
@@ -278,7 +278,7 @@ export default function AgentPage() {
           <div className="space-y-3">
             <div className="relative">
               <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Isim, telefon veya lead kodu ara..."
+              <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Isim, telefon veya potansiyel müşteri kodu ara..."
                 className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               {searchQuery && (
                 <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">
@@ -518,7 +518,7 @@ export default function AgentPage() {
                       </div>
                     </div>
                   ))}
-                  {statusDist.length === 0 && <p className="text-xs text-gray-400 text-center py-4">Henüz lead yok</p>}
+                  {statusDist.length === 0 && <p className="text-xs text-gray-400 text-center py-4">Henüz potansiyel müşteri yok</p>}
                 </div>
               </div>
 

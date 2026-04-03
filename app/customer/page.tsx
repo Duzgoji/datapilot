@@ -946,11 +946,11 @@ const handlePayCommission = async () => {
               {/* Recent leads */}
               <div className="bg-white rounded-2xl border border-gray-100">
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-900 text-sm">Son Leadler</h3>
+                  <h3 className="font-semibold text-gray-900 text-sm">Son Potansiyel Müşteriler</h3>
                   <button onClick={() => setActiveTab('leadler-liste')} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Tümünü gör →</button>
                 </div>
                 {leads.length === 0 ? (
-                  <div className="p-12 text-center"><p className="text-gray-400 text-sm">Henüz lead yok.</p></div>
+                  <div className="p-12 text-center"><p className="text-gray-400 text-sm">Henüz potansiyel müşteri yok.</p></div>
                 ) : leads.slice(0, 6).map((lead, idx) => {
                   const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600','from-violet-100 to-purple-100 text-violet-600','from-emerald-100 to-teal-100 text-emerald-600','from-orange-100 to-amber-100 text-orange-600','from-pink-100 to-rose-100 text-rose-600','from-cyan-100 to-blue-100 text-blue-600']
                   const ac = avatarColors[idx % avatarColors.length]
@@ -986,7 +986,7 @@ const handlePayCommission = async () => {
                   </Btn>
                   <Btn size="sm" onClick={() => setShowAddLead(true)}>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-                    Lead Ekle
+                    Potansiyel Müşteri Ekle
                   </Btn>
                 </div>
               </div>
@@ -994,7 +994,7 @@ const handlePayCommission = async () => {
               {/* Search */}
               <div className="relative">
                 <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="İsim, telefon veya lead kodu ara..."
+                <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="İsim, telefon veya potansiyel müşteri kodu ara..."
                   className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                 {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></button>}
               </div>
@@ -1587,7 +1587,7 @@ const handlePayCommission = async () => {
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 {leads.filter(l => l.source === 'whatsapp').length === 0 ? (
                   <div className="p-16 text-center">
-                    <p className="text-gray-500 text-sm font-medium">Henüz WhatsApp lead yok</p>
+                    <p className="text-gray-500 text-sm font-medium">Henüz WhatsApp potansiyel müşteri yok</p>
                     <p className="text-xs text-gray-400 mt-1">WhatsApp bağlantısı kurulduktan sonra gelen mesajlar burada görünür</p>
                     <button onClick={() => setActiveTab('whatsapp-baglanti')} className="mt-3 text-xs text-green-600 font-medium hover:underline">
                       WhatsApp Bağla →
@@ -1858,13 +1858,13 @@ const handlePayCommission = async () => {
                   <div className="bg-white rounded-2xl border border-blue-100 p-5 bg-gradient-to-br from-blue-50 to-white">
                     <p className="text-xs text-gray-400 mb-1">Bu Ay Gelen</p>
                     <p className="text-2xl font-bold text-blue-600">{metaLeadsThisMonth.length}</p>
-                    <p className="text-xs text-gray-400 mt-1">Meta lead formu</p>
+                    <p className="text-xs text-gray-400 mt-1">Meta potansiyel müşteri formu</p>
                   </div>
                   <div className="bg-white rounded-2xl border border-emerald-100 p-5 bg-gradient-to-br from-emerald-50 to-white">
                     <p className="text-xs text-gray-400 mb-1">Satışa Dönen</p>
                     <p className="text-2xl font-bold text-emerald-600">{metaSales.length}</p>
                     <p className="text-xs text-gray-400 mt-1">
-                      {metaLeads.length > 0 ? `%${((metaSales.length / metaLeads.length) * 100).toFixed(1)} dönüşüm` : 'Henüz lead yok'}
+                      {metaLeads.length > 0 ? `%${((metaSales.length / metaLeads.length) * 100).toFixed(1)} dönüşüm` : 'Henüz potansiyel müşteri yok'}
                     </p>
                   </div>
                   <div className="bg-white rounded-2xl border border-violet-100 p-5 bg-gradient-to-br from-violet-50 to-white">
@@ -1876,7 +1876,7 @@ const handlePayCommission = async () => {
                   </div>
                 </div>
 
-                {/* Meta lead listesi */}
+                {/* Meta potansiyel müşteri listesi */}
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                   <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div>
@@ -1893,7 +1893,7 @@ const handlePayCommission = async () => {
                       <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
                         <MetaLogo size={24} className="text-blue-500" />
                       </div>
-                      <p className="text-gray-500 text-sm font-medium">Henüz Meta'dan lead gelmedi</p>
+                      <p className="text-gray-500 text-sm font-medium">Henüz Meta'dan Potansiyel Müşteri gelmedi</p>
                       <p className="text-xs text-gray-400 mt-1">Reklam formunu dolduran biri olduğunda otomatik buraya düşecek</p>
                     </div>
                   ) : metaLeads.slice(0, 10).map((lead: any, idx: number) => {
@@ -2062,7 +2062,7 @@ const handlePayCommission = async () => {
                   <div className="bg-white rounded-2xl border border-gray-100 p-6">
                     <h3 className="font-semibold text-gray-900 mb-4">Durum Dağılımı</h3>
                     {totalLeads === 0 ? (
-                      <p className="text-sm text-gray-400 text-center py-6">Henüz lead yok.</p>
+                      <p className="text-sm text-gray-400 text-center py-6">Henüz potansiyel müşteri yok.</p>
                     ) : (
                       <div className="space-y-3">
                         {statusDist.map(s => (
@@ -2602,7 +2602,7 @@ const handlePayCommission = async () => {
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="14" rx="2" stroke={importTab === 'manuel' ? '#6366f1' : '#9ca3af'} strokeWidth="1.5"/><path d="M6 7h8M6 10h8M6 13h5" stroke={importTab === 'manuel' ? '#6366f1' : '#9ca3af'} strokeWidth="1.25" strokeLinecap="round"/></svg>
                   </div>
                   <p className={`text-sm font-bold ${importTab === 'manuel' ? 'text-indigo-700' : 'text-gray-700'}`}>Manuel Giriş</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Az sayıda lead için — tabloya direkt yaz</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Az sayıda potansiyel müşteri için — tabloya direkt yaz</p>
                   {importTab === 'manuel' && <span className="mt-2 inline-block text-xs bg-indigo-600 text-white px-2 py-0.5 rounded-full font-medium">Seçili</span>}
                 </button>
 
@@ -2622,11 +2622,11 @@ const handlePayCommission = async () => {
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                   <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">Lead Tablosu</p>
-                      <p className="text-xs text-gray-400 mt-0.5">Her satıra bir lead gir, kaynağını seç</p>
+                      <p className="text-sm font-semibold text-gray-900">Potansiyel Müşteri Tablosu</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Her satıra bir potansiyel müşteri gir, kaynağını seç</p>
                     </div>
                     <span className="text-xs bg-indigo-50 text-indigo-600 font-medium px-2.5 py-1 rounded-lg">
-                      {bulkRows.filter(r => r.full_name || r.phone).length} lead hazır
+                      {bulkRows.filter(r => r.full_name || r.phone).length} potansiyel hazır
                     </span>
                   </div>
 
@@ -2717,7 +2717,7 @@ const handlePayCommission = async () => {
                       <div className="flex items-center gap-3">
                         <span className="text-xl">{bulkResult.errors.length === 0 ? '✅' : '⚠️'}</span>
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">{bulkResult.success} lead başarıyla kaydedildi</p>
+                          <p className="text-sm font-semibold text-gray-900">{bulkResult.success} Potansiyel müşteri başarıyla kaydedildi</p>
                           {bulkResult.errors.length > 0 && <p className="text-xs text-amber-700 mt-0.5">{bulkResult.errors.length} satırda hata</p>}
                         </div>
                       </div>
@@ -2855,7 +2855,7 @@ const handlePayCommission = async () => {
                         <div className="flex items-center gap-3 mb-1">
                           <span className="text-xl">{xlsxResult.errors.length === 0 ? '✅' : '⚠️'}</span>
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">{xlsxResult.success} lead başarıyla aktarıldı</p>
+                            <p className="text-sm font-semibold text-gray-900">{xlsxResult.success} potansiyel müşteri başarıyla aktarıldı</p>
                             {xlsxResult.errors.length > 0 && <p className="text-xs text-amber-700">{xlsxResult.errors.length} satırda hata oluştu</p>}
                           </div>
                         </div>
@@ -2885,7 +2885,7 @@ const handlePayCommission = async () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-base font-semibold text-gray-900">Veri Setlerim</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Toplu lead giriş geçmişin</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Toplu potansiyel müşteri giriş geçmişin</p>
                 </div>
                 <button onClick={() => setActiveTab('veri-yukle')}
                   className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1.5">
@@ -3192,7 +3192,7 @@ const handlePayCommission = async () => {
       </Modal>
 
       {/* ── LEAD EKLE ── */}
-      <Modal open={showAddLead} onClose={() => setShowAddLead(false)} title="Yeni Lead" subtitle="Manuel lead ekleyin" size="lg">
+      <Modal open={showAddLead} onClose={() => setShowAddLead(false)} title="Yeni Potansiyel Müşteri" subtitle="Manuel potansiyel müşteri ekleyin" size="lg">
         <form onSubmit={handleAddLead} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Input label="Ad Soyad *" value={leadName} onChange={(e: any) => setLeadName(e.target.value)} required placeholder="Ad Soyad" />
@@ -3222,7 +3222,7 @@ const handlePayCommission = async () => {
           </div>
           <div className="flex gap-3 pt-2">
             <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddLead(false)}>İptal</Btn>
-            <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Ekleniyor...' : 'Lead Ekle'}</Btn>
+            <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Ekleniyor...' : 'Potansiyel Müşteri Ekle'}</Btn>
           </div>
         </form>
       </Modal>
@@ -3366,7 +3366,7 @@ const handlePayCommission = async () => {
             {memberTab === 'leads' && (
               <div className="space-y-2">
                 {leads.filter(l => l.assigned_to === selectedMember.user_id).length === 0 ? (
-                  <p className="text-gray-400 text-sm text-center py-8">Lead atanmamış.</p>
+                  <p className="text-gray-400 text-sm text-center py-8">Potansiyel müşteri atanmamış.</p>
                 ) : leads.filter(l => l.assigned_to === selectedMember.user_id).map(lead => (
                   <div key={lead.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
                     <div>
@@ -3416,7 +3416,7 @@ const handlePayCommission = async () => {
             <span className="text-2xl flex-shrink-0">⚠️</span>
             <div>
               <p className="text-sm font-semibold text-gray-900">Emin misiniz?</p>
-              <p className="text-xs text-gray-500 mt-1">Bu lead ve tüm işlem geçmişi kalıcı olarak silinecek. Bu işlem geri alınamaz.</p>
+              <p className="text-xs text-gray-500 mt-1">Bu potansiyel müşteri ve tüm işlem geçmişi kalıcı olarak silinecek. Bu işlem geri alınamaz.</p>
             </div>
           </div>
           <div className="flex gap-2">
