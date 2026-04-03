@@ -26,6 +26,7 @@ const menuStructure = [
   {
     key: 'leadler', label: 'Potansiyel Müşteriler', icon: '◎', children: [
       { key: 'leadler-liste', label: 'Potansiyel Müşteri Listesi' },
+      { key: 'pipeline', label: 'Pipeline' },
       { key: 'leadler-dagitim', label: 'Dağıtım' },
     ]
   },
@@ -680,6 +681,11 @@ const handlePayCommission = async () => {
   }
 
   const totalSales = leads.filter(l => l.status === 'procedure_done').length
+  const statusColumns = ['new', 'called', 'appointment_scheduled', 'procedure_done', 'cancelled']
+  const groupedLeads = statusColumns.reduce((acc, status) => {
+  acc[status] = leads.filter(l => l.status === status)
+  return acc
+  }, {} as Record<string, any[]>)
   const totalRevenue = leads.filter(l => l.status === 'procedure_done').reduce((sum, l) => sum + (l.procedure_amount || 0), 0)
   const conversionRate = leads.length > 0 ? ((totalSales / leads.length) * 100).toFixed(1) : '0'
 
@@ -1593,7 +1599,54 @@ const handlePayCommission = async () => {
     </div>
   )}
 </Modal>
-
+{activeTab === 'pipeline' && (
+  <div className="space-y-4">
+    <div>
+      <h2 className="text-base font-semibold text-gray-900">Pipeline</h2>
+      <p className="text-xs text-gray-400 mt-0.5">{leads.length} potansiyel müşteri</p>
+    </div>
+    <div className="flex gap-4 overflow-x-auto pb-4">
+      {statusColumns.map(status => {
+        const colLeads = leads.filter(l => l.status === status)
+        const config = STATUS_CONFIG[status]
+        return (
+          <div key={status} className="w-64 flex-shrink-0">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${config?.dot}`} />
+                <span className="text-xs font-semibold text-gray-700">{config?.label}</span>
+              </div>
+              <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{colLeads.length}</span>
+            </div>
+            <div className="space-y-2">
+              {colLeads.length === 0 ? (
+                <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl p-4 text-center">
+                  <p className="text-xs text-gray-300">Boş</p>
+                </div>
+              ) : colLeads.map(lead => (
+                <div key={lead.id} onClick={() => { setSelectedLead(lead); setNewStatus(lead.status) }}
+                  className="bg-white border border-gray-100 rounded-xl p-3.5 cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
+                  {lead.phone && <p className="text-xs text-gray-400 mt-0.5">{lead.phone}</p>}
+                  {lead.assigned_to && (
+                    <p className="text-xs text-gray-400 mt-0.5 truncate">
+                      👤 {teamMembers.find(m => m.user_id === lead.assigned_to)?.profiles?.full_name || 'Atanmış'}
+                    </p>
+                  )}
+                  <div className="mt-2">
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${config?.badge}`}>
+                      {config?.label}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  </div>
+)}
 {/* ── WHATSAPP ── */}
           {activeTab === 'whatsapp-leadler' && (
             <div className="space-y-4">
