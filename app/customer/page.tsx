@@ -142,11 +142,7 @@ const Btn = ({ variant = 'primary', size = 'md', children, className = '', ...pr
     success: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-200',
     ghost: 'hover:bg-gray-100 text-gray-600',
   }
-  const sizes: any = {
-    sm: 'px-3 py-1.5 text-xs',
-    md: 'px-4 py-2.5 text-sm',
-    lg: 'px-5 py-3 text-sm',
-  }
+ const sizes: any = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-2xl', '2xl': 'max-w-3xl' }
   return (
     <button {...props} className={`inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}>
       {children}
@@ -3228,8 +3224,36 @@ const handlePayCommission = async () => {
       </Modal>
 
       {/* ── DURUM GÜNCELLE ── */}
-      <Modal open={!!selectedLead} onClose={() => setSelectedLead(null)} title={selectedLead?.full_name || 'Potansiyel Müşteri'} subtitle={`${selectedLead?.lead_code} · Durum güncelle`}>
+      <Modal open={!!selectedLead} onClose={() => setSelectedLead(null)} title={selectedLead?.full_name || 'Potansiyel Müşteri'} subtitle={`${selectedLead?.lead_code} · ${selectedLead?.phone}`} size="2xl">
         <form onSubmit={handleUpdateStatus} className="p-6 space-y-4">
+          {/* Temel bilgiler */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-gray-50 rounded-xl p-3">
+              <p className="text-xs text-gray-400 mb-1">Kaynak</p>
+              <p className="text-sm font-medium text-gray-900">{SOURCE_CONFIG[selectedLead?.source]?.label || selectedLead?.source || '-'}</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-3">
+              <p className="text-xs text-gray-400 mb-1">Tarih</p>
+              <p className="text-sm font-medium text-gray-900">{selectedLead?.created_at ? new Date(selectedLead.created_at).toLocaleDateString('tr-TR') : '-'}</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-3">
+              <p className="text-xs text-gray-400 mb-1">Mevcut Durum</p>
+              <p className="text-sm font-medium text-gray-900">{STATUS_CONFIG[selectedLead?.status]?.label || '-'}</p>
+            </div>
+          </div>
+
+          {/* Quick actions */}
+          <div className="flex gap-2">
+            <a href={`tel:${selectedLead?.phone}`}
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
+              📞 Ara
+            </a>
+            <a href={`https://wa.me/90${selectedLead?.phone?.replace(/\D/g, '').replace(/^0/, '')}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
+              💬 WhatsApp
+            </a>
+          </div>
           <div>
             <p className="text-xs font-medium text-gray-500 mb-2">Yeni Durum</p>
             <div className="grid grid-cols-2 gap-2">
