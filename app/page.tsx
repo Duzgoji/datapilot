@@ -9,7 +9,7 @@ const faqs = [
     a: 'Facebook, Instagram (Meta) reklamları ile tam entegrasyon sağlar. Ayrıca Excel dosyası yükleme ve manuel veri girişi de desteklenir.'
   },
   {
-    q: 'Lead verilerim güvende mi?',
+    q: 'Potansiyel müşteri verilerim güvende mi?',
     a: 'Tüm verileriniz SSL şifreli bağlantı üzerinden iletilir ve güvenli sunucularda saklanır. Verilerinize yalnızca siz ve yetkilendirdiğiniz kişiler erişebilir.'
   },
   {
@@ -111,7 +111,7 @@ function DashboardMockup() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-1.5 text-blue-400 text-xs font-medium">
-                  + Yeni Lead
+                  + Yeni Potansiyel Müşteri
                 </div>
               </div>
             </div>
@@ -157,7 +157,7 @@ function DashboardMockup() {
 
               {/* Lead list */}
               <div className="col-span-2 bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
-                <p className="text-white/60 text-[11px] font-medium mb-2">Son Leadler</p>
+                <p className="text-white/60 text-[11px] font-medium mb-2">Son Potansiyel müşteriler</p>
                 <div className="space-y-2">
                   {[
                     { name: 'Mehmet Y.', status: 'Yeni', color: 'blue' },
@@ -277,7 +277,7 @@ export default function LandingPage() {
 
           {/* Headline */}
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-5 leading-[1.1] tracking-tight">
-            Leadlerinizi{' '}
+            Potansiyel Müşterilerinizi{' '}
             <span className="relative">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">akıllıca</span>
             </span>
@@ -328,7 +328,7 @@ export default function LandingPage() {
           <div className="text-center mb-14">
             <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest mb-3">Platform</p>
             <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">Her şey tek platformda</h2>
-            <p className="text-gray-500 max-w-xl mx-auto text-lg">Lead yönetiminden analitiğe kadar ihtiyacınız olan her şey</p>
+            <p className="text-gray-500 max-w-xl mx-auto text-lg">Potansiyel müşteri yönetiminden analitiğe kadar ihtiyacınız olan her şey</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map((f, i) => (
