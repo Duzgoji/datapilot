@@ -49,15 +49,15 @@ export default function CustomerLeadsPage() {
     <div className="space-y-4 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">{customer?.name} · Leadler</h2>
-          <p className="text-xs text-gray-400 mt-0.5">{filtered.length} lead gösteriliyor</p>
+          <h2 className="text-base font-semibold text-gray-900">{customer?.name} · Potansiyel Müşteriler</h2>
+          <p className="text-xs text-gray-400 mt-0.5">{filtered.length} potansiyel müşteri gösteriliyor</p>
         </div>
       </div>
 
       {/* KPI bar */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Lead', value: filtered.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+          { label: 'Potansiyel Müşteri', value: filtered.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
           { label: 'Satış', value: totalSales, color: 'text-emerald-600', bg: 'bg-emerald-50' },
           { label: 'Dönüşüm', value: `%${convRate}`, color: 'text-violet-600', bg: 'bg-violet-50' },
           { label: 'Ciro', value: `₺${totalRevenue.toLocaleString()}`, color: 'text-amber-600', bg: 'bg-amber-50' },

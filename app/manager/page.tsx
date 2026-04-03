@@ -8,8 +8,8 @@ const menuStructure = [
   { key: 'dashboard', label: 'Dashboard', icon: '📊' },
   {
     key: 'leadler', label: 'Leadlar', icon: '📋', children: [
-      { key: 'leadler-liste', label: 'Lead Listesi' },
-      { key: 'leadler-dagitim', label: 'Lead Dağıtımı' },
+      { key: 'leadler-liste', label: 'Potansiyel Müşteri Listesi' },
+      { key: 'leadler-dagitim', label: 'Potansiyel Müşteri Dağıtımı' },
     ]
   },
   {
@@ -256,7 +256,7 @@ export default function ManagerPage() {
             <>
               <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
                 {[
-                  { label: 'Toplam Lead', value: leads.length, icon: '📋', color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'Toplam Potansiyel Müşteri', value: leads.length, icon: '📋', color: 'text-blue-600', bg: 'bg-blue-50' },
                   { label: 'Toplam Satış', value: totalSales, icon: '✅', color: 'text-green-600', bg: 'bg-green-50' },
                   { label: 'Dönüşüm', value: `%${conversionRate}`, icon: '📈', color: 'text-purple-600', bg: 'bg-purple-50' },
                   { label: 'Toplam Ciro', value: `₺${totalRevenue.toLocaleString()}`, icon: '💰', color: 'text-amber-600', bg: 'bg-amber-50' },
@@ -286,7 +286,7 @@ export default function ManagerPage() {
                       </span>
                     </div>
                   ))}
-                  {leads.length === 0 && <p className="p-6 text-xs text-gray-400 text-center">Henüz lead yok.</p>}
+                  {leads.length === 0 && <p className="p-6 text-xs text-gray-400 text-center">Henüz potansiyel müşteri yok.</p>}
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100">
@@ -339,7 +339,7 @@ export default function ManagerPage() {
                 {leads.length === 0 ? (
                   <div className="p-12 text-center">
                     <span className="text-4xl mb-3 block">📭</span>
-                    <p className="text-gray-500 text-sm">Henüz lead yok.</p>
+                    <p className="text-gray-500 text-sm">Henüz potansiyel müşteri yok.</p>
                   </div>
                 ) : leads.map(lead => (
                   <div key={lead.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
@@ -367,13 +367,13 @@ export default function ManagerPage() {
           {activeTab === 'leadler-dagitim' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
               <div className="p-4 border-b border-gray-100">
-                <h3 className="font-bold text-gray-900 text-sm">Lead Dağıtımı</h3>
-                <p className="text-xs text-gray-500 mt-1">Atanmamış leadları satışçılara atayın</p>
+                <h3 className="font-bold text-gray-900 text-sm">Potansiyel Müşteri Dağıtımı</h3>
+                <p className="text-xs text-gray-500 mt-1">Atanmamış potansiyel müşterileri satışçılara atayın</p>
               </div>
               {leads.filter(l => !l.assigned_to).length === 0 ? (
                 <div className="p-12 text-center">
                   <span className="text-4xl mb-3 block">✅</span>
-                  <p className="text-gray-500 text-sm">Tüm leadlar atanmış.</p>
+                  <p className="text-gray-500 text-sm">Tüm potansiyel müşteriler atanmış.</p>
                 </div>
               ) : leads.filter(l => !l.assigned_to).map(lead => (
                 <div key={lead.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0">

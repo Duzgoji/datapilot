@@ -190,7 +190,7 @@ export default function CustomerFinancePage() {
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-medium text-gray-500 w-12 flex-shrink-0">{m.label}</span>
-                      <span className="text-xs text-gray-400">{m.leads} lead · {m.sales} satış</span>
+                      <span className="text-xs text-gray-400">{m.leads} potansiyel müşteri · {m.sales} satış</span>
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="text-xs font-semibold text-gray-700">₺{m.revenue.toLocaleString()}</span>

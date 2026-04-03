@@ -10,8 +10,8 @@ const menuStructure = [
   {
     key: 'meta', label: 'Meta Reklam', icon: '📣', children: [
       { key: 'meta-kampanyalar', label: 'Kampanyalar' },
-      { key: 'meta-leadformlar', label: 'Lead Formları' },
-      { key: 'meta-leadler', label: 'Lead Yönetimi' },
+      { key: 'meta-leadformlar', label: 'Potansiyel Müşteri Formları' },
+      { key: 'meta-leadler', label: 'Potansiyel Müşteri Yönetimi' },
       { key: 'meta-analitik', label: 'Analitik & Raporlar' },
       { key: 'meta-ekip', label: 'Ekip & Satışçılar' },
     ]
@@ -347,13 +347,13 @@ export default function CustomerPage() {
           <div className="relative flex-1 max-w-sm">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
             <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Lead, satışçı ara..."
+              placeholder="Potansiyel müşteri, satışçı ara..."
               className="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div className="flex items-center gap-2 ml-auto">
             <button onClick={() => { setActiveTab('meta-leadler'); setShowAddLead(true) }}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-medium">
-              + Lead Ekle
+              + Potansiyel Müşteri Ekle
             </button>
             <button onClick={() => { setActiveTab('meta-ekip'); setShowAddMember(true) }}
               className="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-2 rounded-lg font-medium">
@@ -374,7 +374,7 @@ export default function CustomerPage() {
             <>
               <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
                 {[
-                  { label: 'Toplam Lead', value: leads.length, icon: '📋', color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'Toplam Potansiyel Müşteri', value: leads.length, icon: '📋', color: 'text-blue-600', bg: 'bg-blue-50' },
                   { label: 'Toplam Satış', value: totalSales, icon: '✅', color: 'text-green-600', bg: 'bg-green-50' },
                   { label: 'Dönüşüm Oranı', value: `%${conversionRate}`, icon: '📈', color: 'text-purple-600', bg: 'bg-purple-50' },
                   { label: 'Toplam Ciro', value: `₺${totalRevenue.toLocaleString()}`, icon: '💰', color: 'text-amber-600', bg: 'bg-amber-50' },
@@ -390,10 +390,10 @@ export default function CustomerPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
                   <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                    <h3 className="font-bold text-gray-900 text-sm">Son Leadlar</h3>
+                    <h3 className="font-bold text-gray-900 text-sm">Son Potansiyel Müşteriler</h3>
                     <button onClick={() => setActiveTab('meta-leadler')} className="text-xs text-blue-600 hover:underline">Tümü →</button>
                   </div>
-                  {leads.length === 0 && <p className="p-6 text-xs text-gray-400 text-center">Henüz lead yok.</p>}
+                  {leads.length === 0 && <p className="p-6 text-xs text-gray-400 text-center">Henüz potansiyel müşteri yok.</p>}
                   {leads.slice(0, 6).map(lead => (
                     <div key={lead.id} className="px-4 py-3 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
                       <div>
@@ -461,17 +461,17 @@ export default function CustomerPage() {
               </div>
 
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-gray-500">{leads.length} lead</p>
+                <p className="text-sm text-gray-500">{leads.length} potansiyel müşteri</p>
                 <button onClick={() => setShowAddLead(!showAddLead)}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                  + Manuel Lead Ekle
+                  + Manuel Potansiyel Müşteri Ekle
                 </button>
               </div>
 
               {showAddLead && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-gray-900">Yeni Lead Ekle</h3>
+                    <h3 className="font-bold text-gray-900">Yeni Potansiyel Müşteri Ekle</h3>
                     <button onClick={() => setShowAddLead(false)} className="text-gray-400 hover:text-gray-600">✕</button>
                   </div>
                   <form onSubmit={handleAddLead} className="grid grid-cols-2 gap-4">
@@ -534,7 +534,7 @@ export default function CustomerPage() {
                     <div className="col-span-2 flex gap-3">
                       <button type="submit" disabled={saving}
                         className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium">
-                        {saving ? 'Ekleniyor...' : 'Lead Ekle'}
+                        {saving ? 'Ekleniyor...' : 'Potansiyel Müşteri Ekle'}
                       </button>
                       <button type="button" onClick={() => setShowAddLead(false)}
                         className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">İptal</button>
@@ -547,7 +547,7 @@ export default function CustomerPage() {
                 {leads.length === 0 ? (
                   <div className="p-12 text-center">
                     <span className="text-4xl mb-3 block">📭</span>
-                    <p className="text-gray-500 text-sm">Henüz lead yok.</p>
+                    <p className="text-gray-500 text-sm">Henüz potansiyel müşteri yok.</p>
                   </div>
                 ) : leads.map(lead => (
                   <div key={lead.id} className="px-5 py-3.5 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
@@ -765,7 +765,7 @@ export default function CustomerPage() {
                             <p className="font-semibold text-gray-900 text-sm">{m.profiles?.full_name}</p>
                             <p className="text-xs text-gray-500">{m.branches?.branch_name} • %{m.commission_rate} prim</p>
                             <div className="flex gap-2 mt-1">
-                              <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{memberLeads.length} lead</span>
+                              <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{memberLeads.length} potansiyel müşteri</span>
                               <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">{memberSales.length} satış</span>
                               <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">₺{commission.toLocaleString()} prim</span>
                             </div>

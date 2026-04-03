@@ -13,19 +13,19 @@ const menuStructure = [
   {
   key: 'meta', label: 'Meta Reklam', icon: '◈', children: [
     { key: 'meta-kampanyalar', label: 'Kampanyalar' },
-    { key: 'meta-leadformlar', label: 'Lead Formları' },
+    { key: 'meta-leadformlar', label: 'Potansiyel Müşteri Formları' },
     { key: 'meta-baglanti', label: 'Bağlantı' },
   ]
 },
 {
   key: 'whatsapp', label: 'WhatsApp', icon: '◎', children: [
-    { key: 'whatsapp-leadler', label: 'WhatsApp Leadleri' },
+    { key: 'whatsapp-leadler', label: 'WhatsApp Potansiyel Müşterileri' },
     { key: 'whatsapp-baglanti', label: 'Bağlantı' },
   ]
 },
   {
-    key: 'leadler', label: 'Leadler', icon: '◎', children: [
-      { key: 'leadler-liste', label: 'Lead Listesi' },
+    key: 'leadler', label: 'Potansiyel Müşteriler', icon: '◎', children: [
+      { key: 'leadler-liste', label: 'Potansiyel Müşteri Listesi' },
       { key: 'leadler-dagitim', label: 'Dağıtım' },
     ]
   },
@@ -736,12 +736,12 @@ const handlePayCommission = async () => {
     const { default: jsPDF } = await import('jspdf')
     const { default: autoTable } = await import('jspdf-autotable')
     const doc = new jsPDF({ orientation: 'landscape' })
-    doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.text('DataPilot — Lead Raporu', 14, 18)
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.text('DataPilot — Potansiyel Müşteri Raporu', 14, 18)
     doc.setFontSize(9); doc.setFont('helvetica', 'normal')
     const pLabel: any = { today: 'Bugün', this_week: 'Bu Hafta', this_month: 'Bu Ay', last_month: 'Geçen Ay', custom: 'Özel' }
     const sales = data.filter(l => l.status === 'procedure_done').length
     const revenue = data.filter(l => l.status === 'procedure_done').reduce((s, l) => s + (l.procedure_amount || 0), 0)
-    doc.text(`Dönem: ${pLabel[reportPeriod]}  |  Toplam: ${data.length} lead  |  Satış: ${sales}  |  Ciro: ₺${revenue.toLocaleString()}  |  Dönüşüm: %${data.length > 0 ? ((sales / data.length) * 100).toFixed(1) : 0}`, 14, 26)
+    doc.text(`Dönem: ${pLabel[reportPeriod]}  |  Toplam: ${data.length} potansiyel müşteri  |  Satış: ${sales}  |  Ciro: ₺${revenue.toLocaleString()}  |  Dönüşüm: %${data.length > 0 ? ((sales / data.length) * 100).toFixed(1) : 0}`, 14, 26)
     autoTable(doc, { startY: 32, head: [['Lead Kodu', 'Ad Soyad', 'Telefon', 'Durum', 'Kaynak', 'Tutar', 'Tarih']], body: data.map(l => [l.lead_code, l.full_name || '', l.phone || '', STATUS_CONFIG[l.status]?.label || l.status, SOURCE_CONFIG[l.source]?.label || l.source, l.procedure_amount ? `₺${l.procedure_amount.toLocaleString()}` : '-', new Date(l.created_at).toLocaleDateString('tr-TR')]), styles: { fontSize: 8, cellPadding: 3 }, headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' }, alternateRowStyles: { fillColor: [249, 250, 251] } })
     const pLabelFile: any = { today: 'Bugün', this_week: 'Bu_Hafta', this_month: 'Bu_Ay', last_month: 'Geçen_Ay', custom: 'Özel' }
     doc.save(`DataPilot_${pLabelFile[reportPeriod]}.pdf`)
@@ -918,7 +918,7 @@ const handlePayCommission = async () => {
                   <h1 className="text-2xl font-bold mb-1">{profile?.full_name}</h1>
                   <p className="text-indigo-300 text-sm">{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                   <div className="flex gap-8 mt-5 pt-5 border-t border-white/10">
-                    <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Toplam Lead</p></div>
+                    <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Toplam Potansiyel Müşteri</p></div>
                     <div><p className="text-3xl font-bold">{totalSales}</p><p className="text-indigo-300 text-xs mt-0.5">Satış</p></div>
                     <div><p className="text-3xl font-bold">%{conversionRate}</p><p className="text-indigo-300 text-xs mt-0.5">Dönüşüm</p></div>
                     <div><p className="text-3xl font-bold">₺{(totalRevenue / 1000).toFixed(0)}K</p><p className="text-indigo-300 text-xs mt-0.5">Ciro</p></div>
@@ -929,7 +929,7 @@ const handlePayCommission = async () => {
               {/* Stat cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                 { label: 'Aktif Lead', value: leads.filter(l => l.status === 'new' || l.status === 'called').length, sub: 'Yeni + Arandı', color: 'text-blue-600', border: 'border-blue-100', gradient: 'from-blue-50 to-white', iconBg: 'bg-blue-100', icon: '◎', tab: 'leadler-liste' },
+                 { label: 'Aktif Potansiyel Müşteri', value: leads.filter(l => l.status === 'new' || l.status === 'called').length, sub: 'Yeni + Arandı', color: 'text-blue-600', border: 'border-blue-100', gradient: 'from-blue-50 to-white', iconBg: 'bg-blue-100', icon: '◎', tab: 'leadler-liste' },
 { label: 'Randevu', value: leads.filter(l => l.status === 'appointment_scheduled').length, sub: 'Bekleyen randevu', color: 'text-violet-600', border: 'border-violet-100', gradient: 'from-violet-50 to-white', iconBg: 'bg-violet-100', icon: '◐', tab: 'leadler-liste' },
 { label: 'Toplam Satış', value: totalSales, sub: `₺${totalRevenue.toLocaleString()}`, color: 'text-emerald-600', border: 'border-emerald-100', gradient: 'from-emerald-50 to-white', iconBg: 'bg-emerald-100', icon: '◉', tab: 'leadler-liste' },
 { label: 'Şubeler', value: branches.length, sub: `${teamMembers.length} ekip üyesi`, color: 'text-orange-600', border: 'border-orange-100', gradient: 'from-orange-50 to-white', iconBg: 'bg-orange-100', icon: '◈', tab: 'ekip-sube' },
@@ -978,7 +978,7 @@ const handlePayCommission = async () => {
             <div className="space-y-4">
               {/* Actions bar */}
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">{filteredLeads.length} / {leads.length} lead</p>
+                <p className="text-sm text-gray-500">{filteredLeads.length} / {leads.length} potansiyel müşteri</p>
                 <div className="flex gap-2">
                   <Btn variant="secondary" size="sm" onClick={() => setShowReportPanel(true)}>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 10h10M2 7h6M2 4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -1210,11 +1210,11 @@ const handlePayCommission = async () => {
           {activeTab === 'leadler-dagitim' && (
             <div className="bg-white rounded-2xl border border-gray-100">
               <div className="px-5 py-4 border-b border-gray-100">
-                <h3 className="font-semibold text-gray-900 text-sm">Lead Dağıtımı</h3>
-                <p className="text-xs text-gray-400 mt-0.5">Atanmamış leadları satışçılara atayın</p>
+                <h3 className="font-semibold text-gray-900 text-sm">Potansiyel Müşteri Dağıtımı</h3>
+                <p className="text-xs text-gray-400 mt-0.5">Atanmamış potansiyel müşterileri satışçılara atayın</p>
               </div>
               {leads.filter(l => !l.assigned_to).length === 0 ? (
-                <div className="p-16 text-center"><div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-3 text-lg">✓</div><p className="text-gray-500 text-sm">Tüm leadlar atanmış.</p></div>
+                <div className="p-16 text-center"><div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-3 text-lg">✓</div><p className="text-gray-500 text-sm">Tüm potansiyel müşteriler atanmış.</p></div>
               ) : leads.filter(l => !l.assigned_to).map((lead, i, arr) => (
                 <div key={lead.id} className={`px-5 py-4 flex items-center justify-between ${i < arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
                   <div className="flex items-center gap-3">
@@ -1355,7 +1355,7 @@ const handlePayCommission = async () => {
               <div className="px-5 py-3 grid grid-cols-4 gap-3 border-b border-gray-50">
                 <div className="text-center">
                   <p className="text-lg font-bold text-blue-600">{memberLeads.length}</p>
-                  <p className="text-xs text-gray-400">Lead</p>
+                  <p className="text-xs text-gray-400">Potansiyel Müşteri</p>
                 </div>
                 <div className="text-center">
                   <p className="text-lg font-bold text-emerald-600">{memberSales.length}</p>
@@ -1581,8 +1581,8 @@ const handlePayCommission = async () => {
           {activeTab === 'whatsapp-leadler' && (
             <div className="space-y-4">
               <div>
-                <h2 className="text-base font-semibold text-gray-900">WhatsApp Leadleri</h2>
-                <p className="text-xs text-gray-400 mt-0.5">WhatsApp'tan gelen otomatik leadler</p>
+                <h2 className="text-base font-semibold text-gray-900">WhatsApp Potansiyel Müşterileri</h2>
+                <p className="text-xs text-gray-400 mt-0.5">WhatsApp'tan gelen otomatik potansiyel müşteriler</p>
               </div>
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 {leads.filter(l => l.source === 'whatsapp').length === 0 ? (
@@ -1721,7 +1721,7 @@ const handlePayCommission = async () => {
                         { label: 'Toplam Harcama', value: `₺${totalSpend.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, sub: `${days} gün`, color: 'text-red-600', bg: 'from-red-50 to-white', border: 'border-red-100', icon: '💸' },
                         { label: 'Meta Geliri', value: `₺${metaRevenue.toLocaleString()}`, sub: `${metaSales.length} satış`, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100', icon: '💰' },
                         { label: 'ROI', value: `%${roi.toFixed(1)}`, sub: totalSpend > 0 ? (roi >= 0 ? 'Kârlı' : 'Zararlı') : '—', color: roi >= 0 ? 'text-emerald-600' : 'text-red-600', bg: roi >= 0 ? 'from-emerald-50 to-white' : 'from-red-50 to-white', border: roi >= 0 ? 'border-emerald-100' : 'border-red-100', icon: roi >= 0 ? '📈' : '📉' },
-                        { label: 'Lead Başı Maliyet', value: cpl > 0 ? `₺${cpl.toFixed(0)}` : '—', sub: `${metaLeads} meta lead`, color: 'text-blue-600', bg: 'from-blue-50 to-white', border: 'border-blue-100', icon: '🎯' },
+                        { label: 'Potansiyel Müşteri Başı Maliyet', value: cpl > 0 ? `₺${cpl.toFixed(0)}` : '—', sub: `${metaLeads} meta potansiyel müşteri`, color: 'text-blue-600', bg: 'from-blue-50 to-white', border: 'border-blue-100', icon: '🎯' },
                      ].map((card: any) => (
                         <div key={card.label} className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-5 border ${card.border} hover:shadow-md transition-all`}>
                         <div className={`w-9 h-9 ${card.iconBg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
@@ -1844,11 +1844,11 @@ const handlePayCommission = async () => {
                           Canlı
                         </span>
                       </div>
-                      <p className="text-blue-200 text-sm">Lead formunu dolduranlar otomatik olarak sisteme düşüyor</p>
+                      <p className="text-blue-200 text-sm">Potansiyel müşteri formunu dolduranlar otomatik olarak sisteme düşüyor</p>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-2xl font-bold">{metaLeads.length}</p>
-                      <p className="text-blue-300 text-xs">toplam Meta lead</p>
+                      <p className="text-blue-300 text-xs">toplam Meta potansiyel müşteri</p>
                     </div>
                   </div>
                 </div>
@@ -1880,7 +1880,7 @@ const handlePayCommission = async () => {
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                   <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold text-gray-900 text-sm">Meta'dan Gelen Leadler</h3>
+                      <h3 className="font-semibold text-gray-900 text-sm">Meta'dan Gelen Potansiyel Müşteriler</h3>
                       <p className="text-xs text-gray-400 mt-0.5">Webhook ile otomatik kaydedildi</p>
                     </div>
                     <button onClick={() => setActiveTab('leadler-liste')}
@@ -2013,7 +2013,7 @@ const handlePayCommission = async () => {
 
                 <div className="grid grid-cols-4 gap-4">
                   {[
-                    { label: 'Toplam Lead', value: totalLeads, sub: 'Seçili dönem', color: 'text-indigo-600', bg: 'from-indigo-50 to-white', icon: '◈' },
+                    { label: 'Toplam Potansiyel Müşteri', value: totalLeads, sub: 'Seçili dönem', color: 'text-indigo-600', bg: 'from-indigo-50 to-white', icon: '◈' },
                     { label: 'Toplam Satış', value: totalSales, sub: convRate + '% dönüşüm', color: 'text-emerald-600', bg: 'from-emerald-50 to-white', icon: '◉' },
                     { label: 'Toplam Ciro', value: '₺' + totalRevenue.toLocaleString(), sub: 'Onaylı satışlar', color: 'text-violet-600', bg: 'from-violet-50 to-white', icon: '◎' },
                     { label: 'Ort. Satış', value: totalSales > 0 ? '₺' + Math.round(totalRevenue / totalSales).toLocaleString() : '—', sub: 'Satış başına', color: 'text-amber-600', bg: 'from-amber-50 to-white', icon: '◐' },
@@ -2031,7 +2031,7 @@ const handlePayCommission = async () => {
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h3 className="font-semibold text-gray-900">Lead ve Satış Trendi</h3>
+                      <h3 className="font-semibold text-gray-900">Potansiyel Müşteri ve Satış Trendi</h3>
                       <p className="text-xs text-gray-400 mt-0.5">Son 6 ay</p>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-gray-500">
@@ -2113,7 +2113,7 @@ const handlePayCommission = async () => {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900">{b.name}</p>
                             <div className="flex gap-3 mt-0.5">
-                              <span className="text-xs text-indigo-600">{b.leads} lead</span>
+                              <span className="text-xs text-indigo-600">{b.leads} potansiyel müşteri</span>
                               <span className="text-xs text-emerald-600">{b.sales} satış</span>
                               <span className="text-xs text-gray-400">%{b.rate} dönüşüm</span>
                             </div>
@@ -2187,7 +2187,7 @@ const handlePayCommission = async () => {
             }
 
             const metrics = [
-              { label: 'Lead', cur: cur.leads, prev: prev.leads, format: (v: number) => v.toString(), color: 'indigo', icon: '◈' },
+              { label: 'Potansiyel Müşteri', cur: cur.leads, prev: prev.leads, format: (v: number) => v.toString(), color: 'indigo', icon: '◈' },
               { label: 'Satış', cur: cur.sales, prev: prev.sales, format: (v: number) => v.toString(), color: 'emerald', icon: '◉' },
               { label: 'Ciro', cur: cur.revenue, prev: prev.revenue, format: (v: number) => '₺' + v.toLocaleString(), color: 'violet', icon: '◎' },
               { label: 'Dönüşüm', cur: cur.conv, prev: prev.conv, format: (v: number) => '%' + v.toFixed(1), color: 'amber', icon: '◐' },
@@ -2284,7 +2284,7 @@ const handlePayCommission = async () => {
                   <h3 className="font-semibold text-gray-900 mb-5">Detaylı Karşılaştırma</h3>
                   <div className="space-y-5">
                     {[
-                      { label: 'Lead', cur: cur.leads, prev: prev.leads, max: Math.max(cur.leads, prev.leads, 1), curColor: 'bg-indigo-500', prevColor: 'bg-indigo-200', format: (v: number) => v.toString() },
+                      { label: 'Potansiyel Müşteri', cur: cur.leads, prev: prev.leads, max: Math.max(cur.leads, prev.leads, 1), curColor: 'bg-indigo-500', prevColor: 'bg-indigo-200', format: (v: number) => v.toString() },
                       { label: 'Satış', cur: cur.sales, prev: prev.sales, max: Math.max(cur.sales, prev.sales, 1), curColor: 'bg-emerald-500', prevColor: 'bg-emerald-200', format: (v: number) => v.toString() },
                       { label: 'Ciro', cur: cur.revenue, prev: prev.revenue, max: Math.max(cur.revenue, prev.revenue, 1), curColor: 'bg-violet-500', prevColor: 'bg-violet-200', format: (v: number) => '₺' + v.toLocaleString() },
                     ].map(m => (
@@ -2545,7 +2545,7 @@ const handlePayCommission = async () => {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-gray-900">{m.name}</p>
-                                <p className="text-xs text-gray-400">{m.branch} · {m.commModel === 'fixed_rate' ? `%${m.commValue} oran` : `₺${m.commValue}/lead`}</p>
+                                <p className="text-xs text-gray-400">{m.branch} · {m.commModel === 'fixed_rate' ? `%${m.commValue} oran` : `₺${m.commValue}/potansiyel müşteri`}</p>
                               </div>
                               <div className="text-right flex-shrink-0">
                                 <p className="text-sm font-bold text-rose-500">₺{m.prim.toLocaleString()}</p>
@@ -2557,7 +2557,7 @@ const handlePayCommission = async () => {
                                 <div className="h-full bg-rose-400 rounded-full" style={{ width: `${(m.prim / maxPrim) * 100}%` }} />
                               </div>
                               <div className="flex gap-3 text-xs text-gray-400 flex-shrink-0">
-                                <span>{m.leads} lead</span>
+                                <span>{m.leads} potansiyel müşteri</span>
                                 <span className="text-emerald-600 font-medium">{m.sales} satış</span>
                                 <span>₺{m.revenue.toLocaleString()} ciro</span>
                               </div>
@@ -2589,7 +2589,7 @@ const handlePayCommission = async () => {
                     </div>
                     <span className="text-indigo-200 text-sm font-medium">Veri Merkezi</span>
                   </div>
-                  <h2 className="text-xl font-bold">Toplu Lead Yükle</h2>
+                  <h2 className="text-xl font-bold">Toplu Potansiyel Müşteri Yükle</h2>
                   <p className="text-indigo-200 text-sm mt-1">Mevcut müşteri veritabanını sisteme aktar. İki farklı yöntemle yükleyebilirsin.</p>
                 </div>
               </div>
@@ -2730,7 +2730,7 @@ const handlePayCommission = async () => {
                       {bulkLoading ? (
                         <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>Kaydediliyor...</>
                       ) : (
-                        <><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 8l4 4 7-7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>{bulkRows.filter(r => r.full_name || r.phone).length} Leadi Kaydet</>
+                        <><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 8l4 4 7-7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>{bulkRows.filter(r => r.full_name || r.phone).length} Potansiyel Müşteriyi Kaydet</>
                       )}
                     </button>
                   </div>
@@ -2870,7 +2870,7 @@ const handlePayCommission = async () => {
                       {xlsxLoading ? (
                         <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>Aktarılıyor...</>
                       ) : (
-                        <><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 10V1M4 4l3.5-3.5L11 4M2 13h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>Leadleri Sisteme Aktar</>
+                        <><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 10V1M4 4l3.5-3.5L11 4M2 13h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>Potansiyel Müşterileri Sisteme Aktar</>
                       )}
                     </button>
                   </div>
@@ -2928,7 +2928,7 @@ const handlePayCommission = async () => {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-gray-900 truncate">{setName}</p>
                             <div className="flex gap-3 mt-1">
-                              <span className="text-xs text-indigo-600 font-medium">{setLeads.length} lead</span>
+                              <span className="text-xs text-indigo-600 font-medium">{setLeads.length} potansiyel müşteri</span>
                               <span className="text-xs text-emerald-600 font-medium">{setDone} satış</span>
                               <span className="text-xs text-gray-400">%{conv} dönüşüm</span>
                             </div>
@@ -3111,7 +3111,7 @@ const handlePayCommission = async () => {
                   {[
                     { label: 'Şube', value: `${branches.length}`, max: '1', color: 'text-indigo-600' },
                     { label: 'Satışçı', value: `${teamMembers.length}`, max: '3', color: 'text-blue-600' },
-                    { label: 'Lead', value: `${leads.length}`, max: '500', color: 'text-emerald-600' },
+                    { label: 'Potansiyel Müşteri', value: `${leads.length}`, max: '500', color: 'text-emerald-600' },
                   ].map(item => (
                     <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
                       <div className="flex items-end gap-1 mb-1">
@@ -3147,7 +3147,7 @@ const handlePayCommission = async () => {
           <div className="grid grid-cols-2 gap-4">
             <Select label="Komisyon Modeli" value={commissionModel} onChange={(e: any) => setCommissionModel(e.target.value)}>
               <option value="fixed_rate">Sabit Oran</option>
-              <option value="per_lead">Lead Başına</option>
+              <option value="per_lead">Potansiyel Müşteri Başına</option>
             </Select>
             <Input label="Komisyon Değeri" type="number" value={commissionValue} onChange={(e: any) => setCommissionValue(e.target.value)} placeholder="10" />
           </div>
@@ -3228,7 +3228,7 @@ const handlePayCommission = async () => {
       </Modal>
 
       {/* ── DURUM GÜNCELLE ── */}
-      <Modal open={!!selectedLead} onClose={() => setSelectedLead(null)} title={selectedLead?.full_name || 'Lead'} subtitle={`${selectedLead?.lead_code} · Durum güncelle`}>
+      <Modal open={!!selectedLead} onClose={() => setSelectedLead(null)} title={selectedLead?.full_name || 'Potansiyel Müşteri'} subtitle={`${selectedLead?.lead_code} · Durum güncelle`}>
         <form onSubmit={handleUpdateStatus} className="p-6 space-y-4">
           <div>
             <p className="text-xs font-medium text-gray-500 mb-2">Yeni Durum</p>
@@ -3270,7 +3270,7 @@ const handlePayCommission = async () => {
       </Modal>
 
       {/* ── LEAD DETAY ── */}
-      <Modal open={showDetailModal} onClose={() => setShowDetailModal(false)} title={detailLead?.full_name || 'Lead Detayı'} subtitle={detailLead?.lead_code} size="lg">
+      <Modal open={showDetailModal} onClose={() => setShowDetailModal(false)} title={detailLead?.full_name || 'Potansiyel Müşteri Detayı'} subtitle={detailLead?.lead_code} size="lg">
         {detailLead && (
           <div className="p-6 space-y-5">
             <div className="flex items-center gap-3">
@@ -3359,7 +3359,7 @@ const handlePayCommission = async () => {
               {(['leads', 'hakedis', 'loglar'] as const).map(tab => (
                 <button key={tab} onClick={() => setMemberTab(tab)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${memberTab === tab ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}>
-                  {tab === 'leads' ? 'Leadler' : tab === 'hakedis' ? 'Hakediş' : 'Loglar'}
+                  {tab === 'leads' ? 'Potansiyel Müşteriler' : tab === 'hakedis' ? 'Hakediş' : 'Loglar'}
                 </button>
               ))}
             </div>
@@ -3388,7 +3388,7 @@ const handlePayCommission = async () => {
                   return (
                     <>
                       {[
-                        { label: 'Toplam Lead', value: mLeads.length, color: 'text-blue-600' },
+                        { label: 'Toplam Potansiyel Müşteri', value: mLeads.length, color: 'text-blue-600' },
                         { label: 'Toplam Satış', value: mSales.length, color: 'text-emerald-600' },
                         { label: 'Toplam Ciro', value: `₺${mRevenue.toLocaleString()}`, color: 'text-gray-900' },
                         { label: 'Prim Oranı', value: `%${selectedMember.commission_rate || 0}`, color: 'text-gray-900' },
@@ -3410,7 +3410,7 @@ const handlePayCommission = async () => {
       </Modal>
 
       {/* ── SİLME ONAY ── */}
-      <Modal open={showDeleteConfirm} onClose={() => { setShowDeleteConfirm(false); setDeletingLeadId(null) }} title="Lead'i Sil" subtitle="Bu işlem geri alınamaz">
+      <Modal open={showDeleteConfirm} onClose={() => { setShowDeleteConfirm(false); setDeletingLeadId(null) }} title="Potansiyel Müşteri'yi Sil" subtitle="Bu işlem geri alınamaz">
         <div className="p-6 space-y-4">
           <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex gap-3">
             <span className="text-2xl flex-shrink-0">⚠️</span>
@@ -3430,7 +3430,7 @@ const handlePayCommission = async () => {
       </Modal>
 
       {/* ── LEAD DÜZENLE ── */}
-      <Modal open={showEditModal} onClose={() => { setShowEditModal(false); setEditLead(null) }} title="Lead Düzenle" subtitle={editLead?.lead_code}>
+      <Modal open={showEditModal} onClose={() => { setShowEditModal(false); setEditLead(null) }} title="Potansiyel Müşteri Düzenle" subtitle={editLead?.lead_code}>
         {editLead && (
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-3">

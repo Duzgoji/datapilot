@@ -196,7 +196,7 @@ const res = await fetch('/api/create-user', {
                 </div>
                 <div className="px-5 py-3 grid grid-cols-4 gap-2 border-b border-gray-50">
                   {[
-                    { label: 'Lead', value: cLeads.length, color: 'text-indigo-600' },
+                    { label: 'Potansiyel Müşteri', value: cLeads.length, color: 'text-indigo-600' },
                     { label: 'Satış', value: cSales.length, color: 'text-emerald-600' },
                     { label: 'Dönüşüm', value: `%${cConv.toFixed(0)}`, color: 'text-violet-600' },
                     { label: 'Ciro', value: `₺${(cRevenue / 1000).toFixed(1)}K`, color: 'text-amber-600' },
@@ -228,7 +228,7 @@ const res = await fetch('/api/create-user', {
           <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
             <div className="grid grid-cols-8 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
               <div className="col-span-2">Müşteri</div>
-              <div className="text-center">Lead</div>
+              <div className="text-center">Potansiyel Müşteri</div>
               <div className="text-center">Satış</div>
               <div className="text-center">Dönüşüm</div>
               <div className="text-center">Ciro</div>

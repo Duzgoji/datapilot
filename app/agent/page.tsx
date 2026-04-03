@@ -197,7 +197,7 @@ export default function AgentPage() {
                 <h2 className="text-xl font-bold mt-0.5">{profile?.full_name} 👋</h2>
                 <p className="text-indigo-300 text-xs mt-1">{teamMember?.branches?.branch_name} · %{teamMember?.commission_rate || 0} prim</p>
                 <div className="flex gap-5 mt-4 pt-4 border-t border-white/10">
-                  <div><p className="text-2xl font-bold">{leads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Lead</p></div>
+                  <div><p className="text-2xl font-bold">{leads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Potansiyel Müşteri</p></div>
                   <div><p className="text-2xl font-bold">{totalSales}</p><p className="text-indigo-300 text-xs mt-0.5">Satış</p></div>
                   <div><p className="text-2xl font-bold">%{conversionRate}</p><p className="text-indigo-300 text-xs mt-0.5">Dönüşüm</p></div>
                   <div><p className="text-2xl font-bold">₺{(commission/1000).toFixed(1)}K</p><p className="text-indigo-300 text-xs mt-0.5">Prim</p></div>
@@ -207,7 +207,7 @@ export default function AgentPage() {
 
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'Toplam Lead', value: leads.length, sub: `${newLeadsCount} yeni`, color: 'text-blue-600', border: 'border-blue-100', gradient: 'from-blue-50 to-white', iconBg: 'bg-blue-100', icon: '◎' },
+                { label: 'Toplam Potansiyel Müşteri', value: leads.length, sub: `${newLeadsCount} yeni`, color: 'text-blue-600', border: 'border-blue-100', gradient: 'from-blue-50 to-white', iconBg: 'bg-blue-100', icon: '◎' },
                 { label: 'Satış', value: totalSales, sub: `%${conversionRate} dönüşüm`, color: 'text-emerald-600', border: 'border-emerald-100', gradient: 'from-emerald-50 to-white', iconBg: 'bg-emerald-100', icon: '◉' },
                 { label: 'Toplam Ciro', value: `₺${totalRevenue.toLocaleString()}`, sub: 'İşlem tutarı', color: 'text-violet-600', border: 'border-violet-100', gradient: 'from-violet-50 to-white', iconBg: 'bg-violet-100', icon: '◈' },
                 { label: 'Hak. Prim', value: `₺${commission.toLocaleString()}`, sub: `%${teamMember?.commission_rate || 0} oran`, color: 'text-amber-600', border: 'border-amber-100', gradient: 'from-amber-50 to-white', iconBg: 'bg-amber-100', icon: '◐' },
@@ -245,7 +245,7 @@ export default function AgentPage() {
 
             <div className="bg-white rounded-2xl border border-gray-100">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-900">Son Leadler</h3>
+                <h3 className="text-sm font-semibold text-gray-900">Son Potansiyel Müşteriler</h3>
                 <button onClick={() => setActiveTab('leadler')} className="text-xs text-indigo-600 font-medium">Tümü →</button>
               </div>
               {leads.length === 0 ? (
@@ -471,7 +471,7 @@ export default function AgentPage() {
                 <div className="relative">
                   <p className="text-emerald-200 text-xs mb-1">Bu Ay · {now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}</p>
                   <div className="flex gap-6 mt-2">
-                    <div><p className="text-2xl font-bold">{thisMonthLeads.length}</p><p className="text-emerald-200 text-xs mt-0.5">Lead</p></div>
+                    <div><p className="text-2xl font-bold">{thisMonthLeads.length}</p><p className="text-emerald-200 text-xs mt-0.5">Potansiyel Müşteri</p></div>
                     <div><p className="text-2xl font-bold">{thisMonthSales.length}</p><p className="text-emerald-200 text-xs mt-0.5">Satış</p></div>
                     <div><p className="text-2xl font-bold">₺{(thisMonthRevenue/1000).toFixed(1)}K</p><p className="text-emerald-200 text-xs mt-0.5">Ciro</p></div>
                     <div><p className="text-2xl font-bold">₺{thisMonthCommission.toLocaleString()}</p><p className="text-emerald-200 text-xs mt-0.5">Prim</p></div>
@@ -495,7 +495,7 @@ export default function AgentPage() {
                   ))}
                 </div>
                 <div className="flex gap-4 mt-3 pt-3 border-t border-gray-50">
-                  <span className="flex items-center gap-1.5 text-xs text-gray-500"><span className="w-2.5 h-2.5 bg-emerald-400 rounded-sm" /> Lead</span>
+                  <span className="flex items-center gap-1.5 text-xs text-gray-500"><span className="w-2.5 h-2.5 bg-emerald-400 rounded-sm" /> Potansiyel Müşteri</span>
                   <span className="flex items-center gap-1.5 text-xs text-gray-500"><span className="w-2.5 h-2.5 bg-indigo-500 rounded-sm" /> Satış</span>
                 </div>
               </div>
@@ -547,7 +547,7 @@ export default function AgentPage() {
         <div className="flex max-w-2xl mx-auto">
           {[
             { key: 'dashboard', label: 'Anasayfa', icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="1" y="11" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg> },
-            { key: 'leadler', label: 'Leadlerim', icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3.5" stroke="currentColor" strokeWidth="1.5"/><path d="M2 16c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> },
+            { key: 'leadler', label: 'Potansiyel Müşterilerim', icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3.5" stroke="currentColor" strokeWidth="1.5"/><path d="M2 16c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> },
             { key: 'performans', label: 'Performans', icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 14l4-4 3 3 4-5 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
           ].map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -570,7 +570,7 @@ export default function AgentPage() {
           <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md z-10 max-h-[92vh] flex flex-col">
             <div className="flex items-start justify-between px-5 pt-5 pb-4 border-b border-gray-100 flex-shrink-0">
               <div>
-                <h2 className="text-base font-semibold text-gray-900">{selectedLead.full_name || 'Lead'}</h2>
+                <h2 className="text-base font-semibold text-gray-900">{selectedLead.full_name || 'Potansiyel Müşteri'}</h2>
                 <p className="text-xs text-gray-400 mt-0.5">{selectedLead.phone} · {selectedLead.lead_code}</p>
               </div>
               <button onClick={() => setShowUpdateModal(false)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 ml-3">

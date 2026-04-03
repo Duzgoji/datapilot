@@ -74,7 +74,7 @@ export default function CustomerWorkspacePage() {
   }))
 
  const quickLinks = [
-  { href: `/advertiser/customers/${customerId}/leads`, label: 'Lead Listesi', icon: '◈', color: 'indigo', count: leads.length },
+  { href: `/advertiser/customers/${customerId}/leads`, label: 'Potansiyel Müşteri Listesi', icon: '◈', color: 'indigo', count: leads.length },
   { href: `/advertiser/customers/${customerId}/finance`, label: 'Finans & Hakediş', icon: '◉', color: 'emerald', count: null },
   { href: `/advertiser/customers/${customerId}/meta`, label: 'Meta Bağlantı', icon: '◇', color: 'blue', count: null },
   { href: `/advertiser/customers/${customerId}/whatsapp`, label: 'WhatsApp', icon: '◎', color: 'green', count: null },
@@ -108,7 +108,7 @@ export default function CustomerWorkspacePage() {
         {/* KPI satırı */}
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/20">
           <div className="flex gap-6">
-            <div><p className="text-xl font-bold">{leads.length}</p><p className="text-amber-200 text-xs">Toplam Lead</p></div>
+            <div><p className="text-xl font-bold">{leads.length}</p><p className="text-amber-200 text-xs">Toplam Potansiyel Müşteri</p></div>
             <div><p className="text-xl font-bold">{leads.filter(l => l.status === 'procedure_done').length}</p><p className="text-amber-200 text-xs">Satış</p></div>
             <div><p className="text-xl font-bold">%{leads.length > 0 ? ((leads.filter(l => l.status === 'procedure_done').length / leads.length) * 100).toFixed(1) : 0}</p><p className="text-amber-200 text-xs">Dönüşüm</p></div>
             <div><p className="text-xl font-bold">₺{leads.filter(l => l.status === 'procedure_done').reduce((s, l) => s + (l.procedure_amount || 0), 0).toLocaleString()}</p><p className="text-amber-200 text-xs">Toplam Ciro</p></div>
@@ -148,7 +148,7 @@ export default function CustomerWorkspacePage() {
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: 'Lead', value: totalLeads, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+              { label: 'Potansiyel Müşteri', value: totalLeads, color: 'text-indigo-600', bg: 'bg-indigo-50' },
               { label: 'Satış', value: totalSales, color: 'text-emerald-600', bg: 'bg-emerald-50' },
               { label: 'Dönüşüm', value: `%${convRate}`, color: 'text-violet-600', bg: 'bg-violet-50' },
               { label: 'Ciro', value: `₺${totalRevenue.toLocaleString()}`, color: 'text-amber-600', bg: 'bg-amber-50' },
@@ -176,7 +176,7 @@ export default function CustomerWorkspacePage() {
                 <span className="text-xs text-gray-500 w-6 text-right">{s.count}</span>
               </div>
             ))}
-            {statusDist.every(s => s.count === 0) && <p className="text-xs text-gray-400 text-center py-4">Henüz lead yok.</p>}
+            {statusDist.every(s => s.count === 0) && <p className="text-xs text-gray-400 text-center py-4">Henüz potansiyel müşteri yok.</p>}
           </div>
         </div>
       </div>
@@ -218,11 +218,11 @@ export default function CustomerWorkspacePage() {
       {/* Son leadler */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900 text-sm">Son Leadler</h3>
+          <h3 className="font-semibold text-gray-900 text-sm">Son Potansiyel Müşteriler</h3>
           <Link href={`/advertiser/customers/${customerId}/leads`} className="text-xs text-amber-600 font-medium hover:text-amber-700">Tümünü Gör →</Link>
         </div>
         {leads.length === 0 ? (
-          <div className="p-10 text-center"><p className="text-gray-400 text-sm">Henüz lead yok.</p></div>
+          <div className="p-10 text-center"><p className="text-gray-400 text-sm">Henüz potansiyel müşteri yok.</p></div>
         ) : leads.slice(0, 8).map((lead, i) => (
           <div key={lead.id} className={`px-5 py-3.5 flex items-center gap-3 hover:bg-gray-50/50 transition-colors ${i < Math.min(leads.length, 8) - 1 ? 'border-b border-gray-50' : ''}`}>
             <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-xs font-bold text-gray-500 flex-shrink-0">{(lead.full_name || 'L').charAt(0)}</div>

@@ -119,7 +119,7 @@ function DashboardMockup() {
             {/* Stat cards */}
             <div className="grid grid-cols-4 gap-3 mb-5">
               {[
-                { label: 'Toplam Lead', value: '1.284', change: '+12%', up: true, color: 'blue' },
+                { label: 'Toplam Potansiyel Müşteri', value: '1.284', change: '+12%', up: true, color: 'blue' },
                 { label: 'Bu Ay', value: '247', change: '+8%', up: true, color: 'green' },
                 { label: 'Dönüşüm', value: '%34', change: '+3%', up: true, color: 'purple' },
                 { label: 'Bekleyen', value: '58', change: '-5', up: false, color: 'orange' },
@@ -302,7 +302,7 @@ export default function LandingPage() {
           {/* Stats row */}
           <div className="flex items-center justify-center gap-10 mt-12 flex-wrap">
             {[
-              { value: '10K+', label: 'Lead Yönetildi' },
+              { value: '10K+', label: 'Potansiyel Müşteri Yönetildi' },
               { value: '%34', label: 'Dönüşüm Artışı' },
               { value: '500+', label: 'Başarılı Firma' },
               { value: '14 Gün', label: 'Ücretsiz Deneme' },

@@ -194,7 +194,7 @@ function Sidebar({ onAddNew }: { onAddNew: () => void }) {
 
   const customerNav = activeCustomer ? [
     { href: `/advertiser/customers/${activeCustomerId}`, label: 'Genel Bakış', IconComp: Icon.overview, exact: true },
-    { href: `/advertiser/customers/${activeCustomerId}/leads`, label: 'Leadler', IconComp: Icon.leads },
+    { href: `/advertiser/customers/${activeCustomerId}/leads`, label: 'Potansiyel Müşteriler', IconComp: Icon.leads },
     { href: `/advertiser/customers/${activeCustomerId}/finance`, label: 'Finans & Hakediş', IconComp: Icon.finance },
     { href: `/advertiser/customers/${activeCustomerId}/meta`, label: 'Meta Bağlantı', IconComp: Icon.meta },
     { href: `/advertiser/customers/${activeCustomerId}/whatsapp`, label: 'WhatsApp', IconComp: Icon.whatsapp },

@@ -94,7 +94,7 @@ export default function AdvertiserDashboard() {
         </div>
         <div className="grid grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/10">
           {[
-            { label: 'Lead', value: totalLeads, color: 'text-white', spark: true },
+            { label: 'Potansiyel Müşteri', value: totalLeads, color: 'text-white', spark: true },
             { label: 'Satış', value: totalSales, color: 'text-emerald-400', spark: false },
             { label: 'Dönüşüm', value: `%${convRate}`, color: 'text-violet-400', spark: false },
             { label: 'Hakediş', value: `₺${totalHakedis.toLocaleString()}`, color: 'text-amber-400', spark: false },
@@ -180,7 +180,7 @@ export default function AdvertiserDashboard() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">{c.name}</p>
                 <div className="flex items-center gap-3 mt-0.5">
-                  <span className="text-xs text-gray-400">{cLeads.length} lead</span>
+                  <span className="text-xs text-gray-400">{cLeads.length} potansiyel müşteri</span>
                   <span className="text-xs text-emerald-600 font-medium">{cSales} satış</span>
                   <span className="text-xs text-gray-400">%{cConv}</span>
                 </div>
