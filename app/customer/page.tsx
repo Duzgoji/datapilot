@@ -26,7 +26,7 @@ const menuStructure = [
   {
     key: 'leadler', label: 'Potansiyel Müşteriler', icon: '◎', children: [
       { key: 'leadler-liste', label: 'Potansiyel Müşteri Listesi' },
-      { key: 'pipeline', label: 'Pipeline' },
+      { key: 'pipeline', label: 'Satış Süreci Takibi' },
       { key: 'leadler-dagitim', label: 'Dağıtım' },
     ]
   },
@@ -1599,45 +1599,65 @@ const handlePayCommission = async () => {
     </div>
   )}
 </Modal>
+
 {activeTab === 'pipeline' && (
-  <div className="space-y-4">
+  <div className="space-y-5">
     <div>
-      <h2 className="text-base font-semibold text-gray-900">Pipeline</h2>
-      <p className="text-xs text-gray-400 mt-0.5">{leads.length} potansiyel müşteri</p>
+      <h2 className="text-base font-semibold text-gray-900">Satış Süreci Takibi</h2>
+      <p className="text-xs text-gray-400 mt-0.5">Potansiyel müşterilerinizi aşamalara göre takip edin</p>
     </div>
+
+    {/* Özet satırı */}
+    <div className="flex gap-3 flex-wrap">
+      {statusColumns.map(status => {
+        const count = leads.filter(l => l.status === status).length
+        const config = STATUS_CONFIG[status]
+        return (
+          <div key={status} className="flex items-center gap-1.5 bg-white border border-gray-100 rounded-xl px-3 py-1.5">
+            <span className={`w-2 h-2 rounded-full ${config?.dot}`} />
+            <span className="text-xs text-gray-500">{config?.label}:</span>
+            <span className="text-xs font-bold text-gray-900">{count}</span>
+          </div>
+        )
+      })}
+    </div>
+
+    {/* Kolonlar */}
     <div className="flex gap-4 overflow-x-auto pb-4">
       {statusColumns.map(status => {
         const colLeads = leads.filter(l => l.status === status)
         const config = STATUS_CONFIG[status]
         return (
-          <div key={status} className="w-64 flex-shrink-0">
-            <div className="flex items-center justify-between mb-3">
+          <div key={status} className="w-60 flex-shrink-0 bg-gray-50 rounded-2xl p-3 border border-gray-100">
+            {/* Kolon başlığı */}
+            <div className="flex items-center justify-between mb-3 px-1">
               <div className="flex items-center gap-2">
                 <span className={`w-2 h-2 rounded-full ${config?.dot}`} />
                 <span className="text-xs font-semibold text-gray-700">{config?.label}</span>
               </div>
-              <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{colLeads.length}</span>
+              <span className="text-xs font-bold text-white px-2 py-0.5 rounded-full" style={{ backgroundColor: config?.dot?.replace('bg-', '') }}>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${config?.badge}`}>{colLeads.length}</span>
+              </span>
             </div>
-            <div className="space-y-2">
+
+            {/* Kartlar */}
+            <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto">
               {colLeads.length === 0 ? (
-                <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl p-4 text-center">
+                <div className="border border-dashed border-gray-200 rounded-xl p-4 text-center">
                   <p className="text-xs text-gray-300">Boş</p>
                 </div>
               ) : colLeads.map(lead => (
-                <div key={lead.id} onClick={() => { setSelectedLead(lead); setNewStatus(lead.status) }}
-                  className="bg-white border border-gray-100 rounded-xl p-3.5 cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
+                <div key={lead.id}
+                  onClick={() => { setSelectedLead(lead); setNewStatus(lead.status) }}
+                  className="bg-white border border-gray-100 rounded-xl p-3 cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group">
+                  <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">{lead.full_name || 'İsimsiz'}</p>
                   {lead.phone && <p className="text-xs text-gray-400 mt-0.5">{lead.phone}</p>}
                   {lead.assigned_to && (
-                    <p className="text-xs text-gray-400 mt-0.5 truncate">
-                      👤 {teamMembers.find(m => m.user_id === lead.assigned_to)?.profiles?.full_name || 'Atanmış'}
-                    </p>
+                    <div className="flex items-center gap-1 mt-1.5">
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="3.5" r="2" stroke="#9ca3af" strokeWidth="1.25"/><path d="M1 9c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5" stroke="#9ca3af" strokeWidth="1.25" strokeLinecap="round"/></svg>
+                      <p className="text-xs text-gray-400 truncate">{teamMembers.find(m => m.user_id === lead.assigned_to)?.profiles?.full_name || '-'}</p>
+                    </div>
                   )}
-                  <div className="mt-2">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${config?.badge}`}>
-                      {config?.label}
-                    </span>
-                  </div>
                 </div>
               ))}
             </div>
