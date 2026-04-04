@@ -1002,15 +1002,17 @@ const handlePayCommission = async () => {
   <div className="flex items-center justify-between gap-4 flex-wrap">
   <p className="text-sm text-gray-500">{filteredLeads.length} / {leads.length} potansiyel müşteri</p>
   <div className="flex gap-2 flex-shrink-0">
-                  <Btn variant="secondary" size="sm" onClick={() => setShowReportPanel(true)}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 10h10M2 7h6M2 4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                    Rapor İndir
-                  </Btn>
-                  <Btn size="sm" onClick={() => setShowAddLead(true)}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-                    Potansiyel Müşteri Ekle
-                  </Btn>
-                </div>
+  <button onClick={() => setShowReportPanel(true)}
+    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-medium rounded-xl transition-colors shadow-sm">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3.5 6l3 3 3-3M1.5 10.5h10" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    Rapor İndir
+  </button>
+  <button onClick={() => setShowAddLead(true)}
+    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm shadow-indigo-200">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+    + Potansiyel Müşteri
+  </button>
+</div>
               </div>
 
               {/* Search */}
@@ -3395,12 +3397,13 @@ const handlePayCommission = async () => {
           </div>
           <div>
             <p className="text-xs font-medium text-gray-500 mb-2">Yeni Durum</p>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(STATUS_CONFIG).map(([key, val]: any) => (
-                <button key={key} type="button" onClick={() => setNewStatus(key)}
-                  className={`py-2.5 px-3 rounded-xl text-sm font-medium border-2 transition-all flex items-center gap-2 ${newStatus === key ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
-                  <span className={`w-2 h-2 rounded-full ${val.dot}`} />{val.label}
-                </button>
+            
+              <div className="flex flex-wrap gap-2">
+  {Object.entries(STATUS_CONFIG).map(([key, val]: any) => (
+    <button key={key} type="button" onClick={() => setNewStatus(key)}
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${newStatus === key ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+      <span className={`w-2 h-2 rounded-full ${val.dot}`} />{val.label}
+    </button>
               ))}
             </div>
           </div>
@@ -3412,10 +3415,10 @@ const handlePayCommission = async () => {
             </div>
           )}
           {newStatus === 'appointment_scheduled' && (
-            <div className="bg-violet-50 rounded-xl p-4">
-              <p className="text-xs font-semibold text-violet-700 mb-2">Randevu Tarihi</p>
-              <Input type="datetime-local" value={appointmentDate} onChange={(e: any) => setAppointmentDate(e.target.value)} />
-            </div>
+           <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
+  <p className="text-xs font-semibold text-violet-700 mb-3">📅 Randevu Tarihi</p>
+  <Input type="datetime-local" value={appointmentDate} onChange={(e: any) => setAppointmentDate(e.target.value)} />
+</div>
           )}
           {newStatus === 'cancelled' && (
             <Input label="İptal Sebebi" value={cancelReason} onChange={(e: any) => setCancelReason(e.target.value)} placeholder="Sebebi yazın..." />
