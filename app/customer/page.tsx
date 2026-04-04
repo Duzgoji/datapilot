@@ -905,7 +905,7 @@ const handlePayCommission = async () => {
         </header>
 
         {/* Content */}
-       <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
+       <div className="ml-16 min-h-screen" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
        <main className="p-6">
           {/* ── DASHBOARD ── */}
           {activeTab === 'dashboard' && (
