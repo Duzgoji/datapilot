@@ -3374,7 +3374,7 @@ const handlePayCommission = async () => {
       </Modal>
 
       {/* ── DURUM GÜNCELLE ── */}
-      <Modal open={!!selectedLead} onClose={() => setSelectedLead(null)} title={selectedLead?.full_name || 'Potansiyel Müşteri'} subtitle={`${selectedLead?.lead_code} · ${selectedLead?.phone}`} size="2xl">
+      <Modal open={!!selectedLead} onClose={() => setSelectedLead(null)} title={selectedLead?.full_name || 'Potansiyel Müşteri'} subtitle={`${selectedLead?.lead_code || ''} · ${selectedLead?.phone || ''}`} size="2xl">
         <form onSubmit={handleUpdateStatus} className="p-6 space-y-4">
           {/* Temel bilgiler */}
           <div className="grid grid-cols-3 gap-3">
