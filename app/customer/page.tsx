@@ -221,6 +221,7 @@ export default function CustomerPage() {
   const [expandedMembers, setExpandedMembers] = useState<string[]>([])
   const [expandedColumns, setExpandedColumns] = useState<string[]>([])
   const COLUMN_LIMIT = 6
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   // Lead detail/update
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [newStatus, setNewStatus] = useState('')
@@ -299,7 +300,13 @@ export default function CustomerPage() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
-
+useEffect(() => {
+  const interval = setInterval(() => {
+    loadData()
+    setLastUpdated(new Date())
+  }, 10000) // 10 saniyede bir
+  return () => clearInterval(interval)
+}, [])
   // ─── DATA ─────────────────────────────────────────────────────────────────
 
   const loadData = async () => {
@@ -1227,6 +1234,9 @@ const handlePayCommission = async () => {
               <div className="px-5 py-4 border-b border-gray-100">
                 <h3 className="font-semibold text-gray-900 text-sm">Potansiyel Müşteri Dağıtımı</h3>
                 <p className="text-xs text-gray-400 mt-0.5">Atanmamış potansiyel müşterileri satışçılara atayın</p>
+                <p className="text-xs text-gray-300 mt-1">
+                   Son güncelleme: {Math.round((new Date().getTime() - lastUpdated.getTime()) / 1000)} sn önce
+                </p>
               </div>
               {leads.filter(l => !l.assigned_to).length === 0 ? (
                 <div className="p-16 text-center"><div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-3 text-lg">✓</div><p className="text-gray-500 text-sm">Tüm potansiyel müşteriler atanmış.</p></div>
