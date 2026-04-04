@@ -478,10 +478,14 @@ setCustomerInvoices(invoicesData || [])
     setSaving(false)
   }
 
-  
-   const handleUpdateStatus = async (e: React.FormEvent) => {
+ const handleUpdateStatus = async (e: React.FormEvent) => {
   e.preventDefault()
   if (!selectedLead || !newStatus) return
+  if (newStatus === selectedLead.status) {
+    alert('Zaten bu durumda.')
+    setSaving(false)
+    return
+  }
   if (selectedLead.status === 'procedure_done' && newStatus !== 'procedure_done' && !cancelReason.trim()) {
     alert('Lütfen satış iptal nedenini girin.')
     return
