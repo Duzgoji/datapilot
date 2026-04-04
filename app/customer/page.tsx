@@ -466,10 +466,15 @@ setCustomerInvoices(invoicesData || [])
     setSaving(false)
   }
 
-  const handleUpdateStatus = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedLead || !newStatus) return
-    setSaving(true)
+  
+   const handleUpdateStatus = async (e: React.FormEvent) => {
+  e.preventDefault()
+  if (!selectedLead || !newStatus) return
+  if (selectedLead.status === 'procedure_done' && newStatus !== 'procedure_done' && !cancelReason.trim()) {
+    alert('Lütfen satış iptal nedenini girin.')
+    return
+  }
+  setSaving(true)
     const updates: any = { status: newStatus }
     if (newStatus === 'called') updates.called_at = new Date().toISOString()
     if (newStatus === 'appointment_scheduled') updates.appointment_date = appointmentDate
