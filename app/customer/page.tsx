@@ -495,11 +495,17 @@ setCustomerInvoices(invoicesData || [])
     if (selectedLead.status === 'procedure_done' && newStatus !== 'procedure_done') {
   updates.cancel_reason = cancelReason || 'Satış iptal edildi'
 }
-    await supabase.from('leads').update(updates).eq('id', selectedLead.id)
-    await supabase.from('lead_history').insert({ lead_id: selectedLead.id, changed_by: profile.id, old_status: selectedLead.status, new_status: newStatus, note: statusNote })
-    setSelectedLead(null); setStatusNote(''); setProcedureType(''); setProcedureAmount(''); setCancelReason(''); setAppointmentDate('')
-    loadData(); setSaving(false)
-  }
+await supabase.from('leads').update(updates).eq('id', selectedLead.id)
+await supabase.from('lead_history').insert({ lead_id: selectedLead.id, changed_by: profile.id, old_status: selectedLead.status, new_status: newStatus, note: statusNote })
+if (statusNote.trim()) {
+  await supabase.from('lead_activities').insert({
+    lead_id: selectedLead.id, user_id: profile.id,
+    type: 'note', content: statusNote
+  })
+}
+setSelectedLead(null); setStatusNote(''); setProcedureType(''); setProcedureAmount(''); setCancelReason(''); setAppointmentDate('')
+loadData(); setSaving(false)
+}
 const handlePayCommission = async () => {
   if (!paymentMember || !paymentAmount) return
   setPaymentSaving(true)
@@ -3377,6 +3383,19 @@ const handlePayCommission = async () => {
             <textarea value={leadNote} onChange={e => setLeadNote(e.target.value)} rows={2} placeholder="Ek not..."
               className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
           </div>
+          <div className="max-h-40 overflow-y-auto space-y-2">
+  {leadActivities.length === 0 ? (
+    <p className="text-xs text-gray-300 text-center py-2">Henüz not yok</p>
+  ) : leadActivities.map(activity => (
+    <div key={activity.id} className="flex gap-2 items-start bg-gray-50 rounded-xl px-3 py-2">
+      <span className="text-xs">💬</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-gray-700">{activity.content}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{activity.profiles?.full_name} · {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+      </div>
+    </div>
+  ))}
+</div>
           <div className="flex gap-3 pt-2">
             <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddLead(false)}>İptal</Btn>
             <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Ekleniyor...' : 'Potansiyel Müşteri Ekle'}</Btn>
@@ -3454,49 +3473,7 @@ const handlePayCommission = async () => {
             <textarea value={statusNote} onChange={e => setStatusNote(e.target.value)} rows={2} placeholder="Görüşme notu..."
               className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
           </div>
-          {/* Timeline */}
-<div className="border-t border-gray-100 pt-4">
-  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Aktivite</p>
-  
-  <div className="flex gap-2 mb-4">
-    <input value={activityNote} onChange={e => setActivityNote(e.target.value)}
-     placeholder="Not ekle..."
-      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-    <button type="button" onClick={async () => {
-      if (!statusNote.trim()) return
-      await supabase.from('lead_activities').insert({
-        lead_id: selectedLead.id, user_id: profile.id,
-        type: 'note', content: activityNote
-      })
-      setActivityNote('')
-      if (selectedLead?.id) loadLeadActivities(selectedLead.id) 
-    }}
-      className="px-3 py-2 bg-indigo-600 text-white text-xs font-medium rounded-xl hover:bg-indigo-700 transition-colors">
-      Ekle
-    </button>
-  </div>
-
-  <div className="space-y-2 max-h-48 overflow-y-auto">
-    {leadActivities.length === 0 ? (
-      <p className="text-xs text-gray-300 text-center py-4">Henüz aktivite yok</p>
-    ) : leadActivities.map(activity => (
-      <div key={activity.id} className="flex gap-3 items-start">
-        <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs
-          ${activity.type === 'note' ? 'bg-amber-100 text-amber-600' :
-            activity.type === 'status_changed' ? 'bg-indigo-100 text-indigo-600' :
-            'bg-gray-100 text-gray-500'}`}>
-          {activity.type === 'note' ? '💬' : activity.type === 'status_changed' ? '↔' : '✓'}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs text-gray-700">{activity.content}</p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {activity.profiles?.full_name} · {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-          </p>
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
+   
           <div className="flex gap-3 pt-2">
             <Btn type="button" variant="secondary" className="flex-1" onClick={() => setSelectedLead(null)}>İptal</Btn>
             <Btn type="submit" className="flex-1" disabled={saving || !newStatus}>{saving ? 'Kaydediliyor...' : 'Kaydet'}</Btn>
