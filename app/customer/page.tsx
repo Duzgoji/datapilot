@@ -219,6 +219,8 @@ export default function CustomerPage() {
   const [leadAssignTo, setLeadAssignTo] = useState('')
   const [leadNote, setLeadNote] = useState('')
   const [expandedMembers, setExpandedMembers] = useState<string[]>([])
+  const [expandedColumns, setExpandedColumns] = useState<string[]>([])
+  const COLUMN_LIMIT = 6
   // Lead detail/update
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [newStatus, setNewStatus] = useState('')
@@ -1656,20 +1658,43 @@ const handlePayCommission = async () => {
                 <div className="border border-dashed border-gray-200 rounded-xl p-4 text-center">
                   <p className="text-xs text-gray-300">Boş</p>
                 </div>
-              ) : colLeads.map(lead => (
-                <div key={lead.id}
-                  onClick={() => { setSelectedLead(lead); setNewStatus(lead.status) }}
-                  className="bg-white border border-gray-100 rounded-xl p-3 cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group">
-                  <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">{lead.full_name || 'İsimsiz'}</p>
-                  {lead.phone && <p className="text-xs text-gray-400 mt-0.5">{lead.phone}</p>}
-                  {lead.assigned_to && (
-                    <div className="flex items-center gap-1 mt-1.5">
-                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="3.5" r="2" stroke="#9ca3af" strokeWidth="1.25"/><path d="M1 9c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5" stroke="#9ca3af" strokeWidth="1.25" strokeLinecap="round"/></svg>
-                      <p className="text-xs text-gray-400 truncate">{teamMembers.find(m => m.user_id === lead.assigned_to)?.profiles?.full_name || '-'}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
+             ) : (() => {
+  const isExpanded = expandedColumns.includes(status)
+  const visibleLeads = isExpanded ? colLeads : colLeads.slice(0, COLUMN_LIMIT)
+  const remaining = colLeads.length - COLUMN_LIMIT
+  return (
+    <>
+      {visibleLeads.map(lead => (
+        <div key={lead.id}
+          onClick={() => { setSelectedLead(lead); setNewStatus(lead.status) }}
+          className="bg-white border border-gray-100 rounded-xl p-3 cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group">
+          <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">{lead.full_name || 'İsimsiz'}</p>
+          {lead.phone && <p className="text-xs text-gray-400 mt-0.5">{lead.phone}</p>}
+          {lead.assigned_to && (
+            <div className="flex items-center gap-1 mt-1.5">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="3.5" r="2" stroke="#9ca3af" strokeWidth="1.25"/><path d="M1 9c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5" stroke="#9ca3af" strokeWidth="1.25" strokeLinecap="round"/></svg>
+              <p className="text-xs text-gray-400 truncate">{teamMembers.find(m => m.user_id === lead.assigned_to)?.profiles?.full_name || '-'}</p>
+            </div>
+          )}
+        </div>
+      ))}
+      {!isExpanded && remaining > 0 && (
+        <button
+          onClick={() => setExpandedColumns(prev => [...prev, status])}
+          className="w-full text-xs text-indigo-600 font-medium py-2 hover:bg-indigo-50 rounded-xl border border-dashed border-indigo-200 transition-colors">
+          + {remaining} daha
+        </button>
+      )}
+      {isExpanded && colLeads.length > COLUMN_LIMIT && (
+        <button
+          onClick={() => setExpandedColumns(prev => prev.filter(s => s !== status))}
+          className="w-full text-xs text-gray-400 font-medium py-2 hover:bg-gray-50 rounded-xl border border-dashed border-gray-200 transition-colors">
+          Daha az göster
+        </button>
+      )}
+    </>
+  )
+})()}
             </div>
           </div>
         )
