@@ -480,7 +480,19 @@ setCustomerInvoices(invoicesData || [])
 
  const handleUpdateStatus = async (e: React.FormEvent) => {
   e.preventDefault()
-  if (!selectedLead || !newStatus) return
+if (!selectedLead) return
+if (!newStatus && statusNote.trim()) {
+  // sadece not ekle
+  await supabase.from('lead_activities').insert({
+    lead_id: selectedLead.id, user_id: profile.id,
+    type: 'note', content: statusNote
+  })
+  if (selectedLead?.id) await loadLeadActivities(selectedLead.id)
+  setStatusNote('')
+  setSaving(false)
+  return
+}
+if (!newStatus) return
 if (newStatus === selectedLead.status) {
   if (statusNote.trim()) {
     await supabase.from('lead_activities').insert({
