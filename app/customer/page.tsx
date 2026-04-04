@@ -487,9 +487,9 @@ if (newStatus === selectedLead.status) {
       lead_id: selectedLead.id, user_id: profile.id,
       type: 'note', content: statusNote
     })
-    if (selectedLead?.id) loadLeadActivities(selectedLead.id)
+    if (selectedLead?.id) await loadLeadActivities(selectedLead.id)
   }
-  setSelectedLead(null); setStatusNote('')
+  setStatusNote('')
   setSaving(false)
   return
 }
