@@ -494,6 +494,7 @@ if (!newStatus && statusNote.trim()) {
 }
 if (!newStatus) return
 if (newStatus === selectedLead.status) {
+  setSaving(true)
   if (statusNote.trim()) {
     await supabase.from('lead_activities').insert({
       lead_id: selectedLead.id, user_id: profile.id,
