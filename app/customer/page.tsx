@@ -231,6 +231,7 @@ export default function CustomerPage() {
   const [editLead, setEditLead] = useState<any>(null)
   const [editLoading, setEditLoading] = useState(false)
   const [leadHistory, setLeadHistory] = useState<any[]>([])
+  const [leadActivities, setLeadActivities] = useState<any[]>([])
   const [statusNote, setStatusNote] = useState('')
   const [procedureType, setProcedureType] = useState('')
   const [procedureAmount, setProcedureAmount] = useState('')
@@ -322,11 +323,11 @@ useEffect(() => {
     const { data: branchesData } = await supabase.from('branches').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
     setBranches(branchesData || [])
     const branchIds = (branchesData || []).map((b: any) => b.id)
-const { data: leadsData } = await supabase.from('leads').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
-setLeads(leadsData || [])
-if (branchIds.length > 0) {
-  const { data: membersData } = await supabase.from('team_members').select('*, profiles(full_name, email), branches(branch_name)').in('branch_id', branchIds)
-  setTeamMembers(membersData || [])
+    const { data: leadsData } = await supabase.from('leads').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
+    setLeads(leadsData || [])
+    if (branchIds.length > 0) {
+   const { data: membersData } = await supabase.from('team_members').select('*, profiles(full_name, email), branches(branch_name)').in('branch_id', branchIds)
+    setTeamMembers(membersData || [])
 }
     const { data: metaConnData } = await supabase.from('meta_connections').select('*').eq('owner_id', user.id).single()
     setMetaConn(metaConnData || null)
@@ -982,7 +983,7 @@ const handlePayCommission = async () => {
                       <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
                       <p className="text-xs text-gray-400">{lead.phone}</p>
                     </div>
-                    <button onClick={e => { e.stopPropagation(); setSelectedLead(lead); setNewStatus(lead.status) }}>
+                    <button onClick={e => { e.stopPropagation(); setSelectedLead(lead); loadLeadActivities(lead.id); setNewStatus(lead.status) }}>
                     <Badge status={lead.status} />
                     </button>
                   </div>
@@ -1224,7 +1225,7 @@ const handlePayCommission = async () => {
                             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8.5 1.5l3 3-7 7H1.5v-3l7-7z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
                           </button>
                           {/* Durum güncelle */}
-                          <button onClick={() => { setSelectedLead(lead); setNewStatus(lead.status) }}
+                          <button onClick={() => { setSelectedLead(lead); loadLeadActivities(lead.id); setNewStatus(lead.status) }}
                             className="p-1.5 hover:bg-indigo-50 rounded-lg text-gray-300 hover:text-indigo-600 transition-colors"
                             title="Durum güncelle">
                             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 7l3 3L12 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -1686,7 +1687,7 @@ const handlePayCommission = async () => {
     <>
       {visibleLeads.map(lead => (
         <div key={lead.id}
-          onClick={() => { setSelectedLead(lead); setNewStatus(lead.status) }}
+          onClick={() => { setSelectedLead(lead); loadLeadActivities(lead.id); setNewStatus(lead.status) }}
           className="bg-white border border-gray-100 rounded-xl p-3 cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group">
           <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">{lead.full_name || 'İsimsiz'}</p>
           {lead.phone && <p className="text-xs text-gray-400 mt-0.5">{lead.phone}</p>}
@@ -3442,6 +3443,49 @@ const handlePayCommission = async () => {
             <textarea value={statusNote} onChange={e => setStatusNote(e.target.value)} rows={2} placeholder="Görüşme notu..."
               className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
           </div>
+          {/* Timeline */}
+<div className="border-t border-gray-100 pt-4">
+  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Aktivite</p>
+  
+  <div className="flex gap-2 mb-4">
+    <input value={statusNote} onChange={e => setStatusNote(e.target.value)}
+      placeholder="Not ekle..."
+      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    <button type="button" onClick={async () => {
+      if (!statusNote.trim()) return
+      await supabase.from('lead_activities').insert({
+        lead_id: selectedLead.id, user_id: profile.id,
+        type: 'note', content: statusNote
+      })
+      setStatusNote('')
+      loadLeadActivities(selectedLead.id)
+    }}
+      className="px-3 py-2 bg-indigo-600 text-white text-xs font-medium rounded-xl hover:bg-indigo-700 transition-colors">
+      Ekle
+    </button>
+  </div>
+
+  <div className="space-y-2 max-h-48 overflow-y-auto">
+    {leadActivities.length === 0 ? (
+      <p className="text-xs text-gray-300 text-center py-4">Henüz aktivite yok</p>
+    ) : leadActivities.map(activity => (
+      <div key={activity.id} className="flex gap-3 items-start">
+        <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs
+          ${activity.type === 'note' ? 'bg-amber-100 text-amber-600' :
+            activity.type === 'status_changed' ? 'bg-indigo-100 text-indigo-600' :
+            'bg-gray-100 text-gray-500'}`}>
+          {activity.type === 'note' ? '💬' : activity.type === 'status_changed' ? '↔' : '✓'}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-gray-700">{activity.content}</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {activity.profiles?.full_name} · {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          </p>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
           <div className="flex gap-3 pt-2">
             <Btn type="button" variant="secondary" className="flex-1" onClick={() => setSelectedLead(null)}>İptal</Btn>
             <Btn type="submit" className="flex-1" disabled={saving || !newStatus}>{saving ? 'Kaydediliyor...' : 'Kaydet'}</Btn>
