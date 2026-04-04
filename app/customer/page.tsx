@@ -329,6 +329,7 @@ useEffect(() => {
    const { data: membersData } = await supabase.from('team_members').select('*, profiles(full_name, email), branches(branch_name)').in('branch_id', branchIds)
     setTeamMembers(membersData || [])
 }
+
     const { data: metaConnData } = await supabase.from('meta_connections').select('*').eq('owner_id', user.id).single()
     setMetaConn(metaConnData || null)
 
@@ -359,6 +360,15 @@ const { data: invoicesData } = await supabase
 setCustomerInvoices(invoicesData || [])
     setLoading(false)
   }
+
+  const loadLeadActivities = async (leadId: string) => {
+  const { data } = await supabase
+    .from('lead_activities')
+    .select('*, profiles(full_name)')
+    .eq('lead_id', leadId)
+    .order('created_at', { ascending: false })
+  setLeadActivities(data || [])
+}
 
   // ─── SETTINGS HANDLERS ────────────────────────────────────────────────────
 
@@ -3458,7 +3468,7 @@ const handlePayCommission = async () => {
         type: 'note', content: statusNote
       })
       setStatusNote('')
-      loadLeadActivities(selectedLead.id)
+      if (selectedLead?.id) loadLeadActivities(selectedLead.id) 
     }}
       className="px-3 py-2 bg-indigo-600 text-white text-xs font-medium rounded-xl hover:bg-indigo-700 transition-colors">
       Ekle
