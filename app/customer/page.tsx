@@ -324,7 +324,7 @@ useEffect(() => {
     const { data: branchesData } = await supabase.from('branches').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
     setBranches(branchesData || [])
     const branchIds = (branchesData || []).map((b: any) => b.id)
-    const { data: leadsData } = await supabase.from('leads').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
+    const { data: leadsData } = await supabase.from('leads').select('*').eq('owner_id', user.id).order('updated_at', { ascending: false })
     setLeads(leadsData || [])
     if (branchIds.length > 0) {
    const { data: membersData } = await supabase.from('team_members').select('*, profiles(full_name, email), branches(branch_name)').in('branch_id', branchIds)
@@ -481,11 +481,18 @@ setCustomerInvoices(invoicesData || [])
  const handleUpdateStatus = async (e: React.FormEvent) => {
   e.preventDefault()
   if (!selectedLead || !newStatus) return
-  if (newStatus === selectedLead.status) {
-    alert('Zaten bu durumda.')
-    setSaving(false)
-    return
+if (newStatus === selectedLead.status) {
+  if (statusNote.trim()) {
+    await supabase.from('lead_activities').insert({
+      lead_id: selectedLead.id, user_id: profile.id,
+      type: 'note', content: statusNote
+    })
+    if (selectedLead?.id) loadLeadActivities(selectedLead.id)
   }
+  setSelectedLead(null); setStatusNote('')
+  setSaving(false)
+  return
+}
   if (selectedLead.status === 'procedure_done' && newStatus !== 'procedure_done' && !cancelReason.trim()) {
     alert('Lütfen satış iptal nedenini girin.')
     return
