@@ -237,6 +237,7 @@ export default function CustomerPage() {
   const [procedureAmount, setProcedureAmount] = useState('')
   const [cancelReason, setCancelReason] = useState('')
   const [appointmentDate, setAppointmentDate] = useState('')
+  const [activityNote, setActivityNote] = useState('')
 
   const [perfPeriod, setPerfPeriod] = useState('6month')
   const [perfStartDate, setPerfStartDate] = useState('')
@@ -3458,16 +3459,16 @@ const handlePayCommission = async () => {
   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Aktivite</p>
   
   <div className="flex gap-2 mb-4">
-    <input value={statusNote} onChange={e => setStatusNote(e.target.value)}
-      placeholder="Not ekle..."
+    <input value={activityNote} onChange={e => setActivityNote(e.target.value)}
+     placeholder="Not ekle..."
       className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" />
     <button type="button" onClick={async () => {
       if (!statusNote.trim()) return
       await supabase.from('lead_activities').insert({
         lead_id: selectedLead.id, user_id: profile.id,
-        type: 'note', content: statusNote
+        type: 'note', content: activityNote
       })
-      setStatusNote('')
+      setActivityNote('')
       if (selectedLead?.id) loadLeadActivities(selectedLead.id) 
     }}
       className="px-3 py-2 bg-indigo-600 text-white text-xs font-medium rounded-xl hover:bg-indigo-700 transition-colors">
