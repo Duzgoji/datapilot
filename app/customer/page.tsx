@@ -475,6 +475,9 @@ setCustomerInvoices(invoicesData || [])
     if (newStatus === 'appointment_scheduled') updates.appointment_date = appointmentDate
     if (newStatus === 'procedure_done') { updates.procedure_type = procedureType; updates.procedure_amount = parseFloat(procedureAmount) || 0; updates.procedure_date = new Date().toISOString() }
     if (newStatus === 'cancelled') updates.cancel_reason = cancelReason
+    if (selectedLead.status === 'procedure_done' && newStatus !== 'procedure_done') {
+  updates.cancel_reason = cancelReason || 'Satış iptal edildi'
+}
     await supabase.from('leads').update(updates).eq('id', selectedLead.id)
     await supabase.from('lead_history').insert({ lead_id: selectedLead.id, changed_by: profile.id, old_status: selectedLead.status, new_status: newStatus, note: statusNote })
     setSelectedLead(null); setStatusNote(''); setProcedureType(''); setProcedureAmount(''); setCancelReason(''); setAppointmentDate('')
@@ -3412,6 +3415,12 @@ const handlePayCommission = async () => {
               <p className="text-xs font-semibold text-emerald-700">Satış Detayları</p>
               <Input label="İşlem Tipi" value={procedureType} onChange={(e: any) => setProcedureType(e.target.value)} placeholder="Örn: Yıllık üyelik" />
               <Input label="Tutar (₺)" type="number" value={procedureAmount} onChange={(e: any) => setProcedureAmount(e.target.value)} placeholder="0" />
+            </div>
+          )}
+              {selectedLead?.status === 'procedure_done' && newStatus !== 'procedure_done' && (
+            <div className="bg-amber-50 rounded-xl p-3 border border-amber-100">
+              <p className="text-xs font-semibold text-amber-700 mb-2">⚠️ Satış İptal Nedeni</p>
+              <Input value={cancelReason} onChange={(e: any) => setCancelReason(e.target.value)} placeholder="Neden satış iptal ediliyor?" />
             </div>
           )}
           {newStatus === 'appointment_scheduled' && (

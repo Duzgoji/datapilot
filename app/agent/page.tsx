@@ -73,11 +73,11 @@ export default function AgentPage() {
     setLeads(leadsData || [])
     setLoading(false)
   }
-
-  const handleUpdateLead = async (e: React.FormEvent) => {
+const handleUpdateLead = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     try {
+      if (selectedLead.status === 'procedure_done') return
       // Satışçı 'procedure_done' yapamaz — sadece müşteri paneli
       if (newStatus === 'procedure_done') return
       const updateData: any = { status: newStatus }
@@ -101,6 +101,7 @@ export default function AgentPage() {
   }
 
   const openUpdateModal = (lead: any) => {
+    if (lead.status === 'procedure_done') return
     setSelectedLead(lead)
     // procedure_done agent tarafından seçilemez, varsayılan olarak 'called' göster
     setNewStatus(lead.status === 'procedure_done' ? 'called' : lead.status)
