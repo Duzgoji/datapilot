@@ -504,6 +504,17 @@ const loadNotifications = async () => {
   body: `${leadName} eklendi`,
   link: newLeadData?.id || 'leadler-liste'
 })
+
+// Atanan satışçıya da bildirim gönder
+if (leadAssignTo) {
+  await supabase.from('notifications').insert({
+    user_id: leadAssignTo,
+    type: 'lead_assigned',
+    title: 'Yeni potansiyel müşteri atandı',
+    body: `${leadName} size atandı`,
+    link: newLeadData?.id || ''
+  })
+}
 loadNotifications()
       setShowAddLead(false); await loadData()
     }
@@ -615,7 +626,20 @@ const handlePayCommission = async () => {
     setAdSpendSyncing(false)
   }
 
-  const handleAssignLead = async (leadId: string, userId: string) => { await supabase.from('leads').update({ assigned_to: userId }).eq('id', leadId); loadData() }
+  const handleAssignLead = async (leadId: string, userId: string) => {
+  await supabase.from('leads').update({ assigned_to: userId }).eq('id', leadId)
+  
+  const lead = leads.find(l => l.id === leadId)
+  await supabase.from('notifications').insert({
+    user_id: userId,
+    type: 'lead_assigned',
+    title: 'Yeni potansiyel müşteri atandı',
+    body: `${lead?.full_name || 'Bir müşteri'} size atandı`,
+    link: leadId
+  })
+  
+  loadData()
+}
 
   const handleEditLead = async () => {
     if (!editLead) return
