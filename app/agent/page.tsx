@@ -174,7 +174,16 @@ export default function AgentPage() {
     } else if (filterDate !== 'all') { matchesDate = false }
     return matchesStatus && matchesSearch && matchesDate
   })
-
+  const sortedLeads = [...filteredLeads].sort((a, b) => {
+  const getDate = (l: any) => new Date(l.updated_at || l.created_at).getTime()
+  const aDays = Math.floor((Date.now() - getDate(a)) / (1000 * 60 * 60 * 24))
+  const bDays = Math.floor((Date.now() - getDate(b)) / (1000 * 60 * 60 * 24))
+  const aStale = aDays >= 2 && (a.status === 'new' || a.status === 'called')
+  const bStale = bDays >= 2 && (b.status === 'new' || b.status === 'called')
+  if (aStale && !bStale) return -1
+  if (!aStale && bStale) return 1
+  return getDate(a) - getDate(b)
+})
   const totalSales = leads.filter(l => l.status === 'procedure_done').length
   const totalRevenue = leads.filter(l => l.status === 'procedure_done').reduce((s, l) => s + (l.procedure_amount || 0), 0)
   const commission = totalRevenue * ((teamMember?.commission_rate || 0) / 100)
@@ -397,7 +406,7 @@ export default function AgentPage() {
 
             {/* Başlık */}
             <div>
-              <h2 className="text-base font-semibold text-gray-900">Bana Atanan Potansiyel Müşteriler</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Bana Atanan Potansiyel Müşteriler</h2>
               <p className="text-xs text-gray-400 mt-0.5">Bugün ilgilenmeniz gerekenler</p>
             </div>
 
@@ -409,7 +418,11 @@ export default function AgentPage() {
                 { key: 'appointment_scheduled', label: 'Randevu', color: 'bg-violet-50 text-violet-700 border-violet-100' },
                 { key: 'procedure_done',        label: 'Satış',   color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
               ].map(s => (
-                <div key={s.key} className={`rounded-xl border p-2.5 text-center ${s.color}`}>
+                <div
+  key={s.key}
+  onClick={() => setFilterStatus(filterStatus === s.key ? 'all' : s.key)}
+  className={`rounded-xl border p-2.5 text-center cursor-pointer hover:shadow-sm transition-all ${s.color} ${filterStatus === s.key ? 'ring-2 ring-offset-1 ring-indigo-400' : ''}`}
+>
                   <p className="text-lg font-bold">{leads.filter(l => l.status === s.key).length}</p>
                   <p className="text-xs font-medium mt-0.5">{s.label}</p>
                 </div>
@@ -463,7 +476,9 @@ export default function AgentPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredLeads.map((lead, i) => {
+                {sortedLeads.map((lead, i) => {
+  const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600','from-violet-100 to-purple-100 text-violet-600','from-emerald-100 to-teal-100 text-emerald-600','from-orange-100 to-amber-100 text-orange-600','from-pink-100 to-rose-100 text-rose-600']
+  const ac = avatarColors[i % avatarColors.length]
                   const stale = isStale(lead)
                   const days = staleDays(lead)
                   const isAppointmentOverdue = lead.appointment_at && new Date(lead.appointment_at) < new Date() && lead.status === 'appointment_scheduled'
@@ -472,16 +487,19 @@ export default function AgentPage() {
                     const diff = Math.floor((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
                     return diff >= 0 && diff <= 1
                   })()
-                  const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600','from-violet-100 to-purple-100 text-violet-600','from-emerald-100 to-teal-100 text-emerald-600','from-orange-100 to-amber-100 text-orange-600','from-pink-100 to-rose-100 text-rose-600']
-                  const ac = avatarColors[i % avatarColors.length]
-
-                  return (
-                    <div
-                      key={lead.id}
-                      onClick={() => openUpdateModal(lead)}
-                      className={`bg-white rounded-2xl border-2 p-4 cursor-pointer transition-all hover:shadow-md group
-                        ${stale ? 'border-amber-300 bg-amber-50/30' : 'border-gray-100 hover:border-indigo-200'}`}
-                    >
+            
+         return (
+  <div
+    key={lead.id}
+  onClick={() => openUpdateModal(lead)}
+  className={`relative bg-white rounded-2xl border-2 p-4 cursor-pointer transition-all hover:shadow-md group
+    ${stale ? 'border-amber-300 bg-amber-50/30' : 'border-gray-100 hover:border-indigo-200'}`}
+>
+  {stale && (
+    <div className="absolute -top-2 left-3 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-md shadow">
+      Bekliyor
+    </div>
+  )}
                       {/* Üst satır */}
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="flex items-center gap-3 min-w-0">
@@ -535,7 +553,7 @@ export default function AgentPage() {
                         <p className="text-xs text-gray-400">
                           Son güncelleme: {timeAgo(lead.updated_at || lead.created_at)}
                         </p>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                        <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                           <a href={`tel:${lead.phone}`}
                             className="p-1.5 hover:bg-green-50 rounded-lg text-gray-300 hover:text-green-500 transition-colors">
                             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 9.5L9.5 11.5C6.2 10.1 2.9 6.8 1.5 3.5L3.5 1.5l2.5 2.5L4.5 5.5C5.3 6.7 6.3 7.7 7.5 8.5L9 7l2.5 2.5z" fill="currentColor"/></svg>
