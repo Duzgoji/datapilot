@@ -28,6 +28,15 @@ const Badge = ({ status }: { status: string }) => (
   </span>
 )
 
+// "2 saat önce", "3 gün önce" gibi relative zaman
+const timeAgo = (dateStr: string) => {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
+  if (diff < 60) return 'az önce'
+  if (diff < 3600) return `${Math.floor(diff / 60)} dk önce`
+  if (diff < 86400) return `${Math.floor(diff / 3600)} saat önce`
+  return `${Math.floor(diff / 86400)} gün önce`
+}
+
 export default function AgentPage() {
   const router = useRouter()
   const profileMenuRef = useRef<HTMLDivElement>(null)
@@ -55,21 +64,21 @@ export default function AgentPage() {
   const [filterDate, setFilterDate] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-useEffect(() => {
-  loadData()
-  const handleClickOutside = (e: MouseEvent) => {
-    if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) setShowProfileMenu(false)
-    if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifications(false)
-  }
-  document.addEventListener('mousedown', handleClickOutside)
-  return () => document.removeEventListener('mousedown', handleClickOutside)
-}, [])
+  useEffect(() => {
+    loadData()
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) setShowProfileMenu(false)
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifications(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
-useEffect(() => {
-  loadNotifications()
-  const interval = setInterval(loadNotifications, 10000)
-  return () => clearInterval(interval)
-}, [])
+  useEffect(() => {
+    loadNotifications()
+    const interval = setInterval(loadNotifications, 10000)
+    return () => clearInterval(interval)
+  }, [])
 
   const loadData = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -79,28 +88,32 @@ useEffect(() => {
     setProfile(profileData)
     const { data: memberData } = await supabase.from('team_members').select('*, branches(branch_name, owner_id)').eq('user_id', user.id).single()
     setTeamMember(memberData)
-    const { data: leadsData } = await supabase.from('leads').select('*').eq('assigned_to', user.id).order('created_at', { ascending: false })
+    const { data: leadsData } = await supabase
+      .from('leads')
+      .select('*')
+      .eq('assigned_to', user.id)
+      .order('updated_at', { ascending: true }) // en eski güncellenen üstte
     setLeads(leadsData || [])
     setLoading(false)
   }
 
   const loadNotifications = async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  const { data } = await supabase
-    .from('notifications')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(20)
-  setNotifications(data || [])
-}
-const handleUpdateLead = async (e: React.FormEvent) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    setNotifications(data || [])
+  }
+
+  const handleUpdateLead = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     try {
       if (selectedLead.status === 'procedure_done') return
-      // Satışçı 'procedure_done' yapamaz — sadece müşteri paneli
       if (newStatus === 'procedure_done') return
       const updateData: any = { status: newStatus }
       if (newNote) updateData.note = newNote
@@ -125,7 +138,6 @@ const handleUpdateLead = async (e: React.FormEvent) => {
   const openUpdateModal = (lead: any) => {
     if (lead.status === 'procedure_done') return
     setSelectedLead(lead)
-    // procedure_done agent tarafından seçilemez, varsayılan olarak 'called' göster
     setNewStatus(lead.status === 'procedure_done' ? 'called' : lead.status)
     setNewNote(lead.note || '')
     setProcedureAmount(lead.procedure_amount?.toString() || '')
@@ -136,6 +148,18 @@ const handleUpdateLead = async (e: React.FormEvent) => {
 
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7)
+
+  // Stale: updated_at'e göre 2+ gün işlem yapılmamış
+  const isStale = (lead: any) => {
+    const ref = lead.updated_at || lead.created_at
+    const days = Math.floor((Date.now() - new Date(ref).getTime()) / (1000 * 60 * 60 * 24))
+    return days >= 2 && (lead.status === 'new' || lead.status === 'called')
+  }
+
+  const staleDays = (lead: any) => {
+    const ref = lead.updated_at || lead.created_at
+    return Math.floor((Date.now() - new Date(ref).getTime()) / (1000 * 60 * 60 * 24))
+  }
 
   const filteredLeads = leads.filter(lead => {
     const matchesStatus = filterStatus === 'all' || lead.status === filterStatus
@@ -156,6 +180,7 @@ const handleUpdateLead = async (e: React.FormEvent) => {
   const commission = totalRevenue * ((teamMember?.commission_rate || 0) / 100)
   const conversionRate = leads.length > 0 ? ((totalSales / leads.length) * 100).toFixed(1) : '0'
   const newLeadsCount = leads.filter(l => l.status === 'new').length
+  const staleCount = leads.filter(l => isStale(l)).length
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -171,7 +196,7 @@ const handleUpdateLead = async (e: React.FormEvent) => {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+    <div className="min-h-screen pb-20" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
 
       {/* TOP BAR */}
       <header className="bg-white border-b border-gray-100 px-4 h-14 flex items-center justify-between sticky top-0 z-10 shadow-sm">
@@ -187,9 +212,7 @@ const handleUpdateLead = async (e: React.FormEvent) => {
           {/* Bildirim Zili */}
           <div className="relative" ref={notifRef}>
             <button
-              onClick={() => {
-                 setShowNotifications(!showNotifications)
-              }}
+              onClick={() => setShowNotifications(!showNotifications)}
               className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors"
             >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -218,19 +241,18 @@ const handleUpdateLead = async (e: React.FormEvent) => {
                     <div
                       key={n.id}
                       className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!n.is_read ? 'bg-indigo-50/50' : ''}`}
-
-                        onClick={async () => {
-                          await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
-                          await loadNotifications()
-                          setShowNotifications(false)
-                          if (n.link && n.link.length === 36) {
-                            const lead = leads.find((l: any) => l.id === n.link)
-                            if (lead) openUpdateModal(lead)
-                            else setActiveTab('leadler')
-                          } else if (n.link) {
-                            setActiveTab(n.link)
-                          }
-                        }}
+                      onClick={async () => {
+                        await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
+                        await loadNotifications()
+                        setShowNotifications(false)
+                        if (n.link && n.link.length === 36) {
+                          const lead = leads.find((l: any) => l.id === n.link)
+                          if (lead) openUpdateModal(lead)
+                          else setActiveTab('leadler')
+                        } else if (n.link) {
+                          setActiveTab(n.link)
+                        }
+                      }}
                     >
                       <div className="flex items-start gap-3">
                         <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.is_read ? 'bg-indigo-500' : 'bg-gray-200'}`} />
@@ -278,9 +300,11 @@ const handleUpdateLead = async (e: React.FormEvent) => {
 
       <div className="p-4 max-w-2xl mx-auto">
 
-        {/* DASHBOARD */}
+        {/* ── DASHBOARD ── */}
         {activeTab === 'dashboard' && (
           <div className="space-y-4">
+
+            {/* Karşılama kartı */}
             <div className="bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-700 rounded-2xl p-5 text-white relative overflow-hidden">
               <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
               <div className="absolute -right-4 -top-4 w-28 h-28 bg-white/5 rounded-full" />
@@ -297,6 +321,7 @@ const handleUpdateLead = async (e: React.FormEvent) => {
               </div>
             </div>
 
+            {/* Stat kartlar */}
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: 'Toplam Potansiyel Müşteri', value: leads.length, sub: `${newLeadsCount} yeni`, color: 'text-blue-600', border: 'border-blue-100', gradient: 'from-blue-50 to-white', iconBg: 'bg-blue-100', icon: '◎' },
@@ -313,7 +338,7 @@ const handleUpdateLead = async (e: React.FormEvent) => {
               ))}
             </div>
 
-            {/* Prim bar görseli */}
+            {/* Prim özeti */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-gray-900">Prim Özeti</h3>
@@ -335,6 +360,7 @@ const handleUpdateLead = async (e: React.FormEvent) => {
               )}
             </div>
 
+            {/* Son müşteriler */}
             <div className="bg-white rounded-2xl border border-gray-100">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-gray-900">Son Potansiyel Müşteriler</h3>
@@ -365,12 +391,45 @@ const handleUpdateLead = async (e: React.FormEvent) => {
           </div>
         )}
 
-        {/* LEADLER */}
+        {/* ── LEADLER ── */}
         {activeTab === 'leadler' && (
-          <div className="space-y-3">
+          <div className="space-y-4">
+
+            {/* Başlık */}
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">Bana Atanan Potansiyel Müşteriler</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Bugün ilgilenmeniz gerekenler</p>
+            </div>
+
+            {/* Durum özeti */}
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { key: 'new',                   label: 'Yeni',    color: 'bg-blue-50 text-blue-700 border-blue-100' },
+                { key: 'called',                label: 'Arandı',  color: 'bg-amber-50 text-amber-700 border-amber-100' },
+                { key: 'appointment_scheduled', label: 'Randevu', color: 'bg-violet-50 text-violet-700 border-violet-100' },
+                { key: 'procedure_done',        label: 'Satış',   color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+              ].map(s => (
+                <div key={s.key} className={`rounded-xl border p-2.5 text-center ${s.color}`}>
+                  <p className="text-lg font-bold">{leads.filter(l => l.status === s.key).length}</p>
+                  <p className="text-xs font-medium mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Uyarı — stale leadler varsa */}
+            {staleCount > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
+                <span className="text-lg flex-shrink-0">⚠️</span>
+                <p className="text-xs text-amber-800 font-medium">
+                  {staleCount} potansiyel müşteri 2+ gündür güncellenmedi. Aşağıda sarı renkle işaretlendi.
+                </p>
+              </div>
+            )}
+
+            {/* Arama */}
             <div className="relative">
               <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Isim, telefon veya potansiyel müşteri kodu ara..."
+              <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="İsim, telefon veya kod ara..."
                 className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               {searchQuery && (
                 <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">
@@ -379,155 +438,128 @@ const handleUpdateLead = async (e: React.FormEvent) => {
               )}
             </div>
 
-            <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Durum</p>
-              <div className="flex gap-1.5 overflow-x-auto pb-1">
-                {[{ key: 'all', label: 'Tümü' }, ...Object.entries(STATUS_CONFIG).filter(([k]) => k !== 'procedure_done').map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
-                  <button key={f.key} onClick={() => setFilterStatus(f.key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${filterStatus === f.key ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}>
-                    {f.label} ({f.key === 'all' ? leads.length : leads.filter(l => l.status === f.key).length})
-                  </button>
-                ))}
-              </div>
+            {/* Durum filtresi */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {[{ key: 'all', label: 'Tümü' }, ...Object.entries(STATUS_CONFIG).filter(([k]) => k !== 'procedure_done').map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
+                <button key={f.key} onClick={() => setFilterStatus(f.key)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${filterStatus === f.key ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}>
+                  {f.label} ({f.key === 'all' ? leads.length : leads.filter(l => l.status === f.key).length})
+                </button>
+              ))}
             </div>
 
-            <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Randevu Tarihi</p>
-              <div className="flex gap-1.5 overflow-x-auto pb-1">
-                {[
-                  { key: 'all', label: 'Tümü' },
-                  { key: 'today', label: 'Bugün', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d.getTime() === today.getTime() }).length },
-                  { key: 'this_week', label: 'Bu Hafta', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d >= today && d <= weekEnd }).length },
-                  { key: 'overdue', label: 'Geçmiş', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d < today }).length },
-                ].map(f => (
-                  <button key={f.key} onClick={() => setFilterDate(f.key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${filterDate === f.key ? 'bg-violet-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}>
-                    {f.label}{f.count !== undefined ? ` (${f.count})` : ''}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {(searchQuery || filterStatus !== 'all' || filterDate !== 'all') && (
+            {(searchQuery || filterStatus !== 'all') && (
               <div className="flex items-center justify-between">
                 <p className="text-xs text-gray-400">{filteredLeads.length} sonuç</p>
-                <button onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterDate('all') }} className="text-xs text-indigo-600 hover:underline">Temizle</button>
+                <button onClick={() => { setSearchQuery(''); setFilterStatus('all') }} className="text-xs text-indigo-600 hover:underline">Temizle</button>
               </div>
             )}
 
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              {filteredLeads.length === 0 ? (
-                <div className="p-12 text-center">
-                  <p className="text-gray-400 text-sm">Sonuç bulunamadı.</p>
-                </div>
-              // ─── BUNU BUL ────────────────────────────────────────────────────────────────
-// leadler sekmesinde şu satırı bul:
-//   ) : filteredLeads.map((lead, i) => {
-//     const avatarColors = [...]
-//     return (
-//     <div key={lead.id} onClick={() => openUpdateModal(lead)}
-//       className={`px-4 py-4 flex items-center gap-3 ...`}>
-//
-// O bloktan kapanış parantezine kadar sil, yerine aşağıdakini yapıştır:
-// ─────────────────────────────────────────────────────────────────────────────
+            {/* Kart listesi */}
+            {filteredLeads.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
+                <p className="text-3xl mb-3">🎉</p>
+                <p className="text-gray-500 text-sm font-medium">Size atanmış potansiyel müşteri yok</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredLeads.map((lead, i) => {
+                  const stale = isStale(lead)
+                  const days = staleDays(lead)
+                  const isAppointmentOverdue = lead.appointment_at && new Date(lead.appointment_at) < new Date() && lead.status === 'appointment_scheduled'
+                  const hasAppointmentSoon = lead.appointment_at && (() => {
+                    const d = new Date(lead.appointment_at); d.setHours(0,0,0,0)
+                    const diff = Math.floor((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                    return diff >= 0 && diff <= 1
+                  })()
+                  const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600','from-violet-100 to-purple-100 text-violet-600','from-emerald-100 to-teal-100 text-emerald-600','from-orange-100 to-amber-100 text-orange-600','from-pink-100 to-rose-100 text-rose-600']
+                  const ac = avatarColors[i % avatarColors.length]
 
-              ) : filteredLeads.map((lead, i) => {
-                const daysSinceCreated = Math.floor((Date.now() - new Date(lead.created_at).getTime()) / (1000 * 60 * 60 * 24))
-                const isStale = daysSinceCreated >= 3 && (lead.status === 'new' || lead.status === 'called')
-                const hasAppointmentSoon = lead.appointment_at && (() => {
-                  const d = new Date(lead.appointment_at); d.setHours(0,0,0,0)
-                  const diff = Math.floor((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-                  return diff >= 0 && diff <= 1
-                })()
-                const isAppointmentOverdue = lead.appointment_at && new Date(lead.appointment_at) < new Date() && lead.status === 'appointment_scheduled'
-                const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600','from-violet-100 to-purple-100 text-violet-600','from-emerald-100 to-teal-100 text-emerald-600','from-orange-100 to-amber-100 text-orange-600','from-pink-100 to-rose-100 text-rose-600']
-                const ac = avatarColors[i % avatarColors.length]
+                  return (
+                    <div
+                      key={lead.id}
+                      onClick={() => openUpdateModal(lead)}
+                      className={`bg-white rounded-2xl border-2 p-4 cursor-pointer transition-all hover:shadow-md group
+                        ${stale ? 'border-amber-300 bg-amber-50/30' : 'border-gray-100 hover:border-indigo-200'}`}
+                    >
+                      {/* Üst satır */}
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${ac} flex items-center justify-center flex-shrink-0`}>
+                            <span className="text-sm font-bold">{(lead.full_name || 'İ').charAt(0)}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{lead.phone}</p>
+                          </div>
+                        </div>
+                        <Badge status={lead.status} />
+                      </div>
 
-                return (
-                  <div key={lead.id}
-                    className={`px-4 py-3.5 flex items-start gap-3 cursor-pointer transition-colors group ${i < filteredLeads.length - 1 ? 'border-b border-gray-50' : ''} ${isStale ? 'bg-amber-50/30' : 'hover:bg-indigo-50/30'}`}
-                    onClick={() => openUpdateModal(lead)}>
-
-                    {/* Avatar */}
-                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${ac} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                      <span className="text-sm font-semibold">{(lead.full_name || 'İ').charAt(0)}</span>
-                    </div>
-
-                    {/* Bilgi */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                        <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
-                        <span className={`text-xs font-medium px-1.5 py-0.5 rounded-md flex-shrink-0 ${SOURCE_CONFIG[lead.source]?.badge || 'bg-gray-100 text-gray-500'}`}>
+                      {/* Etiketler */}
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${SOURCE_CONFIG[lead.source]?.badge || 'bg-gray-100 text-gray-500'}`}>
                           {SOURCE_CONFIG[lead.source]?.label || lead.source}
                         </span>
-                        {isStale && (
-                          <span className="text-xs text-amber-600 font-medium bg-amber-100 px-1.5 py-0.5 rounded-md flex-shrink-0">
-                            ⏳ {daysSinceCreated}g
+                        {stale && (
+                          <span className="text-xs font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md">
+                            ⏳ {days} gündür işlem yapılmadı
                           </span>
                         )}
                         {hasAppointmentSoon && (
-                          <span className="text-xs text-violet-600 font-medium bg-violet-100 px-1.5 py-0.5 rounded-md flex-shrink-0">
-                            📅 Yakın
+                          <span className="text-xs font-medium bg-violet-100 text-violet-700 px-2 py-0.5 rounded-md">
+                            📅 Yakın randevu
                           </span>
                         )}
                         {isAppointmentOverdue && (
-                          <span className="text-xs text-red-500 font-medium bg-red-50 px-1.5 py-0.5 rounded-md flex-shrink-0">
-                            ⚠ Geçti
+                          <span className="text-xs font-medium bg-red-50 text-red-600 px-2 py-0.5 rounded-md">
+                            ⚠ Randevu geçti
+                          </span>
+                        )}
+                        {lead.procedure_amount > 0 && (
+                          <span className="text-xs font-bold bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-md">
+                            ₺{lead.procedure_amount.toLocaleString()}
                           </span>
                         )}
                       </div>
 
-                      <p className="text-xs text-gray-400">{lead.phone}{lead.email && ` · ${lead.email}`}</p>
-                      <p className="text-xs text-gray-300 mt-0.5">{lead.lead_code} · {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
-
-                      {lead.appointment_at && (
-                        <p className={`text-xs mt-1 font-medium ${isAppointmentOverdue ? 'text-red-500' : 'text-violet-600'}`}>
-                          📅 {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+                      {/* Not */}
+                      {lead.note && (
+                        <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-2.5 py-1.5 truncate mb-3">
+                          💬 {lead.note}
                         </p>
                       )}
-                      {lead.note && <p className="text-xs text-gray-500 mt-1 bg-gray-50 rounded-lg px-2 py-1 truncate">💬 {lead.note}</p>}
-                    </div>
 
-                    {/* Sağ: badge + quick actions */}
-                    <div className="flex flex-col items-end gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center gap-1.5">
-                        <Badge status={lead.status} />
-                        {lead.procedure_amount > 0 && (
-                          <span className="text-xs font-bold text-emerald-600">₺{lead.procedure_amount.toLocaleString()}</span>
-                        )}
-                      </div>
-
-                      {/* Quick Actions — hover'da görünür */}
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {/* Ara */}
-                        <a href={`tel:${lead.phone}`}
-                          className="p-1.5 hover:bg-green-50 rounded-lg text-gray-300 hover:text-green-500 transition-colors"
-                          title="Ara">
-                          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 9.5L9.5 11.5C6.2 10.1 2.9 6.8 1.5 3.5L3.5 1.5l2.5 2.5L4.5 5.5C5.3 6.7 6.3 7.7 7.5 8.5L9 7l2.5 2.5z" fill="currentColor"/></svg>
-                        </a>
-                        {/* WhatsApp */}
-                        <a href={`https://wa.me/90${lead.phone?.replace(/\D/g, '').replace(/^0/, '')}`}
-                          target="_blank" rel="noopener noreferrer"
-                          className="p-1.5 hover:bg-green-50 rounded-lg text-gray-300 hover:text-green-600 transition-colors"
-                          title="WhatsApp">
-                          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1C3.46 1 1 3.46 1 6.5c0 .97.25 1.88.69 2.67L1 12l2.9-.67A5.48 5.48 0 006.5 12C9.54 12 12 9.54 12 6.5S9.54 1 6.5 1zm2.7 7.5c-.11.3-.63.58-.87.61-.21.03-.48.04-.77-.05-.18-.05-.41-.13-.7-.26C5.47 8.32 4.5 7.1 4.42 7s-.6-.8-.6-1.52c0-.72.37-1.07.5-1.22.13-.15.28-.18.38-.18h.27c.09 0 .21-.03.33.25l.43 1.05c.04.09.07.19.01.3L5.5 5.9c-.07.1-.1.13-.05.23.25.45.54.86.9 1.2.42.4.87.67 1.4.85.1.03.2 0 .26-.07l.35-.42c.07-.1.16-.11.26-.07l1 .47c.1.04.17.1.2.19.03.1 0 .31-.1.57z" fill="currentColor"/></svg>
-                        </a>
-                        {/* Durum güncelle */}
-                        <button onClick={() => openUpdateModal(lead)}
-                          className="p-1.5 hover:bg-indigo-50 rounded-lg text-gray-300 hover:text-indigo-600 transition-colors"
-                          title="Durum güncelle">
-                          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 7l3 3L12 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        </button>
+                      {/* Alt satır */}
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-gray-400">
+                          Son güncelleme: {timeAgo(lead.updated_at || lead.created_at)}
+                        </p>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                          <a href={`tel:${lead.phone}`}
+                            className="p-1.5 hover:bg-green-50 rounded-lg text-gray-300 hover:text-green-500 transition-colors">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 9.5L9.5 11.5C6.2 10.1 2.9 6.8 1.5 3.5L3.5 1.5l2.5 2.5L4.5 5.5C5.3 6.7 6.3 7.7 7.5 8.5L9 7l2.5 2.5z" fill="currentColor"/></svg>
+                          </a>
+                          <a href={`https://wa.me/90${lead.phone?.replace(/\D/g, '').replace(/^0/, '')}`}
+                            target="_blank" rel="noopener noreferrer"
+                            className="p-1.5 hover:bg-green-50 rounded-lg text-gray-300 hover:text-green-600 transition-colors">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1C3.46 1 1 3.46 1 6.5c0 .97.25 1.88.69 2.67L1 12l2.9-.67A5.48 5.48 0 006.5 12C9.54 12 12 9.54 12 6.5S9.54 1 6.5 1zm2.7 7.5c-.11.3-.63.58-.87.61-.21.03-.48.04-.77-.05-.18-.05-.41-.13-.7-.26C5.47 8.32 4.5 7.1 4.42 7s-.6-.8-.6-1.52c0-.72.37-1.07.5-1.22.13-.15.28-.18.38-.18h.27c.09 0 .21-.03.33.25l.43 1.05c.04.09.07.19.01.3L5.5 5.9c-.07.1-.1.13-.05.23.25.45.54.86.9 1.2.42.4.87.67 1.4.85.1.03.2 0 .26-.07l.35-.42c.07-.1.16-.11.26-.07l1 .47c.1.04.17.1.2.19.03.1 0 .31-.1.57z" fill="currentColor"/></svg>
+                          </a>
+                          <button onClick={() => openUpdateModal(lead)}
+                            className="p-1.5 hover:bg-indigo-50 rounded-lg text-gray-300 hover:text-indigo-600 transition-colors">
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 7l3 3L12 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )}
 
-        {/* PERFORMANS */}
+        {/* ── PERFORMANS ── */}
         {activeTab === 'performans' && (() => {
           const now = new Date()
           const thisMonthLeads = leads.filter(l => {
@@ -552,8 +584,7 @@ const handleUpdateLead = async (e: React.FormEvent) => {
           const maxLeads = Math.max(...months.map(m => m.leads), 1)
 
           const statusDist = Object.entries(STATUS_CONFIG).filter(([key]) => key !== 'procedure_done').map(([key, val]: any) => ({
-            key, label: val.label, count: leads.filter(l => l.status === key).length,
-            dot: val.dot,
+            key, label: val.label, count: leads.filter(l => l.status === key).length, dot: val.dot,
           })).filter(s => s.count > 0)
 
           return (
@@ -605,7 +636,7 @@ const handleUpdateLead = async (e: React.FormEvent) => {
                         <span className="text-xs font-semibold text-gray-700">{s.count} · %{leads.length > 0 ? ((s.count / leads.length) * 100).toFixed(0) : 0}</span>
                       </div>
                       <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${s.dot.replace('bg-', 'bg-')}`}
+                        <div className={`h-full rounded-full ${s.dot}`}
                           style={{ width: `${leads.length > 0 ? (s.count / leads.length) * 100 : 0}%` }} />
                       </div>
                     </div>
@@ -655,7 +686,7 @@ const handleUpdateLead = async (e: React.FormEvent) => {
         </div>
       </nav>
 
-      {/* GUNCELLEME MODAL */}
+      {/* GÜNCELLEME MODAL */}
       {showUpdateModal && selectedLead && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowUpdateModal(false)} />
@@ -671,38 +702,38 @@ const handleUpdateLead = async (e: React.FormEvent) => {
             </div>
             <div className="overflow-y-auto flex-1">
               <form onSubmit={handleUpdateLead} className="p-5 space-y-4">
-                {/* Temel bilgiler */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 mb-1">Kaynak</p>
-                  <p className="text-sm font-medium text-gray-900">{SOURCE_CONFIG[selectedLead?.source]?.label || selectedLead?.source || '-'}</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 mb-1">Kaynak</p>
+                    <p className="text-sm font-medium text-gray-900">{SOURCE_CONFIG[selectedLead?.source]?.label || selectedLead?.source || '-'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 mb-1">Tarih</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedLead?.created_at ? new Date(selectedLead.created_at).toLocaleDateString('tr-TR') : '-'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 mb-1">Mevcut Durum</p>
+                    <p className="text-sm font-medium text-gray-900">{STATUS_CONFIG[selectedLead?.status]?.label || '-'}</p>
+                  </div>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 mb-1">Tarih</p>
-                  <p className="text-sm font-medium text-gray-900">{selectedLead?.created_at ? new Date(selectedLead.created_at).toLocaleDateString('tr-TR') : '-'}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 mb-1">Mevcut Durum</p>
-                  <p className="text-sm font-medium text-gray-900">{STATUS_CONFIG[selectedLead?.status]?.label || '-'}</p>
-                </div>
-              </div>
 
-              {/* Quick actions */}
-              <div className="flex gap-2">
-                <a href={`tel:${selectedLead?.phone}`}
-                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
-                  📞 Ara
-                </a>
-                <a href={`https://wa.me/90${selectedLead?.phone?.replace(/\D/g, '').replace(/^0/, '')}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
-                  💬 WhatsApp
-                </a>
-              </div>
+                <div className="flex gap-2">
+                  <a href={`tel:${selectedLead?.phone}`}
+                    className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
+                    📞 Ara
+                  </a>
+                  <a href={`https://wa.me/90${selectedLead?.phone?.replace(/\D/g, '').replace(/^0/, '')}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
+                    💬 WhatsApp
+                  </a>
+                </div>
+
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-400">Mevcut:</span>
                   <Badge status={selectedLead.status} />
                 </div>
+
                 <div>
                   <p className="text-xs font-medium text-gray-500 mb-2">Yeni Durum</p>
                   <div className="grid grid-cols-2 gap-2">
@@ -732,11 +763,13 @@ const handleUpdateLead = async (e: React.FormEvent) => {
                     </div>
                   </div>
                 )}
+
                 <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1.5">Not</label>
                   <textarea value={newNote} onChange={e => setNewNote(e.target.value)} rows={3} placeholder="Görüşme notu..."
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
                 </div>
+
                 <div className="flex gap-3">
                   <button type="button" onClick={() => setShowUpdateModal(false)}
                     className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
