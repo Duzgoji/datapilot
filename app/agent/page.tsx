@@ -55,7 +55,6 @@ export default function AgentPage() {
   const [filterDate, setFilterDate] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  // SONRA:
 useEffect(() => {
   loadData()
   const handleClickOutside = (e: MouseEvent) => {
@@ -183,97 +182,100 @@ const handleUpdateLead = async (e: React.FormEvent) => {
           <div className="h-4 w-px bg-gray-200" />
           <span className="text-sm font-medium text-gray-700 truncate max-w-[140px]">{teamMember?.branches?.branch_name || 'Şube'}</span>
         </div>
-        // SONRA:
-{/* Bildirim Zili */}
-<div className="relative mr-1" ref={notifRef}>
-  <button
-    onClick={() => {
-      setShowNotifications(!showNotifications)
-      if (!showNotifications) {
-        notifications.filter(n => !n.is_read).forEach(async n => {
-          await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
-        })
-        setTimeout(loadNotifications, 500)
-      }
-    }}
-    className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors"
-  >
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path d="M9 1.5a5.5 5.5 0 015.5 5.5v3.5l1.5 2H2L3.5 10.5V7A5.5 5.5 0 019 1.5z" stroke="#374151" strokeWidth="1.25"/>
-      <path d="M7 14.5a2 2 0 004 0" stroke="#374151" strokeWidth="1.25"/>
-    </svg>
-    {notifications.filter(n => !n.is_read).length > 0 && (
-      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-        {notifications.filter(n => !n.is_read).length}
-      </span>
-    )}
-  </button>
 
-  {showNotifications && (
-    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-        <p className="text-sm font-semibold text-gray-900">Bildirimler</p>
-        <span className="text-xs text-gray-400">{notifications.filter(n => !n.is_read).length} okunmamış</span>
-      </div>
-      <div className="max-h-80 overflow-y-auto">
-        {notifications.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-gray-400 text-sm">Bildirim yok</p>
-          </div>
-        ) : notifications.map(n => (
-          <div
-            key={n.id}
-            className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!n.is_read ? 'bg-indigo-50/50' : ''}`}
-            onClick={() => {
-              setShowNotifications(false)
-              if (n.link && n.link.length === 36) {
-                const lead = leads.find(l => l.id === n.link)
-                if (lead) openUpdateModal(lead)
-                else setActiveTab('leadler')
-              } else if (n.link) {
-                setActiveTab(n.link)
-              }
-            }}
-          >
-            <div className="flex items-start gap-3">
-              <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.is_read ? 'bg-indigo-500' : 'bg-gray-200'}`} />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-gray-900">{n.title}</p>
-                {n.body && <p className="text-xs text-gray-500 mt-0.5">{n.body}</p>}
-                <p className="text-xs text-gray-400 mt-1">
-                  {new Date(n.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )}
-</div>
+        <div className="flex items-center gap-1">
+          {/* Bildirim Zili */}
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => {
+                setShowNotifications(!showNotifications)
+                if (!showNotifications) {
+                  notifications.filter(n => !n.is_read).forEach(async n => {
+                    await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
+                  })
+                  setTimeout(loadNotifications, 500)
+                }
+              }}
+              className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors"
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M9 1.5a5.5 5.5 0 015.5 5.5v3.5l1.5 2H2L3.5 10.5V7A5.5 5.5 0 019 1.5z" stroke="#374151" strokeWidth="1.25"/>
+                <path d="M7 14.5a2 2 0 004 0" stroke="#374151" strokeWidth="1.25"/>
+              </svg>
+              {notifications.filter(n => !n.is_read).length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                  {notifications.filter(n => !n.is_read).length}
+                </span>
+              )}
+            </button>
 
-<div className="relative" ref={profileMenuRef}>
-  <button onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center gap-2 hover:bg-gray-50 border border-transparent hover:border-gray-200 rounded-xl px-3 py-1.5 transition-all">
-            <div className="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-indigo-600 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
-            </div>
-            <span className="text-sm font-medium text-gray-700 hidden sm:block truncate max-w-[100px]">{profile?.full_name}</span>
-            <svg className="text-gray-400" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </button>
-          {showProfileMenu && (
-            <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50">
-              <div className="px-4 py-2.5 border-b border-gray-100 mb-1">
-                <p className="text-sm font-semibold text-gray-900">{profile?.full_name}</p>
-                <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
-                <span className="text-xs bg-indigo-50 text-indigo-600 font-medium px-2 py-0.5 rounded-full mt-1 inline-block">Satışçı</span>
+            {showNotifications && (
+              <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-900">Bildirimler</p>
+                  <span className="text-xs text-gray-400">{notifications.filter(n => !n.is_read).length} okunmamış</span>
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <p className="text-gray-400 text-sm">Bildirim yok</p>
+                    </div>
+                  ) : notifications.map(n => (
+                    <div
+                      key={n.id}
+                      className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!n.is_read ? 'bg-indigo-50/50' : ''}`}
+                      onClick={() => {
+                        setShowNotifications(false)
+                        if (n.link && n.link.length === 36) {
+                          const lead = leads.find((l: any) => l.id === n.link)
+                          if (lead) openUpdateModal(lead)
+                          else setActiveTab('leadler')
+                        } else if (n.link) {
+                          setActiveTab(n.link)
+                        }
+                      }}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.is_read ? 'bg-indigo-500' : 'bg-gray-200'}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-gray-900">{n.title}</p>
+                          {n.body && <p className="text-xs text-gray-500 mt-0.5">{n.body}</p>}
+                          <p className="text-xs text-gray-400 mt-1">
+                            {new Date(n.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2">
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M5 11H2.5A1.5 1.5 0 011 9.5v-6A1.5 1.5 0 012.5 2H5M9 9.5l3-3-3-3M12 6.5H5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                Çıkış Yap
-              </button>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Profil */}
+          <div className="relative" ref={profileMenuRef}>
+            <button onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="flex items-center gap-2 hover:bg-gray-50 border border-transparent hover:border-gray-200 rounded-xl px-3 py-1.5 transition-all">
+              <div className="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <span className="text-indigo-600 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
+              </div>
+              <span className="text-sm font-medium text-gray-700 hidden sm:block truncate max-w-[100px]">{profile?.full_name}</span>
+              <svg className="text-gray-400" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+            {showProfileMenu && (
+              <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50">
+                <div className="px-4 py-2.5 border-b border-gray-100 mb-1">
+                  <p className="text-sm font-semibold text-gray-900">{profile?.full_name}</p>
+                  <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
+                  <span className="text-xs bg-indigo-50 text-indigo-600 font-medium px-2 py-0.5 rounded-full mt-1 inline-block">Satışçı</span>
+                </div>
+                <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2">
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M5 11H2.5A1.5 1.5 0 011 9.5v-6A1.5 1.5 0 012.5 2H5M9 9.5l3-3-3-3M12 6.5H5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  Çıkış Yap
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
