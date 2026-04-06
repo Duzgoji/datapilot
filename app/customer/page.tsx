@@ -488,12 +488,12 @@ const loadNotifications = async () => {
       .eq('owner_id', user.id)
       .single()
 
-    const { error } = await supabase.from('leads').insert({
-      lead_code: leadCode, branch_id: leadBranch !== '' ? leadBranch : null, owner_id: user.id,
-      assigned_to: leadAssignTo || null, full_name: leadName, phone: leadPhone,
-      email: leadEmail || null, source: leadSource, note: leadNote || null, status: 'new',
-      customer_id: customerData?.id || null,
-    })
+    const { data: newLeadData, error } = await supabase.from('leads').insert({
+  lead_code: leadCode, branch_id: leadBranch !== '' ? leadBranch : null, owner_id: user.id,
+  assigned_to: leadAssignTo || null, full_name: leadName, phone: leadPhone,
+  email: leadEmail || null, source: leadSource, note: leadNote || null, status: 'new',
+  customer_id: customerData?.id || null,
+}).select().single()
     if (error) { alert(error.message); setSaving(false); return }
     if (!error) {
       setLeadName(''); setLeadPhone(''); setLeadEmail(''); setLeadBranch(''); setLeadSource('manual'); setLeadAssignTo(''); setLeadNote('')
@@ -502,7 +502,7 @@ const loadNotifications = async () => {
   type: 'lead_created',
   title: 'Yeni potansiyel müşteri',
   body: `${leadName} eklendi`,
-  link: 'leadler-liste'
+  link: newLeadData?.id || 'leadler-liste'
 })
 loadNotifications()
       setShowAddLead(false); await loadData()
@@ -1011,10 +1011,16 @@ const handlePayCommission = async () => {
             ) : notifications.map(n => (
               <div key={n.id}
                 className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!n.is_read ? 'bg-indigo-50/50' : ''}`}
-                onClick={() => {
-               setShowNotifications(false)
-               if (n.link) setActiveTab(n.link)
-                 }}>
+               onClick={() => {
+  setShowNotifications(false)
+  if (n.link && n.link.length === 36) {
+    const lead = leads.find(l => l.id === n.link)
+    if (lead) openDetailModal(lead)
+    else setActiveTab('leadler-liste')
+  } else if (n.link) {
+    setActiveTab(n.link)
+  }
+}}>
                 <div className="flex items-start gap-3">
                   <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.is_read ? 'bg-indigo-500' : 'bg-gray-200'}`} />
                   <div className="flex-1 min-w-0">
