@@ -156,6 +156,7 @@ const Btn = ({ variant = 'primary', size = 'md', children, className = '', ...pr
 export default function CustomerPage() {
   const router = useRouter()
   const profileMenuRef = useRef<HTMLDivElement>(null)
+  const notifRef = useRef<HTMLDivElement>(null)
 
   // Core state
   const [profile, setProfile] = useState<any>(null)
@@ -282,6 +283,8 @@ export default function CustomerPage() {
   const [xlsxResult, setXlsxResult] = useState<{success: number, errors: string[]} | null>(null)
 
   const [showReportPanel, setShowReportPanel] = useState(false)
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [showNotifications, setShowNotifications] = useState(false)
   const [customerInvoices, setCustomerInvoices] = useState<any[]>([])
   const [reportPeriod, setReportPeriod] = useState('this_month')
   const [reportFormat, setReportFormat] = useState('excel')
@@ -289,6 +292,7 @@ export default function CustomerPage() {
   const [reportStartDate, setReportStartDate] = useState('')
   const [reportEndDate, setReportEndDate] = useState('')
   const [reportLoading, setReportLoading] = useState(false)
+  
 
   // ─── EFFECTS ──────────────────────────────────────────────────────────────
 
@@ -298,7 +302,9 @@ export default function CustomerPage() {
     loadData()
     const handleClickOutside = (e: MouseEvent) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) setShowProfileMenu(false)
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifications(false)  
     }
+     
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
@@ -307,6 +313,12 @@ useEffect(() => {
     loadData()
     setLastUpdated(new Date())
   }, 10000) // 10 saniyede bir
+  return () => clearInterval(interval)
+}, [])
+
+useEffect(() => {
+  loadNotifications()
+  const interval = setInterval(loadNotifications, 10000)
   return () => clearInterval(interval)
 }, [])
   // ─── DATA ─────────────────────────────────────────────────────────────────
@@ -362,13 +374,25 @@ setCustomerInvoices(invoicesData || [])
     setLoading(false)
   }
 
-  const loadLeadActivities = async (leadId: string) => {
+ const loadLeadActivities = async (leadId: string) => {
   const { data } = await supabase
     .from('lead_activities')
     .select('*, profiles(full_name)')
     .eq('lead_id', leadId)
     .order('created_at', { ascending: false })
-  setLeadActivities(data || [])
+  setLeadActivities([...(data || [])])
+}
+
+const loadNotifications = async () => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  const { data } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(20)
+  setNotifications(data || [])
 }
 
   // ─── SETTINGS HANDLERS ────────────────────────────────────────────────────
@@ -473,6 +497,14 @@ setCustomerInvoices(invoicesData || [])
     if (error) { alert(error.message); setSaving(false); return }
     if (!error) {
       setLeadName(''); setLeadPhone(''); setLeadEmail(''); setLeadBranch(''); setLeadSource('manual'); setLeadAssignTo(''); setLeadNote('')
+      await supabase.from('notifications').insert({
+      user_id: profile.id,
+      type: 'lead_created',
+      title: 'Yeni potansiyel müşteri',
+      body: `${leadName} eklendi`,
+      link: '/customer'
+})
+loadNotifications()
       setShowAddLead(false); await loadData()
     }
     setSaving(false)
@@ -488,12 +520,14 @@ if (!newStatus && statusNote.trim()) {
     type: 'note', content: statusNote
   })
   if (selectedLead?.id) await loadLeadActivities(selectedLead.id)
+  
   setStatusNote('')
   setSaving(false)
   return
 }
 if (!newStatus) return
 if (newStatus === selectedLead.status) {
+  console.log('AYNI STATÜ - not:', statusNote, 'lead:', selectedLead.id)
   setSaving(true)
   if (statusNote.trim()) {
     await supabase.from('lead_activities').insert({
@@ -520,15 +554,31 @@ if (newStatus === selectedLead.status) {
   updates.cancel_reason = cancelReason || 'Satış iptal edildi'
 }
 await supabase.from('leads').update(updates).eq('id', selectedLead.id)
-await supabase.from('lead_history').insert({ lead_id: selectedLead.id, changed_by: profile.id, old_status: selectedLead.status, new_status: newStatus, note: statusNote })
+if (newStatus !== selectedLead.status) {
+  await supabase.from('lead_history').insert({ 
+    lead_id: selectedLead.id, changed_by: profile.id, 
+    old_status: selectedLead.status, new_status: newStatus, note: statusNote 
+  })
+
+  await supabase.from('notifications').insert({
+  user_id: profile.id,
+  type: 'status_changed',
+  title: 'Durum güncellendi',
+  body: `${selectedLead.full_name}: ${STATUS_CONFIG[selectedLead.status]?.label} → ${STATUS_CONFIG[newStatus]?.label}`,
+  link: '/customer'
+})
+loadNotifications()
+}
 if (statusNote.trim()) {
   await supabase.from('lead_activities').insert({
     lead_id: selectedLead.id, user_id: profile.id,
     type: 'note', content: statusNote
   })
 }
+const updatedLead = { ...selectedLead, status: newStatus }
 setSelectedLead(null); setStatusNote(''); setProcedureType(''); setProcedureAmount(''); setCancelReason(''); setAppointmentDate('')
 loadData(); setSaving(false)
+openDetailModal(updatedLead)
 }
 const handlePayCommission = async () => {
   if (!paymentMember || !paymentAmount) return
@@ -608,11 +658,12 @@ const handlePayCommission = async () => {
     await loadData()
   }
 
-  const openDetailModal = async (lead: any) => {
-    setDetailLead(lead); setShowDetailModal(true)
-    const { data } = await supabase.from('lead_history').select('*, profiles(full_name)').eq('lead_id', lead.id).order('created_at', { ascending: false })
-    setLeadHistory(data || [])
-  }
+ const openDetailModal = async (lead: any) => {
+  setDetailLead(lead); setShowDetailModal(true)
+  const { data } = await supabase.from('lead_history').select('*, profiles(full_name)').eq('lead_id', lead.id).order('created_at', { ascending: false })
+  setLeadHistory(data || [])
+  loadLeadActivities(lead.id)
+}
 
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
   const toggleMenu = (key: string) => setExpandedMenus(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
@@ -932,7 +983,54 @@ const handlePayCommission = async () => {
               </span>
             ))}
           </div>
+            <div className="relative mr-3" ref={notifRef}>
+  <button onClick={() => {
+    setShowNotifications(!showNotifications)
+    if (!showNotifications) {
+      notifications.filter(n => !n.is_read).forEach(async n => {
+        await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
+      })
+      setTimeout(loadNotifications, 500)
+    }
+  }}
+    className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5a5.5 5.5 0 015.5 5.5v3.5l1.5 2H2L3.5 10.5V7A5.5 5.5 0 019 1.5z" stroke="#374151" strokeWidth="1.25"/><path d="M7 14.5a2 2 0 004 0" stroke="#374151" strokeWidth="1.25"/></svg>
+    {notifications.filter(n => !n.is_read).length > 0 && (
+      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+        {notifications.filter(n => !n.is_read).length}
+      </span>
+    )}
+  </button>
 
+  {showNotifications && (
+    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <p className="text-sm font-semibold text-gray-900">Bildirimler</p>
+        <span className="text-xs text-gray-400">{notifications.filter(n => !n.is_read).length} okunmamış</span>
+      </div>
+      <div className="max-h-80 overflow-y-auto">
+        {notifications.length === 0 ? (
+          <div className="p-8 text-center">
+            <p className="text-gray-400 text-sm">Bildirim yok</p>
+          </div>
+        ) : notifications.map(n => (
+          <div key={n.id}
+            className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!n.is_read ? 'bg-indigo-50/50' : ''}`}
+            onClick={() => setShowNotifications(false)}>
+            <div className="flex items-start gap-3">
+              <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.is_read ? 'bg-indigo-500' : 'bg-gray-200'}`} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-gray-900">{n.title}</p>
+                {n.body && <p className="text-xs text-gray-500 mt-0.5">{n.body}</p>}
+                <p className="text-xs text-gray-400 mt-1">{new Date(n.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
           <div className="ml-auto flex items-center gap-2" ref={profileMenuRef}>
             <div className="relative">
               <button onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -3407,19 +3505,6 @@ const handlePayCommission = async () => {
             <textarea value={leadNote} onChange={e => setLeadNote(e.target.value)} rows={2} placeholder="Ek not..."
               className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
           </div>
-          <div className="max-h-40 overflow-y-auto space-y-2">
-  {leadActivities.length === 0 ? (
-    <p className="text-xs text-gray-300 text-center py-2">Henüz not yok</p>
-  ) : leadActivities.map(activity => (
-    <div key={activity.id} className="flex gap-2 items-start bg-gray-50 rounded-xl px-3 py-2">
-      <span className="text-xs">💬</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs text-gray-700">{activity.content}</p>
-        <p className="text-xs text-gray-400 mt-0.5">{activity.profiles?.full_name} · {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
-      </div>
-    </div>
-  ))}
-</div>
           <div className="flex gap-3 pt-2">
             <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddLead(false)}>İptal</Btn>
             <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Ekleniyor...' : 'Potansiyel Müşteri Ekle'}</Btn>
@@ -3445,7 +3530,21 @@ const handlePayCommission = async () => {
               <p className="text-sm font-medium text-gray-900">{STATUS_CONFIG[selectedLead?.status]?.label || '-'}</p>
             </div>
           </div>
-
+         <div className="max-h-40 overflow-y-auto space-y-2">
+  {leadActivities.length === 0 ? (
+    <p className="text-xs text-gray-300 text-center py-2">Henüz not yok</p>
+  ) : leadActivities.map(activity => (
+    <div key={activity.id} className="flex gap-2 items-start bg-gray-50 rounded-xl px-3 py-2">
+      <span className="text-xs">{activity.type === 'note' ? '💬' : '↔'}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-gray-700">{activity.content}</p>
+        <p className="text-xs text-gray-400 mt-0.5">
+          {activity.profiles?.full_name} · {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+        </p>
+      </div>
+    </div>
+  ))}
+</div>
           {/* Quick actions */}
           <div className="flex gap-2">
             <a href={`tel:${selectedLead?.phone}`}
@@ -3497,7 +3596,19 @@ const handlePayCommission = async () => {
             <textarea value={statusNote} onChange={e => setStatusNote(e.target.value)} rows={2} placeholder="Görüşme notu..."
               className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
           </div>
-   
+           <div className="max-h-40 overflow-y-auto space-y-2">
+  {leadActivities.length === 0 ? (
+    <p className="text-xs text-gray-300 text-center py-2">Henüz not yok</p>
+  ) : leadActivities.map(activity => (
+    <div key={activity.id} className="flex gap-2 items-start bg-gray-50 rounded-xl px-3 py-2">
+      <span className="text-xs">💬</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-gray-700">{activity.content}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{activity.profiles?.full_name} · {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+      </div>
+    </div>
+  ))}
+</div>
           <div className="flex gap-3 pt-2">
             <Btn type="button" variant="secondary" className="flex-1" onClick={() => setSelectedLead(null)}>İptal</Btn>
             <Btn type="submit" className="flex-1" disabled={saving || !newStatus}>{saving ? 'Kaydediliyor...' : 'Kaydet'}</Btn>
@@ -3568,6 +3679,42 @@ const handlePayCommission = async () => {
                 </div>
               )}
             </div>
+            {/* Aktivite / Not */}
+<div>
+  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Notlar</p>
+  <div className="flex gap-2 mb-3">
+    <input 
+      value={activityNote} 
+      onChange={e => setActivityNote(e.target.value)}
+      placeholder="Not ekle..."
+      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    <button type="button" onClick={async () => {
+      if (!activityNote.trim()) return
+      await supabase.from('lead_activities').insert({
+        lead_id: detailLead.id, user_id: profile.id,
+        type: 'note', content: activityNote
+      })
+      setActivityNote('')
+      loadLeadActivities(detailLead.id)
+    }}
+      className="px-3 py-2 bg-indigo-600 text-white text-xs font-medium rounded-xl hover:bg-indigo-700 transition-colors">
+      Ekle
+    </button>
+  </div>
+  <div className="space-y-2 max-h-40 overflow-y-auto">
+    {leadActivities.length === 0 ? (
+      <p className="text-xs text-gray-300 text-center py-2">Henüz not yok</p>
+    ) : leadActivities.map(activity => (
+      <div key={activity.id} className="flex gap-2 items-start bg-gray-50 rounded-xl px-3 py-2">
+        <span className="text-xs">💬</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-gray-700">{activity.content}</p>
+          <p className="text-xs text-gray-400 mt-0.5">{activity.profiles?.full_name} · {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
             <div className="flex gap-2">
               <button onClick={() => { setDeletingLeadId(detailLead.id); setShowDeleteConfirm(true) }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-red-100 text-red-400 hover:bg-red-50 hover:text-red-600 text-xs font-medium transition-colors">
@@ -3579,9 +3726,9 @@ const handlePayCommission = async () => {
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 1.5l2.5 2.5-6.5 6.5H1.5V8L8 1.5z" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 Düzenle
               </button>
-              <Btn className="flex-1" onClick={() => { setShowDetailModal(false); setSelectedLead(detailLead); setNewStatus(detailLead.status) }}>
-                Durumu Güncelle
-              </Btn>
+      <Btn className="flex-1" onClick={() => { setShowDetailModal(false); setSelectedLead(detailLead); setNewStatus(detailLead.status); loadLeadActivities(detailLead.id) }}>
+  Durumu Güncelle
+</Btn>
             </div>
           </div>
         )}
