@@ -494,33 +494,36 @@ const loadNotifications = async () => {
   email: leadEmail || null, source: leadSource, note: leadNote || null, status: 'new',
   customer_id: customerData?.id || null,
 }).select().single()
-    if (error) { alert(error.message); setSaving(false); return }
+   if (error) { alert(error.message); setSaving(false); return }
     if (!error) {
       setLeadName(''); setLeadPhone(''); setLeadEmail(''); setLeadBranch(''); setLeadSource('manual'); setLeadAssignTo(''); setLeadNote('')
-      await supabase.from('notifications').insert({
-  user_id: profile.id,
-  type: 'lead_created',
-  title: 'Yeni potansiyel müşteri',
-  body: `${leadName} eklendi`,
-  link: newLeadData?.id || 'leadler-liste'
-})
+      
+      // Owner bildirimi
+      const { error: notifError1 } = await supabase.from('notifications').insert({
+        user_id: profile.id,
+        type: 'lead_created',
+        title: 'Yeni potansiyel müşteri',
+        body: `${leadName} eklendi`,
+        link: newLeadData?.id || ''
+      })
+      if (notifError1) console.error('Owner notif hatası:', notifError1)
 
-// Atanan satışçıya da bildirim gönder
-if (leadAssignTo) {
-  await supabase.from('notifications').insert({
-    user_id: leadAssignTo,
-    type: 'lead_assigned',
-    title: 'Yeni potansiyel müşteri atandı',
-    body: `${leadName} size atandı`,
-    link: newLeadData?.id || ''
-  })
-}
-loadNotifications()
+      // Agent bildirimi
+      if (leadAssignTo) {
+        const { error: notifError2 } = await supabase.from('notifications').insert({
+          user_id: leadAssignTo,
+          type: 'lead_assigned',
+          title: 'Yeni potansiyel müşteri atandı',
+          body: `${leadName} size atandı`,
+          link: newLeadData?.id || ''
+        })
+        if (notifError2) console.error('Agent notif hatası:', notifError2)
+      }
+
+      loadNotifications()
       setShowAddLead(false); await loadData()
     }
     setSaving(false)
-  }
-
  const handleUpdateStatus = async (e: React.FormEvent) => {
   e.preventDefault()
 if (!selectedLead) return
