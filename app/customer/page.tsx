@@ -1010,14 +1010,8 @@ const handlePayCommission = async () => {
     {/* Bildirim */}
     <div className="relative" ref={notifRef}>
       <button onClick={() => {
-        setShowNotifications(!showNotifications)
-        if (!showNotifications) {
-          notifications.filter(n => !n.is_read).forEach(async n => {
-            await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
-          })
-          setTimeout(loadNotifications, 500)
-        }
-      }}
+         setShowNotifications(!showNotifications)
+}}
         className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5a5.5 5.5 0 015.5 5.5v3.5l1.5 2H2L3.5 10.5V7A5.5 5.5 0 019 1.5z" stroke="#374151" strokeWidth="1.25"/><path d="M7 14.5a2 2 0 004 0" stroke="#374151" strokeWidth="1.25"/></svg>
         {notifications.filter(n => !n.is_read).length > 0 && (
@@ -1040,8 +1034,9 @@ const handlePayCommission = async () => {
             ) : notifications.map(n => (
               <div key={n.id}
                 className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!n.is_read ? 'bg-indigo-50/50' : ''}`}
-              onClick={() => {
-  console.log('NOTIF LINK:', n.link, n.link?.length)
+ onClick={async () => {
+  await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
+  await loadNotifications()
   setShowNotifications(false)
   if (n.link && n.link.length === 36) {
     const lead = leads.find(l => l.id === n.link)
