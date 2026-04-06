@@ -498,11 +498,11 @@ const loadNotifications = async () => {
     if (!error) {
       setLeadName(''); setLeadPhone(''); setLeadEmail(''); setLeadBranch(''); setLeadSource('manual'); setLeadAssignTo(''); setLeadNote('')
       await supabase.from('notifications').insert({
-      user_id: profile.id,
-      type: 'lead_created',
-      title: 'Yeni potansiyel müşteri',
-      body: `${leadName} eklendi`,
-      link: '/customer'
+  user_id: profile.id,
+  type: 'lead_created',
+  title: 'Yeni potansiyel müşteri',
+  body: `${leadName} eklendi`,
+  link: 'leadler-liste'
 })
 loadNotifications()
       setShowAddLead(false); await loadData()
@@ -1011,7 +1011,10 @@ const handlePayCommission = async () => {
             ) : notifications.map(n => (
               <div key={n.id}
                 className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!n.is_read ? 'bg-indigo-50/50' : ''}`}
-                onClick={() => setShowNotifications(false)}>
+                onClick={() => {
+               setShowNotifications(false)
+               if (n.link) setActiveTab(n.link)
+                 }}>
                 <div className="flex items-start gap-3">
                   <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.is_read ? 'bg-indigo-500' : 'bg-gray-200'}`} />
                   <div className="flex-1 min-w-0">
