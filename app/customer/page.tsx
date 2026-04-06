@@ -560,14 +560,7 @@ if (newStatus !== selectedLead.status) {
     old_status: selectedLead.status, new_status: newStatus, note: statusNote 
   })
 
-  await supabase.from('notifications').insert({
-  user_id: profile.id,
-  type: 'status_changed',
-  title: 'Durum güncellendi',
-  body: `${selectedLead.full_name}: ${STATUS_CONFIG[selectedLead.status]?.label} → ${STATUS_CONFIG[newStatus]?.label}`,
-  link: '/customer'
-})
-loadNotifications()
+  
 }
 if (statusNote.trim()) {
   await supabase.from('lead_activities').insert({
@@ -973,93 +966,96 @@ const handlePayCommission = async () => {
       <div className="ml-16 flex-1 transition-all duration-200 min-w-0">
 
         {/* Top bar */}
-        <header className="h-14 bg-white/80 backdrop-blur-sm border-b border-gray-100 flex items-center px-6 sticky top-0 z-10 shadow-sm">
-          <div className="flex items-center gap-1.5 text-sm text-gray-400">
-            <span>DataPilot</span>
-            {getPageTitle().split(' › ').map((part, i, arr) => (
-              <span key={i} className="flex items-center gap-1.5">
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span className={i === arr.length - 1 ? 'text-gray-800 font-medium' : ''}>{part}</span>
-              </span>
+<header className="h-14 bg-white/80 backdrop-blur-sm border-b border-gray-100 flex items-center px-6 sticky top-0 z-10 shadow-sm">
+  <div className="flex items-center gap-1.5 text-sm text-gray-400">
+    <span>DataPilot</span>
+    {getPageTitle().split(' › ').map((part, i, arr) => (
+      <span key={i} className="flex items-center gap-1.5">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <span className={i === arr.length - 1 ? 'text-gray-800 font-medium' : ''}>{part}</span>
+      </span>
+    ))}
+  </div>
+
+  <div className="ml-auto flex items-center gap-2">
+    {/* Bildirim */}
+    <div className="relative" ref={notifRef}>
+      <button onClick={() => {
+        setShowNotifications(!showNotifications)
+        if (!showNotifications) {
+          notifications.filter(n => !n.is_read).forEach(async n => {
+            await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
+          })
+          setTimeout(loadNotifications, 500)
+        }
+      }}
+        className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5a5.5 5.5 0 015.5 5.5v3.5l1.5 2H2L3.5 10.5V7A5.5 5.5 0 019 1.5z" stroke="#374151" strokeWidth="1.25"/><path d="M7 14.5a2 2 0 004 0" stroke="#374151" strokeWidth="1.25"/></svg>
+        {notifications.filter(n => !n.is_read).length > 0 && (
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+            {notifications.filter(n => !n.is_read).length}
+          </span>
+        )}
+      </button>
+      {showNotifications && (
+        <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <p className="text-sm font-semibold text-gray-900">Bildirimler</p>
+            <span className="text-xs text-gray-400">{notifications.filter(n => !n.is_read).length} okunmamış</span>
+          </div>
+          <div className="max-h-80 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-8 text-center">
+                <p className="text-gray-400 text-sm">Bildirim yok</p>
+              </div>
+            ) : notifications.map(n => (
+              <div key={n.id}
+                className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!n.is_read ? 'bg-indigo-50/50' : ''}`}
+                onClick={() => setShowNotifications(false)}>
+                <div className="flex items-start gap-3">
+                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.is_read ? 'bg-indigo-500' : 'bg-gray-200'}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-gray-900">{n.title}</p>
+                    {n.body && <p className="text-xs text-gray-500 mt-0.5">{n.body}</p>}
+                    <p className="text-xs text-gray-400 mt-1">{new Date(n.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
-            <div className="relative mr-3" ref={notifRef}>
-  <button onClick={() => {
-    setShowNotifications(!showNotifications)
-    if (!showNotifications) {
-      notifications.filter(n => !n.is_read).forEach(async n => {
-        await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
-      })
-      setTimeout(loadNotifications, 500)
-    }
-  }}
-    className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors">
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 1.5a5.5 5.5 0 015.5 5.5v3.5l1.5 2H2L3.5 10.5V7A5.5 5.5 0 019 1.5z" stroke="#374151" strokeWidth="1.25"/><path d="M7 14.5a2 2 0 004 0" stroke="#374151" strokeWidth="1.25"/></svg>
-    {notifications.filter(n => !n.is_read).length > 0 && (
-      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-        {notifications.filter(n => !n.is_read).length}
-      </span>
-    )}
-  </button>
-
-  {showNotifications && (
-    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-        <p className="text-sm font-semibold text-gray-900">Bildirimler</p>
-        <span className="text-xs text-gray-400">{notifications.filter(n => !n.is_read).length} okunmamış</span>
-      </div>
-      <div className="max-h-80 overflow-y-auto">
-        {notifications.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-gray-400 text-sm">Bildirim yok</p>
-          </div>
-        ) : notifications.map(n => (
-          <div key={n.id}
-            className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!n.is_read ? 'bg-indigo-50/50' : ''}`}
-            onClick={() => setShowNotifications(false)}>
-            <div className="flex items-start gap-3">
-              <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.is_read ? 'bg-indigo-500' : 'bg-gray-200'}`} />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-gray-900">{n.title}</p>
-                {n.body && <p className="text-xs text-gray-500 mt-0.5">{n.body}</p>}
-                <p className="text-xs text-gray-400 mt-1">{new Date(n.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
-  )}
-</div>
-          <div className="ml-auto flex items-center gap-2" ref={profileMenuRef}>
-            <div className="relative">
-              <button onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2 hover:bg-gray-50 rounded-xl px-3 py-1.5 transition-colors border border-transparent hover:border-gray-200">
-                <div className="w-6 h-6 rounded-lg bg-indigo-100 flex items-center justify-center">
-                  <span className="text-indigo-600 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700 hidden md:block">{profile?.full_name}</span>
-                <svg className="text-gray-400" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-              {showProfileMenu && (
-                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50">
-                  <div className="px-4 py-2.5 border-b border-gray-100 mb-1">
-                    <p className="text-sm font-semibold text-gray-900">{profile?.full_name}</p>
-                    <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
-                  </div>
-                  <button onClick={() => { setActiveTab('ayarlar'); setShowProfileMenu(false) }} className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-2">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.25"/><path d="M7 1v1m0 10v1M1 7h1m10 0h1m-2.05-3.95-.7.7M4.75 9.25l-.7.7m0-6.65.7.7m4.5 4.5.7.7" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round"/></svg>
-                    Ayarlar
-                  </button>
-                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 12H2.5A1.5 1.5 0 011 10.5v-7A1.5 1.5 0 012.5 2H5M9 10l3-3-3-3M12 7H5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    Çıkış Yap
-                  </button>
-                </div>
-              )}
-            </div>
+
+    {/* Profil */}
+    <div className="relative" ref={profileMenuRef}>
+      <button onClick={() => setShowProfileMenu(!showProfileMenu)}
+        className="flex items-center gap-2 hover:bg-gray-50 rounded-xl px-3 py-1.5 transition-colors border border-transparent hover:border-gray-200">
+        <div className="w-6 h-6 rounded-lg bg-indigo-100 flex items-center justify-center">
+          <span className="text-indigo-600 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
+        </div>
+        <span className="text-sm font-medium text-gray-700 hidden md:block">{profile?.full_name}</span>
+        <svg className="text-gray-400" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </button>
+      {showProfileMenu && (
+        <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50">
+          <div className="px-4 py-2.5 border-b border-gray-100 mb-1">
+            <p className="text-sm font-semibold text-gray-900">{profile?.full_name}</p>
+            <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
           </div>
-        </header>
+          <button onClick={() => { setActiveTab('ayarlar'); setShowProfileMenu(false) }} className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.25"/><path d="M7 1v1m0 10v1M1 7h1m10 0h1m-2.05-3.95-.7.7M4.75 9.25l-.7.7m0-6.65.7.7m4.5 4.5.7.7" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round"/></svg>
+            Ayarlar
+          </button>
+          <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 12H2.5A1.5 1.5 0 011 10.5v-7A1.5 1.5 0 012.5 2H5M9 10l3-3-3-3M12 7H5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Çıkış Yap
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+</header>
 
         {/* Content */}
        <div className="ml-16 min-h-screen" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
