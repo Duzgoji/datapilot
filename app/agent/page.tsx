@@ -188,13 +188,7 @@ const handleUpdateLead = async (e: React.FormEvent) => {
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => {
-                setShowNotifications(!showNotifications)
-                if (!showNotifications) {
-                  notifications.filter(n => !n.is_read).forEach(async n => {
-                    await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
-                  })
-                  setTimeout(loadNotifications, 500)
-                }
+                 setShowNotifications(!showNotifications)
               }}
               className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors"
             >
@@ -224,16 +218,19 @@ const handleUpdateLead = async (e: React.FormEvent) => {
                     <div
                       key={n.id}
                       className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!n.is_read ? 'bg-indigo-50/50' : ''}`}
-                      onClick={() => {
-                        setShowNotifications(false)
-                        if (n.link && n.link.length === 36) {
-                          const lead = leads.find((l: any) => l.id === n.link)
-                          if (lead) openUpdateModal(lead)
-                          else setActiveTab('leadler')
-                        } else if (n.link) {
-                          setActiveTab(n.link)
-                        }
-                      }}
+
+                        onClick={async () => {
+                          await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
+                          await loadNotifications()
+                          setShowNotifications(false)
+                          if (n.link && n.link.length === 36) {
+                            const lead = leads.find((l: any) => l.id === n.link)
+                            if (lead) openUpdateModal(lead)
+                            else setActiveTab('leadler')
+                          } else if (n.link) {
+                            setActiveTab(n.link)
+                          }
+                        }}
                     >
                       <div className="flex items-start gap-3">
                         <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.is_read ? 'bg-indigo-500' : 'bg-gray-200'}`} />
