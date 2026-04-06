@@ -494,7 +494,7 @@ const loadNotifications = async () => {
   email: leadEmail || null, source: leadSource, note: leadNote || null, status: 'new',
   customer_id: customerData?.id || null,
 }).select().single()
-   if (error) { alert(error.message); setSaving(false); return }
+    if (error) { alert(error.message); setSaving(false); return }
     if (!error) {
       setLeadName(''); setLeadPhone(''); setLeadEmail(''); setLeadBranch(''); setLeadSource('manual'); setLeadAssignTo(''); setLeadNote('')
       
@@ -524,6 +524,8 @@ const loadNotifications = async () => {
       setShowAddLead(false); await loadData()
     }
     setSaving(false)
+  }
+
  const handleUpdateStatus = async (e: React.FormEvent) => {
   e.preventDefault()
 if (!selectedLead) return
