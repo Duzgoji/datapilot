@@ -1011,7 +1011,8 @@ const handlePayCommission = async () => {
             ) : notifications.map(n => (
               <div key={n.id}
                 className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!n.is_read ? 'bg-indigo-50/50' : ''}`}
-               onClick={() => {
+              onClick={() => {
+  console.log('NOTIF LINK:', n.link, n.link?.length)
   setShowNotifications(false)
   if (n.link && n.link.length === 36) {
     const lead = leads.find(l => l.id === n.link)

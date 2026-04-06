@@ -31,6 +31,7 @@ const Badge = ({ status }: { status: string }) => (
 export default function AgentPage() {
   const router = useRouter()
   const profileMenuRef = useRef<HTMLDivElement>(null)
+  const notifRef = useRef<HTMLDivElement>(null)
 
   const [profile, setProfile] = useState<any>(null)
   const [teamMember, setTeamMember] = useState<any>(null)
@@ -45,6 +46,8 @@ export default function AgentPage() {
   const [newNote, setNewNote] = useState('')
   const [procedureAmount, setProcedureAmount] = useState('')
   const [saving, setSaving] = useState(false)
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [showNotifications, setShowNotifications] = useState(false)
   const [appointmentDate, setAppointmentDate] = useState('')
   const [appointmentTime, setAppointmentTime] = useState('')
 
@@ -52,14 +55,22 @@ export default function AgentPage() {
   const [filterDate, setFilterDate] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  useEffect(() => {
-    loadData()
-    const handleClickOutside = (e: MouseEvent) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) setShowProfileMenu(false)
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  // SONRA:
+useEffect(() => {
+  loadData()
+  const handleClickOutside = (e: MouseEvent) => {
+    if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) setShowProfileMenu(false)
+    if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifications(false)
+  }
+  document.addEventListener('mousedown', handleClickOutside)
+  return () => document.removeEventListener('mousedown', handleClickOutside)
+}, [])
+
+useEffect(() => {
+  loadNotifications()
+  const interval = setInterval(loadNotifications, 10000)
+  return () => clearInterval(interval)
+}, [])
 
   const loadData = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -73,6 +84,18 @@ export default function AgentPage() {
     setLeads(leadsData || [])
     setLoading(false)
   }
+
+  const loadNotifications = async () => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  const { data } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(20)
+  setNotifications(data || [])
+}
 const handleUpdateLead = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -160,8 +183,77 @@ const handleUpdateLead = async (e: React.FormEvent) => {
           <div className="h-4 w-px bg-gray-200" />
           <span className="text-sm font-medium text-gray-700 truncate max-w-[140px]">{teamMember?.branches?.branch_name || 'Şube'}</span>
         </div>
-        <div className="relative" ref={profileMenuRef}>
-          <button onClick={() => setShowProfileMenu(!showProfileMenu)}
+        // SONRA:
+{/* Bildirim Zili */}
+<div className="relative mr-1" ref={notifRef}>
+  <button
+    onClick={() => {
+      setShowNotifications(!showNotifications)
+      if (!showNotifications) {
+        notifications.filter(n => !n.is_read).forEach(async n => {
+          await supabase.from('notifications').update({ is_read: true }).eq('id', n.id)
+        })
+        setTimeout(loadNotifications, 500)
+      }
+    }}
+    className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors"
+  >
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M9 1.5a5.5 5.5 0 015.5 5.5v3.5l1.5 2H2L3.5 10.5V7A5.5 5.5 0 019 1.5z" stroke="#374151" strokeWidth="1.25"/>
+      <path d="M7 14.5a2 2 0 004 0" stroke="#374151" strokeWidth="1.25"/>
+    </svg>
+    {notifications.filter(n => !n.is_read).length > 0 && (
+      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+        {notifications.filter(n => !n.is_read).length}
+      </span>
+    )}
+  </button>
+
+  {showNotifications && (
+    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <p className="text-sm font-semibold text-gray-900">Bildirimler</p>
+        <span className="text-xs text-gray-400">{notifications.filter(n => !n.is_read).length} okunmamış</span>
+      </div>
+      <div className="max-h-80 overflow-y-auto">
+        {notifications.length === 0 ? (
+          <div className="p-8 text-center">
+            <p className="text-gray-400 text-sm">Bildirim yok</p>
+          </div>
+        ) : notifications.map(n => (
+          <div
+            key={n.id}
+            className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors ${!n.is_read ? 'bg-indigo-50/50' : ''}`}
+            onClick={() => {
+              setShowNotifications(false)
+              if (n.link && n.link.length === 36) {
+                const lead = leads.find(l => l.id === n.link)
+                if (lead) openUpdateModal(lead)
+                else setActiveTab('leadler')
+              } else if (n.link) {
+                setActiveTab(n.link)
+              }
+            }}
+          >
+            <div className="flex items-start gap-3">
+              <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.is_read ? 'bg-indigo-500' : 'bg-gray-200'}`} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-gray-900">{n.title}</p>
+                {n.body && <p className="text-xs text-gray-500 mt-0.5">{n.body}</p>}
+                <p className="text-xs text-gray-400 mt-1">
+                  {new Date(n.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
+
+<div className="relative" ref={profileMenuRef}>
+  <button onClick={() => setShowProfileMenu(!showProfileMenu)}
             className="flex items-center gap-2 hover:bg-gray-50 border border-transparent hover:border-gray-200 rounded-xl px-3 py-1.5 transition-all">
             <div className="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-indigo-600 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
