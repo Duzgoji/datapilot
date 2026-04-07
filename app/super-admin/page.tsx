@@ -220,14 +220,11 @@ export default function SuperAdminPage() {
     if (profileData?.role !== 'super_admin') { router.push('/login'); return }
     console.log('profile role:', profileData?.role, 'user id:', user.id)
     setProfile(profileData)
- const { data: customersData, error: customersError } = await supabase
+   const { data: customersData } = await supabase
   .from('profiles')
-  .select('*')
+  .select('*, customers(customer_number)')
   .eq('role', 'customer')
   .order('created_at', { ascending: false })
-
-console.log('customersData:', customersData?.length, customersError)
-
 const { data: subsData } = await supabase
   .from('subscriptions')
   .select('*')
@@ -236,10 +233,7 @@ const customersWithSubs = (customersData || []).map(c => ({
   ...c,
   subscriptions: (subsData || []).filter(s => s.owner_id === c.id)
 }))
-
-console.log('customersWithSubs:', customersWithSubs.length)
 setCustomers(customersWithSubs)
-    setCustomers(customersData || [])
     const { data: branchesData } = await supabase.from('branches').select('*')
     setBranches(branchesData || [])
     const { data: leadsData } = await supabase.from('leads').select('id, status, procedure_amount, created_at, branch_id, assigned_to')
@@ -526,18 +520,11 @@ const advRes = await fetch('/api/get-advertisers', {
 
         <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
       <main className="p-6 max-w-6xl mx-auto">
-
-          {/* ── DASHBOARD ── */}
-          {activeTab === 'dashboard' && (() => {
-  // ── FİNANS HESAPLAMALARI ──────────────────────────────
-
-  // Direkt müşteri aylık geliri
+              {activeTab === 'dashboard' && (() => {
   const directCustomerRevenue = directCustomers.reduce((sum, c) => {
-    const sub = c.subscriptions?.[0]
-    return sum + (sub?.monthly_fee || 0)
+    return sum + (c.subscriptions?.[0]?.monthly_fee || 0)
   }, 0)
 
-  // Reklamcı aylık geliri
   const advertiserRevenue = advertisers.reduce((sum, a) => {
     const sub = advSubs.find(s => s.advertiser_id === a.id)
     const clientCount = a.advertiser_clients?.length || 0
@@ -545,23 +532,16 @@ const advRes = await fetch('/api/get-advertisers', {
   }, 0)
 
   const totalMRR = directCustomerRevenue + advertiserRevenue
-
   const pendingTotal = invoices.filter(i => i.status === 'pending').reduce((s, i) => s + (i.total_amount || 0), 0)
   const paidTotal = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.total_amount || 0), 0)
-
-  // Gecikmiş faturalar
   const today = new Date()
-  const overdueInvoices = invoices.filter(i =>
-    i.status === 'pending' && i.due_date && new Date(i.due_date) < today
-  )
-  const pendingInvoices = invoices.filter(i =>
-    i.status === 'pending' && (!i.due_date || new Date(i.due_date) >= today)
-  )
+  const overdueInvoices = invoices.filter(i => i.status === 'pending' && i.due_date && new Date(i.due_date) < today)
+  const pendingInvoices = invoices.filter(i => i.status === 'pending' && (!i.due_date || new Date(i.due_date) >= today))
 
   return (
     <div className="space-y-6">
 
-      {/* ── MEVCUT KARŞILAMA KARTI ── */}
+      {/* Karşılama */}
       <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-indigo-950 rounded-2xl p-6 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
         <div className="absolute -right-8 -top-8 w-40 h-40 bg-indigo-500/10 rounded-full" />
@@ -582,7 +562,7 @@ const advRes = await fetch('/api/get-advertisers', {
         </div>
       </div>
 
-      {/* ── BÖLÜM 1: FİNANS ÖZET KARTLAR ── */}
+      {/* Finansal Özet */}
       <div>
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Finansal Özet</h2>
         <div className="grid grid-cols-5 gap-3">
@@ -602,7 +582,7 @@ const advRes = await fetch('/api/get-advertisers', {
         </div>
       </div>
 
-      {/* ── BÖLÜM 2: FİRMALAR MALİ TABLOSU ── */}
+      {/* Firmalar Mali Tablosu */}
       <div>
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Firmalar Mali Durumu</h2>
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
@@ -618,12 +598,14 @@ const advRes = await fetch('/api/get-advertisers', {
             <div className="p-8 text-center text-sm text-gray-400">Direkt firma yok.</div>
           ) : directCustomers.map((c, i) => {
             const sub = c.subscriptions?.[0]
-            const lastInvoice = invoices.filter(inv => inv.owner_id === c.id).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+            const lastInvoice = invoices
+              .filter(inv => inv.owner_id === c.id)
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
             const planCfg: any = {
-              starter: 'bg-gray-100 text-gray-600',
-              pro: 'bg-blue-50 text-blue-700',
-              enterprise: 'bg-purple-50 text-purple-700',
-              trial: 'bg-gray-100 text-gray-400',
+              trial: 'bg-gray-100 text-gray-500',
+              starter: 'bg-indigo-50 text-indigo-700',
+              pro: 'bg-violet-50 text-violet-700',
+              enterprise: 'bg-amber-50 text-amber-700',
             }
             return (
               <div key={c.id} className={`px-5 py-3.5 grid grid-cols-5 gap-2 items-center ${i < directCustomers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
@@ -637,7 +619,7 @@ const advRes = await fetch('/api/get-advertisers', {
                   </div>
                 </div>
                 <div>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${planCfg[sub?.plan || 'trial'] || 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${planCfg[sub?.plan || 'trial']}`}>
                     {sub?.plan || 'trial'}
                   </span>
                 </div>
@@ -659,7 +641,7 @@ const advRes = await fetch('/api/get-advertisers', {
         </div>
       </div>
 
-      {/* ── BÖLÜM 3: REKLAMCILAR MALİ TABLOSU ── */}
+      {/* Reklamcılar Mali Tablosu */}
       <div>
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Reklamcılar Mali Durumu</h2>
         <div className="bg-white rounded-2xl border border-amber-100 overflow-hidden">
@@ -678,7 +660,9 @@ const advRes = await fetch('/api/get-advertisers', {
             const sub = advSubs.find(s => s.advertiser_id === a.id)
             const clientCount = a.advertiser_clients?.length || 0
             const monthlyTotal = (sub?.monthly_fee || 0) + clientCount * (sub?.per_client_fee || 0)
-            const lastInvoice = invoices.filter(inv => inv.owner_id === a.id).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+            const lastInvoice = invoices
+              .filter(inv => inv.owner_id === a.id)
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
             return (
               <div key={a.id} className={`px-5 py-3.5 grid grid-cols-6 gap-2 items-center ${i < advertisers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-amber-50/20 transition-colors`}>
                 <div className="col-span-2 flex items-center gap-2 min-w-0">
@@ -710,7 +694,6 @@ const advRes = await fetch('/api/get-advertisers', {
               </div>
             )
           })}
-          {/* Toplam satırı */}
           <div className="px-5 py-3 bg-amber-50 border-t border-amber-100 grid grid-cols-6 gap-2">
             <div className="col-span-5 text-right text-xs font-semibold text-gray-500">Toplam Aylık Reklamcı Geliri</div>
             <div className="text-right text-sm font-bold text-amber-700">₺{advertiserRevenue.toLocaleString()}</div>
@@ -718,7 +701,7 @@ const advRes = await fetch('/api/get-advertisers', {
         </div>
       </div>
 
-      {/* ── BÖLÜM 4: GECİKMİŞ / BEKLEYENLER ── */}
+      {/* Bekleyen & Gecikmiş */}
       {(overdueInvoices.length > 0 || pendingInvoices.length > 0) && (
         <div>
           <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Bekleyen & Gecikmiş Faturalar</h2>
@@ -742,12 +725,8 @@ const advRes = await fetch('/api/get-advertisers', {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900">{owner?.company_name || owner?.full_name || owner?.email || 'Bilinmiyor'}</p>
-                    {inv.due_date && (
-                      <p className="text-xs text-gray-400">Vade: {new Date(inv.due_date).toLocaleDateString('tr-TR')}</p>
-                    )}
-                    {isOverdue && (
-                      <p className="text-xs text-red-500 font-medium">{daysLate} gün gecikmiş</p>
-                    )}
+                    {inv.due_date && <p className="text-xs text-gray-400">Vade: {new Date(inv.due_date).toLocaleDateString('tr-TR')}</p>}
+                    {isOverdue && <p className="text-xs text-red-500 font-medium">{daysLate} gün gecikmiş</p>}
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-sm font-bold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
@@ -765,970 +744,7 @@ const advRes = await fetch('/api/get-advertisers', {
     </div>
   )
 })()}
-            
-            <div className="space-y-6">
-              <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-indigo-950 rounded-2xl p-6 text-white relative overflow-hidden">
-                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-                <div className="absolute -right-8 -top-8 w-40 h-40 bg-indigo-500/10 rounded-full" />
-                <div className="flex items-start justify-between relative">
-                  <div>
-                    <p className="text-gray-400 text-sm">Hoş geldin,</p>
-                    <h1 className="text-2xl font-bold mt-0.5">{profile?.full_name}</h1>
-                    <p className="text-gray-500 text-sm mt-1">Platform genel durumu · {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}</p>
-                  </div>
-                  <span className="bg-rose-500/20 text-rose-400 text-xs font-semibold px-3 py-1.5 rounded-full border border-rose-500/20">Super Admin</span>
-                </div>
-                <div className="flex gap-8 mt-5 pt-5 border-t border-white/10 relative">
-                  <div><p className="text-3xl font-bold">{customers.length}</p><p className="text-gray-500 text-xs mt-0.5">Firma</p></div>
-                  <div><p className="text-3xl font-bold">{advertisers.length}</p><p className="text-amber-400 text-xs mt-0.5">Reklamcı</p></div>
-                  <div><p className="text-3xl font-bold">{branches.length}</p><p className="text-gray-500 text-xs mt-0.5">Şube</p></div>
-                  <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-gray-500 text-xs mt-0.5">Potansiyel Müşteri</p></div>
-                  <div><p className="text-3xl font-bold">{allUsers.length}</p><p className="text-gray-500 text-xs mt-0.5">Kullanıcı</p></div>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  { label: 'Aktif Firma', value: customers.filter(c => c.is_active !== false).length, sub: `${customers.filter(c => c.is_active === false).length} pasif`, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100', icon: '◈' },
-                  { label: 'Reklamcı', value: advertisers.length, sub: `${advertisers.filter(a => a.is_active !== false).length} aktif`, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', icon: '◇' },
-                  { label: 'Bekleyen Fatura', value: `₺${pendingInvoicesTotal.toLocaleString()}`, sub: `${invoices.filter(i => i.status === 'pending').length} fatura`, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100', icon: '◐' },
-                  { label: 'Tahsil Edilen', value: `₺${paidInvoicesTotal.toLocaleString()}`, sub: 'Tüm zamanlar', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', icon: '◉' },
-                ].map(card => (
-                  <div key={card.label} className={`bg-gradient-to-br from-white to-${card.bg.replace('bg-','')} rounded-2xl p-5 border ${card.border} hover:shadow-sm transition-all`}>
-                    <div className={`w-9 h-9 ${card.bg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
-                    <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
-                    <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 gap-5">
-                {/* Son firmalar */}
-                <div className="bg-white rounded-2xl border border-gray-100">
-                  <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-900 text-sm">Son Firmalar</h3>
-                    <button onClick={() => setActiveTab('firma-listesi')} className="text-xs text-indigo-600 font-medium">Tümü →</button>
-                  </div>
-                  {customers.slice(0, 5).map((c, i) => (
-                    <div key={c.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < Math.min(customers.length, 5) - 1 ? 'border-b border-gray-50' : ''}`}>
-                      <div className="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                        <span className="text-indigo-600 font-semibold text-xs">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{c.company_name || c.full_name}</p>
-                        <p className="text-xs text-gray-400 truncate">{c.email}</p>
-                        {c.customers?.[0]?.customer_number && <p className="text-xs text-gray-300 font-mono">#{String(c.customers[0].customer_number).padStart(4, '0')}</p>}
-                      </div>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${c.is_active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
-                        {c.is_active !== false ? 'Aktif' : 'Pasif'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Son reklamcılar */}
-                <div className="bg-white rounded-2xl border border-amber-100">
-                  <div className="px-5 py-4 border-b border-amber-100 flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
-                      <span className="w-2 h-2 bg-amber-400 rounded-full" />
-                      Reklamcılar
-                    </h3>
-                    <button onClick={() => setActiveTab('reklamci-listesi')} className="text-xs text-amber-600 font-medium">Tümü →</button>
-                  </div>
-                  {advertisers.length === 0 ? (
-                    <div className="p-10 text-center">
-                      <p className="text-gray-400 text-sm">Henüz reklamcı yok.</p>
-                      <button onClick={() => setActiveTab('reklamci-ekle')} className="mt-2 text-xs text-amber-600 font-medium hover:underline">Reklamcı Ekle →</button>
-                    </div>
-                  ) : advertisers.slice(0, 5).map((a, i) => {
-                    const clientCount = a.advertiser_clients?.length || 0
-                    return (
-                      <div key={a.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < Math.min(advertisers.length, 5) - 1 ? 'border-b border-gray-50' : ''}`}>
-                        <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-                          <span className="text-amber-600 font-semibold text-xs">{(a.company_name || a.full_name || 'R').charAt(0)}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{a.company_name || a.full_name}</p>
-                          <p className="text-xs text-gray-400">{clientCount} müşteri</p>
-                        </div>
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${a.is_active !== false ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
-                          {a.is_active !== false ? 'Aktif' : 'Pasif'}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-      
-          {/* ── FİRMA LİSTESİ ── */}
-          {activeTab === 'firma-listesi' && (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm text-gray-500">
-                    Toplam <span className="font-semibold text-gray-800">{filteredCustomers.length}</span> firma
-                    <span className="text-gray-400 mx-1.5">·</span>
-                    <span className="text-indigo-600 font-medium">{directCustomers.length}</span> platform
-                    <span className="text-gray-400 mx-1.5">·</span>
-                    <span className="text-amber-600 font-medium">{viaAdvertiserCustomers.length}</span> reklamcı
-                  </p>
-                </div>
-                <Btn size="sm" onClick={() => { resetOnboarding(); setShowOnboardingModal(true) }}>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-                  Firma Ekle
-                </Btn>
-              </div>
-              <div className="relative">
-                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Firma adı veya e-posta ara..."
-                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {([
-                  { key: 'all', label: 'Tümü' },
-                  { key: 'platform', label: 'Platform (doğrudan)' },
-                  { key: 'advertiser', label: 'Reklamcı müşterisi' },
-                ] as const).map(({ key, label }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setFirmaSourceFilter(key)}
-                    className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
-                      firmaSourceFilter === key
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              {filteredCustomers.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
-                  <p className="text-gray-400 text-sm">Firma bulunamadı.</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {(firmaSourceFilter === 'all' || firmaSourceFilter === 'platform') && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-2 px-0.5">
-                        <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">Platform</span>
-                        <span className="text-xs text-gray-400">DataPilot üzerinden doğrudan kayıtlı müşteriler</span>
-                        <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-medium">{directCustomers.length}</span>
-                      </div>
-                      <div className="bg-white rounded-2xl border border-indigo-100 overflow-hidden">
-                        {directCustomers.length === 0 ? (
-                          <div className="p-8 text-center text-sm text-gray-400">Bu kategoride firma yok.</div>
-                        ) : directCustomers.map((c, i) => {
-                          const cBranches = branches.filter(b => b.owner_id === c.id)
-                          const sub = c.subscriptions?.[0]
-                          return (
-                            <div key={c.id} className={`px-5 py-4 flex items-center gap-4 hover:bg-gray-50/70 transition-colors ${i < directCustomers.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center flex-shrink-0">
-                                <span className="text-indigo-600 font-bold">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                                  <p className="text-sm font-semibold text-gray-900 truncate">{c.company_name || c.full_name}</p>
-<span className="text-[10px] font-semibold uppercase tracking-wide bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-100">Platform</span>
-{(() => {
-  const plan = c.subscriptions?.[0]?.plan
-  const cfg: any = {
-    trial:      'bg-gray-100 text-gray-500',
-    starter:    'bg-indigo-50 text-indigo-700 border border-indigo-200',
-    pro:        'bg-violet-50 text-violet-700 border border-violet-200',
-    enterprise: 'bg-amber-50 text-amber-700 border border-amber-200',
-  }
-  return plan ? (
-    <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${cfg[plan] || 'bg-gray-100 text-gray-500'}`}>
-      {plan}
-    </span>
-  ) : null
-})()}
-                                  {c.sector && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">{c.sector}</span>}
-                                </div>
-                                <p className="text-xs text-gray-400">{c.email}</p>
-                                <div className="flex gap-3 mt-1 flex-wrap">
-                                  <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
-                                  {sub && <span className="text-xs text-gray-400">₺{sub.monthly_fee}/ay · Plan: {sub.plan}</span>}
-                                  <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('tr-TR')}</span>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <button onClick={() => { setSelectedCustomer(c); setShowCustomerDetail(true) }}
-                                  className="text-xs text-indigo-600 font-medium hover:text-indigo-700 px-3 py-1.5 hover:bg-indigo-50 rounded-lg transition-colors">
-                                  Detay
-                                </button>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                  <input type="checkbox" checked={c.is_active !== false} onChange={() => handleToggleActive(c)} className="sr-only peer" />
-                                  <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                                </label>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {(firmaSourceFilter === 'all' || firmaSourceFilter === 'advertiser') && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-2 px-0.5 flex-wrap">
-                        <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Reklamcı</span>
-                        <span className="text-xs text-gray-400">Bir reklamcı hesabı üzerinden eklenen müşteri hesapları</span>
-                        <span className="text-xs bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full font-medium">{viaAdvertiserCustomers.length}</span>
-                      </div>
-                      <div className="bg-white rounded-2xl border border-amber-100 overflow-hidden">
-                        {viaAdvertiserCustomers.length === 0 ? (
-                          <div className="p-8 text-center text-sm text-gray-400">Bu kategoride firma yok.</div>
-                        ) : viaAdvertiserCustomers.map((c, i) => {
-                          const cBranches = branches.filter(b => b.owner_id === c.id)
-                          const sub = c.subscriptions?.[0]
-                          const advName = getAdvertiserForCustomerProfile(c.id)
-                          return (
-                            <div key={c.id} className={`px-5 py-4 flex items-center gap-4 hover:bg-amber-50/40 transition-colors ${i < viaAdvertiserCustomers.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center flex-shrink-0">
-                                <span className="text-amber-700 font-bold">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                                  <p className="text-sm font-semibold text-gray-900 truncate">{c.company_name || c.full_name}</p>
-                                  <span className="text-[10px] font-semibold uppercase tracking-wide bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">Reklamcı</span>
-{(() => {
-  const plan = c.subscriptions?.[0]?.plan
-  const cfg: any = {
-    trial:      'bg-gray-100 text-gray-500',
-    starter:    'bg-indigo-50 text-indigo-700 border border-indigo-200',
-    pro:        'bg-violet-50 text-violet-700 border border-violet-200',
-    enterprise: 'bg-amber-50 text-amber-700 border border-amber-200',
-  }
-  return plan ? (
-    <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${cfg[plan] || 'bg-gray-100 text-gray-500'}`}>
-      {plan}
-    </span>
-  ) : null
-})()}
-                                  {c.sector && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">{c.sector}</span>}
-                                </div>
-                                {advName && (
-                                  <p className="text-xs text-amber-700 font-medium mt-0.5">Reklamcı: {advName}</p>
-                                  
-                                )}
-                                <p className="text-xs text-gray-400">{c.email}</p>
-                                <div className="flex gap-3 mt-1 flex-wrap">
-                                  <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
-                                  {sub && <span className="text-xs text-gray-400">₺{sub.monthly_fee}/ay · Plan: {sub.plan}</span>}
-                                  <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('tr-TR')}</span>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <button onClick={() => { setSelectedCustomer(c); setShowCustomerDetail(true) }}
-                                  className="text-xs text-indigo-600 font-medium hover:text-indigo-700 px-3 py-1.5 hover:bg-indigo-50 rounded-lg transition-colors">
-                                  Detay
-                                </button>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                  <input type="checkbox" checked={c.is_active !== false} onChange={() => handleToggleActive(c)} className="sr-only peer" />
-                                  <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                                </label>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── ONBOARDING SEKME ── */}
-          {activeTab === 'firma-onboarding' && (
-            <OnboardingWizard
-              step={onboardingStep} setStep={setOnboardingStep}
-              obName={obName} setObName={setObName} obEmail={obEmail} setObEmail={setObEmail}
-              obPassword={obPassword} setObPassword={setObPassword} obCompany={obCompany} setObCompany={setObCompany}
-              obSector={obSector} setObSector={setObSector} obPhone={obPhone} setObPhone={setObPhone}
-              obPlan={obPlan} setObPlan={setObPlan} obMonthlyFee={obMonthlyFee} setObMonthlyFee={setObMonthlyFee}
-              obPerBranchFee={obPerBranchFee} setObPerBranchFee={setObPerBranchFee}
-              obBranchName={obBranchName} setObBranchName={setObBranchName}
-              obBranchCity={obBranchCity} setObBranchCity={setObBranchCity}
-              obCommissionModel={obCommissionModel} setObCommissionModel={setObCommissionModel}
-              obInviteLink={obInviteLink} obSaving={obSaving}
-              onStep1={handleOnboardingStep1} onStep2={handleOnboardingStep2} onStep3={handleOnboardingStep3}
-              onReset={() => resetOnboarding()} isModal={false}
-            />
-          )}
-
-       {/* ── REKLAMCI LİSTESİ ── */}
-          {activeTab === 'reklamci-listesi' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">{filteredAdvertisers.length} reklamcı</p>
-                <div className="flex gap-2">
-                  <Btn size="sm" variant="secondary" onClick={async () => {
-                    if (!confirm('Auth\'daki tüm reklamcılar profiles tablosuna senkronize edilecek. Devam?')) return
-                   const session = await supabase.auth.getSession()
-const token = session.data.session?.access_token
-const res = await fetch('/api/sync-advertisers', { 
-  method: 'POST',
-  headers: { 'Authorization': `Bearer ${token}` }
-})
-                    const result = await res.json()
-                    if (result.error) { alert('Hata: ' + result.error); return }
-                    alert(`${result.synced} reklamcı senkronize edildi.`)
-                    loadData()
-                  }}>Eskilerini Senkronize Et</Btn>
-                  <Btn size="sm" onClick={() => setActiveTab('reklamci-ekle')} className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-                    Reklamcı Ekle
-                  </Btn>
-                </div>
-              </div>
-              <div className="relative">
-                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                <input value={advSearchQuery} onChange={e => setAdvSearchQuery(e.target.value)} placeholder="Reklamcı ara..."
-                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
-              </div>
-
-              {/* Platform Özet */}
-              <div className="grid grid-cols-4 gap-3">
-                {[
-                  { label: 'Toplam Reklamcı', value: advertisers.length, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
-                  { label: 'Aktif', value: advertisers.filter(a => a.is_active !== false).length, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-                  { label: 'Toplam Müşteri', value: advertisers.reduce((s, a) => s + (a.advertiser_clients?.length || 0), 0), color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
-                  { label: 'Aylık Gelir', value: `₺${advertisers.reduce((s, a) => { const sub = advSubs.find(s => s.advertiser_id === a.id); return s + (sub?.monthly_fee || 0) + ((a.advertiser_clients?.length || 0) * (sub?.per_client_fee || 0)) }, 0).toLocaleString()}`, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
-                ].map(card => (
-                  <div key={card.label} className={`${card.bg} border ${card.border} rounded-2xl p-4`}>
-                    <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
-                    <p className="text-xs text-gray-500 mt-1">{card.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              {filteredAdvertisers.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-amber-100 p-16 text-center">
-                  <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">◇</div>
-                  <p className="text-gray-500 text-sm font-medium">Henüz reklamcı yok</p>
-                  <button onClick={() => setActiveTab('reklamci-ekle')} className="mt-4 text-xs text-amber-600 font-medium hover:underline">Reklamcı Ekle →</button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {filteredAdvertisers.map((a) => {
-                    const clientCount = a.advertiser_clients?.length || 0
-                    const sub = advSubs.find(s => s.advertiser_id === a.id)
-                    const monthlyIncome = (sub?.monthly_fee || 0) + clientCount * (sub?.per_client_fee || 0)
-                    const advInvoices = (invoices as any[]).filter(inv => inv.owner_id === a.id)
-                    const pendingAdv = advInvoices.filter(inv => inv.status === 'pending').reduce((s: number, inv: any) => s + (inv.total_amount || 0), 0)
-                    const paidAdv = advInvoices.filter(inv => inv.status === 'paid').reduce((s: number, inv: any) => s + (inv.total_amount || 0), 0)
-
-                    return (
-                      <div key={a.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-sm transition-all">
-                        {/* Üst satır — tıklanabilir */}
-                        <div
-                          className="px-5 py-4 flex items-center gap-4 cursor-pointer select-none"
-                          onClick={() => setExpandedAdvertiser(expandedAdvertiser === a.id ? null : a.id)}
-                        >
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center flex-shrink-0">
-                            <span className="text-amber-600 font-bold">{(a.company_name || a.full_name || 'R').charAt(0)}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <p className="text-sm font-semibold text-gray-900 truncate">{a.company_name || a.full_name}</p>
-                              <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full flex-shrink-0 font-medium border border-amber-200">Reklamcı</span>
-                            </div>
-                            <p className="text-xs text-gray-400">{a.email} · {a.phone || '-'}</p>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
-                            <button onClick={() => setSelectedAdvertiser(a)}
-                              className="text-xs text-amber-600 font-medium hover:text-amber-700 px-3 py-1.5 hover:bg-amber-50 rounded-lg transition-colors border border-amber-200">
-                              Detay & Fatura
-                            </button>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input type="checkbox" checked={a.is_active !== false} onChange={() => handleToggleActive(a)} className="sr-only peer" />
-                              <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-amber-500 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                            </label>
-                            <svg className={`w-4 h-4 text-gray-400 transition-transform ${expandedAdvertiser === a.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                          </div>
-                        </div>
-
-                        {/* Açılır detay */}
-                        {expandedAdvertiser === a.id && (
-                          <div className="border-t border-gray-50">
-                            {/* Mali özet */}
-                            <div className="px-5 py-3 grid grid-cols-4 gap-3">
-                              <div className="text-center">
-                                <p className="text-base font-bold text-amber-600">{clientCount}</p>
-                                <p className="text-xs text-gray-400">Müşteri</p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-base font-bold text-indigo-600">₺{(monthlyIncome).toLocaleString()}</p>
-                                <p className="text-xs text-gray-400">Aylık Gelir</p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-base font-bold text-rose-500">₺{pendingAdv.toLocaleString()}</p>
-                                <p className="text-xs text-gray-400">Bekleyen</p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-base font-bold text-emerald-600">₺{paidAdv.toLocaleString()}</p>
-                                <p className="text-xs text-gray-400">Tahsil</p>
-                              </div>
-                            </div>
-
-                            {/* Fiyat bilgisi */}
-                            {sub && (
-                              <div className="px-5 pb-3 flex items-center gap-3">
-                                <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">₺{sub.monthly_fee}/ay sabit</span>
-                                <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">₺{sub.per_client_fee}/müşteri</span>
-                                <span className="text-xs text-gray-400">kayıt: {new Date(a.created_at).toLocaleDateString('tr-TR')}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── REKLAMCI EKLE ── */}
-          {activeTab === 'reklamci-ekle' && (
-            <div className="max-w-lg mx-auto space-y-5">
-              <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl p-5 text-white relative overflow-hidden">
-                <div className="absolute -right-4 -top-4 w-28 h-28 bg-white/10 rounded-full" />
-                <div className="relative">
-                  <p className="text-amber-100 text-xs mb-1">Reklamcı Paneli</p>
-                  <h2 className="text-lg font-bold">Yeni Reklamcı Ekle</h2>
-                  <p className="text-amber-100 text-sm mt-1">Reklamcı hesabı oluşturun ve fiyatlandırmasını belirleyin.</p>
-                </div>
-              </div>
-
-              {advSuccess && (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
-                  <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7l3.5 3.5 7.5-7" stroke="#059669" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-emerald-800">Reklamcı oluşturuldu!</p>
-                    <p className="text-xs text-emerald-600">{advSuccess} hesabı aktif.</p>
-                  </div>
-                  <button onClick={() => setAdvSuccess('')} className="text-emerald-400 hover:text-emerald-600">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                  </button>
-                </div>
-              )}
-
-              <form onSubmit={handleAddAdvertiser} className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Hesap Bilgileri</p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2">
-                      <Input label="Ad Soyad *" value={advName} onChange={(e: any) => setAdvName(e.target.value)} required placeholder="Ahmet Yılmaz" />
-                    </div>
-                    <Input label="E-posta *" type="email" value={advEmail} onChange={(e: any) => setAdvEmail(e.target.value)} required placeholder="reklamci@email.com" />
-                    <Input label="Şifre *" type="password" value={advPassword} onChange={(e: any) => setAdvPassword(e.target.value)} required placeholder="min. 6 karakter" />
-                    <Input label="Firma/Ajans Adı" value={advCompany} onChange={(e: any) => setAdvCompany(e.target.value)} placeholder="Ajans Adı" />
-                    <Input label="Telefon" value={advPhone} onChange={(e: any) => setAdvPhone(e.target.value)} placeholder="05XX XXX XXXX" />
-                  </div>
-                </div>
-
-                <div className="border-t border-gray-100 pt-4">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Fiyatlandırma</p>
-                  <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-4">
-                    <p className="text-xs text-amber-700 font-medium">💡 Reklamcı gelir modeli</p>
-                    <p className="text-xs text-amber-600 mt-1">Sabit aylık ücret + sisteme eklediği her müşteri başına ayrı ücret alınır.</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Aylık Sabit Ücret (₺)</label>
-                      <input type="number" value={advMonthlyFee} onChange={e => setAdvMonthlyFee(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Müşteri Başı Ücret (₺)</label>
-                      <input type="number" value={advPerClientFee} onChange={e => setAdvPerClientFee(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
-                    </div>
-                  </div>
-                  <div className="mt-3 bg-gray-50 rounded-xl p-3 flex items-center justify-between">
-                    <p className="text-xs text-gray-500">Örnek hesap (5 müşteri ile):</p>
-                    <p className="text-sm font-bold text-gray-900">
-                      ₺{((parseFloat(advMonthlyFee) || 0) + (parseFloat(advPerClientFee) || 0) * 5).toLocaleString()}/ay
-                    </p>
-                  </div>
-                </div>
-
-                <button type="submit" disabled={advSaving}
-                  className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
-                  {advSaving ? 'Oluşturuluyor...' : '✓ Reklamcı Hesabı Oluştur'}
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* ── FATURALAR ── */}
-          {activeTab === 'fatura-faturalar' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                {[
-                  { label: 'Bekleyen', value: `₺${pendingInvoicesTotal.toLocaleString()}`, count: invoices.filter(i => i.status === 'pending').length, color: 'text-amber-600', bg: 'from-amber-50 to-white', border: 'border-amber-100' },
-                  { label: 'Ödendi', value: `₺${paidInvoicesTotal.toLocaleString()}`, count: invoices.filter(i => i.status === 'paid').length, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100' },
-                  { label: 'Toplam', value: `₺${(pendingInvoicesTotal + paidInvoicesTotal).toLocaleString()}`, count: invoices.length, color: 'text-indigo-600', bg: 'from-indigo-50 to-white', border: 'border-indigo-100' },
-                ].map(card => (
-                  <div key={card.label} className={`bg-gradient-to-br ${card.bg} rounded-2xl border ${card.border} p-5`}>
-                    <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
-                    <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
-                    <p className="text-xs text-gray-400">{card.count} fatura</p>
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-end">
-                <Btn variant="success" size="sm" onClick={handleGenerateInvoices} disabled={generatingInvoices}>
-                  {generatingInvoices ? 'Oluşturuluyor...' : '+ Fatura Oluştur'}
-                </Btn>
-              </div>
-              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                {invoices.length === 0 ? (
-                  <div className="p-16 text-center"><p className="text-gray-400 text-sm">Henüz fatura yok.</p></div>
-                ) : invoices.map((inv, i) => (
-                  <div key={inv.id} className={`px-5 py-4 flex items-center gap-4 ${i < invoices.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                    <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="#94a3b8" strokeWidth="1.25"/><path d="M5 6h6M5 9h4" stroke="#94a3b8" strokeWidth="1.25" strokeLinecap="round"/></svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">{inv.profiles?.company_name || inv.profiles?.full_name}</p>
-                      <p className="text-xs text-gray-400">{inv.branch_count} şube · ₺{inv.per_branch_fee}/şube · Vade: {inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-'}</p>
-                    </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <p className="text-sm font-semibold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
-                      {inv.status === 'pending' ? (
-                        <button onClick={() => handleMarkPaid(inv.id)} className="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium px-3 py-1.5 rounded-lg transition-colors">Ödendi</button>
-                      ) : (
-                        <span className="text-xs bg-emerald-50 text-emerald-600 font-medium px-2.5 py-1 rounded-full">✓ Ödendi</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── KULLANICILAR ── */}
-          {activeTab === 'kullanici-listesi' && !selectedFirmaUser && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-4 gap-3">
-                {[
-                  { label: 'Toplam Firma', value: customers.length, color: 'text-indigo-600' },
-                  { label: 'Reklamcı', value: advertisers.length, color: 'text-amber-600' },
-                  { label: 'Satışçı', value: allUsers.filter(u => ['team','agent'].includes(u.role)).length, color: 'text-blue-600' },
-                  { label: 'Aktif', value: allUsers.filter(u => u.is_active !== false).length, color: 'text-emerald-600' },
-                ].map(c => (
-                  <div key={c.label} className="bg-white rounded-xl border border-gray-100 px-4 py-3">
-                    <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{c.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-2">
-                {customers.map(customer => {
-                  const cBranches = branches.filter(b => b.owner_id === customer.id)
-                  const branchIds = cBranches.map(b => b.id)
-                  const cMembers = allUsers.filter(u => ['team', 'agent'].includes(u.role) && teamMembersBelongTo(u.id, branchIds))
-                  const cLeads = leads.filter(l => branchIds.includes(l.branch_id))
-                  const cRevenue = cLeads.filter(l => l.status === 'procedure_done').reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
-
-                  return (
-                    <div key={customer.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                      <button onClick={() => setSelectedFirmaUser(customer)}
-                        className="w-full px-5 py-4 flex items-center gap-4 hover:bg-gray-50/70 transition-colors text-left">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center flex-shrink-0">
-                          <span className="text-indigo-600 font-bold">{(customer.company_name || customer.full_name || 'F').charAt(0)}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900">{customer.company_name || customer.full_name}</p>
-                          <div className="flex gap-3 mt-1">
-                            <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
-                            <span className="text-xs text-blue-600 font-medium">{cMembers.length} satışçı</span>
-                            <span className="text-xs text-gray-400">{cLeads.length} lead</span>
-                            {cRevenue > 0 && <span className="text-xs text-emerald-600 font-medium">₺{cRevenue.toLocaleString()}</span>}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${customer.is_active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
-                            {customer.is_active !== false ? 'Aktif' : 'Pasif'}
-                          </span>
-                          <svg className="text-gray-300" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        </div>
-                      </button>
-                      {cMembers.length > 0 && (
-                        <div className="border-t border-gray-50 px-5 py-2 bg-gray-50/50 flex gap-2 flex-wrap">
-                          {cMembers.slice(0, 4).map(m => (
-                            <span key={m.id} className="inline-flex items-center gap-1 text-xs text-gray-500 bg-white border border-gray-200 rounded-lg px-2 py-1">
-                              <span className="w-4 h-4 bg-blue-100 text-blue-600 rounded font-bold text-xs flex items-center justify-center">{(m.full_name || 'U').charAt(0)}</span>
-                              {m.full_name || m.email}
-                            </span>
-                          ))}
-                          {cMembers.length > 4 && <span className="text-xs text-gray-400 self-center">+{cMembers.length - 4} daha</span>}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ── FİRMA DETAY ── */}
-          {activeTab === 'kullanici-listesi' && selectedFirmaUser && (() => {
-            const customer = selectedFirmaUser
-            const cBranches = branches.filter(b => b.owner_id === customer.id)
-            const branchIds = cBranches.map((b: any) => b.id)
-            const cLeads = leads.filter((l: any) => branchIds.includes(l.branch_id))
-            const cSales = cLeads.filter((l: any) => l.status === 'procedure_done')
-            const cRevenue = cSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
-            const cMembers = allUsers.filter(u => ['team', 'agent'].includes(u.role) && teamMembersBelongTo(u.id, branchIds))
-            const filteredMembers = firmaUserFilter === 'all' ? cMembers
-              : firmaUserFilter === 'active' ? cMembers.filter(m => m.is_active !== false)
-              : cMembers.filter(m => m.is_active === false)
-
-            return (
-              <div className="space-y-4">
-                <button onClick={() => { setSelectedFirmaUser(null); setFirmaUserFilter('all') }}
-                  className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  Tüm Kullanıcılar
-                </button>
-                <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-5 text-white relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-                  <div className="flex items-center gap-4 relative">
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-xl font-bold">{(customer.company_name || customer.full_name || 'F').charAt(0)}</span>
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-bold">{customer.company_name || customer.full_name}</h2>
-                      <p className="text-indigo-200 text-xs">{customer.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-6 mt-4 pt-4 border-t border-indigo-500/40 relative">
-                    <div><p className="text-2xl font-bold">{cBranches.length}</p><p className="text-indigo-300 text-xs mt-0.5">Şube</p></div>
-                    <div><p className="text-2xl font-bold">{cMembers.length}</p><p className="text-indigo-300 text-xs mt-0.5">Satışçı</p></div>
-                    <div><p className="text-2xl font-bold">{cLeads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Potansiyel Müşteri</p></div>
-                    <div><p className="text-2xl font-bold">{cSales.length}</p><p className="text-indigo-300 text-xs mt-0.5">Satış</p></div>
-                    <div><p className="text-2xl font-bold">₺{(cRevenue/1000).toFixed(0)}K</p><p className="text-indigo-300 text-xs mt-0.5">Ciro</p></div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-gray-100">
-                  <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
-                    <p className="text-sm font-semibold text-gray-900">Satışçılar ({cMembers.length})</p>
-                    <div className="flex gap-1">
-                      {[{ key: 'all', label: 'Tümü' }, { key: 'active', label: 'Aktif' }, { key: 'passive', label: 'Pasif' }].map(f => (
-                        <button key={f.key} onClick={() => setFirmaUserFilter(f.key)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${firmaUserFilter === f.key ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:bg-gray-100'}`}>
-                          {f.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  {filteredMembers.length === 0 ? (
-                    <p className="text-xs text-gray-400 text-center py-8">Satışçı yok.</p>
-                  ) : filteredMembers.map((member: any, i: number) => {
-                    const mLeads = cLeads.filter((l: any) => l.assigned_to === member.id)
-                    const mSales = mLeads.filter((l: any) => l.status === 'procedure_done')
-                    return (
-                      <div key={member.id} className={`px-5 py-3.5 flex items-center gap-4 ${i < filteredMembers.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                        <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                          <span className="text-blue-600 font-semibold text-sm">{(member.full_name || 'U').charAt(0)}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">{member.full_name || '-'}</p>
-                          <p className="text-xs text-gray-400">{member.email}</p>
-                          <div className="flex gap-3 mt-1">
-                            <span className="text-xs text-blue-600 font-medium">{mLeads.length} lead</span>
-                            <span className="text-xs text-emerald-600 font-medium">{mSales.length} satış</span>
-                          </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                          <input type="checkbox" checked={member.is_active !== false}
-                            onChange={async () => { await supabase.from('profiles').update({ is_active: !member.is_active }).eq('id', member.id); loadData() }}
-                            className="sr-only peer" />
-                          <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:bg-indigo-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
-                        </label>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })()}
-
-          {/* ── KİMLİK TAKLİDİ ── */}
-          {/* ── FATURA PLANLAR ── */}
-          {activeTab === 'fatura-planlar' && (
-            <div className="space-y-4 max-w-3xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-semibold text-gray-900">Abonelik Planları</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Platform'da sunulan paketler</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { key: 'trial', label: 'Deneme', price: '₺0', period: '14 gün', color: 'border-gray-200', badge: 'bg-gray-100 text-gray-600', features: ['Tüm özellikler açık', '1 şube', '3 kullanıcı', '500 lead/ay', 'Destek yok'] },
-                  { key: 'starter', label: 'Starter', price: '₺990', period: '/ay', color: 'border-indigo-200', badge: 'bg-indigo-50 text-indigo-700', features: ['1 şube', '3 kullanıcı', '500 lead/ay', 'Email destek', 'Meta entegrasyon'] },
-                  { key: 'pro', label: 'Pro', price: '₺2.490', period: '/ay', color: 'border-violet-200', badge: 'bg-violet-50 text-violet-700', features: ['5 şube', '15 kullanıcı', 'Sınırsız lead', 'Öncelikli destek', 'Tüm entegrasyonlar'] },
-                  { key: 'enterprise', label: 'Enterprise', price: '₺4.990+', period: '/ay', color: 'border-amber-200', badge: 'bg-amber-50 text-amber-700', features: ['Sınırsız şube', 'Sınırsız kullanıcı', 'Sınırsız lead', '7/24 destek', 'AI rapor dahil', 'Özel entegrasyon'] },
-                ].map(plan => (
-                  <div key={plan.key} className={`bg-white rounded-2xl border-2 ${plan.color} p-5`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${plan.badge}`}>{plan.label}</span>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-gray-900">{plan.price}</p>
-                        <p className="text-xs text-gray-400">{plan.period}</p>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      {plan.features.map(f => (
-                        <div key={f} className="flex items-center gap-2">
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 6l3 3 6-6" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          <span className="text-xs text-gray-600">{f}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-                      <span className="text-xs text-gray-400">{customers.filter(c => c.subscriptions?.[0]?.plan === plan.key).length} firma</span>
-                      <span className="text-xs font-semibold text-gray-500">aktif</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {/* ── FATURA ABONELİKLER ── */}
-          {activeTab === 'fatura-abonelikler' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-4 gap-3">
-                {[
-                  { label: 'Toplam Abonelik', value: customers.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                  { label: 'Trial', value: customers.filter(c => c.subscriptions?.[0]?.plan === 'trial').length, color: 'text-gray-600', bg: 'bg-gray-100' },
-                  { label: 'Starter', value: customers.filter(c => c.subscriptions?.[0]?.plan === 'starter').length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                  { label: 'Pro+', value: customers.filter(c => ['pro','enterprise'].includes(c.subscriptions?.[0]?.plan)).length, color: 'text-violet-600', bg: 'bg-violet-50' },
-                ].map(c => (
-                  <div key={c.label} className="bg-white rounded-xl border border-gray-100 px-4 py-3">
-                    <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{c.label}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-                  <div className="grid grid-cols-6 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    <div className="col-span-2">Firma</div>
-                    <div>Plan</div>
-                    <div className="text-right">Aylık (₺)</div>
-                    <div className="text-right">Şube</div>
-                    <div className="text-right">Durum</div>
-                  </div>
-                </div>
-                {customers.map((c, i) => {
-                  const sub = c.subscriptions?.[0]
-                  const cBranchCount = branches.filter((b: any) => b.owner_id === c.id).length
-                  return (
-                    <div key={c.id} className={`px-5 py-3.5 grid grid-cols-6 gap-2 items-center ${i < customers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
-                      <div className="col-span-2 flex items-center gap-2 min-w-0">
-                        <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                          <span className="text-indigo-600 text-xs font-bold">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{c.company_name || c.full_name}</p>
-                          <p className="text-xs text-gray-400 truncate">{c.email}</p>
-                        </div>
-                      </div>
-                      <div>
-                        <select
-                          value={sub?.plan || 'trial'}
-                          onChange={async (e) => {
-                            if (sub?.id) {
-                              await supabase.from('subscriptions').update({ plan: e.target.value }).eq('id', sub.id)
-                            } else {
-                              await supabase.from('subscriptions').insert({ owner_id: c.id, plan: e.target.value, status: 'active', monthly_fee: 0, per_branch_fee: 0 })
-                            }
-                            loadData()
-                          }}
-                          className={`text-xs font-semibold px-2 py-1 rounded-lg border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                            sub?.plan === 'enterprise' ? 'bg-amber-50 text-amber-700' :
-                            sub?.plan === 'pro' ? 'bg-violet-50 text-violet-700' :
-                            sub?.plan === 'starter' ? 'bg-indigo-50 text-indigo-700' :
-                            'bg-gray-100 text-gray-500'
-                          }`}>
-                          <option value="trial">trial</option>
-                          <option value="starter">starter</option>
-                          <option value="pro">pro</option>
-                          <option value="enterprise">enterprise</option>
-                        </select>
-                      </div>
-                      <div className="text-right">
-                        <input
-                          type="number"
-                          defaultValue={sub?.monthly_fee || 0}
-                          onBlur={async (e) => {
-                            if (sub?.id) {
-                              await supabase.from('subscriptions').update({ monthly_fee: parseFloat(e.target.value) || 0 }).eq('id', sub.id)
-                              loadData()
-                            }
-                          }}
-                          className="w-20 text-right text-sm font-semibold text-gray-900 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-indigo-500 focus:outline-none transition-colors"
-                        />
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm text-gray-500">{cBranchCount}</span>
-                      </div>
-                      <div className="text-right">
-                        <button
-                          onClick={() => handleToggleActive(c)}
-                          className={`text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
-                            c.is_active !== false
-                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                          }`}>
-                          {c.is_active !== false ? 'Aktif' : 'Pasif'}
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ── KİMLİK TAKLİDİ ── */}
-          {activeTab === 'destek-impersonation' && (
-            <div className="space-y-4">
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-                <span className="text-amber-500 flex-shrink-0 mt-0.5">⚠️</span>
-                <div>
-                  <p className="text-sm font-semibold text-amber-800">Dikkat</p>
-                  <p className="text-xs text-amber-700 mt-0.5">Kimlik taklidi yetkisi yalnızca destek amaçlıdır. Tüm işlemler loglanır.</p>
-                </div>
-              </div>
-              <div className="bg-white rounded-2xl border border-gray-100">
-                {customers.map((c, i) => (
-                  <div key={c.id} className={`px-5 py-3.5 flex items-center justify-between ${i < customers.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                        <span className="text-indigo-600 text-xs font-bold">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{c.company_name || c.full_name}</p>
-                        <p className="text-xs text-gray-400">{c.email}</p>
-                      </div>
-                    </div>
-                    <Btn variant="secondary" size="sm">Giriş Yap</Btn>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── DESTEK TALEPLERİ ── */}
-          {activeTab === 'destek-talepler' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { label: 'Açık Talepler', value: 0, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
-                  { label: 'İşlemde', value: 0, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
-                  { label: 'Çözüldü', value: 0, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-                ].map(c => (
-                  <div key={c.label} className={`${c.bg} border ${c.border} rounded-2xl p-4 text-center`}>
-                    <p className={`text-2xl font-bold ${c.color}`}>{c.value}</p>
-                    <p className="text-xs text-gray-500 mt-1">{c.label}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
-                <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl">◌</div>
-                <p className="text-gray-500 text-sm font-medium">Destek talep sistemi</p>
-                <p className="text-gray-400 text-xs mt-1">Müşterilerden gelen talepler burada görünecek.</p>
-              </div>
-            </div>
-          )}
-
-          {/* ── GÜVENLİK LOGLAR ── */}
-         {activeTab === 'guvenlik-loglar' && (
-  <div className="space-y-4">
-    <div>
-      <h2 className="text-base font-semibold text-gray-900">Denetim Logları</h2>
-      <p className="text-xs text-gray-400 mt-0.5">Platforma kayıtlı tüm kullanıcılar</p>
-    </div>
-
-    {/* Özet */}
-    <div className="grid grid-cols-4 gap-3">
-      {[
-        { label: 'Toplam Kullanıcı', value: allUsers.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-        { label: 'Firma', value: customers.length, color: 'text-violet-600', bg: 'bg-violet-50' },
-        { label: 'Reklamcı', value: advertisers.length, color: 'text-amber-600', bg: 'bg-amber-50' },
-        { label: 'Satışçı', value: allUsers.filter(u => ['team','agent'].includes(u.role)).length, color: 'text-blue-600', bg: 'bg-blue-50' },
-      ].map(c => (
-        <div key={c.label} className={`${c.bg} rounded-xl px-4 py-3`}>
-          <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
-          <p className="text-xs text-gray-500 mt-0.5">{c.label}</p>
-        </div>
-      ))}
-    </div>
-
-    {/* Kullanıcı listesi */}
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-      <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-        <div className="grid grid-cols-4 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          <div className="col-span-2">Kullanıcı</div>
-          <div>Rol</div>
-          <div className="text-right">Durum</div>
-        </div>
-      </div>
-      {allUsers.map((u, i) => (
-        <div key={u.id} className={`px-5 py-3 grid grid-cols-4 gap-2 items-center ${i < allUsers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
-          <div className="col-span-2 flex items-center gap-2 min-w-0">
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold
-              ${u.role === 'super_admin' ? 'bg-rose-100 text-rose-600' :
-                u.role === 'customer' ? 'bg-indigo-100 text-indigo-600' :
-                u.role === 'advertiser' ? 'bg-amber-100 text-amber-600' :
-                'bg-blue-100 text-blue-600'}`}>
-              {(u.full_name || u.email || 'U').charAt(0)}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{u.full_name || '-'}</p>
-              <p className="text-xs text-gray-400 truncate">{u.email}</p>
-            </div>
-          </div>
-          <div>
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full
-              ${u.role === 'super_admin' ? 'bg-rose-50 text-rose-600' :
-                u.role === 'customer' ? 'bg-indigo-50 text-indigo-600' :
-                u.role === 'advertiser' ? 'bg-amber-50 text-amber-600' :
-                'bg-blue-50 text-blue-600'}`}>
-              {u.role === 'super_admin' ? 'Admin' :
-               u.role === 'customer' ? 'Firma' :
-               u.role === 'advertiser' ? 'Reklamcı' :
-               u.role === 'team' || u.role === 'agent' ? 'Satışçı' : u.role}
-            </span>
-          </div>
-          <div className="text-right">
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
-              {u.is_active !== false ? 'Aktif' : 'Pasif'}
-            </span>
-            <p className="text-xs text-gray-300 mt-0.5">{new Date(u.created_at).toLocaleDateString('tr-TR')}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
           {/* ── BOŞLAR ── */}
         {!['dashboard','firma-listesi','firma-onboarding','reklamci-listesi','reklamci-ekle','fatura-planlar','fatura-abonelikler','guvenlik-loglar'].includes(activeTab) && (
             <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
