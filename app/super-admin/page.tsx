@@ -1620,7 +1620,6 @@ const advRes = await fetch('/api/get-advertisers', {
                   status: 'pending',
                   due_date: custInvoiceDue || null,
                   note: custInvoiceNote || null,
-                  issued_by_role: 'superadmin',
                 })
                 setCustInvoiceAmount(''); setCustInvoiceNote(''); setCustInvoiceDue('')
                 setCustInvoiceSaving(false)
