@@ -233,6 +233,7 @@ const customersWithSubs = (customersData || []).map(c => ({
   ...c,
   subscriptions: (subsData || []).filter(s => s.owner_id === c.id)
 }))
+console.log('customers:', customersWithSubs.length, customersWithSubs)
 setCustomers(customersWithSubs)
     setCustomers(customersData || [])
     const { data: branchesData } = await supabase.from('branches').select('*')
@@ -333,11 +334,15 @@ const advRes = await fetch('/api/get-advertisers', {
     setNewPassword(''); setNewCompany(''); setNewSector(''); setNewPerBranchFee(''); setNewMonthlyFee(''); setNewUserType('customer')
   }
 
-  const filteredCustomers = customers.filter(c =>
-    c.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.email?.toLowerCase().includes(searchQuery.toLowerCase())
+ const filteredCustomers = customers.filter(c => {
+  if (!searchQuery) return true
+  const q = searchQuery.toLowerCase()
+  return (
+    c.full_name?.toLowerCase().includes(q) ||
+    c.company_name?.toLowerCase().includes(q) ||
+    c.email?.toLowerCase().includes(q)
   )
+})
 
   const advertiserLinkedProfileIds = new Set<string>()
   advertisers.forEach((a: any) => {
