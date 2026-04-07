@@ -705,7 +705,62 @@ const advRes = await fetch('/api/get-advertisers', {
           </div>
         </div>
       </div>
-
+{/* Onay Bekleyenler */}
+{(() => {
+  const awaitingApproval = invoices.filter(i => i.status === 'awaiting_approval')
+  if (awaitingApproval.length === 0) return null
+  return (
+    <div>
+      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+        Ödeme Onayı Bekleyenler
+        <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">{awaitingApproval.length}</span>
+      </h2>
+      <div className="bg-white rounded-2xl border border-indigo-200 overflow-hidden">
+        <div className="px-5 py-3 bg-indigo-50 border-b border-indigo-100 flex items-center gap-2">
+          <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+          <p className="text-xs font-semibold text-indigo-700">Müşteri ödeme yaptığını bildirdi — onay bekleniyor</p>
+        </div>
+        {awaitingApproval.map((inv, i) => {
+          const owner = allUsers.find(u => u.id === inv.owner_id)
+          return (
+            <div key={inv.id} className={`px-5 py-4 flex items-center gap-4 ${i < awaitingApproval.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-indigo-50/20 transition-colors`}>
+              <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                <span className="text-indigo-600 font-bold text-sm">{(owner?.company_name || owner?.full_name || '?').charAt(0)}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900">{owner?.company_name || owner?.full_name || owner?.email || 'Bilinmiyor'}</p>
+                <p className="text-xs text-gray-400">{owner?.email}</p>
+                {inv.note && <p className="text-xs text-gray-500 mt-0.5">Not: {inv.note}</p>}
+                {inv.due_date && <p className="text-xs text-gray-400">Vade: {new Date(inv.due_date).toLocaleDateString('tr-TR')}</p>}
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className="text-base font-bold text-gray-900 mb-2">₺{inv.total_amount?.toLocaleString()}</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      await supabase.from('invoices').update({ status: 'pending' }).eq('id', inv.id)
+                      await loadData()
+                    }}
+                    className="text-xs bg-gray-50 hover:bg-gray-100 text-gray-500 font-medium px-3 py-1.5 rounded-lg border border-gray-200 transition-colors">
+                    Reddet
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await supabase.from('invoices').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', inv.id)
+                      await loadData()
+                    }}
+                    className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors">
+                    ✓ Onayla
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+})()}
       {/* Bekleyen & Gecikmiş */}
       {(overdueInvoices.length > 0 || pendingInvoices.length > 0) && (
         <div>
