@@ -528,7 +528,244 @@ const advRes = await fetch('/api/get-advertisers', {
       <main className="p-6 max-w-6xl mx-auto">
 
           {/* ── DASHBOARD ── */}
-          {activeTab === 'dashboard' && (
+          {activeTab === 'dashboard' && (() => {
+  // ── FİNANS HESAPLAMALARI ──────────────────────────────
+
+  // Direkt müşteri aylık geliri
+  const directCustomerRevenue = directCustomers.reduce((sum, c) => {
+    const sub = c.subscriptions?.[0]
+    return sum + (sub?.monthly_fee || 0)
+  }, 0)
+
+  // Reklamcı aylık geliri
+  const advertiserRevenue = advertisers.reduce((sum, a) => {
+    const sub = advSubs.find(s => s.advertiser_id === a.id)
+    const clientCount = a.advertiser_clients?.length || 0
+    return sum + (sub?.monthly_fee || 0) + (clientCount * (sub?.per_client_fee || 0))
+  }, 0)
+
+  const totalMRR = directCustomerRevenue + advertiserRevenue
+
+  const pendingTotal = invoices.filter(i => i.status === 'pending').reduce((s, i) => s + (i.total_amount || 0), 0)
+  const paidTotal = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.total_amount || 0), 0)
+
+  // Gecikmiş faturalar
+  const today = new Date()
+  const overdueInvoices = invoices.filter(i =>
+    i.status === 'pending' && i.due_date && new Date(i.due_date) < today
+  )
+  const pendingInvoices = invoices.filter(i =>
+    i.status === 'pending' && (!i.due_date || new Date(i.due_date) >= today)
+  )
+
+  return (
+    <div className="space-y-6">
+
+      {/* ── MEVCUT KARŞILAMA KARTI ── */}
+      <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-indigo-950 rounded-2xl p-6 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+        <div className="absolute -right-8 -top-8 w-40 h-40 bg-indigo-500/10 rounded-full" />
+        <div className="flex items-start justify-between relative">
+          <div>
+            <p className="text-gray-400 text-sm">Hoş geldin,</p>
+            <h1 className="text-2xl font-bold mt-0.5">{profile?.full_name}</h1>
+            <p className="text-gray-500 text-sm mt-1">Platform genel durumu · {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}</p>
+          </div>
+          <span className="bg-rose-500/20 text-rose-400 text-xs font-semibold px-3 py-1.5 rounded-full border border-rose-500/20">Super Admin</span>
+        </div>
+        <div className="flex gap-8 mt-5 pt-5 border-t border-white/10 relative">
+          <div><p className="text-3xl font-bold">{customers.length}</p><p className="text-gray-500 text-xs mt-0.5">Firma</p></div>
+          <div><p className="text-3xl font-bold">{advertisers.length}</p><p className="text-amber-400 text-xs mt-0.5">Reklamcı</p></div>
+          <div><p className="text-3xl font-bold">{branches.length}</p><p className="text-gray-500 text-xs mt-0.5">Şube</p></div>
+          <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-gray-500 text-xs mt-0.5">Potansiyel Müşteri</p></div>
+          <div><p className="text-3xl font-bold">{allUsers.length}</p><p className="text-gray-500 text-xs mt-0.5">Kullanıcı</p></div>
+        </div>
+      </div>
+
+      {/* ── BÖLÜM 1: FİNANS ÖZET KARTLAR ── */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Finansal Özet</h2>
+        <div className="grid grid-cols-5 gap-3">
+          {[
+            { label: 'Toplam Aylık Tekrarlayan Gelir', value: `₺${totalMRR.toLocaleString()}`, sub: 'Tüm kaynaklar', color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
+            { label: 'Firma Geliri', value: `₺${directCustomerRevenue.toLocaleString()}`, sub: `${directCustomers.length} direkt firma`, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
+            { label: 'Reklamcı Geliri', value: `₺${advertiserRevenue.toLocaleString()}`, sub: `${advertisers.length} reklamcı`, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
+            { label: 'Bekleyen Tahsilat', value: `₺${pendingTotal.toLocaleString()}`, sub: `${invoices.filter(i => i.status === 'pending').length} fatura`, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
+            { label: 'Tahsil Edilen', value: `₺${paidTotal.toLocaleString()}`, sub: 'Tüm zamanlar', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+          ].map(card => (
+            <div key={card.label} className={`${card.bg} border ${card.border} rounded-2xl p-4`}>
+              <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
+              <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── BÖLÜM 2: FİRMALAR MALİ TABLOSU ── */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Firmalar Mali Durumu</h2>
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+            <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <div className="col-span-2">Firma</div>
+              <div>Plan</div>
+              <div className="text-right">Aylık Ücret</div>
+              <div className="text-right">Son Fatura</div>
+            </div>
+          </div>
+          {directCustomers.length === 0 ? (
+            <div className="p-8 text-center text-sm text-gray-400">Direkt firma yok.</div>
+          ) : directCustomers.map((c, i) => {
+            const sub = c.subscriptions?.[0]
+            const lastInvoice = invoices.filter(inv => inv.owner_id === c.id).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+            const planCfg: any = {
+              starter: 'bg-gray-100 text-gray-600',
+              pro: 'bg-blue-50 text-blue-700',
+              enterprise: 'bg-purple-50 text-purple-700',
+              trial: 'bg-gray-100 text-gray-400',
+            }
+            return (
+              <div key={c.id} className={`px-5 py-3.5 grid grid-cols-5 gap-2 items-center ${i < directCustomers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                <div className="col-span-2 flex items-center gap-2 min-w-0">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                    <span className="text-indigo-600 text-xs font-bold">{(c.company_name || c.full_name || 'F').charAt(0)}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{c.company_name || c.full_name}</p>
+                    <p className="text-xs text-gray-400 truncate">{c.email}</p>
+                  </div>
+                </div>
+                <div>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${planCfg[sub?.plan || 'trial'] || 'bg-gray-100 text-gray-500'}`}>
+                    {sub?.plan || 'trial'}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-900">₺{(sub?.monthly_fee || 0).toLocaleString()}</p>
+                </div>
+                <div className="text-right">
+                  {!lastInvoice ? (
+                    <span className="text-xs text-gray-300">Fatura yok</span>
+                  ) : lastInvoice.status === 'paid' ? (
+                    <span className="text-xs bg-emerald-50 text-emerald-600 font-medium px-2 py-0.5 rounded-full">✓ Ödendi</span>
+                  ) : (
+                    <span className="text-xs bg-amber-50 text-amber-600 font-medium px-2 py-0.5 rounded-full">Bekliyor</span>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ── BÖLÜM 3: REKLAMCILAR MALİ TABLOSU ── */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Reklamcılar Mali Durumu</h2>
+        <div className="bg-white rounded-2xl border border-amber-100 overflow-hidden">
+          <div className="px-5 py-3 bg-amber-50/50 border-b border-amber-100">
+            <div className="grid grid-cols-6 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <div className="col-span-2">Reklamcı</div>
+              <div className="text-right">Sabit Ücret</div>
+              <div className="text-right">Müşteri</div>
+              <div className="text-right">Müşteri Başı</div>
+              <div className="text-right">Toplam Aylık</div>
+            </div>
+          </div>
+          {advertisers.length === 0 ? (
+            <div className="p-8 text-center text-sm text-gray-400">Reklamcı yok.</div>
+          ) : advertisers.map((a, i) => {
+            const sub = advSubs.find(s => s.advertiser_id === a.id)
+            const clientCount = a.advertiser_clients?.length || 0
+            const monthlyTotal = (sub?.monthly_fee || 0) + clientCount * (sub?.per_client_fee || 0)
+            const lastInvoice = invoices.filter(inv => inv.owner_id === a.id).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+            return (
+              <div key={a.id} className={`px-5 py-3.5 grid grid-cols-6 gap-2 items-center ${i < advertisers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-amber-50/20 transition-colors`}>
+                <div className="col-span-2 flex items-center gap-2 min-w-0">
+                  <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                    <span className="text-amber-600 text-xs font-bold">{(a.company_name || a.full_name || 'R').charAt(0)}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{a.company_name || a.full_name}</p>
+                    <p className="text-xs text-gray-400 truncate">{a.email}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-700">₺{(sub?.monthly_fee || 0).toLocaleString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-700">{clientCount}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-700">₺{(sub?.per_client_fee || 0).toLocaleString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-amber-600">₺{monthlyTotal.toLocaleString()}</p>
+                  {lastInvoice && (
+                    <span className={`text-xs font-medium ${lastInvoice.status === 'paid' ? 'text-emerald-500' : 'text-amber-500'}`}>
+                      {lastInvoice.status === 'paid' ? '✓ Ödendi' : 'Bekliyor'}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+          {/* Toplam satırı */}
+          <div className="px-5 py-3 bg-amber-50 border-t border-amber-100 grid grid-cols-6 gap-2">
+            <div className="col-span-5 text-right text-xs font-semibold text-gray-500">Toplam Aylık Reklamcı Geliri</div>
+            <div className="text-right text-sm font-bold text-amber-700">₺{advertiserRevenue.toLocaleString()}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── BÖLÜM 4: GECİKMİŞ / BEKLEYENLER ── */}
+      {(overdueInvoices.length > 0 || pendingInvoices.length > 0) && (
+        <div>
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Bekleyen & Gecikmiş Faturalar</h2>
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            {overdueInvoices.length > 0 && (
+              <div className="px-5 py-3 bg-red-50 border-b border-red-100 flex items-center gap-2">
+                <span className="w-2 h-2 bg-red-400 rounded-full" />
+                <p className="text-xs font-semibold text-red-600">{overdueInvoices.length} gecikmiş fatura</p>
+              </div>
+            )}
+            {[...overdueInvoices, ...pendingInvoices].map((inv, i) => {
+              const isOverdue = inv.due_date && new Date(inv.due_date) < today
+              const daysLate = isOverdue ? Math.floor((today.getTime() - new Date(inv.due_date).getTime()) / (1000 * 60 * 60 * 24)) : 0
+              const owner = allUsers.find(u => u.id === inv.owner_id)
+              return (
+                <div key={inv.id} className={`px-5 py-3.5 flex items-center gap-4 ${i < overdueInvoices.length + pendingInvoices.length - 1 ? 'border-b border-gray-50' : ''} ${isOverdue ? 'bg-red-50/30' : ''}`}>
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${isOverdue ? 'bg-red-100' : 'bg-amber-50'}`}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d="M7 4v4M7 10v.5" stroke={isOverdue ? '#e11d48' : '#d97706'} strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{owner?.company_name || owner?.full_name || owner?.email || 'Bilinmiyor'}</p>
+                    {inv.due_date && (
+                      <p className="text-xs text-gray-400">Vade: {new Date(inv.due_date).toLocaleDateString('tr-TR')}</p>
+                    )}
+                    {isOverdue && (
+                      <p className="text-xs text-red-500 font-medium">{daysLate} gün gecikmiş</p>
+                    )}
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-bold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isOverdue ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
+                      {isOverdue ? 'Gecikmiş' : 'Bekliyor'}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+    </div>
+  )
+})()}
+            
             <div className="space-y-6">
               <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-indigo-950 rounded-2xl p-6 text-white relative overflow-hidden">
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
@@ -624,8 +861,7 @@ const advRes = await fetch('/api/get-advertisers', {
                 </div>
               </div>
             </div>
-          )}
-
+      
           {/* ── FİRMA LİSTESİ ── */}
           {activeTab === 'firma-listesi' && (
             <div className="space-y-4">
