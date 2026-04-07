@@ -10,12 +10,14 @@ const menuStructure = [
     key: 'firmalar', label: 'Firmalar', icon: '◈', children: [
       { key: 'firma-listesi', label: 'Firma Listesi' },
       { key: 'firma-onboarding', label: 'Onboarding' },
+      { key: 'firma-mali', label: 'Mali Yönetim' },
     ]
   },
   {
     key: 'reklamcilar', label: 'Reklamcılar', icon: '◇', children: [
       { key: 'reklamci-listesi', label: 'Reklamcı Listesi' },
       { key: 'reklamci-ekle', label: 'Reklamcı Ekle' },
+      { key: 'reklamci-mali', label: 'Mali Yönetim' },
     ]
   },
   {
@@ -26,7 +28,6 @@ const menuStructure = [
   },
   { key: 'guvenlik-loglar', label: 'Denetim Logları', icon: '◐' },
 ]
-
 // ─── SHARED ───────────────────────────────────────────────────────────────────
 
 const Modal = ({ open, onClose, title, subtitle, children, size = 'md' }: any) => {
@@ -1269,6 +1270,243 @@ const advRes = await fetch('/api/get-advertisers', {
               </div>
             </div>
           )}
+          {/* ── FİRMA MALİ YÖNETİM ── */}
+{activeTab === 'firma-mali' && (
+  <div className="space-y-5">
+    <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-base font-semibold text-gray-900">Firma Mali Yönetim</h2>
+        <p className="text-xs text-gray-400 mt-0.5">Tüm firmaların fatura ve ödeme geçmişi</p>
+      </div>
+      <button
+        onClick={async () => {
+          const now = new Date()
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+          let created = 0
+          for (const c of directCustomers) {
+            const sub = c.subscriptions?.[0]
+            if (!sub?.monthly_fee || sub.monthly_fee <= 0) continue
+            const { data: existing } = await supabase
+              .from('invoices')
+              .select('id')
+              .eq('owner_id', c.id)
+              .gte('created_at', monthStart)
+              .limit(1)
+            if (existing && existing.length > 0) continue
+            await supabase.from('invoices').insert({
+              owner_id: c.id,
+              total_amount: sub.monthly_fee,
+              status: 'pending',
+              due_date: new Date(now.getFullYear(), now.getMonth(), 15).toISOString().split('T')[0],
+              branch_count: 0,
+              per_branch_fee: 0,
+              note: `${now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} aylık hizmet bedeli`,
+            })
+            created++
+          }
+          alert(`${created} firma için fatura oluşturuldu.`)
+          loadData()
+        }}
+        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+        Bu Ay Faturaları Oluştur
+      </button>
+    </div>
+
+    {/* Özet */}
+    <div className="grid grid-cols-4 gap-3">
+      {[
+        { label: 'Toplam Fatura', value: invoices.filter(i => directCustomers.some(c => c.id === i.owner_id)).length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+        { label: 'Bekleyen', value: invoices.filter(i => i.status === 'pending' && directCustomers.some(c => c.id === i.owner_id)).length, color: 'text-amber-600', bg: 'bg-amber-50' },
+        { label: 'Onay Bekliyor', value: invoices.filter(i => i.status === 'awaiting_approval' && directCustomers.some(c => c.id === i.owner_id)).length, color: 'text-blue-600', bg: 'bg-blue-50' },
+        { label: 'Ödendi', value: invoices.filter(i => i.status === 'paid' && directCustomers.some(c => c.id === i.owner_id)).length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+      ].map(c => (
+        <div key={c.label} className={`${c.bg} rounded-xl px-4 py-3`}>
+          <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{c.label}</p>
+        </div>
+      ))}
+    </div>
+
+    {/* Fatura listesi */}
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+        <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          <div className="col-span-2">Firma</div>
+          <div className="text-right">Tutar</div>
+          <div className="text-center">Durum</div>
+          <div className="text-right">İşlem</div>
+        </div>
+      </div>
+      {invoices.filter(i => directCustomers.some(c => c.id === i.owner_id)).length === 0 ? (
+        <div className="p-12 text-center"><p className="text-gray-400 text-sm">Henüz fatura yok.</p></div>
+      ) : invoices.filter(i => directCustomers.some(c => c.id === i.owner_id)).map((inv, i, arr) => {
+        const owner = directCustomers.find(c => c.id === inv.owner_id)
+        const statusCfg: any = {
+          pending: { label: 'Bekliyor', color: 'bg-amber-50 text-amber-700' },
+          awaiting_approval: { label: 'Onay Bekliyor', color: 'bg-blue-50 text-blue-700' },
+          paid: { label: 'Ödendi', color: 'bg-emerald-50 text-emerald-700' },
+        }
+        const st = statusCfg[inv.status] || statusCfg.pending
+        return (
+          <div key={inv.id} className={`px-5 py-3.5 grid grid-cols-5 gap-2 items-center ${i < arr.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+            <div className="col-span-2 flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                <span className="text-indigo-600 text-xs font-bold">{(owner?.company_name || owner?.full_name || '?').charAt(0)}</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{owner?.company_name || owner?.full_name}</p>
+                <p className="text-xs text-gray-400">{inv.note || new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-bold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
+            </div>
+            <div className="text-center">
+              <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${st.color}`}>{st.label}</span>
+            </div>
+            <div className="text-right">
+              {inv.status === 'awaiting_approval' && (
+                <div className="flex gap-1 justify-end">
+                  <button onClick={async () => { await supabase.from('invoices').update({ status: 'pending' }).eq('id', inv.id); loadData() }}
+                    className="text-xs bg-gray-50 hover:bg-gray-100 text-gray-500 font-medium px-2 py-1 rounded-lg border border-gray-200 transition-colors">Reddet</button>
+                  <button onClick={async () => { await supabase.from('invoices').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', inv.id); loadData() }}
+                    className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-2 py-1 rounded-lg transition-colors">Onayla</button>
+                </div>
+              )}
+              {inv.status === 'pending' && (
+                <span className="text-xs text-gray-400">Ödeme bekleniyor</span>
+              )}
+              {inv.status === 'paid' && (
+                <span className="text-xs text-emerald-600 font-medium">✓ Tamamlandı</span>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  </div>
+)}
+
+{/* ── REKLAMCI MALİ YÖNETİM ── */}
+{activeTab === 'reklamci-mali' && (
+  <div className="space-y-5">
+    <div className="flex items-center justify-between">
+      <div>
+        <h2 className="text-base font-semibold text-gray-900">Reklamcı Mali Yönetim</h2>
+        <p className="text-xs text-gray-400 mt-0.5">Tüm reklamcıların fatura ve ödeme geçmişi</p>
+      </div>
+      <button
+        onClick={async () => {
+          const now = new Date()
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+          let created = 0
+          for (const a of advertisers) {
+            const sub = advSubs.find(s => s.advertiser_id === a.id)
+            const clientCount = a.advertiser_clients?.length || 0
+            const monthlyTotal = (sub?.monthly_fee || 0) + clientCount * (sub?.per_client_fee || 0)
+            if (monthlyTotal <= 0) continue
+            const { data: existing } = await supabase
+              .from('invoices')
+              .select('id')
+              .eq('owner_id', a.id)
+              .gte('created_at', monthStart)
+              .limit(1)
+            if (existing && existing.length > 0) continue
+            await supabase.from('invoices').insert({
+              owner_id: a.id,
+              total_amount: monthlyTotal,
+              status: 'pending',
+              due_date: new Date(now.getFullYear(), now.getMonth(), 15).toISOString().split('T')[0],
+              branch_count: clientCount,
+              per_branch_fee: sub?.per_client_fee || 0,
+              note: `${now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} aylık hizmet bedeli`,
+            })
+            created++
+          }
+          alert(`${created} reklamcı için fatura oluşturuldu.`)
+          loadData()
+        }}
+        className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-xl transition-colors">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+        Bu Ay Faturaları Oluştur
+      </button>
+    </div>
+
+    {/* Özet */}
+    <div className="grid grid-cols-4 gap-3">
+      {[
+        { label: 'Toplam Fatura', value: invoices.filter(i => advertisers.some(a => a.id === i.owner_id)).length, color: 'text-amber-600', bg: 'bg-amber-50' },
+        { label: 'Bekleyen', value: invoices.filter(i => i.status === 'pending' && advertisers.some(a => a.id === i.owner_id)).length, color: 'text-rose-600', bg: 'bg-rose-50' },
+        { label: 'Onay Bekliyor', value: invoices.filter(i => i.status === 'awaiting_approval' && advertisers.some(a => a.id === i.owner_id)).length, color: 'text-blue-600', bg: 'bg-blue-50' },
+        { label: 'Ödendi', value: invoices.filter(i => i.status === 'paid' && advertisers.some(a => a.id === i.owner_id)).length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+      ].map(c => (
+        <div key={c.label} className={`${c.bg} rounded-xl px-4 py-3`}>
+          <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{c.label}</p>
+        </div>
+      ))}
+    </div>
+
+    {/* Fatura listesi */}
+    <div className="bg-white rounded-2xl border border-amber-100 overflow-hidden">
+      <div className="px-5 py-3 bg-amber-50/50 border-b border-amber-100">
+        <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          <div className="col-span-2">Reklamcı</div>
+          <div className="text-right">Tutar</div>
+          <div className="text-center">Durum</div>
+          <div className="text-right">İşlem</div>
+        </div>
+      </div>
+      {invoices.filter(i => advertisers.some(a => a.id === i.owner_id)).length === 0 ? (
+        <div className="p-12 text-center"><p className="text-gray-400 text-sm">Henüz fatura yok.</p></div>
+      ) : invoices.filter(i => advertisers.some(a => a.id === i.owner_id)).map((inv, i, arr) => {
+        const owner = advertisers.find(a => a.id === inv.owner_id)
+        const statusCfg: any = {
+          pending: { label: 'Bekliyor', color: 'bg-amber-50 text-amber-700' },
+          awaiting_approval: { label: 'Onay Bekliyor', color: 'bg-blue-50 text-blue-700' },
+          paid: { label: 'Ödendi', color: 'bg-emerald-50 text-emerald-700' },
+        }
+        const st = statusCfg[inv.status] || statusCfg.pending
+        return (
+          <div key={inv.id} className={`px-5 py-3.5 grid grid-cols-5 gap-2 items-center ${i < arr.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-amber-50/20 transition-colors`}>
+            <div className="col-span-2 flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                <span className="text-amber-600 text-xs font-bold">{(owner?.company_name || owner?.full_name || '?').charAt(0)}</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{owner?.company_name || owner?.full_name}</p>
+                <p className="text-xs text-gray-400">{inv.note || new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-bold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
+            </div>
+            <div className="text-center">
+              <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${st.color}`}>{st.label}</span>
+            </div>
+            <div className="text-right">
+              {inv.status === 'awaiting_approval' && (
+                <div className="flex gap-1 justify-end">
+                  <button onClick={async () => { await supabase.from('invoices').update({ status: 'pending' }).eq('id', inv.id); loadData() }}
+                    className="text-xs bg-gray-50 hover:bg-gray-100 text-gray-500 font-medium px-2 py-1 rounded-lg border border-gray-200 transition-colors">Reddet</button>
+                  <button onClick={async () => { await supabase.from('invoices').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', inv.id); loadData() }}
+                    className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-2 py-1 rounded-lg transition-colors">Onayla</button>
+                </div>
+              )}
+              {inv.status === 'pending' && (
+                <span className="text-xs text-gray-400">Ödeme bekleniyor</span>
+              )}
+              {inv.status === 'paid' && (
+                <span className="text-xs text-emerald-600 font-medium">✓ Tamamlandı</span>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  </div>
+)}
           {/* ── BOŞLAR ── */}
         {!['dashboard','firma-listesi','firma-onboarding','reklamci-listesi','reklamci-ekle','fatura-planlar','fatura-abonelikler','guvenlik-loglar'].includes(activeTab) && (
             <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
@@ -1430,14 +1668,14 @@ const advRes = await fetch('/api/get-advertisers', {
                     <button onClick={async () => {
                       if (!advInvoiceAmount) return
                       setAdvInvoiceSaving(true)
-                      await supabase.from('invoices').insert({
-                        owner_id: selectedAdvertiser.id,
-                        total_amount: parseFloat(advInvoiceAmount),
+                     await supabase.from('invoices').insert({
+                        owner_id: selectedCustomer.id,
+                        total_amount: parseFloat(custInvoiceAmount),
                         status: 'pending',
-                        due_date: advInvoiceDue || null,
-                        note: advInvoiceNote || null,
-                        branch_count: clientCount,
-                        per_branch_fee: sub?.per_client_fee || 0,
+                        due_date: custInvoiceDue || null,
+                        note: custInvoiceNote || null,
+                        branch_count: 0,
+                        per_branch_fee: 0,
                       })
                       setAdvInvoiceAmount(''); setAdvInvoiceNote(''); setAdvInvoiceDue('')
                       setAdvInvoiceSaving(false)
