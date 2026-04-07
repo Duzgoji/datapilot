@@ -219,12 +219,13 @@ export default function SuperAdminPage() {
     const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (profileData?.role !== 'super_admin') { router.push('/login'); return }
     setProfile(profileData)
-    const { data: customersData } = await supabase
+   const { data: customersData, error: customersError } = await supabase
   .from('profiles')
   .select('*, customers(customer_number)')
   .eq('role', 'customer')
   .order('created_at', { ascending: false })
 
+console.log('customersData:', customersData, 'error:', customersError)
 const { data: subsData } = await supabase
   .from('subscriptions')
   .select('*')
