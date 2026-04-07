@@ -19,30 +19,12 @@ const menuStructure = [
     ]
   },
   {
-    key: 'kullanicilar', label: 'Kullanıcılar', icon: '◉', children: [
-      { key: 'kullanici-listesi', label: 'Tüm Kullanıcılar' },
-      { key: 'kullanici-roller', label: 'Roller & İzinler' },
-    ]
-  },
-  {
     key: 'faturalama', label: 'Faturalama', icon: '◎', children: [
       { key: 'fatura-planlar', label: 'Planlar' },
       { key: 'fatura-abonelikler', label: 'Abonelikler' },
-      { key: 'fatura-faturalar', label: 'Faturalar' },
     ]
   },
-  {
-    key: 'guvenlik', label: 'Güvenlik', icon: '◐', children: [
-      { key: 'guvenlik-loglar', label: 'Denetim Logları' },
-    ]
-  },
-  {
-    key: 'destek', label: 'Destek', icon: '◌', children: [
-      { key: 'destek-talepler', label: 'Talepler' },
-      { key: 'destek-impersonation', label: 'Kimlik Taklidi' },
-    ]
-  },
-  { key: 'ayarlar', label: 'Platform Ayarları', icon: '◍' },
+  { key: 'guvenlik-loglar', label: 'Denetim Logları', icon: '◐' },
 ]
 
 // ─── SHARED ───────────────────────────────────────────────────────────────────
@@ -1419,39 +1401,77 @@ const res = await fetch('/api/sync-advertisers', {
           )}
 
           {/* ── GÜVENLİK LOGLAR ── */}
-          {activeTab === 'guvenlik-loglar' && (
-            <div className="space-y-4">
-              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 text-sm">Denetim Logları</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">Son 30 günlük işlem geçmişi</p>
-                  </div>
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full font-medium">
-                    {allUsers.length} kullanıcı
-                  </span>
-                </div>
-                {/* Son kayıt olan kullanıcıları log gibi göster */}
-                {allUsers.slice(0, 10).map((u, i) => (
-                  <div key={u.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < Math.min(allUsers.length, 10) - 1 ? 'border-b border-gray-50' : ''}`}>
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${u.role === 'super_admin' ? 'bg-rose-400' : u.role === 'customer' ? 'bg-indigo-400' : u.role === 'advertiser' ? 'bg-amber-400' : 'bg-blue-400'}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{u.full_name || u.email}</p>
-                      <p className="text-xs text-gray-400">{u.email} · {u.role}</p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
-                        {u.is_active !== false ? 'Aktif' : 'Pasif'}
-                      </span>
-                      <p className="text-xs text-gray-400 mt-0.5">{new Date(u.created_at).toLocaleDateString('tr-TR')}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+         {activeTab === 'guvenlik-loglar' && (
+  <div className="space-y-4">
+    <div>
+      <h2 className="text-base font-semibold text-gray-900">Denetim Logları</h2>
+      <p className="text-xs text-gray-400 mt-0.5">Platforma kayıtlı tüm kullanıcılar</p>
+    </div>
+
+    {/* Özet */}
+    <div className="grid grid-cols-4 gap-3">
+      {[
+        { label: 'Toplam Kullanıcı', value: allUsers.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+        { label: 'Firma', value: customers.length, color: 'text-violet-600', bg: 'bg-violet-50' },
+        { label: 'Reklamcı', value: advertisers.length, color: 'text-amber-600', bg: 'bg-amber-50' },
+        { label: 'Satışçı', value: allUsers.filter(u => ['team','agent'].includes(u.role)).length, color: 'text-blue-600', bg: 'bg-blue-50' },
+      ].map(c => (
+        <div key={c.label} className={`${c.bg} rounded-xl px-4 py-3`}>
+          <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{c.label}</p>
+        </div>
+      ))}
+    </div>
+
+    {/* Kullanıcı listesi */}
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+        <div className="grid grid-cols-4 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          <div className="col-span-2">Kullanıcı</div>
+          <div>Rol</div>
+          <div className="text-right">Durum</div>
+        </div>
+      </div>
+      {allUsers.map((u, i) => (
+        <div key={u.id} className={`px-5 py-3 grid grid-cols-4 gap-2 items-center ${i < allUsers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+          <div className="col-span-2 flex items-center gap-2 min-w-0">
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold
+              ${u.role === 'super_admin' ? 'bg-rose-100 text-rose-600' :
+                u.role === 'customer' ? 'bg-indigo-100 text-indigo-600' :
+                u.role === 'advertiser' ? 'bg-amber-100 text-amber-600' :
+                'bg-blue-100 text-blue-600'}`}>
+              {(u.full_name || u.email || 'U').charAt(0)}
             </div>
-          )}
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">{u.full_name || '-'}</p>
+              <p className="text-xs text-gray-400 truncate">{u.email}</p>
+            </div>
+          </div>
+          <div>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full
+              ${u.role === 'super_admin' ? 'bg-rose-50 text-rose-600' :
+                u.role === 'customer' ? 'bg-indigo-50 text-indigo-600' :
+                u.role === 'advertiser' ? 'bg-amber-50 text-amber-600' :
+                'bg-blue-50 text-blue-600'}`}>
+              {u.role === 'super_admin' ? 'Admin' :
+               u.role === 'customer' ? 'Firma' :
+               u.role === 'advertiser' ? 'Reklamcı' :
+               u.role === 'team' || u.role === 'agent' ? 'Satışçı' : u.role}
+            </span>
+          </div>
+          <div className="text-right">
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+              {u.is_active !== false ? 'Aktif' : 'Pasif'}
+            </span>
+            <p className="text-xs text-gray-300 mt-0.5">{new Date(u.created_at).toLocaleDateString('tr-TR')}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
           {/* ── BOŞLAR ── */}
-         {!['dashboard','firma-listesi','firma-onboarding','reklamci-listesi','reklamci-ekle','fatura-faturalar','fatura-planlar','fatura-abonelikler','kullanici-listesi','destek-impersonation','destek-talepler','guvenlik-loglar'].includes(activeTab) && (
+        {!['dashboard','firma-listesi','firma-onboarding','reklamci-listesi','reklamci-ekle','fatura-planlar','fatura-abonelikler','guvenlik-loglar'].includes(activeTab) && (
             <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
               <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">◌</div>
               <p className="text-gray-500 text-sm font-medium">{getPageTitle()}</p>
