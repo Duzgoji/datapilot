@@ -222,7 +222,7 @@ export default function SuperAdminPage() {
     setProfile(profileData)
    const { data: customersData } = await supabase
   .from('profiles')
-  .select('*, customers(customer_number)')
+  .select('*')
   .eq('role', 'customer')
   .order('created_at', { ascending: false })
 const { data: subsData } = await supabase
