@@ -1296,16 +1296,7 @@ const advRes = await fetch('/api/get-advertisers', {
               .gte('created_at', monthStart)
               .limit(1)
             if (existing && existing.length > 0) continue
-            await supabase.from('invoices').insert({
-              owner_id: c.id,
-              total_amount: sub.monthly_fee,
-              status: 'pending',
-              due_date: new Date(now.getFullYear(), now.getMonth(), 15).toISOString().split('T')[0],
-              branch_count: 0,
-              per_branch_fee: 0,
-              note: `${now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} aylık hizmet bedeli`,
-            })
-            created++
+          
           }
           alert(`${created} firma için fatura oluşturuldu.`)
           loadData()
@@ -1416,15 +1407,16 @@ const advRes = await fetch('/api/get-advertisers', {
               .gte('created_at', monthStart)
               .limit(1)
             if (existing && existing.length > 0) continue
-            await supabase.from('invoices').insert({
-              owner_id: a.id,
-              total_amount: monthlyTotal,
-              status: 'pending',
-              due_date: new Date(now.getFullYear(), now.getMonth(), 15).toISOString().split('T')[0],
-              branch_count: clientCount,
-              per_branch_fee: sub?.per_client_fee || 0,
-              note: `${now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} aylık hizmet bedeli`,
-            })
+           await supabase.from('invoices').insert({
+  owner_id: a.id,
+  customer_id: null,
+  total_amount: monthlyTotal,
+  status: 'pending',
+  due_date: new Date(now.getFullYear(), now.getMonth(), 15).toISOString().split('T')[0],
+  branch_count: clientCount,
+  per_branch_fee: sub?.per_client_fee || 0,
+  note: `${now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} aylık hizmet bedeli`,
+})
             created++
           }
           alert(`${created} reklamcı için fatura oluşturuldu.`)
