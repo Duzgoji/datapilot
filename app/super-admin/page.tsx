@@ -218,12 +218,16 @@ export default function SuperAdminPage() {
     if (!user) { router.push('/login'); return }
     const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (profileData?.role !== 'super_admin') { router.push('/login'); return }
+    console.log('profile role:', profileData?.role, 'user id:', user.id)
     setProfile(profileData)
-   const { data: customersData } = await supabase
+ const { data: customersData, error: customersError } = await supabase
   .from('profiles')
-  .select('*, customers(customer_number)')
+  .select('*')
   .eq('role', 'customer')
   .order('created_at', { ascending: false })
+
+console.log('customersData:', customersData?.length, customersError)
+
 const { data: subsData } = await supabase
   .from('subscriptions')
   .select('*')
@@ -232,7 +236,8 @@ const customersWithSubs = (customersData || []).map(c => ({
   ...c,
   subscriptions: (subsData || []).filter(s => s.owner_id === c.id)
 }))
-console.log('customers:', customersWithSubs.length, customersWithSubs)
+
+console.log('customersWithSubs:', customersWithSubs.length)
 setCustomers(customersWithSubs)
     setCustomers(customersData || [])
     const { data: branchesData } = await supabase.from('branches').select('*')

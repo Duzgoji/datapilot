@@ -1,5 +1,7 @@
 'use client'
-
+import { getPlanLimits } from '@/lib/planLimits'
+import { getUserUsage, getBranchUsage, getMonthlyLeadUsage } from '@/lib/usageHelpers'
+import { checkLimit } from '@/lib/usageHelpers'
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -80,10 +82,76 @@ const MetaLogo = ({ size = 20, className = '' }: { size?: number, className?: st
 
 const Badge = ({ status }: { status: string }) => (
   <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_CONFIG[status]?.badge || 'bg-gray-100 text-gray-600'}`}>
-    <span className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG[status]?.dot || 'bg-gray-400'}`} />
+    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${STATUS_CONFIG[status]?.dot || 'bg-gray-400'}`} />
     {STATUS_CONFIG[status]?.label || status}
   </span>
 )
+
+const PlanUsageWidget = ({ ownerId, plan }: { ownerId: string, plan: string }) => {
+  const [usage, setUsage] = useState<{ users: number, branches: number, leads: number } | null>(null)
+  const limits = getPlanLimits(plan)
+
+  useEffect(() => {
+    if (!ownerId) return
+    const load = async () => {
+      const [users, branches, leads] = await Promise.all([
+        getUserUsage(ownerId),
+        getBranchUsage(ownerId),
+        getMonthlyLeadUsage(ownerId),
+      ])
+      setUsage({ users, branches, leads })
+    }
+    load()
+  }, [ownerId, plan])
+
+  if (!usage) return <div className="text-xs text-gray-400">Yükleniyor...</div>
+
+  const rows = [
+    { label: 'Kullanıcı', used: usage.users, max: limits.maxUsers },
+    { label: 'Şube', used: usage.branches, max: limits.maxBranches },
+    { label: 'Bu ay potansiyel müşteri', used: usage.leads, max: limits.maxMonthlyLeads },
+  ]
+
+  return (
+    <div className="space-y-3">
+      {rows.map(row => {
+        const pct = row.max ? (row.used / row.max) * 100 : 0
+        const isWarning = row.max && pct >= 80
+        const isOver = row.max && row.used >= row.max
+        return (
+          <div key={row.label}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-gray-500">{row.label}</span>
+              <span className={`text-xs font-semibold ${isOver ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-gray-700'}`}>
+                {row.used} / {row.max ?? '∞'}
+              </span>
+            </div>
+            {row.max && (
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${isOver ? 'bg-red-400' : isWarning ? 'bg-amber-400' : 'bg-indigo-500'}`}
+                  style={{ width: `${Math.min(pct, 100)}%` }}
+                />
+              </div>
+            )}
+            {isWarning && !isOver && (
+              <p className="text-xs text-amber-500 mt-0.5">⚠ Limite yaklaşıyorsunuz</p>
+            )}
+            {isOver && (
+              <p className="text-xs text-red-500 mt-0.5">✕ Limite ulaştınız</p>
+            )}
+          </div>
+        )
+      })}
+      {rows.some(r => r.max && r.used >= r.max) && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-2">
+          <p className="text-xs text-amber-700 font-medium">Plan yükseltmeyi değerlendirin</p>
+          <p className="text-xs text-amber-600 mt-0.5">Limitinize ulaştınız. Daha fazla kapasite için planınızı yükseltin.</p>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const SourceBadge = ({ source }: { source: string }) => (
   <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md ${SOURCE_CONFIG[source]?.badge || 'bg-gray-100 text-gray-500'}`}>
@@ -450,6 +518,12 @@ const loadNotifications = async () => {
     e.preventDefault(); setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
+     const { allowed, message } = await checkLimit(user.id, 'branch')
+  if (!allowed) {
+    alert(message)
+    setSaving(false)
+    return
+  }
     const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase()
     const { data, error } = await supabase.from('branches').insert({
       owner_id: user.id, branch_name: branchName, contact_name: branchContact,
@@ -465,66 +539,78 @@ const loadNotifications = async () => {
   }
 
   const handleAddMember = async (e: React.FormEvent) => {
-    e.preventDefault(); setSaving(true)
-    const { data, error } = await supabase.auth.signUp({ email: memberEmail, password: memberPassword, options: { data: { full_name: memberName, role: 'team' } } })
-    if (error) { alert(error.message); setSaving(false); return }
-    if (data.user) {
-      await supabase.from('profiles').insert({ id: data.user.id, email: memberEmail, full_name: memberName, role: 'team', is_active: true })
-      await supabase.from('team_members').insert({ branch_id: memberBranch, user_id: data.user.id, role: memberRole, commission_rate: parseFloat(memberCommission) || 0 })
-      setMemberName(''); setMemberEmail(''); setMemberPassword(''); setMemberCommission(''); setMemberBranch(''); setMemberRole('agent')
-      setShowAddMember(false); loadData()
-    }
+  e.preventDefault(); setSaving(true)
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const { allowed, message } = await checkLimit(user.id, 'user')
+  if (!allowed) {
+    alert(message)
     setSaving(false)
+    return
   }
 
-  const handleAddLead = async (e: React.FormEvent) => {
-    e.preventDefault(); setSaving(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const leadCode = 'DP-' + Date.now().toString().slice(-6)
-    const { data: customerData } = await supabase
-      .from('customers')
-      .select('id')
-      .eq('owner_id', user.id)
-      .single()
+  const { data, error } = await supabase.auth.signUp({ email: memberEmail, password: memberPassword, options: { data: { full_name: memberName, role: 'team' } } })
+  if (error) { alert(error.message); setSaving(false); return }
+  if (data.user) {
+    await supabase.from('profiles').insert({ id: data.user.id, email: memberEmail, full_name: memberName, role: 'team', is_active: true })
+    await supabase.from('team_members').insert({ branch_id: memberBranch, user_id: data.user.id, role: memberRole, commission_rate: parseFloat(memberCommission) || 0 })
+    setMemberName(''); setMemberEmail(''); setMemberPassword(''); setMemberCommission(''); setMemberBranch(''); setMemberRole('agent')
+    setShowAddMember(false); loadData()
+  }
+  setSaving(false)
+}
 
-    const { data: newLeadData, error } = await supabase.from('leads').insert({
-  lead_code: leadCode, branch_id: leadBranch !== '' ? leadBranch : null, owner_id: user.id,
-  assigned_to: leadAssignTo || null, full_name: leadName, phone: leadPhone,
-  email: leadEmail || null, source: leadSource, note: leadNote || null, status: 'new',
-  customer_id: customerData?.id || null,
-}).select().single()
-    if (error) { alert(error.message); setSaving(false); return }
-    if (!error) {
-      setLeadName(''); setLeadPhone(''); setLeadEmail(''); setLeadBranch(''); setLeadSource('manual'); setLeadAssignTo(''); setLeadNote('')
-      
-      // Owner bildirimi
-      const { error: notifError1 } = await supabase.from('notifications').insert({
-        user_id: profile.id,
-        type: 'lead_created',
-        title: 'Yeni potansiyel müşteri',
-        body: `${leadName} eklendi`,
+ const handleAddLead = async (e: React.FormEvent) => {
+  e.preventDefault(); setSaving(true)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const { allowed, message } = await checkLimit(user.id, 'lead')
+  if (!allowed) {
+    alert(message)
+    setSaving(false)
+    return
+  }
+
+  const leadCode = 'DP-' + Date.now().toString().slice(-6)
+  const { data: customerData } = await supabase
+    .from('customers')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  const { data: newLeadData, error } = await supabase.from('leads').insert({
+    lead_code: leadCode, branch_id: leadBranch !== '' ? leadBranch : null, owner_id: user.id,
+    assigned_to: leadAssignTo || null, full_name: leadName, phone: leadPhone,
+    email: leadEmail || null, source: leadSource, note: leadNote || null, status: 'new',
+    customer_id: customerData?.id || null,
+  }).select().single()
+  if (error) { alert(error.message); setSaving(false); return }
+  if (!error) {
+    setLeadName(''); setLeadPhone(''); setLeadEmail(''); setLeadBranch(''); setLeadSource('manual'); setLeadAssignTo(''); setLeadNote('')
+    await supabase.from('notifications').insert({
+      user_id: profile.id,
+      type: 'lead_created',
+      title: 'Yeni potansiyel müşteri',
+      body: `${leadName} eklendi`,
+      link: newLeadData?.id || 'leadler-liste'
+    })
+    if (leadAssignTo) {
+      await supabase.from('notifications').insert({
+        user_id: leadAssignTo,
+        type: 'lead_assigned',
+        title: 'Yeni potansiyel müşteri atandı',
+        body: `${leadName} size atandı`,
         link: newLeadData?.id || ''
       })
-      if (notifError1) console.error('Owner notif hatası:', notifError1)
-
-      // Agent bildirimi
-      if (leadAssignTo) {
-        const { error: notifError2 } = await supabase.from('notifications').insert({
-          user_id: leadAssignTo,
-          type: 'lead_assigned',
-          title: 'Yeni potansiyel müşteri atandı',
-          body: `${leadName} size atandı`,
-          link: newLeadData?.id || ''
-        })
-        if (notifError2) console.error('Agent notif hatası:', notifError2)
-      }
-
-      loadNotifications()
-      setShowAddLead(false); await loadData()
     }
-    setSaving(false)
+    loadNotifications()
+    setShowAddLead(false); await loadData()
   }
+  setSaving(false)
+}
 
  const handleUpdateStatus = async (e: React.FormEvent) => {
   e.preventDefault()
@@ -3414,33 +3500,22 @@ const handlePayCommission = async () => {
                   </Btn>
                 </div>
               </div>
-
-              {/* Plan Bilgisi */}
-              <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-gray-900">Abonelik</h3>
-                  <span className="text-xs bg-indigo-50 text-indigo-600 font-semibold px-3 py-1 rounded-full">Starter</span>
-                </div>
-                <p className="text-sm text-gray-400">Plan yükseltme ve fatura detayları için destek ekibiyle iletişime geçin.</p>
-                <div className="grid grid-cols-3 gap-3 mt-4">
-                  {[
-                    { label: 'Şube', value: `${branches.length}`, max: '1', color: 'text-indigo-600' },
-                    { label: 'Satışçı', value: `${teamMembers.length}`, max: '3', color: 'text-blue-600' },
-                    { label: 'Potansiyel Müşteri', value: `${leads.length}`, max: '500', color: 'text-emerald-600' },
-                  ].map(item => (
-                    <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
-                      <div className="flex items-end gap-1 mb-1">
-                        <span className={`text-lg font-bold ${item.color}`}>{item.value}</span>
-                        <span className="text-xs text-gray-400 mb-0.5">/ {item.max}</span>
-                      </div>
-                      <p className="text-xs text-gray-400">{item.label}</p>
-                      <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full bg-current ${item.color}`} style={{ width: `${Math.min(100, (parseInt(item.value) / parseInt(item.max)) * 100)}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+{/* Plan Bilgisi */}
+<div className="bg-white rounded-2xl border border-gray-100 p-6">
+  <div className="flex items-center justify-between mb-4">
+    <h3 className="font-semibold text-gray-900">Abonelik & Kullanım</h3>
+    {(() => {
+      const plan = profile?.subscriptions?.[0]?.plan || 'starter'
+      const cfg: any = {
+        starter: 'bg-gray-100 text-gray-600',
+        pro: 'bg-blue-50 text-blue-700',
+        enterprise: 'bg-purple-50 text-purple-700',
+      }
+      return <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${cfg[plan] || cfg.starter}`}>{plan}</span>
+    })()}
+  </div>
+  <PlanUsageWidget ownerId={profile?.id} plan={profile?.subscriptions?.[0]?.plan || 'starter'} />
+</div>
 
             </div>
           )}
