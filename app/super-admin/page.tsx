@@ -692,7 +692,21 @@ const advRes = await fetch('/api/get-advertisers', {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                                   <p className="text-sm font-semibold text-gray-900 truncate">{c.company_name || c.full_name}</p>
-                                  <span className="text-[10px] font-semibold uppercase tracking-wide bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-100">Platform</span>
+<span className="text-[10px] font-semibold uppercase tracking-wide bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-100">Platform</span>
+{(() => {
+  const plan = c.subscriptions?.[0]?.plan
+  const cfg: any = {
+    trial:      'bg-gray-100 text-gray-500',
+    starter:    'bg-indigo-50 text-indigo-700 border border-indigo-200',
+    pro:        'bg-violet-50 text-violet-700 border border-violet-200',
+    enterprise: 'bg-amber-50 text-amber-700 border border-amber-200',
+  }
+  return plan ? (
+    <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${cfg[plan] || 'bg-gray-100 text-gray-500'}`}>
+      {plan}
+    </span>
+  ) : null
+})()}
                                   {c.sector && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">{c.sector}</span>}
                                 </div>
                                 <p className="text-xs text-gray-400">{c.email}</p>
@@ -742,10 +756,25 @@ const advRes = await fetch('/api/get-advertisers', {
                                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                                   <p className="text-sm font-semibold text-gray-900 truncate">{c.company_name || c.full_name}</p>
                                   <span className="text-[10px] font-semibold uppercase tracking-wide bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">Reklamcı</span>
+{(() => {
+  const plan = c.subscriptions?.[0]?.plan
+  const cfg: any = {
+    trial:      'bg-gray-100 text-gray-500',
+    starter:    'bg-indigo-50 text-indigo-700 border border-indigo-200',
+    pro:        'bg-violet-50 text-violet-700 border border-violet-200',
+    enterprise: 'bg-amber-50 text-amber-700 border border-amber-200',
+  }
+  return plan ? (
+    <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${cfg[plan] || 'bg-gray-100 text-gray-500'}`}>
+      {plan}
+    </span>
+  ) : null
+})()}
                                   {c.sector && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">{c.sector}</span>}
                                 </div>
                                 {advName && (
                                   <p className="text-xs text-amber-700 font-medium mt-0.5">Reklamcı: {advName}</p>
+                                  
                                 )}
                                 <p className="text-xs text-gray-400">{c.email}</p>
                                 <div className="flex gap-3 mt-1 flex-wrap">
