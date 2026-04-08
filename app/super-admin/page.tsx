@@ -1399,7 +1399,8 @@ const advRes = await fetch('/api/get-advertisers', {
             const sub = advSubs.find(s => s.advertiser_id === a.id)
             const clientCount = a.advertiser_clients?.length || 0
             const monthlyTotal = (sub?.monthly_fee || 0) + clientCount * (sub?.per_client_fee || 0)
-            if (monthlyTotal <= 0) continue
+           console.log('advertiser:', a.id, 'monthlyTotal:', monthlyTotal, 'sub:', sub)
+if (monthlyTotal <= 0) continue
             const { data: existing } = await supabase
               .from('invoices')
               .select('id')
@@ -1407,7 +1408,7 @@ const advRes = await fetch('/api/get-advertisers', {
               .gte('created_at', monthStart)
               .limit(1)
             if (existing && existing.length > 0) continue
-           await supabase.from('invoices').insert({
+          const { error: invErr } = await supabase.from('invoices').insert({
   owner_id: a.id,
   customer_id: null,
   total_amount: monthlyTotal,
@@ -1417,7 +1418,8 @@ const advRes = await fetch('/api/get-advertisers', {
   per_branch_fee: sub?.per_client_fee || 0,
   note: `${now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} aylık hizmet bedeli`,
 })
-            created++
+if (invErr) console.error('Invoice insert error:', JSON.stringify(invErr))
+else created++
           }
           alert(`${created} reklamcı için fatura oluşturuldu.`)
           loadData()
