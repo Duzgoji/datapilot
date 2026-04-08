@@ -2014,7 +2014,7 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Şirket Adı *</label>
-              <input value={obCompany} onChange={e => setObCompany(e.target.value)} placeholder="Klinik Adı"
+              <input value={obCompany} onChange={e => setObCompany(e.target.value)} placeholder="Firma Adı"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div className="col-span-2">
