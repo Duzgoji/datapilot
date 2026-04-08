@@ -436,7 +436,7 @@ useEffect(() => {
 const { data: invoicesData } = await supabase
   .from('invoices')
   .select('*')
-  .or(`customer_id.eq.${customerData?.id || '00000000-0000-0000-0000-000000000000'},owner_id.eq.${user.id}`)
+  .eq('owner_id', user.id)
   .order('created_at', { ascending: false })
 setCustomerInvoices(invoicesData || [])
     setLoading(false)
