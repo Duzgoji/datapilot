@@ -135,7 +135,7 @@ export default function SuperAdminPage() {
   const [advPassword, setAdvPassword] = useState('')
   const [advCompany, setAdvCompany] = useState('')
   const [advPhone, setAdvPhone] = useState('')
-  const [advMonthlyFee, setAdvMonthlyFee] = useState('990')
+  const [advMonthlyFee, setAdvMonthlyFee] = useState('2000')
   const [advPerClientFee, setAdvPerClientFee] = useState('0')
   const [advSaving, setAdvSaving] = useState(false)
   const [advSuccess, setAdvSuccess] = useState('')
@@ -164,7 +164,7 @@ export default function SuperAdminPage() {
   const [obSector, setObSector] = useState('')
   const [obPhone, setObPhone] = useState('')
   const [obPlan, setObPlan] = useState('starter')
-  const [obMonthlyFee, setObMonthlyFee] = useState('990')
+  const [obMonthlyFee, setObMonthlyFee] = useState('2000')
   const [obPerBranchFee, setObPerBranchFee] = useState('0')
   const [obBranchName, setObBranchName] = useState('')
   const [obBranchCity, setObBranchCity] = useState('')
@@ -174,7 +174,7 @@ export default function SuperAdminPage() {
 
   const resetOnboarding = () => {
     setOnboardingStep(1); setObName(''); setObEmail(''); setObPassword(''); setObCompany('')
-    setObSector(''); setObPhone(''); setObPlan('starter'); setObMonthlyFee('990')
+    setObSector(''); setObPhone(''); setObPlan('starter'); setObMonthlyFee('2000')
     setObPerBranchFee('0'); setObBranchName(''); setObBranchCity('')
     setObCommissionModel('fixed_rate'); setObInviteLink('')
   }
@@ -332,7 +332,7 @@ const advRes = await fetch('/api/get-advertisers', {
       if (result.error) { alert(result.error); setAdvSaving(false); return }
       setAdvSuccess(advEmail)
       setAdvName(''); setAdvEmail(''); setAdvPassword(''); setAdvCompany(''); setAdvPhone('')
-      setAdvMonthlyFee('990'); setAdvPerClientFee('0')
+      setAdvMonthlyFee('2000'); setAdvPerClientFee('0')
       loadData()
     } catch (err: any) { alert(err.message) }
     setAdvSaving(false)
@@ -1954,9 +1954,9 @@ else created++
 function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmail, obPassword, setObPassword, obCompany, setObCompany, obSector, setObSector, obPhone, setObPhone, obPlan, setObPlan, obMonthlyFee, setObMonthlyFee, obPerBranchFee, setObPerBranchFee, obBranchName, setObBranchName, obBranchCity, setObBranchCity, obCommissionModel, setObCommissionModel, obInviteLink, obSaving, onStep1, onStep2, onStep3, onReset, isModal }: any) {
 
   const PLANS = [
-    { key: 'starter', label: 'Starter', price: '₺990', desc: '3 kullanıcı · 1 şube · 500 lead/ay', color: 'border-indigo-500 bg-indigo-50' },
-    { key: 'pro', label: 'Pro', price: '₺2.490', desc: '15 kullanıcı · 5 şube · sınırsız lead', color: 'border-violet-500 bg-violet-50' },
-    { key: 'enterprise', label: 'Enterprise', price: '₺4.990+', desc: 'Sınırsız her şey · AI rapor dahil', color: 'border-amber-500 bg-amber-50' },
+    { key: 'starter', label: 'Starter', price: '₺2000', desc: '3 kullanıcı · 1 şube · 500 lead/ay', color: 'border-indigo-500 bg-indigo-50' },
+    { key: 'pro', label: 'Pro', price: '₺5.000', desc: '15 kullanıcı · 5 şube · sınırsız lead', color: 'border-violet-500 bg-violet-50' },
+    { key: 'enterprise', label: 'Enterprise', price: '₺15.000+', desc: 'Sınırsız her şey · AI rapor dahil', color: 'border-amber-500 bg-amber-50' },
     { key: 'trial', label: 'Deneme', price: 'Ücretsiz', desc: '14 gün · tüm özellikler', color: 'border-gray-300 bg-gray-50' },
   ]
 
@@ -2045,9 +2045,9 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
             {PLANS.map(plan => (
               <button key={plan.key} onClick={() => {
                 setObPlan(plan.key)
-                if (plan.key === 'starter') setObMonthlyFee('990')
-                else if (plan.key === 'pro') setObMonthlyFee('2490')
-                else if (plan.key === 'enterprise') setObMonthlyFee('4990')
+                if (plan.key === 'starter') setObMonthlyFee('2000')
+                else if (plan.key === 'pro') setObMonthlyFee('5500')
+                else if (plan.key === 'enterprise') setObMonthlyFee('15000+')
                 else setObMonthlyFee('0')
               }}
                 className={`p-4 rounded-xl border-2 text-left transition-all ${obPlan === plan.key ? plan.color + ' border-2' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
