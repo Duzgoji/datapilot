@@ -187,9 +187,13 @@ export default function SuperAdminPage() {
   const handleOnboardingStep3 = async () => {
     setObSaving(true)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/create-user', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({
           email: obEmail, password: obPassword, full_name: obName,
           company_name: obCompany, sector: obSector, phone: obPhone,
@@ -1399,7 +1403,7 @@ const advRes = await fetch('/api/get-advertisers', {
             const sub = advSubs.find(s => s.advertiser_id === a.id)
             const clientCount = a.advertiser_clients?.length || 0
             const monthlyTotal = (sub?.monthly_fee || 0) + clientCount * (sub?.per_client_fee || 0)
-           console.log('advertiser:', a.id, 'monthlyTotal:', monthlyTotal, 'sub:', sub)
+           
 if (monthlyTotal <= 0) continue
             const { data: existing } = await supabase
               .from('invoices')
@@ -1505,7 +1509,7 @@ else created++
   </div>
 )}
           {/* ── BOŞLAR ── */}
-        {!['dashboard','firma-listesi','firma-onboarding','reklamci-listesi','reklamci-ekle','fatura-planlar','fatura-abonelikler','guvenlik-loglar'].includes(activeTab) && (
+        {!['dashboard','firma-listesi','firma-onboarding','firma-mali','reklamci-listesi','reklamci-ekle','reklamci-mali','fatura-planlar','fatura-abonelikler','guvenlik-loglar'].includes(activeTab) && (
             <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
               <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">◌</div>
               <p className="text-gray-500 text-sm font-medium">{getPageTitle()}</p>

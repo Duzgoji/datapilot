@@ -1,8 +1,7 @@
-
 import { supabase } from '@/lib/supabase/client'
-import { getPlanLimits } from './planLimits'
+import { PLAN_LIMITS } from './planLimits'
 
-// Müşterinin mevcut planını çek
+// Plan çözümleme
 export const getCustomerPlan = async (ownerId: string): Promise<string> => {
   const { data } = await supabase
     .from('subscriptions')
@@ -12,7 +11,7 @@ export const getCustomerPlan = async (ownerId: string): Promise<string> => {
   return data?.plan || 'starter'
 }
 
-// Kullanıcı sayısı
+// Kullanıcı sayısı — sadece bu owner'a ait şubeler
 export const getUserUsage = async (ownerId: string): Promise<number> => {
   const { data: branches } = await supabase
     .from('branches')
@@ -27,7 +26,7 @@ export const getUserUsage = async (ownerId: string): Promise<number> => {
   return count || 0
 }
 
-// Şube sayısı
+// Şube sayısı — sadece bu owner'a ait
 export const getBranchUsage = async (ownerId: string): Promise<number> => {
   const { count } = await supabase
     .from('branches')
@@ -36,7 +35,7 @@ export const getBranchUsage = async (ownerId: string): Promise<number> => {
   return count || 0
 }
 
-// Bu ayki lead sayısı
+// Bu ayki lead sayısı — sadece bu owner'a ait
 export const getMonthlyLeadUsage = async (ownerId: string): Promise<number> => {
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
@@ -48,46 +47,58 @@ export const getMonthlyLeadUsage = async (ownerId: string): Promise<number> => {
   return count || 0
 }
 
-// Limit kontrolü — true = izin ver, false = engelle
+// ── Merkezi limit kontrolü ─────────────────────────────────────────────────
+
+type LimitType = 'user' | 'branch' | 'lead'
+
+interface CheckLimitParams {
+  plan: string
+  type: LimitType
+  currentUsage: number
+}
+
+const LIMIT_LABELS: Record<LimitType, string> = {
+  user: 'kullanıcı',
+  branch: 'şube',
+  lead: 'potansiyel müşteri',
+}
+
+export const checkLimitOrThrow = ({ plan, type, currentUsage }: CheckLimitParams): void => {
+  const limits = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS] || PLAN_LIMITS.starter
+  const label = LIMIT_LABELS[type]
+
+  let max: number | null = null
+  if (type === 'user') max = limits.maxUsers
+  if (type === 'branch') max = limits.maxBranches
+  if (type === 'lead') max = limits.maxMonthlyLeads
+
+  // null = sınırsız (enterprise)
+  if (max === null) return
+
+  if (currentUsage >= max) {
+    throw new Error(
+      `${limits.label} planında en fazla ${max} ${label} ekleyebilirsiniz. ` +
+      `Daha fazla kapasite için planınızı yükseltin.`
+    )
+  }
+}
+
+// Tüm limit kontrolü — fresh data ile (concurrency koruması)
 export const checkLimit = async (
   ownerId: string,
-  type: 'user' | 'branch' | 'lead'
+  type: LimitType
 ): Promise<{ allowed: boolean; message: string }> => {
-  const plan = await getCustomerPlan(ownerId)
-  const limits = getPlanLimits(plan)
+  try {
+    const plan = await getCustomerPlan(ownerId)
 
-  if (type === 'user') {
-    if (limits.maxUsers === null) return { allowed: true, message: '' }
-    const usage = await getUserUsage(ownerId)
-    if (usage >= limits.maxUsers) {
-      return {
-        allowed: false,
-        message: `${limits.label} plan kapsamında en fazla ${limits.maxUsers} kullanıcı ekleyebilirsiniz.`
-      }
-    }
+    let currentUsage = 0
+    if (type === 'user') currentUsage = await getUserUsage(ownerId)
+    if (type === 'branch') currentUsage = await getBranchUsage(ownerId)
+    if (type === 'lead') currentUsage = await getMonthlyLeadUsage(ownerId)
+
+    checkLimitOrThrow({ plan, type, currentUsage })
+    return { allowed: true, message: '' }
+  } catch (err: any) {
+    return { allowed: false, message: err.message }
   }
-
-  if (type === 'branch') {
-    if (limits.maxBranches === null) return { allowed: true, message: '' }
-    const usage = await getBranchUsage(ownerId)
-    if (usage >= limits.maxBranches) {
-      return {
-        allowed: false,
-        message: `${limits.label} plan kapsamında en fazla ${limits.maxBranches} şube ekleyebilirsiniz.`
-      }
-    }
-  }
-
-  if (type === 'lead') {
-    if (limits.maxMonthlyLeads === null) return { allowed: true, message: '' }
-    const usage = await getMonthlyLeadUsage(ownerId)
-    if (usage >= limits.maxMonthlyLeads) {
-      return {
-        allowed: false,
-        message: `Bu ayki potansiyel müşteri limitinize ulaştınız (${limits.maxMonthlyLeads}). Plan yükselterek devam edebilirsiniz.`
-      }
-    }
-  }
-
-  return { allowed: true, message: '' }
 }
