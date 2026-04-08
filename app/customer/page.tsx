@@ -427,7 +427,7 @@ useEffect(() => {
   .eq('owner_id', user.id)
   .order('paid_at', { ascending: false })
    setCommissionPayments(paymentsData || [])
-   const { data: customerData } = await supabase
+  const { data: customerData } = await supabase
   .from('customers')
   .select('id')
   .eq('owner_id', user.id)
@@ -436,7 +436,7 @@ useEffect(() => {
 const { data: invoicesData } = await supabase
   .from('invoices')
   .select('*')
-  .eq('customer_id', customerData?.id || '')
+  .or(`customer_id.eq.${customerData?.id || '00000000-0000-0000-0000-000000000000'},owner_id.eq.${user.id}`)
   .order('created_at', { ascending: false })
 setCustomerInvoices(invoicesData || [])
     setLoading(false)
@@ -3403,7 +3403,7 @@ const handlePayCommission = async () => {
                     onClick={async () => {
                       await supabase.from('invoices').update({ status: 'awaiting_approval' }).eq('id', inv.id)
                       const { data: customerData } = await supabase.from('customers').select('id').eq('owner_id', profile.id).maybeSingle()
-                      const { data: invoicesData } = await supabase.from('invoices').select('*').eq('customer_id', customerData?.id || '').order('created_at', { ascending: false })
+                      const { data: invoicesData } = await supabase.from('invoices').select('*').or(`customer_id.eq.${customerData?.id || '00000000-0000-0000-0000-000000000000'},owner_id.eq.${profile.id}`).order('created_at', { ascending: false })
                       setCustomerInvoices(invoicesData || [])
                     }}
                     className="text-xs text-blue-600 font-medium px-3 py-1.5 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200">
