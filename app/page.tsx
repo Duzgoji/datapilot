@@ -14,21 +14,22 @@ const faqs = [
   },
   {
     q: 'Kaç kullanıcı ekleyebilirim?',
-    a: 'Starter pakette 2, Pro pakette 10, Enterprise pakette sınırsız kullanıcı ekleyebilirsiniz. Her kullanıcı için ayrı giriş bilgisi ve yetki seviyesi tanımlanabilir.'
+    a: 'Seçtiğiniz pakete göre değişir. Starter pakette 2 kullanıcı, Pro pakette 10 kullanıcı, Enterprise pakette sınırsız kullanıcı ekleyebilirsiniz.'
   },
   {
     q: 'Deneme süresi var mı?',
-    a: '14 günlük ücretsiz deneme sunuyoruz. Deneme süresinde tüm özelliklere erişebilirsiniz. Kredi kartı gerekmez, istediğiniz zaman iptal edebilirsiniz.'
+    a: 'Evet. Uygun müşteriler için demo ve deneme süreci sunuyoruz. Detaylar için bizimle iletişime geçebilirsiniz.'
   },
   {
     q: 'İstediğim zaman iptal edebilir miyim?',
-    a: 'Evet, herhangi bir taahhüt yoktur. Dilediğiniz zaman hesabınızı iptal edebilirsiniz. İptal ettiğinizde verileriniz 30 gün boyunca saklanır.'
+    a: 'Evet, sözleşme ve kullanım koşullarınıza bağlı olarak iptal veya paket değişikliği yapılabilir. Detaylar için destek ekibimizle iletişime geçebilirsiniz.'
   },
   {
     q: 'Teknik destek alabilir miyim?',
     a: 'Tüm paketlerde e-posta desteği mevcuttur. Pro ve Enterprise paketlerde öncelikli destek ve daha hızlı yanıt süresi sunulmaktadır.'
   },
 ]
+
 const plans = [
   {
     name: 'Starter',
@@ -48,7 +49,7 @@ const plans = [
   },
   {
     name: 'Enterprise',
-    price: '₺15.000',
+    price: '₺15.000+',
     period: '/ay',
     desc: 'Büyük kurumlar için özelleştirilebilir çözüm',
     highlight: false,
@@ -65,16 +66,11 @@ const features = [
   { icon: '🔒', title: 'Güvenli & Hızlı', desc: 'Güvenli altyapı ve hızlı performans ile verileriniz her zaman koruma altında.' },
 ]
 
-// Dashboard Mockup SVG Component
 function DashboardMockup() {
   return (
     <div className="relative w-full max-w-3xl mx-auto mt-16">
-      {/* Glow effect behind mockup */}
       <div className="absolute inset-0 bg-blue-500 opacity-10 blur-3xl rounded-3xl scale-95 translate-y-4" />
-      
-      {/* Browser chrome */}
       <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50">
-        {/* Browser top bar */}
         <div className="bg-[#1a1f2e] px-4 py-3 flex items-center gap-3 border-b border-white/5">
           <div className="flex gap-1.5">
             <div className="w-3 h-3 rounded-full bg-red-500/70" />
@@ -88,25 +84,18 @@ function DashboardMockup() {
             <span className="text-white/30 text-xs font-mono">datapilot.com.tr/dashboard</span>
           </div>
         </div>
-
-        {/* Dashboard UI */}
         <div className="bg-[#0f1422] flex">
-          {/* Sidebar */}
           <div className="w-14 bg-[#0a0e1a] flex flex-col items-center py-4 gap-4 border-r border-white/5 flex-shrink-0">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mb-2">
               <span className="text-white font-bold text-sm">D</span>
             </div>
             {['▣', '◈', '◉', '⊞', '◎'].map((icon, i) => (
-              <div key={i} className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs cursor-pointer transition-all
-                ${i === 0 ? 'bg-blue-600/20 text-blue-400' : 'text-white/20 hover:text-white/40'}`}>
+              <div key={i} className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs cursor-pointer transition-all ${i === 0 ? 'bg-blue-600/20 text-blue-400' : 'text-white/20 hover:text-white/40'}`}>
                 {icon}
               </div>
             ))}
           </div>
-
-          {/* Main content */}
           <div className="flex-1 p-5 min-w-0">
-            {/* Header */}
             <div className="flex items-center justify-between mb-5">
               <div>
                 <p className="text-white/40 text-xs mb-0.5">Hoş geldiniz,</p>
@@ -118,14 +107,12 @@ function DashboardMockup() {
                 </div>
               </div>
             </div>
-
-            {/* Stat cards */}
             <div className="grid grid-cols-4 gap-3 mb-5">
               {[
-                { label: 'Toplam Potansiyel Müşteri', value: '1.284', change: '+12%', up: true, color: 'blue' },
-                { label: 'Bu Ay', value: '247', change: '+8%', up: true, color: 'green' },
-                { label: 'Dönüşüm', value: '%34', change: '+3%', up: true, color: 'purple' },
-                { label: 'Bekleyen', value: '58', change: '-5', up: false, color: 'orange' },
+                { label: 'Toplam Potansiyel Müşteri', value: '1.284', change: '+12%', up: true },
+                { label: 'Bu Ay', value: '247', change: '+8%', up: true },
+                { label: 'Dönüşüm', value: '%34', change: '+3%', up: true },
+                { label: 'Bekleyen', value: '58', change: '-5', up: false },
               ].map((stat, i) => (
                 <div key={i} className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
                   <p className="text-white/40 text-[10px] mb-1">{stat.label}</p>
@@ -134,10 +121,7 @@ function DashboardMockup() {
                 </div>
               ))}
             </div>
-
-            {/* Chart + Lead list */}
             <div className="grid grid-cols-5 gap-3">
-              {/* Mini bar chart */}
               <div className="col-span-3 bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-white/60 text-[11px] font-medium">Haftalık Lead Trendi</p>
@@ -146,19 +130,12 @@ function DashboardMockup() {
                 <div className="flex items-end gap-1.5 h-16">
                   {[40, 65, 45, 80, 55, 90, 72].map((h, i) => (
                     <div key={i} className="flex-1 flex flex-col justify-end gap-0.5">
-                      <div
-                        className={`rounded-sm w-full transition-all ${i === 5 ? 'bg-blue-500' : 'bg-white/10'}`}
-                        style={{ height: `${h}%` }}
-                      />
-                      <p className="text-white/20 text-[8px] text-center">
-                        {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'][i]}
-                      </p>
+                      <div className={`rounded-sm w-full transition-all ${i === 5 ? 'bg-blue-500' : 'bg-white/10'}`} style={{ height: `${h}%` }} />
+                      <p className="text-white/20 text-[8px] text-center">{['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'][i]}</p>
                     </div>
                   ))}
                 </div>
               </div>
-
-              {/* Lead list */}
               <div className="col-span-2 bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
                 <p className="text-white/60 text-[11px] font-medium mb-2">Son Potansiyel müşteriler</p>
                 <div className="space-y-2">
@@ -170,15 +147,10 @@ function DashboardMockup() {
                   ].map((lead, i) => (
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[8px] text-white/50">
-                          {lead.name[0]}
-                        </div>
+                        <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[8px] text-white/50">{lead.name[0]}</div>
                         <span className="text-white/60 text-[10px]">{lead.name}</span>
                       </div>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full 
-                        ${lead.color === 'blue' ? 'bg-blue-500/20 text-blue-400' : 
-                          lead.color === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' : 
-                          'bg-green-500/20 text-green-400'}`}>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${lead.color === 'blue' ? 'bg-blue-500/20 text-blue-400' : lead.color === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-green-500/20 text-green-400'}`}>
                         {lead.status}
                       </span>
                     </div>
@@ -189,8 +161,6 @@ function DashboardMockup() {
           </div>
         </div>
       </div>
-
-      {/* Floating badge */}
       <div className="absolute -bottom-4 -right-4 bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-green-900/50 flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
         Canlı Veri
@@ -212,6 +182,9 @@ export default function LandingPage() {
   const [contactEmail, setContactEmail] = useState('')
   const [contactMessage, setContactMessage] = useState('')
   const [contactSent, setContactSent] = useState(false)
+  const [demoName, setDemoName] = useState('')
+  const [demoPhone, setDemoPhone] = useState('')
+  const [demoBusiness, setDemoBusiness] = useState('')
 
   const sendChat = async () => {
     if (!chatInput.trim()) return
@@ -233,6 +206,11 @@ export default function LandingPage() {
     setChatLoading(false)
   }
 
+  const scrollToDemo = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    document.getElementById('demo-form')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   return (
     <div className="min-h-screen bg-white">
 
@@ -240,7 +218,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100/80">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center cursor-pointer" onClick={() => router.push('/')}>
-             <img src="/logo.png" alt="DataPilot" className="h-9 w-auto" />
+            <img src="/logo.png" alt="DataPilot" className="h-9 w-auto" />
           </div>
           <div className="hidden md:flex items-center gap-8">
             {[['#ozellikler', 'Özellikler'], ['#paketler', 'Fiyatlar'], ['#sss', 'SSS'], ['#iletisim', 'İletişim']].map(([href, label]) => (
@@ -262,12 +240,10 @@ export default function LandingPage() {
 
       {/* ─── HERO ─── */}
       <section className="relative pt-28 pb-0 overflow-hidden bg-gradient-to-b from-[#060c1f] via-[#0a1435] to-[#0d1a45]">
-        {/* Background grid */}
         <div className="absolute inset-0 opacity-[0.03]" style={{
           backgroundImage: 'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
           backgroundSize: '60px 60px'
         }} />
-        {/* Radial glow center */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600 opacity-10 blur-[120px] rounded-full" />
         <div className="absolute top-20 right-10 w-72 h-72 bg-purple-600 opacity-5 blur-3xl rounded-full" />
 
@@ -275,38 +251,53 @@ export default function LandingPage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 backdrop-blur-sm rounded-full px-4 py-1.5 mb-7">
             <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-blue-300 text-xs font-medium tracking-wide">Meta, Instagram, WhatsApp & Google Ads Entegrasyonu</span>
+            <span className="text-blue-300 text-xs font-medium tracking-wide">Meta, Instagram, WhatsApp ve Google Ads entegrasyonları</span>
           </div>
 
           {/* Headline */}
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-5 leading-[1.1] tracking-tight">
-         Satış sürecinizi{' '}
+            Satış sürecinizi{' '}
             <span className="relative">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">tek panelden</span>
             </span>
             {' '}yönetin
           </h1>
-         <p className="text-slate-400 text-lg md:text-xl mb-4 max-w-2xl mx-auto leading-relaxed">
+
+          <p className="text-slate-400 text-lg md:text-xl mb-4 max-w-2xl mx-auto leading-relaxed">
             Potansiyel müşterileri toplayın, ekibinize dağıtın ve performansı takip edin.
           </p>
           <p className="text-slate-500 text-sm mb-8 max-w-xl mx-auto">
-            Tüm satış ekipleri ve işletmeler için tek platform, tek çözüm.
+            Tüm satış ekipleri ve işletmeler için tek, güçlü ve merkezi çözüm.
           </p>
 
           {/* CTA buttons */}
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            <button onClick={() => router.push('/register')}
-              className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-xl shadow-blue-900/50 text-sm hover:-translate-y-0.5">
+            <a
+              href="https://wa.me/905453467778?text=Merhaba%2C%20DataPilot%20hakk%C4%B1nda%20demo%20almak%20istiyorum."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-xl shadow-blue-900/50 text-sm hover:-translate-y-0.5 inline-flex items-center">
               Ücretsiz Demo Al →
-            </button>
+            </a>
             <button onClick={() => router.push('/login')}
               className="border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white font-medium px-8 py-3.5 rounded-xl transition-all text-sm backdrop-blur-sm">
               Giriş Yap
             </button>
           </div>
-             <p className="text-slate-600 text-xs mt-4 text-center">
+
+          <p className="text-slate-600 text-xs mt-4 text-center">
             500+ işletme tarafından kullanılıyor
           </p>
+
+          <div className="mt-3 text-center">
+            <a
+              href="#demo-form"
+              onClick={scrollToDemo}
+              className="text-slate-500 text-xs hover:text-slate-300 underline underline-offset-2 transition-colors cursor-pointer">
+              veya formu doldur
+            </a>
+          </div>
+
           {/* Stats row */}
           <div className="flex items-center justify-center gap-10 mt-12 flex-wrap">
             {[
@@ -339,7 +330,7 @@ export default function LandingPage() {
             <p className="text-gray-500 max-w-xl mx-auto text-lg">Potansiyel müşteri yönetiminden analitiğe kadar ihtiyacınız olan her şey</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((f, i) => (
+            {features.map((f) => (
               <div key={f.title} className="group bg-white rounded-2xl p-7 border border-gray-100 hover:border-blue-100 hover:shadow-xl hover:shadow-blue-50 transition-all duration-300 hover:-translate-y-1">
                 <div className="w-12 h-12 bg-blue-50 group-hover:bg-blue-100 rounded-xl flex items-center justify-center text-2xl mb-5 transition-colors">{f.icon}</div>
                 <h3 className="font-bold text-gray-900 mb-2 text-base">{f.title}</h3>
@@ -358,12 +349,11 @@ export default function LandingPage() {
             <h2 className="text-4xl font-bold text-gray-900 tracking-tight">3 adımda başlayın</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-            {/* Connector line */}
             <div className="hidden md:block absolute top-10 left-1/3 right-1/3 h-px bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100" />
             {[
               { num: '01', title: 'Tüm talepleri tek yerde toplayın', desc: 'Formlar, reklamlar, WhatsApp ve diğer tüm kanallardan gelen müşteri talepleri tek panelde toplanır.' },
-{ num: '02', title: 'Ekibinize otomatik olarak dağıtın', desc: 'Gelen müşteriler doğru kişilere atanır, hiçbir talep cevapsız kalmaz.' },
-{ num: '03', title: 'Satış sürecini baştan sona yönetin', desc: 'Tüm görüşmeleri, durumları ve ilerlemeyi tek ekrandan takip edin.' },
+              { num: '02', title: 'Ekibinize otomatik olarak dağıtın', desc: 'Gelen müşteriler doğru kişilere atanır, hiçbir talep cevapsız kalmaz.' },
+              { num: '03', title: 'Satış sürecini baştan sona yönetin', desc: 'Tüm görüşmeleri, durumları ve ilerlemeyi tek ekrandan takip edin.' },
             ].map(step => (
               <div key={step.num} className="text-center">
                 <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-200 relative z-10">
@@ -387,11 +377,7 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {plans.map(plan => (
-              <div key={plan.name} className={`rounded-2xl p-8 relative transition-all ${
-                plan.highlight
-                  ? 'bg-blue-600 shadow-2xl shadow-blue-200 scale-[1.02]'
-                  : 'bg-white border border-gray-100 shadow-sm hover:shadow-md'
-              }`}>
+              <div key={plan.name} className={`rounded-2xl p-8 relative transition-all ${plan.highlight ? 'bg-blue-600 shadow-2xl shadow-blue-200 scale-[1.02]' : 'bg-white border border-gray-100 shadow-sm hover:shadow-md'}`}>
                 {plan.highlight && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                     <span className="bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg">En Popüler</span>
@@ -412,11 +398,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <button onClick={() => router.push('/register')}
-                  className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all ${
-                    plan.highlight
-                      ? 'bg-white text-blue-600 hover:bg-blue-50 shadow-lg'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100'
-                  }`}>
+                  className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all ${plan.highlight ? 'bg-white text-blue-600 hover:bg-blue-50 shadow-lg' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100'}`}>
                   {plan.name === 'Enterprise' ? 'Teklif Alın' : '14 Gün Ücretsiz Dene'}
                 </button>
               </div>
@@ -448,6 +430,67 @@ export default function LandingPage() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── DEMO FORM ─── */}
+      <section id="demo-form" className="py-20 bg-gray-50">
+        <div className="max-w-lg mx-auto px-6">
+          <div className="text-center mb-10">
+            <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest mb-3">Demo</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">Demo Talebi</h2>
+            <p className="text-gray-500 text-base">Formu doldurun, sizi arayalım.</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 p-8 space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Ad Soyad</label>
+              <input
+                value={demoName}
+                onChange={e => setDemoName(e.target.value)}
+                placeholder="Adınız Soyadınız"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Telefon</label>
+              <input
+                value={demoPhone}
+                onChange={e => setDemoPhone(e.target.value)}
+                placeholder="05XX XXX XX XX"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">İşletme Adı</label>
+              <input
+                value={demoBusiness}
+                onChange={e => setDemoBusiness(e.target.value)}
+                placeholder="Şirket / İşletme Adı"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
+              />
+            </div>
+            <button
+              onClick={() => {
+                console.log('Demo talebi:', { demoName, demoPhone, demoBusiness })
+                alert('Talebiniz alındı, en kısa sürede sizinle iletişime geçeceğiz.')
+                setDemoName('')
+                setDemoPhone('')
+                setDemoBusiness('')
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-100 hover:shadow-blue-200">
+              Gönder →
+            </button>
+            <p className="text-center text-xs text-gray-400 mt-2">
+              Ya da direkt WhatsApp&apos;tan ulaşın:{' '}
+              <a
+                href="https://wa.me/905XXXXXXXXX?text=Merhaba%2C%20DataPilot%20hakk%C4%B1nda%20demo%20almak%20istiyorum."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline font-medium">
+                WhatsApp ile iletişime geç →
+              </a>
+            </p>
           </div>
         </div>
       </section>
@@ -535,7 +578,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
             <div className="col-span-2 md:col-span-1">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-4 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                 <img src="/logo2.png" alt="DataPilot" className="h-8 w-auto" />
               </div>
               <p className="text-sm leading-relaxed">Akıllı potansiyel müşteri yönetim platformu.<br />İşinizi büyütün.</p>
@@ -571,49 +614,51 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      {/* ─── AI DESTEK CHAT ─── */}
-      {false && <div className="fixed bottom-6 right-6 z-50">
-        {chatOpen && (
-          <div className="mb-4 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm">🤖</div>
-                <div>
-                  <p className="text-white font-semibold text-sm">DataPilot Destek</p>
-                  <p className="text-blue-200 text-xs">AI Destekli</p>
-                </div>
-              </div>
-              <button onClick={() => setChatOpen(false)} className="text-white/70 hover:text-white transition-colors">✕</button>
-            </div>
-            <div className="h-64 overflow-y-auto p-4 space-y-3">
-              {chatMessages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-xs px-3 py-2 rounded-xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>
-                    {msg.text}
+      {/* ─── AI DESTEK CHAT (geçici olarak gizlendi) ─── */}
+      {false && (
+        <div className="fixed bottom-6 right-6 z-50">
+          {chatOpen && (
+            <div className="mb-4 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm">🤖</div>
+                  <div>
+                    <p className="text-white font-semibold text-sm">DataPilot Destek</p>
+                    <p className="text-blue-200 text-xs">AI Destekli</p>
                   </div>
                 </div>
-              ))}
-              {chatLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-gray-100 px-4 py-2 rounded-xl text-sm text-gray-400">Yazıyor...</div>
-                </div>
-              )}
+                <button onClick={() => setChatOpen(false)} className="text-white/70 hover:text-white transition-colors">✕</button>
+              </div>
+              <div className="h-64 overflow-y-auto p-4 space-y-3">
+                {chatMessages.map((msg, i) => (
+                  <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-xs px-3 py-2 rounded-xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+                {chatLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-100 px-4 py-2 rounded-xl text-sm text-gray-400">Yazıyor...</div>
+                  </div>
+                )}
+              </div>
+              <div className="p-3 border-t border-gray-100 flex gap-2">
+                <input value={chatInput} onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && sendChat()}
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Mesajınızı yazın..." />
+                <button onClick={sendChat}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl text-sm transition-colors">→</button>
+              </div>
             </div>
-            <div className="p-3 border-t border-gray-100 flex gap-2">
-              <input value={chatInput} onChange={e => setChatInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && sendChat()}
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Mesajınızı yazın..." />
-              <button onClick={sendChat}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl text-sm transition-colors">→</button>
-            </div>
-          </div>
-        )}
-        <button onClick={() => setChatOpen(!chatOpen)}
-          className="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-xl shadow-blue-200 flex items-center justify-center text-2xl transition-all hover:scale-110">
-          {chatOpen ? '✕' : '💬'}
-        </button>
-      </div>}
+          )}
+          <button onClick={() => setChatOpen(!chatOpen)}
+            className="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-xl shadow-blue-200 flex items-center justify-center text-2xl transition-all hover:scale-110">
+            {chatOpen ? '✕' : '💬'}
+          </button>
+        </div>
+      )}
 
     </div>
   )
