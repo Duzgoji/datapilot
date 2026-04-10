@@ -26,6 +26,12 @@ const menuStructure = [
     { key: 'whatsapp-baglanti', label: 'Bağlantı' },
   ]
 },
+{
+  key: 'google', label: 'Google Ads', icon: '◈', children: [
+    { key: 'google-leadler', label: 'Google Ads Leadleri' },
+    { key: 'google-baglanti', label: 'Bağlantı' },
+  ]
+},
   {
     key: 'leadler', label: 'Potansiyel Müşteriler', icon: '◎', children: [
       { key: 'leadler-liste', label: 'Potansiyel Müşteri Listesi' },
@@ -2013,6 +2019,89 @@ const handlePayCommission = async () => {
             </div>
           )}
           {activeTab === 'whatsapp-baglanti' && profile?.id && <WhatsAppConnect ownerId={profile.id} />}
+          {/* ── GOOGLE ADS ── */}
+{activeTab === 'google-leadler' && (
+  <div className="space-y-4">
+    <div>
+      <h2 className="text-base font-semibold text-gray-900">Google Ads Leadleri</h2>
+      <p className="text-xs text-gray-400 mt-0.5">Google Ads'ten gelen otomatik potansiyel müşteriler</p>
+    </div>
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      {leads.filter(l => l.source === 'google_ads').length === 0 ? (
+        <div className="p-16 text-center">
+          <p className="text-gray-500 text-sm font-medium">Henüz Google Ads lead yok</p>
+          <p className="text-xs text-gray-400 mt-1">Google Ads bağlantısı kurulduktan sonra gelen leadler burada görünür</p>
+          <button onClick={() => setActiveTab('google-baglanti')} className="mt-3 text-xs text-yellow-600 font-medium hover:underline">
+            Google Ads Bağla →
+          </button>
+        </div>
+      ) : leads.filter(l => l.source === 'google_ads').map((lead, i, arr) => (
+        <div key={lead.id} onClick={() => openDetailModal(lead)}
+          className={`px-5 py-3.5 flex items-center gap-3 hover:bg-yellow-50/30 cursor-pointer transition-colors ${i < arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
+          <div className="w-8 h-8 rounded-xl bg-yellow-50 flex items-center justify-center flex-shrink-0">
+            <span className="text-lg">🔍</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
+            <p className="text-xs text-gray-400">{lead.phone} · {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+            {lead.note && <p className="text-xs text-gray-400 truncate mt-0.5">💬 {lead.note}</p>}
+          </div>
+          <Badge status={lead.status} />
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+{activeTab === 'google-baglanti' && (
+  <div className="space-y-5 max-w-2xl">
+    <div className="bg-gradient-to-br from-yellow-400 to-orange-400 rounded-2xl p-6 text-white relative overflow-hidden">
+      <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+      <div className="relative">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-2xl">🔍</div>
+          <div>
+            <p className="font-bold text-lg">Google Ads Bağlantısı</p>
+            <p className="text-yellow-100 text-sm">Lead form entegrasyonu</p>
+          </div>
+        </div>
+        <p className="text-yellow-100 text-sm">Google Ads kampanyalarınızdan gelen leadleri otomatik olarak sisteme çekin.</p>
+      </div>
+    </div>
+
+    <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+      <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+        <span className="text-2xl">🚧</span>
+        <div>
+          <p className="text-sm font-semibold text-gray-900">Entegrasyon Yakında</p>
+          <p className="text-xs text-gray-500 mt-0.5">Google Ads API entegrasyonu hazırlanıyor. Şu an manuel olarak Google Ads kaynaklı lead ekleyebilirsiniz.</p>
+        </div>
+      </div>
+
+      <div>
+        <p className="text-sm font-semibold text-gray-700 mb-3">Şu an ne yapabilirsiniz?</p>
+        <div className="space-y-2">
+          {[
+            { icon: '✏️', text: 'Lead eklerken kaynak olarak "Google Ads" seçin' },
+            { icon: '📊', text: 'Google Ads leadlerini listede filtreleyin' },
+            { icon: '📈', text: 'Performans raporlarında Google Ads leadlerini takip edin' },
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+              <span className="text-lg">{item.icon}</span>
+              <p className="text-sm text-gray-600">{item.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <button
+        onClick={() => setShowAddLead(true)}
+        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
+        + Google Ads Lead Ekle
+      </button>
+    </div>
+  </div>
+)}
           {/* ── META ── */}
 
           {activeTab === 'meta-baglanti' && profile?.id && <MetaConnect ownerId={profile.id} />}
