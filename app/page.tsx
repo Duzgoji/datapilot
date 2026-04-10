@@ -6,47 +6,50 @@ import { useRouter } from 'next/navigation'
 const faqs = [
   {
     q: 'DataPilot hangi platformlarla entegre çalışır?',
-    a: 'Facebook, Instagram (Meta) reklamları ile tam entegrasyon sağlar. Ayrıca Excel dosyası yükleme ve manuel veri girişi de desteklenir.'
+    a: 'Meta, Instagram, WhatsApp ve Google Ads entegrasyonları bulunmaktadır. Ayrıca Excel dosyası yükleme ve manuel veri girişi de desteklenir. Yeni entegrasyonlar roadmap doğrultusunda eklenmektedir.'
   },
   {
     q: 'Potansiyel müşteri verilerim güvende mi?',
-    a: 'Tüm verileriniz SSL şifreli bağlantı üzerinden iletilir ve güvenli sunucularda saklanır. Verilerinize yalnızca siz ve yetkilendirdiğiniz kişiler erişebilir.'
+    a: 'Tüm verileriniz SSL şifreli bağlantı üzerinden iletilir ve güvenli sunucularda saklanır. Verilerinize yalnızca siz ve yetkilendirdiğiniz kişiler erişebilir. Verileriniz üçüncü taraflarla paylaşılmaz.'
   },
   {
     q: 'Kaç kullanıcı ekleyebilirim?',
-    a: 'Seçtiğiniz pakete göre değişir. Starter pakette 3, Pro pakette 15, Enterprise pakette sınırsız kullanıcı ekleyebilirsiniz.'
+    a: 'Starter pakette 2, Pro pakette 10, Enterprise pakette sınırsız kullanıcı ekleyebilirsiniz. Her kullanıcı için ayrı giriş bilgisi ve yetki seviyesi tanımlanabilir.'
   },
   {
     q: 'Deneme süresi var mı?',
-    a: 'Evet! Tüm paketlerde 14 günlük ücretsiz deneme sunuyoruz. Kredi kartı gerekmez.'
+    a: '14 günlük ücretsiz deneme sunuyoruz. Deneme süresinde tüm özelliklere erişebilirsiniz. Kredi kartı gerekmez, istediğiniz zaman iptal edebilirsiniz.'
   },
   {
     q: 'İstediğim zaman iptal edebilir miyim?',
-    a: 'Evet, istediğiniz zaman iptal edebilirsiniz. Taahhüt yoktur, aylık ödeme yaparsınız.'
+    a: 'Evet, herhangi bir taahhüt yoktur. Dilediğiniz zaman hesabınızı iptal edebilirsiniz. İptal ettiğinizde verileriniz 30 gün boyunca saklanır.'
+  },
+  {
+    q: 'Teknik destek alabilir miyim?',
+    a: 'Tüm paketlerde e-posta desteği mevcuttur. Pro ve Enterprise paketlerde öncelikli destek ve daha hızlı yanıt süresi sunulmaktadır.'
   },
 ]
-
 const plans = [
   {
     name: 'Starter',
-    price: '₺990',
+    price: '₺2.000',
     period: '/ay',
     desc: 'Küçük ekipler için ideal başlangıç paketi',
     highlight: false,
-    features: ['3 kullanıcı', '1 şube', '500 potansiyel müşteri/ay', 'Meta entegrasyonu', 'Excel yükleme', 'Temel raporlar']
+    features: ['2 kullanıcı', '1 şube', '400 potansiyel müşteri/ay', 'Meta entegrasyonu', 'Excel yükleme', 'Temel raporlar']
   },
   {
     name: 'Pro',
-    price: '₺2.490',
+    price: '₺5.500',
     period: '/ay',
     desc: 'Büyüyen işletmeler için güçlü özellikler',
     highlight: true,
-    features: ['15 kullanıcı', '5 şube', 'Sınırsız potansiyel müşteri', 'Meta entegrasyonu', 'Excel yükleme', 'AI analitik & raporlar', 'Öncelikli destek']
+    features: ['10 kullanıcı', '3 şube', '2000 potansiyel müşteri/ay', 'Meta entegrasyonu', 'Excel yükleme', 'Gelişmiş raporlar', 'Öncelikli destek']
   },
   {
     name: 'Enterprise',
-    price: 'Özel Fiyat',
-    period: '',
+    price: '₺15.000',
+    period: '/ay',
     desc: 'Büyük kurumlar için özelleştirilebilir çözüm',
     highlight: false,
     features: ['Sınırsız kullanıcı', 'Sınırsız şube', 'Sınırsız potansiyel müşteri', 'Tüm entegrasyonlar', 'Özel AI modeli', 'Dedicated destek', 'SLA garantisi']
@@ -236,8 +239,8 @@ export default function LandingPage() {
       {/* ─── NAVBAR ─── */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100/80">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <img src="/logo.png" alt="DataPilot" className="h-9 w-auto" />
+          <div className="flex items-center cursor-pointer" onClick={() => router.push('/')}>
+             <img src="/logo.png" alt="DataPilot" className="h-9 w-auto" />
           </div>
           <div className="hidden md:flex items-center gap-8">
             {[['#ozellikler', 'Özellikler'], ['#paketler', 'Fiyatlar'], ['#sss', 'SSS'], ['#iletisim', 'İletişim']].map(([href, label]) => (
@@ -272,22 +275,22 @@ export default function LandingPage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 backdrop-blur-sm rounded-full px-4 py-1.5 mb-7">
             <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-blue-300 text-xs font-medium tracking-wide">Meta & Instagram Entegrasyonu Aktif</span>
+            <span className="text-blue-300 text-xs font-medium tracking-wide">Meta, Instagram, WhatsApp & Google Ads Entegrasyonu</span>
           </div>
 
           {/* Headline */}
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-5 leading-[1.1] tracking-tight">
-          Reklamdan gelen müşterileri{' '}
+         Satış sürecinizi{' '}
             <span className="relative">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">kaçırmayı</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">tek panelden</span>
             </span>
-            {' '}bırakın
+            {' '}yönetin
           </h1>
          <p className="text-slate-400 text-lg md:text-xl mb-4 max-w-2xl mx-auto leading-relaxed">
-            Meta reklamlarından gelen tüm potansiyel müşterileri tek panelde toplayın, ekibinize dağıtın ve satışa dönüştürün.
+            Potansiyel müşterileri toplayın, ekibinize dağıtın ve performansı takip edin.
           </p>
           <p className="text-slate-500 text-sm mb-8 max-w-xl mx-auto">
-            Klinikler, ajanslar ve satış ekipleri için geliştirilmiştir.
+            Tüm satış ekipleri ve işletmeler için tek platform, tek çözüm.
           </p>
 
           {/* CTA buttons */}
