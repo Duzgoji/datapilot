@@ -277,28 +277,33 @@ export default function LandingPage() {
 
           {/* Headline */}
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-5 leading-[1.1] tracking-tight">
-            Potansiyel Müşterilerinizi{' '}
+          Reklamdan gelen müşterileri{' '}
             <span className="relative">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">akıllıca</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">kaçırmayı</span>
             </span>
-            {' '}yönetin
+            {' '}bırakın
           </h1>
-          <p className="text-slate-400 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
-            Meta reklamlarından gelen potansiyel müşterileri otomatik toplayın, ekibinize dağıtın ve satışa dönüştürün.
+         <p className="text-slate-400 text-lg md:text-xl mb-4 max-w-2xl mx-auto leading-relaxed">
+            Meta reklamlarından gelen tüm potansiyel müşterileri tek panelde toplayın, ekibinize dağıtın ve satışa dönüştürün.
+          </p>
+          <p className="text-slate-500 text-sm mb-8 max-w-xl mx-auto">
+            Klinikler, ajanslar ve satış ekipleri için geliştirilmiştir.
           </p>
 
           {/* CTA buttons */}
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <button onClick={() => router.push('/register')}
               className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-xl shadow-blue-900/50 text-sm hover:-translate-y-0.5">
-              Ücretsiz Başlayın →
+              Ücretsiz Demo Al →
             </button>
             <button onClick={() => router.push('/login')}
               className="border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white font-medium px-8 py-3.5 rounded-xl transition-all text-sm backdrop-blur-sm">
               Giriş Yap
             </button>
           </div>
-
+             <p className="text-slate-600 text-xs mt-4 text-center">
+            500+ işletme tarafından kullanılıyor
+          </p>
           {/* Stats row */}
           <div className="flex items-center justify-center gap-10 mt-12 flex-wrap">
             {[
@@ -564,7 +569,7 @@ export default function LandingPage() {
       </footer>
 
       {/* ─── AI DESTEK CHAT ─── */}
-      <div className="fixed bottom-6 right-6 z-50">
+      {false && <div className="fixed bottom-6 right-6 z-50">
         {chatOpen && (
           <div className="mb-4 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 flex items-center justify-between">
@@ -605,7 +610,7 @@ export default function LandingPage() {
           className="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-xl shadow-blue-200 flex items-center justify-center text-2xl transition-all hover:scale-110">
           {chatOpen ? '✕' : '💬'}
         </button>
-      </div>
+      </div>}
 
     </div>
   )
