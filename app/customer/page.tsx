@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import MetaConnect from '@/components/MetaConnect'
 import WhatsAppConnect from '@/components/WhatsAppConnect'
+import { checkLimitOrThrow } from '@/lib/usageHelpers'
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 
@@ -1723,26 +1724,8 @@ const handlePayCommission = async () => {
   </>
 )}
  
-                {/* İlerleme Çubuğu */}
-                {totalEarned > 0 && (
-                  <div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all"
-                        style={{ width: `${Math.min(100, (totalPaid / totalEarned) * 100)}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <p className="text-xs text-gray-400">%{totalEarned > 0 ? ((totalPaid / totalEarned) * 100).toFixed(0) : 0} ödendi</p>
-                      <p className="text-xs text-gray-400">%{member.commission_rate} prim oranı</p>
-                    </div>
-                  </div>
-                )}
- 
-                {totalEarned === 0 && (
-                  <p className="text-xs text-gray-300 text-center py-1">Henüz satış yok — hakediş hesaplanamıyor</p>
-                )}
-              </div>
+              
+           </div>
           )
         })}
       </div>
