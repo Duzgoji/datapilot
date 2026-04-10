@@ -1568,21 +1568,26 @@ const handlePayCommission = async () => {
             </div>
           )}
 
-          {/* ── SATIŞÇILAR ── */}
+         {/* ── SATIŞÇILAR ── */}
         {activeTab === 'ekip-liste' && (
   <div className="space-y-4">
     <div className="flex items-center justify-between">
-      <p className="text-sm text-gray-500">{teamMembers.length} ekip üyesi</p>
+      <div>
+        <h2 className="text-base font-semibold text-gray-900">Ekip Üyeleri</h2>
+        <p className="text-xs text-gray-400 mt-0.5">{teamMembers.length} aktif satışçı</p>
+      </div>
       <div className="flex gap-2">
-  <Btn variant="secondary" size="sm" onClick={() => setShowPaymentReport(true)}>
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 10h10M2 7h6M2 4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-    Ödeme Raporu
-  </Btn>
-  <Btn size="sm" onClick={() => setShowAddMember(true)}>
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-    Üye Ekle
-  </Btn>
-</div>
+        <button onClick={() => setShowPaymentReport(true)}
+          className="flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-medium rounded-xl transition-colors">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 10h10M2 7h6M2 4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          Ödeme Raporu
+        </button>
+        <button onClick={() => setShowAddMember(true)}
+          className="flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+          Üye Ekle
+        </button>
+      </div>
     </div>
  
     {teamMembers.length === 0 ? (
