@@ -71,6 +71,7 @@ const SOURCE_CONFIG: any = {
   whatsapp:     { label: 'WhatsApp',     badge: 'bg-green-100 text-green-700' },
   website:      { label: 'Web',          badge: 'bg-purple-100 text-purple-700' },
   referral:     { label: 'Referans',     badge: 'bg-orange-100 text-orange-700' },
+   google_ads:   { label: 'Google Ads',   badge: 'bg-yellow-100 text-yellow-700' },
 }
 
 // ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
@@ -1329,6 +1330,7 @@ const handlePayCommission = async () => {
                       { key: 'instagram_dm', label: '📸 Instagram', color: filterSource === 'instagram_dm' ? 'bg-pink-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-pink-200' },
                       { key: 'referral', label: '🤝 Referans', color: filterSource === 'referral' ? 'bg-amber-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-amber-200' },
                       { key: 'website', label: '🌐 Web', color: filterSource === 'website' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-indigo-200' },
+                      { key: 'google_ads', label: '🔍 Google Ads', color: filterSource === 'google_ads' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-yellow-200' },
                     ].map(f => (
                       <button key={f.key} onClick={() => setFilterSource(f.key)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${f.color}`}>
@@ -1379,8 +1381,7 @@ const handlePayCommission = async () => {
                           <span className="text-indigo-600 text-sm font-semibold">{(lead.full_name || 'İ').charAt(0)}</span>
                         </div>
                         <span className="absolute -bottom-1 -right-1 text-xs leading-none">
-                          {lead.source === 'meta_form' ? '🎯' : lead.source === 'whatsapp' ? '💬' : lead.source === 'instagram_dm' ? '📸' : lead.source === 'referral' ? '🤝' : lead.source === 'website' ? '🌐' : '✏️'}
-                        </span>
+                          {lead.source === 'meta_form' ? '🎯' : lead.source === 'whatsapp' ? '💬' : lead.source === 'instagram_dm' ? '📸' : lead.source === 'referral' ? '🤝' : lead.source === 'website' ? '🌐' : lead.source === 'google_ads' ? '🔍' : '✏️'}                        </span>
                       </div>
 
                       {/* Ana bilgi */}
@@ -3061,6 +3062,7 @@ const handlePayCommission = async () => {
                                   <option value="whatsapp">WhatsApp</option>
                                   <option value="instagram_dm">Instagram</option>
                                   <option value="meta_form">Meta Form</option>
+                                  <option value="google_ads">Google Ads</option>
                                 </select>
                                 <svg className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                               </div>
@@ -3592,6 +3594,7 @@ const handlePayCommission = async () => {
               <option value="whatsapp">WhatsApp</option>
               <option value="website">Web Sitesi</option>
               <option value="referral">Referans</option>
+              <option value="google_ads">Google Ads</option>
             </Select>
             <Select label="Satışçıya Ata" value={leadAssignTo} onChange={(e: any) => setLeadAssignTo(e.target.value)}>
               <option value="">Atama yapma</option>
@@ -3941,6 +3944,7 @@ const handlePayCommission = async () => {
                     <option value="instagram_dm">📸 Instagram</option>
                     <option value="referral">🤝 Referans</option>
                     <option value="website">🌐 Web Sitesi</option>
+                    <option value="google_ads">🔍 Google Ads</option>
                   </select>
                   <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </div>
