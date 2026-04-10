@@ -1528,11 +1528,16 @@ const handlePayCommission = async () => {
           {/* ── ŞUBELER ── */}
           {activeTab === 'ekip-sube' && (
             <div className="space-y-4">
-             <div className="flex justify-end">
-  <Btn size="sm" onClick={() => setShowAddBranch(true)}>
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+            <div className="flex items-center justify-between">
+  <div>
+    <h2 className="text-base font-semibold text-gray-900">Şubeler</h2>
+    <p className="text-xs text-gray-400 mt-0.5">{branches.length} şube</p>
+  </div>
+  <button onClick={() => setShowAddBranch(true)}
+    className="flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm">
+    <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
     Şube Ekle
-  </Btn>
+  </button>
 </div>
               {branchInviteLink && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
