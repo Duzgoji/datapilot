@@ -57,12 +57,12 @@ const plans = [
 ]
 
 const features = [
-  { icon: '📣', title: 'Meta Entegrasyonu', desc: 'Facebook ve Instagram reklamlarından gelen potansiyel müşterileri anında ve otomatik olarak sisteme çekin.' },
-  { icon: '🤖', title: 'AI Analitik', desc: 'Yapay zeka destekli raporlarla satış performansınızı anlayın, eksiklerinizi görün.' },
-  { icon: '👥', title: 'Ekip Yönetimi', desc: 'Şubelerinizi ve satışçılarınızı tek panelden yönetin, potansiyel müşterileri otomatik dağıtın.' },
-  { icon: '📂', title: 'Veri Merkezi', desc: 'Excel dosyalarınızı yükleyin, otomatik olarak potansiyel müşterilere dönüştürün.' },
-  { icon: '📊', title: 'Gelişmiş Raporlar', desc: 'Günlük, haftalık ve aylık raporlarla işinizin nabzını tutun.' },
-  { icon: '🔒', title: 'Güvenli & Hızlı', desc: 'SSL şifreli bağlantı, güvenli veri saklama ve yüksek performanslı altyapı.' },
+  { icon: '🔗', title: 'Çoklu Kanal Entegrasyonu', desc: 'Meta, Instagram, WhatsApp ve Google Ads dahil tüm kanallardan gelen müşteri taleplerini otomatik olarak tek panelde toplayın.' },
+  { icon: '🤖', title: 'AI Analitik', desc: 'Satış performansınızı analiz edin, hangi kanalların ve ekiplerin daha iyi sonuç verdiğini kolayca görün.' },
+  { icon: '👥', title: 'Ekip Yönetimi', desc: 'Ekibinizi, satış süreçlerinizi ve müşteri dağıtımını tek panelden kolayca yönetin.' },
+  { icon: '📂', title: 'Veri Merkezi', desc: 'Excel ve diğer veri kaynaklarınızı içe aktarın, tüm müşteri verinizi tek yerde yönetin.' },
+  { icon: '📊', title: 'Gelişmiş Raporlar', desc: 'Günlük, haftalık ve aylık raporlarla işinizin performansını net bir şekilde takip edin.' },
+  { icon: '🔒', title: 'Güvenli & Hızlı', desc: 'Güvenli altyapı ve hızlı performans ile verileriniz her zaman koruma altında.' },
 ]
 
 // Dashboard Mockup SVG Component
@@ -361,9 +361,9 @@ export default function LandingPage() {
             {/* Connector line */}
             <div className="hidden md:block absolute top-10 left-1/3 right-1/3 h-px bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100" />
             {[
-              { num: '01', title: 'Bağlanın', desc: 'Meta reklamlarınızı birkaç tıkla DataPilot\'a bağlayın.' },
-              { num: '02', title: 'Otomatize Edin', desc: 'Leadler anında sisteme düşer, ekibinize otomatik dağıtılır.' },
-              { num: '03', title: 'Büyüyün', desc: 'AI destekli analizlerle satışlarınızı optimize edin.' },
+              { num: '01', title: 'Tüm talepleri tek yerde toplayın', desc: 'Formlar, reklamlar, WhatsApp ve diğer tüm kanallardan gelen müşteri talepleri tek panelde toplanır.' },
+{ num: '02', title: 'Ekibinize otomatik olarak dağıtın', desc: 'Gelen müşteriler doğru kişilere atanır, hiçbir talep cevapsız kalmaz.' },
+{ num: '03', title: 'Satış sürecini baştan sona yönetin', desc: 'Tüm görüşmeleri, durumları ve ilerlemeyi tek ekrandan takip edin.' },
             ].map(step => (
               <div key={step.num} className="text-center">
                 <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-200 relative z-10">
