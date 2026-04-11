@@ -315,6 +315,10 @@ export default function CustomerPage() {
   const [cancelReason, setCancelReason] = useState('')
   const [appointmentDate, setAppointmentDate] = useState('')
   const [activityNote, setActivityNote] = useState('')
+  const [waProvider, setWaProvider] = useState('')
+  const [waApiKey, setWaApiKey] = useState('')
+  const [waConnecting, setWaConnecting] = useState(false)
+  const [waConnected, setWaConnected] = useState(false)
 
   const [perfPeriod, setPerfPeriod] = useState('6month')
   const [perfStartDate, setPerfStartDate] = useState('')
@@ -375,7 +379,7 @@ export default function CustomerPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.get('meta') === 'connected') setActiveTab('meta-baglanti')
+    if (params.get('meta') === 'waConnected') setActiveTab('meta-baglanti')
     loadData()
     const handleClickOutside = (e: MouseEvent) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) setShowProfileMenu(false)
@@ -2019,7 +2023,224 @@ const handlePayCommission = async () => {
               </div>
             </div>
           )}
-          {activeTab === 'whatsapp-baglanti' && profile?.id && <WhatsAppConnect ownerId={profile.id} />}
+         {activeTab === 'whatsapp-baglanti' && (() => {
+  const [waProvider, setWaProvider] = useState<string>('')
+  const [waApiKey, setWaApiKey] = useState('')
+  const [waConnecting, setWaConnecting] = useState(false)
+  const [waConnected, setWaConnected] = useState(false)
+
+  const providers = [
+    {
+      key: 'wati',
+      name: 'WATI',
+      logo: '🟢',
+      desc: 'En kolay kurulum, Türkiye\'de yaygın',
+      price: '$49/ay',
+      url: 'https://wati.io',
+      apiLabel: 'WATI API Key',
+      apiPlaceholder: 'eyJhbGc...',
+      docsUrl: 'https://docs.wati.io',
+    },
+    {
+      key: '360dialog',
+      name: '360dialog',
+      logo: '🔵',
+      desc: 'Uygun fiyatlı, geliştiriciler için ideal',
+      price: '€5/numara/ay',
+      url: 'https://360dialog.com',
+      apiLabel: '360dialog API Key',
+      apiPlaceholder: 'sk_...',
+      docsUrl: 'https://docs.360dialog.com',
+    },
+    {
+      key: 'twilio',
+      name: 'Twilio',
+      logo: '🔴',
+      desc: 'En esnek, kullandığın kadar öde',
+      price: 'Kullandığın kadar',
+      url: 'https://twilio.com',
+      apiLabel: 'Twilio Auth Token',
+      apiPlaceholder: 'AC...',
+      docsUrl: 'https://twilio.com/docs',
+    },
+    {
+      key: 'messagebird',
+      name: 'MessageBird',
+      logo: '🟡',
+      desc: 'Orta seviye, iyi dashboard',
+      price: 'Kullandığın kadar',
+      url: 'https://messagebird.com',
+      apiLabel: 'MessageBird API Key',
+      apiPlaceholder: 'live_...',
+      docsUrl: 'https://developers.messagebird.com',
+    },
+  ]
+
+  const selected = providers.find(p => p.key === waProvider)
+
+  const handleConnect = async () => {
+    if (!waApiKey.trim()) return
+    setWaConnecting(true)
+    await new Promise(r => setTimeout(r, 1500))
+    // Supabase'e kaydet
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await supabase.from('whatsapp_connections').upsert({
+        owner_id: user.id,
+        provider: waProvider,
+        api_key: waApiKey,
+        is_active: true,
+      }, { onConflict: 'owner_id' })
+    }
+    setWaConnecting(false)
+    setWaConnected(true)
+  }
+
+  return (
+    <div className="space-y-5 max-w-2xl">
+
+      {/* Header */}
+      <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 text-white relative overflow-hidden">
+        <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-2xl">💬</div>
+            <div>
+              <p className="font-bold text-lg">WhatsApp Bağlantısı</p>
+              <p className="text-green-100 text-sm">Kendi servis sağlayıcınızla bağlanın</p>
+            </div>
+          </div>
+          <p className="text-green-100 text-sm">WhatsApp'a gelen mesajlar otomatik olarak lead'e dönüşür. Servis ücretini doğrudan sağlayıcıya ödersiniz.</p>
+        </div>
+      </div>
+
+      {waConnected ? (
+        <div className="bg-white rounded-2xl border border-emerald-100 p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9l5 5 10-10" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{selected?.name} Bağlandı</p>
+              <p className="text-xs text-emerald-600">WhatsApp entegrasyonu aktif</p>
+            </div>
+          </div>
+          <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-400">Servis Sağlayıcı</p>
+              <p className="text-xs font-semibold text-gray-700">{selected?.name}</p>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-400">Webhook URL</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-mono text-gray-600 truncate max-w-[200px]">
+                  {typeof window !== 'undefined' ? window.location.origin : ''}/api/whatsapp/webhook
+                </p>
+                <button onClick={() => navigator.clipboard.writeText(`${window.location.origin}/api/whatsapp/webhook`)}
+                  className="text-xs text-indigo-600 hover:underline">Kopyala</button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-400">Durum</p>
+              <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                Aktif
+              </span>
+            </div>
+          </div>
+          <button onClick={() => { setWaConnected(false); setWaApiKey(''); setWaProvider('') }}
+            className="w-full py-2.5 rounded-xl text-sm font-medium border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
+            Bağlantıyı Kes
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+
+          {/* Servis seçimi */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <p className="text-sm font-semibold text-gray-900 mb-4">Servis Sağlayıcı Seçin</p>
+            <div className="grid grid-cols-2 gap-3">
+              {providers.map(p => (
+                <button key={p.key} onClick={() => setWaProvider(p.key)}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${waProvider === p.key ? 'border-green-500 bg-green-50' : 'border-gray-100 hover:border-green-200 bg-white'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xl">{p.logo}</span>
+                    <span className={`text-sm font-bold ${waProvider === p.key ? 'text-green-700' : 'text-gray-700'}`}>{p.name}</span>
+                  </div>
+                  <p className="text-xs text-gray-400">{p.desc}</p>
+                  <p className={`text-xs font-semibold mt-1 ${waProvider === p.key ? 'text-green-600' : 'text-gray-500'}`}>{p.price}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Hesap yok uyarısı */}
+          {waProvider && (
+            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
+              <span className="text-xl">ℹ️</span>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">{selected?.name} hesabınız yok mu?</p>
+                <p className="text-xs text-gray-500 mt-0.5">Önce {selected?.name}'e kaydolun, API key alın, buraya girin.</p>
+                <div className="flex gap-3 mt-2">
+                  <a href={selected?.url} target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-green-600 font-medium hover:underline">
+                    {selected?.name}'e Kaydol →
+                  </a>
+                  <a href={selected?.docsUrl} target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-gray-400 hover:underline">
+                    Döküman
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* API Key girişi */}
+          {waProvider && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">{selected?.apiLabel}</label>
+                <input
+                  value={waApiKey}
+                  onChange={e => setWaApiKey(e.target.value)}
+                  placeholder={selected?.apiPlaceholder}
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono"
+                />
+              </div>
+
+              {/* Webhook URL */}
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                <p className="text-xs font-semibold text-blue-700 mb-1">Webhook URL</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-mono text-blue-600 flex-1 truncate">
+                    https://datapilot-omega.vercel.app/api/whatsapp/webhook
+                  </p>
+                  <button onClick={() => navigator.clipboard.writeText('https://datapilot-omega.vercel.app/api/whatsapp/webhook')}
+                    className="text-xs text-blue-600 font-medium hover:underline flex-shrink-0">
+                    Kopyala
+                  </button>
+                </div>
+                <p className="text-xs text-blue-500 mt-1">Bu URL'yi {selected?.name} panelindeki webhook ayarlarına ekleyin.</p>
+              </div>
+
+              <button
+                onClick={handleConnect}
+                disabled={!waApiKey.trim() || waConnecting}
+                className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                {waConnecting ? (
+                  <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>Bağlanıyor...</>
+                ) : (
+                  <>💬 {selected?.name} ile Bağlan</>
+                )}
+              </button>
+            </div>
+          )}
+
+        </div>
+      )}
+    </div>
+  )
+})()}
 {/* ── GOOGLE ADS ── */}
 {activeTab === 'google-leadler' && (() => {
   const googleLeads = leads.filter(l => l.source === 'google_ads')
