@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { getPlanLimits } from '@/lib/planLimits'
 import { getUserUsage, getBranchUsage, getMonthlyLeadUsage } from '@/lib/usageHelpers'
 import { checkLimit } from '@/lib/usageHelpers'
@@ -9,65 +9,65 @@ import MetaConnect from '@/components/MetaConnect'
 import WhatsAppConnect from '@/components/WhatsAppConnect'
 import { checkLimitOrThrow } from '@/lib/usageHelpers'
 
-// â”€â”€â”€ CONSTANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Constants
 
 const menuStructure = [
-  { key: 'dashboard', label: 'Dashboard', icon: 'â¬¡' },
+  { key: 'dashboard', label: 'Dashboard', icon: '◻' },
   {
-  key: 'meta', label: 'Meta Reklam', icon: 'â—ˆ', children: [
+  key: 'meta', label: 'Meta Reklam', icon: '•', children: [
     { key: 'meta-kampanyalar', label: 'Kampanyalar' },
-    { key: 'meta-leadformlar', label: 'Potansiyel MÃ¼ÅŸteri FormlarÄ±' },
-    { key: 'meta-baglanti', label: 'BaÄŸlantÄ±' },
+    { key: 'meta-leadformlar', label: 'Potansiyel Müşteri Formları' },
+    { key: 'meta-baglanti', label: 'Bağlantı' },
   ]
 },
 {
-  key: 'whatsapp', label: 'WhatsApp', icon: 'â—', children: [
-    { key: 'whatsapp-leadler', label: 'WhatsApp Potansiyel MÃ¼ÅŸterileri' },
-    { key: 'whatsapp-baglanti', label: 'BaÄŸlantÄ±' },
+  key: 'whatsapp', label: 'WhatsApp', icon: '•', children: [
+    { key: 'whatsapp-leadler', label: 'WhatsApp Potansiyel Müşterileri' },
+    { key: 'whatsapp-baglanti', label: 'Bağlantı' },
   ]
 },
 {
-  key: 'google', label: 'Google Ads', icon: 'â—ˆ', children: [
+  key: 'google', label: 'Google Ads', icon: '•', children: [
     { key: 'google-leadler', label: 'Google Ads Leadleri' },
-    { key: 'google-baglanti', label: 'BaÄŸlantÄ±' },
+    { key: 'google-baglanti', label: 'Bağlantı' },
   ]
 },
   {
-    key: 'leadler', label: 'Potansiyel MÃ¼ÅŸteriler', icon: 'â—', children: [
-      { key: 'leadler-liste', label: 'Potansiyel MÃ¼ÅŸteri Listesi' },
-      { key: 'pipeline', label: 'SatÄ±ÅŸ SÃ¼reci Takibi' },
-      { key: 'leadler-dagitim', label: 'DaÄŸÄ±tÄ±m' },
+    key: 'leadler', label: 'Potansiyel Müşteriler', icon: '•', children: [
+      { key: 'leadler-liste', label: 'Potansiyel Müşteri Listesi' },
+      { key: 'pipeline', label: 'Satış Süreci Takibi' },
+      { key: 'leadler-dagitim', label: 'Dağıtım' },
     ]
   },
   {
-    key: 'ekip', label: 'Ekip', icon: 'â—‰', children: [
-      { key: 'ekip-sube', label: 'Åubeler' },
-      { key: 'ekip-liste', label: 'SatÄ±ÅŸÃ§Ä±lar' },
+    key: 'ekip', label: 'Ekip', icon: '•', children: [
+      { key: 'ekip-sube', label: 'Şubeler' },
+      { key: 'ekip-liste', label: 'Satışçılar' },
     ]
   },
   {
-    key: 'performans', label: 'Performans', icon: 'â—', children: [
+    key: 'performans', label: 'Performans', icon: '•', children: [
       { key: 'performans-genel', label: 'Genel' },
-      { key: 'performans-karsilastirma', label: 'KarÅŸÄ±laÅŸtÄ±rma' },
-      { key: 'performans-kar', label: 'KÃ¢r Analizi' },
+      { key: 'performans-karsilastirma', label: 'Karşılaştırma' },
+      { key: 'performans-kar', label: 'Kâr Analizi' },
     ]
   },
   {
-    key: 'veri', label: 'Veri Merkezi', icon: 'â—«', children: [
-      { key: 'veri-yukle', label: 'Veri YÃ¼kle' },
+    key: 'veri', label: 'Veri Merkezi', icon: '•', children: [
+      { key: 'veri-yukle', label: 'Veri Yükle' },
       { key: 'veri-setlerim', label: 'Veri Setlerim' },
     ]
   },
-  { key: 'faturalarim', label: 'FaturalarÄ±m', icon: 'â—§' },
-  { key: 'ayarlar', label: 'Ayarlar', icon: 'â—Œ' },
+  { key: 'faturalarim', label: 'Faturalarım', icon: '•' },
+  { key: 'ayarlar', label: 'Ayarlar', icon: '•' },
 ]
 
 const STATUS_CONFIG: any = {
   new:                   { label: 'Yeni',     dot: 'bg-blue-500',   badge: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' },
-  called:                { label: 'ArandÄ±',   dot: 'bg-amber-500',  badge: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' },
+  called:                { label: 'Arandı',   dot: 'bg-amber-500',  badge: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' },
   appointment_scheduled: { label: 'Randevu',  dot: 'bg-violet-500', badge: 'bg-violet-50 text-violet-700 ring-1 ring-violet-200' },
-  procedure_done:        { label: 'SatÄ±ÅŸ',    dot: 'bg-emerald-500',badge: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' },
-  cancelled:             { label: 'Ä°ptal',    dot: 'bg-red-400',    badge: 'bg-red-50 text-red-600 ring-1 ring-red-200' },
+  procedure_done:        { label: 'Satış',    dot: 'bg-emerald-500',badge: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' },
+  cancelled:             { label: 'İptal',    dot: 'bg-red-400',    badge: 'bg-red-50 text-red-600 ring-1 ring-red-200' },
 }
 
 const SOURCE_CONFIG: any = {
@@ -80,7 +80,7 @@ const SOURCE_CONFIG: any = {
    google_ads:   { label: 'Google Ads',   badge: 'bg-yellow-100 text-yellow-700' },
 }
 
-// â”€â”€â”€ SHARED COMPONENTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Shared components
 
 const MetaLogo = ({ size = 20, className = '' }: { size?: number, className?: string }) => (
   <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
@@ -112,12 +112,12 @@ const PlanUsageWidget = ({ ownerId, plan }: { ownerId: string, plan: string }) =
     load()
   }, [ownerId, plan])
 
-  if (!usage) return <div className="text-xs text-gray-400">YÃ¼kleniyor...</div>
+  if (!usage) return <div className="text-xs text-gray-400">Yükleniyor...</div>
 
   const rows = [
-    { label: 'KullanÄ±cÄ±', used: usage.users, max: limits.maxUsers },
-    { label: 'Åube', used: usage.branches, max: limits.maxBranches },
-    { label: 'Bu ay potansiyel mÃ¼ÅŸteri', used: usage.leads, max: limits.maxMonthlyLeads },
+    { label: 'Kullanıcı', used: usage.users, max: limits.maxUsers },
+    { label: 'Şube', used: usage.branches, max: limits.maxBranches },
+    { label: 'Bu ay potansiyel müşteri', used: usage.leads, max: limits.maxMonthlyLeads },
   ]
 
   return (
@@ -131,7 +131,7 @@ const PlanUsageWidget = ({ ownerId, plan }: { ownerId: string, plan: string }) =
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-gray-500">{row.label}</span>
               <span className={`text-xs font-semibold ${isOver ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-gray-700'}`}>
-                {row.used} / {row.max ?? 'âˆ'}
+                {row.used} / {row.max ?? 'Ã¢Ë†Â'}
               </span>
             </div>
             {row.max && (
@@ -143,18 +143,18 @@ const PlanUsageWidget = ({ ownerId, plan }: { ownerId: string, plan: string }) =
               </div>
             )}
             {isWarning && !isOver && (
-              <p className="text-xs text-amber-500 mt-0.5">âš  Limite yaklaÅŸÄ±yorsunuz</p>
+              <p className="text-xs text-amber-500 mt-0.5">Limite yaklaşıyorsunuz</p>
             )}
             {isOver && (
-              <p className="text-xs text-red-500 mt-0.5">âœ• Limite ulaÅŸtÄ±nÄ±z</p>
+              <p className="text-xs text-red-500 mt-0.5">Limite ulaştınız</p>
             )}
           </div>
         )
       })}
       {rows.some(r => r.max && r.used >= r.max) && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-2">
-          <p className="text-xs text-amber-700 font-medium">Plan yÃ¼kseltmeyi deÄŸerlendirin</p>
-          <p className="text-xs text-amber-600 mt-0.5">Limitinize ulaÅŸtÄ±nÄ±z. Daha fazla kapasite iÃ§in planÄ±nÄ±zÄ± yÃ¼kseltin.</p>
+          <p className="text-xs text-amber-700 font-medium">Plan yükseltmeyi değerlendirin</p>
+          <p className="text-xs text-amber-600 mt-0.5">Limitinize ulaştınız. Daha fazla kapasite için planınızı yükseltin.</p>
         </div>
       )}
     </div>
@@ -227,7 +227,7 @@ const Btn = ({ variant = 'primary', size = 'md', children, className = '', ...pr
   )
 }
 
-// â”€â”€â”€ MAIN COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ??? MAIN COMPONENT ???????????????????????????????????????????????????????????
 
 export default function CustomerPage() {
   const router = useRouter()
@@ -375,7 +375,7 @@ export default function CustomerPage() {
   const [reportLoading, setReportLoading] = useState(false)
   
 
-  // â”€â”€â”€ EFFECTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ??? EFFECTS ??????????????????????????????????????????????????????????????
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -402,7 +402,7 @@ useEffect(() => {
   const interval = setInterval(loadNotifications, 10000)
   return () => clearInterval(interval)
 }, [])
-  // â”€â”€â”€ DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ??? DATA ?????????????????????????????????????????????????????????????????
 
   const loadData = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -427,7 +427,7 @@ useEffect(() => {
     const { data: metaConnData } = await supabase.from('meta_connections').select('*').eq('owner_id', user.id).single()
     setMetaConn(metaConnData || null)
 
-    // Ad spend yÃ¼kle
+    // Ad spend y?kle
     const { data: adSpendData } = await supabase
       .from('ad_spend')
       .select('*')
@@ -476,7 +476,7 @@ const loadNotifications = async () => {
   setNotifications(data || [])
 }
 
-  // â”€â”€â”€ SETTINGS HANDLERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ??? SETTINGS HANDLERS ????????????????????????????????????????????????????
 
   const handleSaveProfile = async () => {
     setSettingsSaving(true); setSettingsMsg(null)
@@ -487,25 +487,25 @@ const loadNotifications = async () => {
       phone: settingsPhone, sector: settingsSector,
     }).eq('id', user.id)
     if (error) setSettingsMsg({ type: 'error', text: 'Kaydedilemedi: ' + error.message })
-    else { setSettingsMsg({ type: 'success', text: 'Profil gÃ¼ncellendi!' }); loadData() }
+    else { setSettingsMsg({ type: 'success', text: 'Profil g?ncellendi!' }); loadData() }
     setSettingsSaving(false)
     setTimeout(() => setSettingsMsg(null), 3000)
   }
 
   const handleChangePassword = async () => {
     setPasswordMsg(null)
-    if (!settingsOldPassword) { setPasswordMsg({ type: 'error', text: 'Mevcut ÅŸifrenizi girin.' }); return }
-    if (settingsNewPassword !== settingsNewPassword2) { setPasswordMsg({ type: 'error', text: 'Yeni ÅŸifreler eÅŸleÅŸmiyor.' }); return }
-    if (settingsNewPassword.length < 6) { setPasswordMsg({ type: 'error', text: 'Yeni ÅŸifre en az 6 karakter olmalÄ±.' }); return }
-    // Eski ÅŸifreyi doÄŸrula
+    if (!settingsOldPassword) { setPasswordMsg({ type: 'error', text: 'Mevcut Ã…Å¸ifrenizi girin.' }); return }
+    if (settingsNewPassword !== settingsNewPassword2) { setPasswordMsg({ type: 'error', text: 'Yeni Ã…Å¸ifreler eÃ…Å¸leÃ…Å¸miyor.' }); return }
+    if (settingsNewPassword.length < 6) { setPasswordMsg({ type: 'error', text: 'Yeni Ã…Å¸ifre en az 6 karakter olmal?.' }); return }
+    // Eski Ã…Å¸ifreyi doÃ„Å¸rula
     const { data: { user } } = await supabase.auth.getUser()
     if (!user?.email) return
     const { error: signInError } = await supabase.auth.signInWithPassword({ email: user.email, password: settingsOldPassword })
-    if (signInError) { setPasswordMsg({ type: 'error', text: 'Mevcut ÅŸifre yanlÄ±ÅŸ.' }); return }
-    // Yeni ÅŸifreyi kaydet
+    if (signInError) { setPasswordMsg({ type: 'error', text: 'Mevcut Ã…Å¸ifre yanl?Ã…Å¸.' }); return }
+    // Yeni Ã…Å¸ifreyi kaydet
     const { error } = await supabase.auth.updateUser({ password: settingsNewPassword })
     if (error) setPasswordMsg({ type: 'error', text: 'Hata: ' + error.message })
-    else { setPasswordMsg({ type: 'success', text: 'Åifre gÃ¼ncellendi!' }); setSettingsOldPassword(''); setSettingsNewPassword(''); setSettingsNewPassword2('') }
+    else { setPasswordMsg({ type: 'success', text: '?ifre g?ncellendi!' }); setSettingsOldPassword(''); setSettingsNewPassword(''); setSettingsNewPassword2('') }
     setTimeout(() => setPasswordMsg(null), 3000)
   }
 
@@ -525,7 +525,7 @@ const loadNotifications = async () => {
     setLogoUploading(false)
   }
 
-  // â”€â”€â”€ HANDLERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ??? HANDLERS ?????????????????????????????????????????????????????????????
 
   const handleAddBranch = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true)
@@ -606,7 +606,7 @@ const loadNotifications = async () => {
     await supabase.from('notifications').insert({
       user_id: profile.id,
       type: 'lead_created',
-      title: 'Yeni potansiyel mÃ¼ÅŸteri',
+      title: 'Yeni potansiyel m?Ã…Å¸teri',
       body: `${leadName} eklendi`,
       link: newLeadData?.id || 'leadler-liste'
     })
@@ -614,8 +614,8 @@ const loadNotifications = async () => {
       await supabase.from('notifications').insert({
         user_id: leadAssignTo,
         type: 'lead_assigned',
-        title: 'Yeni potansiyel mÃ¼ÅŸteri atandÄ±',
-        body: `${leadName} size atandÄ±`,
+        title: 'Yeni potansiyel m?Ã…Å¸teri atand?',
+        body: `${leadName} size atand?`,
         link: newLeadData?.id || ''
       })
     }
@@ -642,7 +642,7 @@ if (!newStatus && statusNote.trim()) {
 }
 if (!newStatus) return
 if (newStatus === selectedLead.status) {
-  console.log('AYNI STATÃœ - not:', statusNote, 'lead:', selectedLead.id)
+  console.log('AYNI STATÃƒÅ“ - not:', statusNote, 'lead:', selectedLead.id)
   setSaving(true)
   if (statusNote.trim()) {
     await supabase.from('lead_activities').insert({
@@ -656,7 +656,7 @@ if (newStatus === selectedLead.status) {
   return
 }
   if (selectedLead.status === 'procedure_done' && newStatus !== 'procedure_done' && !cancelReason.trim()) {
-    alert('LÃ¼tfen satÄ±ÅŸ iptal nedenini girin.')
+    alert('L?tfen sat?Ã…Å¸ iptal nedenini girin.')
     return
   }
   setSaving(true)
@@ -666,7 +666,7 @@ if (newStatus === selectedLead.status) {
     if (newStatus === 'procedure_done') { updates.procedure_type = procedureType; updates.procedure_amount = parseFloat(procedureAmount) || 0; updates.procedure_date = new Date().toISOString() }
     if (newStatus === 'cancelled') updates.cancel_reason = cancelReason
     if (selectedLead.status === 'procedure_done' && newStatus !== 'procedure_done') {
-  updates.cancel_reason = cancelReason || 'SatÄ±ÅŸ iptal edildi'
+  updates.cancel_reason = cancelReason || 'Sat?Ã…Å¸ iptal edildi'
 }
 await supabase.from('leads').update(updates).eq('id', selectedLead.id)
 if (newStatus !== selectedLead.status) {
@@ -716,7 +716,7 @@ const handlePayCommission = async () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ owner_id: profile.id }),
       })
-      // Veriyi yeniden yÃ¼kle
+      // Veriyi yeniden y?kle
       const { data } = await supabase
         .from('ad_spend')
         .select('*')
@@ -737,8 +737,8 @@ const handlePayCommission = async () => {
   await supabase.from('notifications').insert({
     user_id: userId,
     type: 'lead_assigned',
-    title: 'Yeni potansiyel mÃ¼ÅŸteri atandÄ±',
-    body: `${lead?.full_name || 'Bir mÃ¼ÅŸteri'} size atandÄ±`,
+    title: 'Yeni potansiyel m?Ã…Å¸teri atand?',
+    body: `${lead?.full_name || 'Bir m?Ã…Å¸teri'} size atand?`,
     link: leadId
   })
   
@@ -789,16 +789,16 @@ const handlePayCommission = async () => {
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
   const toggleMenu = (key: string) => setExpandedMenus(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
 
-  // â”€â”€â”€ VERÄ° MERKEZÄ° â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ??? VER? MERKEZ? ?????????????????????????????????????????????????????????
 
   const handleBulkSave = async () => {
     const validRows = bulkRows.filter(r => r.full_name.trim() || r.phone.trim())
-    if (validRows.length === 0) { alert('En az 1 satÄ±r doldurmanÄ±z gerekiyor.'); return }
+    if (validRows.length === 0) { alert('En az 1 sat?r doldurman?z gerekiyor.'); return }
     setBulkLoading(true)
     setBulkResult(null)
     let success = 0
     const errors: string[] = []
-    const setName = `Manuel GiriÅŸ â€” ${new Date().toLocaleDateString('tr-TR')}`
+    const setName = `Manuel GiriÃ…Å¸ Ã¢â‚¬â€ ${new Date().toLocaleDateString('tr-TR')}`
     for (let i = 0; i < validRows.length; i++) {
       const row = validRows[i]
       const leadCode = 'LD' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 100)
@@ -810,7 +810,7 @@ const handlePayCommission = async () => {
         assigned_to: null, status: 'new', lead_code: leadCode,
         owner_id: profile.id, import_set: setName,
       })
-      if (error) { errors.push(`SatÄ±r ${i + 1}: ${error.message}`); continue }
+      if (error) { errors.push(`Sat?r ${i + 1}: ${error.message}`); continue }
       success++
     }
     setBulkResult({ success, errors })
@@ -826,12 +826,12 @@ const handlePayCommission = async () => {
     const XLSX = await import('xlsx')
     const agentNames = teamMembers.filter(m => m.role === 'agent' || m.role === 'team').map(m => m.profiles?.full_name || '').filter(Boolean)
     const ws = XLSX.utils.aoa_to_sheet([
-      ['Ad Soyad', 'Telefon', 'E-posta', 'Kaynak', 'Not', 'Åube AdÄ±', 'SatÄ±ÅŸÃ§Ä±'],
-      ['Ahmet YÄ±lmaz', '05321234567', 'ahmet@email.com', 'manuel', 'Instagram reklamÄ±ndan geldi', branches[0]?.branch_name || 'Merkez Åube', agentNames[0] || ''],
-      ['Fatma Kaya', '05431234567', '', 'referral', 'Referans mÃ¼ÅŸteri', branches[0]?.branch_name || 'Merkez Åube', ''],
+      ['Ad Soyad', 'Telefon', 'E-posta', 'Kaynak', 'Not', '?ube Ad?', 'Sat?Ã…Å¸??'],
+      ['Ahmet Y?lmaz', '05321234567', 'ahmet@email.com', 'manuel', 'Instagram reklam?ndan geldi', branches[0]?.branch_name || 'Merkez ?ube', agentNames[0] || ''],
+      ['Fatma Kaya', '05431234567', '', 'referral', 'Referans m?Ã…Å¸teri', branches[0]?.branch_name || 'Merkez ?ube', ''],
       ['', '', '', '', '', '', ''],
-      ['GeÃ§erli Kaynak DeÄŸerleri:', 'manuel', 'referral', 'website', 'whatsapp', 'instagram_dm', ''],
-      ['SatÄ±ÅŸÃ§Ä± AdlarÄ±:', ...agentNames.slice(0, 5), ''],
+      ['Ge?erli Kaynak DeÃ„Å¸erleri:', 'manuel', 'referral', 'website', 'whatsapp', 'instagram_dm', ''],
+      ['Sat?Ã…Å¸?? Adlar?:', ...agentNames.slice(0, 5), ''],
     ])
     ws['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 14 }, { wch: 30 }, { wch: 20 }, { wch: 20 }]
     const wb = XLSX.utils.book_new()
@@ -863,27 +863,27 @@ const handlePayCommission = async () => {
     const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' })
     const branchMap: Record<string, string> = {}
     branches.forEach(b => { branchMap[b.branch_name?.toLowerCase().trim()] = b.id })
-    // SatÄ±ÅŸÃ§Ä± adÄ± â†’ user_id haritasÄ±
+    // Sat?Ã…Å¸?? ad? Ã¢â€ â€™ user_id haritas?
     const agentMap: Record<string, string> = {}
     teamMembers.forEach(m => {
       const name = m.profiles?.full_name?.toLowerCase().trim()
       if (name) agentMap[name] = m.user_id
     })
-    const setName = `${xlsxFile.name} â€” ${new Date().toLocaleDateString('tr-TR')}`
+    const setName = `${xlsxFile.name} Ã¢â‚¬â€ ${new Date().toLocaleDateString('tr-TR')}`
     let success = 0
     const errors: string[] = []
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i]
       const fullName = String(row['Ad Soyad'] || row['ad soyad'] || row['Ad'] || '').trim()
       const phone = String(row['Telefon'] || row['telefon'] || '').trim()
-      if (!fullName && !phone) { errors.push(`SatÄ±r ${i + 2}: Ad ve telefon boÅŸ, atlandÄ±`); continue }
-      const branchRaw = String(row['Åube AdÄ±'] || row['sube adi'] || '').toLowerCase().trim()
+      if (!fullName && !phone) { errors.push(`Sat?r ${i + 2}: Ad ve telefon boÃ…Å¸, atland?`); continue }
+      const branchRaw = String(row['?ube Ad?'] || row['sube adi'] || '').toLowerCase().trim()
       const branchId = branchMap[branchRaw] || branches[0]?.id || null
       const source = String(row['Kaynak'] || row['kaynak'] || 'excel_import').trim()
       const note = String(row['Not'] || row['not'] || '').trim()
       const email = String(row['E-posta'] || row['eposta'] || row['email'] || '').trim()
-      // SatÄ±ÅŸÃ§Ä±: Ã¶nce Excel'deki isimden bul, yoksa varsayÄ±lan dropdown
-      const agentRaw = String(row['SatÄ±ÅŸÃ§Ä±'] || row['satisci'] || row['SatÄ±ÅŸÃ§Ä± AdÄ±'] || '').toLowerCase().trim()
+      // Sat?Ã…Å¸??: ?nce Excel'deki isimden bul, yoksa varsay?lan dropdown
+      const agentRaw = String(row['Sat?Ã…Å¸??'] || row['satisci'] || row['Sat?Ã…Å¸?? Ad?'] || '').toLowerCase().trim()
       const assignedTo = (agentRaw && agentMap[agentRaw]) ? agentMap[agentRaw] : (xlsxDefaultAgent || null)
       const leadCode = 'LD' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 100)
       const { error } = await supabase.from('leads').insert({
@@ -893,7 +893,7 @@ const handlePayCommission = async () => {
         status: 'new', lead_code: leadCode,
         owner_id: profile.id, import_set: setName,
       })
-      if (error) { errors.push(`SatÄ±r ${i + 2}: ${error.message}`); continue }
+      if (error) { errors.push(`Sat?r ${i + 2}: ${error.message}`); continue }
       success++
     }
     setXlsxResult({ success, errors })
@@ -901,12 +901,12 @@ const handlePayCommission = async () => {
     setXlsxLoading(false)
   }
 
-  // â”€â”€â”€ COMPUTED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ??? COMPUTED ?????????????????????????????????????????????????????????????
 
   const getPageTitle = () => {
     for (const item of menuStructure) {
       if (item.key === activeTab) return item.label
-      if (item.children) { const child = item.children.find(c => c.key === activeTab); if (child) return `${item.label} â€º ${child.label}` }
+      if (item.children) { const child = item.children.find(c => c.key === activeTab); if (child) return `${item.label} ? ${child.label}` }
     }
     return 'Dashboard'
   }
@@ -937,7 +937,7 @@ const handlePayCommission = async () => {
     return matchesSearch && matchesStatus && matchesSource && matchesDate
   })
 
-  // â”€â”€â”€ REPORT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ??? REPORT ???????????????????????????????????????????????????????????????
 
   const getReportLeads = () => {
     const now = new Date()
@@ -954,11 +954,11 @@ const handlePayCommission = async () => {
     setReportLoading(true)
     const data = getReportLeads()
     const XLSX = await import('xlsx')
-    const rows = data.map(l => ({ 'Lead Kodu': l.lead_code, 'Ad Soyad': l.full_name || '', 'Telefon': l.phone || '', 'E-posta': l.email || '', 'Durum': STATUS_CONFIG[l.status]?.label || l.status, 'Kaynak': SOURCE_CONFIG[l.source]?.label || l.source, 'Ä°ÅŸlem TutarÄ±': l.procedure_amount || 0, 'Randevu': l.appointment_at ? new Date(l.appointment_at).toLocaleDateString('tr-TR') : '', 'Not': l.note || '', 'Eklenme Tarihi': new Date(l.created_at).toLocaleDateString('tr-TR') }))
+    const rows = data.map(l => ({ 'Lead Kodu': l.lead_code, 'Ad Soyad': l.full_name || '', 'Telefon': l.phone || '', 'E-posta': l.email || '', 'Durum': STATUS_CONFIG[l.status]?.label || l.status, 'Kaynak': SOURCE_CONFIG[l.source]?.label || l.source, '?Ã…Å¸lem Tutar?': l.procedure_amount || 0, 'Randevu': l.appointment_at ? new Date(l.appointment_at).toLocaleDateString('tr-TR') : '', 'Not': l.note || '', 'Eklenme Tarihi': new Date(l.created_at).toLocaleDateString('tr-TR') }))
     const ws = XLSX.utils.json_to_sheet(rows)
     ws['!cols'] = [12, 20, 14, 24, 12, 14, 14, 14, 30, 14].map(w => ({ wch: w }))
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Leadler')
-    const pLabel: any = { today: 'BugÃ¼n', this_week: 'Bu_Hafta', this_month: 'Bu_Ay', last_month: 'GeÃ§en_Ay', custom: 'Ã–zel' }
+    const pLabel: any = { today: 'Bug?n', this_week: 'Bu_Hafta', this_month: 'Bu_Ay', last_month: 'Ge?en_Ay', custom: 'Ãƒâ€“zel' }
     XLSX.writeFile(wb, `DataPilot_${pLabel[reportPeriod]}.xlsx`)
     setReportLoading(false); setShowReportPanel(false)
   }
@@ -969,19 +969,19 @@ const handlePayCommission = async () => {
     const { default: jsPDF } = await import('jspdf')
     const { default: autoTable } = await import('jspdf-autotable')
     const doc = new jsPDF({ orientation: 'landscape' })
-    doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.text('DataPilot â€” Potansiyel MÃ¼ÅŸteri Raporu', 14, 18)
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.text('DataPilot Ã¢â‚¬â€ Potansiyel M?Ã…Å¸teri Raporu', 14, 18)
     doc.setFontSize(9); doc.setFont('helvetica', 'normal')
-    const pLabel: any = { today: 'BugÃ¼n', this_week: 'Bu Hafta', this_month: 'Bu Ay', last_month: 'GeÃ§en Ay', custom: 'Ã–zel' }
+    const pLabel: any = { today: 'Bug?n', this_week: 'Bu Hafta', this_month: 'Bu Ay', last_month: 'Ge?en Ay', custom: 'Ãƒâ€“zel' }
     const sales = data.filter(l => l.status === 'procedure_done').length
     const revenue = data.filter(l => l.status === 'procedure_done').reduce((s, l) => s + (l.procedure_amount || 0), 0)
-    doc.text(`DÃ¶nem: ${pLabel[reportPeriod]}  |  Toplam: ${data.length} potansiyel mÃ¼ÅŸteri  |  SatÄ±ÅŸ: ${sales}  |  Ciro: â‚º${revenue.toLocaleString()}  |  DÃ¶nÃ¼ÅŸÃ¼m: %${data.length > 0 ? ((sales / data.length) * 100).toFixed(1) : 0}`, 14, 26)
-    autoTable(doc, { startY: 32, head: [['Lead Kodu', 'Ad Soyad', 'Telefon', 'Durum', 'Kaynak', 'Tutar', 'Tarih']], body: data.map(l => [l.lead_code, l.full_name || '', l.phone || '', STATUS_CONFIG[l.status]?.label || l.status, SOURCE_CONFIG[l.source]?.label || l.source, l.procedure_amount ? `â‚º${l.procedure_amount.toLocaleString()}` : '-', new Date(l.created_at).toLocaleDateString('tr-TR')]), styles: { fontSize: 8, cellPadding: 3 }, headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' }, alternateRowStyles: { fillColor: [249, 250, 251] } })
-    const pLabelFile: any = { today: 'BugÃ¼n', this_week: 'Bu_Hafta', this_month: 'Bu_Ay', last_month: 'GeÃ§en_Ay', custom: 'Ã–zel' }
+    doc.text(`D?nem: ${pLabel[reportPeriod]}  |  Toplam: ${data.length} potansiyel m?Ã…Å¸teri  |  Sat?Ã…Å¸: ${sales}  |  Ciro: ?${revenue.toLocaleString()}  |  D?n?Ã…Å¸?m: %${data.length > 0 ? ((sales / data.length) * 100).toFixed(1) : 0}`, 14, 26)
+    autoTable(doc, { startY: 32, head: [['Lead Kodu', 'Ad Soyad', 'Telefon', 'Durum', 'Kaynak', 'Tutar', 'Tarih']], body: data.map(l => [l.lead_code, l.full_name || '', l.phone || '', STATUS_CONFIG[l.status]?.label || l.status, SOURCE_CONFIG[l.source]?.label || l.source, l.procedure_amount ? `?${l.procedure_amount.toLocaleString()}` : '-', new Date(l.created_at).toLocaleDateString('tr-TR')]), styles: { fontSize: 8, cellPadding: 3 }, headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' }, alternateRowStyles: { fillColor: [249, 250, 251] } })
+    const pLabelFile: any = { today: 'Bug?n', this_week: 'Bu_Hafta', this_month: 'Bu_Ay', last_month: 'Ge?en_Ay', custom: 'Ãƒâ€“zel' }
     doc.save(`DataPilot_${pLabelFile[reportPeriod]}.pdf`)
     setReportLoading(false); setShowReportPanel(false)
   }
 
-  // â”€â”€â”€ LOADING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ??? LOADING ??????????????????????????????????????????????????????????????
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -996,7 +996,7 @@ const handlePayCommission = async () => {
     </div>
   )
 
-  // â”€â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ??? RENDER ???????????????????????????????????????????????????????????????
  const sidebarWidth = sidebarCollapsed ? '4rem' : '15rem'
   return (
     <div
@@ -1007,7 +1007,7 @@ const handlePayCommission = async () => {
       }}
     >
 
-      {/* â”€â”€ SIDEBAR â”€â”€ */}
+      {/* ?? SIDEBAR ?? */}
      <aside
   className="fixed inset-y-0 left-0 z-30 w-[var(--sidebar-width)] bg-gray-950 border-r border-gray-800 flex flex-col transition-all duration-200 shadow-xl"
 >
@@ -1029,7 +1029,7 @@ const handlePayCommission = async () => {
             )}
             <div className="min-w-0">
               <p className="text-xs font-semibold text-gray-200 truncate">{profile?.company_name || profile?.full_name}</p>
-              <span className="text-xs text-indigo-400 font-medium">MÃ¼ÅŸteri</span>
+              <span className="text-xs text-indigo-400 font-medium">Müşteri</span>
             </div>
           </div>
         )}
@@ -1094,7 +1094,7 @@ const handlePayCommission = async () => {
         )}
       </aside>
 
-      {/* â”€â”€ MAIN â”€â”€ */}
+      {/* ?? MAIN ?? */}
       <div className="ml-[var(--sidebar-width)] min-w-0 transition-all duration-200">
 
         {/* Top bar */}
@@ -1109,7 +1109,7 @@ const handlePayCommission = async () => {
 </button>
   <div className="flex items-center gap-1.5 text-sm text-gray-400">
     <span>DataPilot</span>
-    {getPageTitle().split(' â€º ').map((part, i, arr) => (
+    {getPageTitle().split(' / ').map((part, i, arr) => (
       <span key={i} className="flex items-center gap-1.5">
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
         <span className={i === arr.length - 1 ? 'text-gray-800 font-medium' : ''}>{part}</span>
@@ -1135,7 +1135,7 @@ const handlePayCommission = async () => {
         <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <p className="text-sm font-semibold text-gray-900">Bildirimler</p>
-            <span className="text-xs text-gray-400">{notifications.filter(n => !n.is_read).length} okunmamÄ±ÅŸ</span>
+            <span className="text-xs text-gray-400">{notifications.filter(n => !n.is_read).length} okunmamış</span>
           </div>
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
@@ -1194,7 +1194,7 @@ const handlePayCommission = async () => {
           </button>
           <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 12H2.5A1.5 1.5 0 011 10.5v-7A1.5 1.5 0 012.5 2H5M9 10l3-3-3-3M12 7H5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Ã‡Ä±kÄ±ÅŸ Yap
+            Çıkış Yap
           </button>
         </div>
       )}
@@ -1205,7 +1205,7 @@ const handlePayCommission = async () => {
         {/* Content */}
         <main className="min-h-[calc(100vh-56px)] px-6 py-6" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
           <div className="max-w-7xl mx-auto">
-          {/* â”€â”€ DASHBOARD â”€â”€ */}
+          {/* ?? DASHBOARD ?? */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
               {/* Welcome */}
@@ -1214,14 +1214,14 @@ const handlePayCommission = async () => {
                 <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/5 rounded-full" />
                 <div className="absolute -right-2 bottom-0 w-24 h-24 bg-violet-500/20 rounded-full" />
                 <div className="relative">
-                  <p className="text-indigo-200 text-sm mb-1">HoÅŸ geldin,</p>
+                  <p className="text-indigo-200 text-sm mb-1">Hoş geldin,</p>
                   <h1 className="text-2xl font-bold mb-1">{profile?.full_name}</h1>
                   <p className="text-indigo-300 text-sm">{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                   <div className="flex gap-8 mt-5 pt-5 border-t border-white/10">
-                    <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Toplam Potansiyel MÃ¼ÅŸteri</p></div>
-                    <div><p className="text-3xl font-bold">{totalSales}</p><p className="text-indigo-300 text-xs mt-0.5">SatÄ±ÅŸ</p></div>
-                    <div><p className="text-3xl font-bold">%{conversionRate}</p><p className="text-indigo-300 text-xs mt-0.5">DÃ¶nÃ¼ÅŸÃ¼m</p></div>
-                    <div><p className="text-3xl font-bold">â‚º{(totalRevenue / 1000).toFixed(0)}K</p><p className="text-indigo-300 text-xs mt-0.5">Ciro</p></div>
+                    <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Toplam Potansiyel Müşteri</p></div>
+                    <div><p className="text-3xl font-bold">{totalSales}</p><p className="text-indigo-300 text-xs mt-0.5">Satış</p></div>
+                    <div><p className="text-3xl font-bold">%{conversionRate}</p><p className="text-indigo-300 text-xs mt-0.5">Dönüşüm</p></div>
+                    <div><p className="text-3xl font-bold">₺{(totalRevenue / 1000).toFixed(0)}K</p><p className="text-indigo-300 text-xs mt-0.5">Ciro</p></div>
                   </div>
                 </div>
               </div>
@@ -1229,10 +1229,10 @@ const handlePayCommission = async () => {
               {/* Stat cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                 { label: 'Aktif Potansiyel MÃ¼ÅŸteri', value: leads.filter(l => l.status === 'new' || l.status === 'called').length, sub: 'Yeni + ArandÄ±', color: 'text-blue-600', border: 'border-blue-100', gradient: 'from-blue-50 to-white', iconBg: 'bg-blue-100', icon: 'â—', tab: 'leadler-liste' },
-{ label: 'Randevu', value: leads.filter(l => l.status === 'appointment_scheduled').length, sub: 'Bekleyen randevu', color: 'text-violet-600', border: 'border-violet-100', gradient: 'from-violet-50 to-white', iconBg: 'bg-violet-100', icon: 'â—', tab: 'leadler-liste' },
-{ label: 'Toplam SatÄ±ÅŸ', value: totalSales, sub: `â‚º${totalRevenue.toLocaleString()}`, color: 'text-emerald-600', border: 'border-emerald-100', gradient: 'from-emerald-50 to-white', iconBg: 'bg-emerald-100', icon: 'â—‰', tab: 'leadler-liste' },
-{ label: 'Åubeler', value: branches.length, sub: `${teamMembers.length} ekip Ã¼yesi`, color: 'text-orange-600', border: 'border-orange-100', gradient: 'from-orange-50 to-white', iconBg: 'bg-orange-100', icon: 'â—ˆ', tab: 'ekip-sube' },
+                 { label: 'Aktif Potansiyel Müşteri', value: leads.filter(l => l.status === 'new' || l.status === 'called').length, sub: 'Yeni + Arandı', color: 'text-blue-600', border: 'border-blue-100', gradient: 'from-blue-50 to-white', iconBg: 'bg-blue-100', icon: '?', tab: 'leadler-liste' },
+{ label: 'Randevu', value: leads.filter(l => l.status === 'appointment_scheduled').length, sub: 'Bekleyen randevu', color: 'text-violet-600', border: 'border-violet-100', gradient: 'from-violet-50 to-white', iconBg: 'bg-violet-100', icon: '?', tab: 'leadler-liste' },
+                 { label: 'Toplam Satış', value: totalSales, sub: `₺${totalRevenue.toLocaleString()}`, color: 'text-emerald-600', border: 'border-emerald-100', gradient: 'from-emerald-50 to-white', iconBg: 'bg-emerald-100', icon: '?', tab: 'leadler-liste' },
+                 { label: 'Şubeler', value: branches.length, sub: `${teamMembers.length} ekip üyesi`, color: 'text-orange-600', border: 'border-orange-100', gradient: 'from-orange-50 to-white', iconBg: 'bg-orange-100', icon: '?', tab: 'ekip-sube' },
                 ].map((card: any) => (
   <div key={card.label} onClick={() => setActiveTab(card.tab)} className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-5 border ${card.border} hover:shadow-md transition-all cursor-pointer`}>
                     <div className={`w-9 h-9 ${card.iconBg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
@@ -1246,21 +1246,21 @@ const handlePayCommission = async () => {
               {/* Recent leads */}
               <div className="bg-white rounded-2xl border border-gray-100">
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-900 text-sm">Son Potansiyel MÃ¼ÅŸteriler</h3>
-                  <button onClick={() => setActiveTab('leadler-liste')} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">TÃ¼mÃ¼nÃ¼ gÃ¶r â†’</button>
+                  <h3 className="font-semibold text-gray-900 text-sm">Son Potansiyel Müşteriler</h3>
+                  <button onClick={() => setActiveTab('leadler-liste')} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Tümünü gör →</button>
                 </div>
                 {leads.length === 0 ? (
-                  <div className="p-12 text-center"><p className="text-gray-400 text-sm">HenÃ¼z potansiyel mÃ¼ÅŸteri yok.</p></div>
+                  <div className="p-12 text-center"><p className="text-gray-400 text-sm">Henüz potansiyel müşteri yok.</p></div>
                 ) : leads.slice(0, 6).map((lead, idx) => {
                   const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600','from-violet-100 to-purple-100 text-violet-600','from-emerald-100 to-teal-100 text-emerald-600','from-orange-100 to-amber-100 text-orange-600','from-pink-100 to-rose-100 text-rose-600','from-cyan-100 to-blue-100 text-blue-600']
                   const ac = avatarColors[idx % avatarColors.length]
                   return (
                   <div key={lead.id} onClick={() => openDetailModal(lead)} className="px-5 py-3.5 flex items-center gap-3 border-b border-gray-50 last:border-0 hover:bg-indigo-50/30 cursor-pointer transition-colors group">
                     <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${ac} flex items-center justify-center flex-shrink-0`}>
-                      <span className="text-xs font-semibold">{(lead.full_name || 'Ä°').charAt(0)}</span>
+                      <span className="text-xs font-semibold">{(lead.full_name || '?').charAt(0)}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'Ä°simsiz'}</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || '?simsiz'}</p>
                       <p className="text-xs text-gray-400">{lead.phone}</p>
                     </div>
                     <button onClick={e => { e.stopPropagation(); setSelectedLead(lead); loadLeadActivities(lead.id); setNewStatus(lead.status) }}>
@@ -1273,33 +1273,33 @@ const handlePayCommission = async () => {
             </div>
           )}
 
-          {/* â”€â”€ LEAD LÄ°STESÄ° â”€â”€ */}
+          {/* ?? LEAD L?STES? ?? */}
           {activeTab === 'leadler-liste' && (
            <div className="space-y-4">
-  {/* BaÅŸlÄ±k */}
+  {/* BaÃ…Å¸l?k */}
  <div className="flex items-center justify-between gap-4 flex-wrap">
     <div>
-      <h2 className="text-base font-semibold text-gray-900">Potansiyel MÃ¼ÅŸteri Listesi</h2>
-      <p className="text-xs text-gray-400 mt-0.5">Potansiyel mÃ¼ÅŸterilerinizi filtreleyin, arayÄ±n ve yÃ¶netin</p>
+      <h2 className="text-base font-semibold text-gray-900">Potansiyel M?Ã…Å¸teri Listesi</h2>
+      <p className="text-xs text-gray-400 mt-0.5">Potansiyel m?Ã…Å¸terilerinizi filtreleyin, aray?n ve y?netin</p>
     </div>
     <button onClick={() => setActiveTab('pipeline')}
       className="text-xs text-indigo-600 font-medium px-3 py-1.5 hover:bg-indigo-50 rounded-lg border border-indigo-200 transition-colors">
-      SÃ¼reÃ§te GÃ¶r â†’
+      S?re?te G?r Ã¢â€ â€™
     </button>
   </div>
   {/* Actions bar */}
   <div className="flex items-center justify-between gap-4 flex-wrap">
-  <p className="text-sm text-gray-500">{filteredLeads.length} / {leads.length} potansiyel mÃ¼ÅŸteri</p>
+  <p className="text-sm text-gray-500">{filteredLeads.length} / {leads.length} potansiyel m?Ã…Å¸teri</p>
   <div className="flex gap-2 flex-shrink-0">
   <button onClick={() => setShowReportPanel(true)}
     className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-medium rounded-xl transition-colors shadow-sm">
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3.5 6l3 3 3-3M1.5 10.5h10" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
-    Rapor Ä°ndir
+    Rapor ?ndir
   </button>
   <button onClick={() => setShowAddLead(true)}
     className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm shadow-indigo-200">
     <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-    Potansiyel MÃ¼ÅŸteri
+    Potansiyel M?Ã…Å¸teri
   </button>
 </div>
               </div>
@@ -1307,7 +1307,7 @@ const handlePayCommission = async () => {
               {/* Search */}
               <div className="relative">
                 <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Ä°sim, telefon veya potansiyel mÃ¼ÅŸteri kodu ara..."
+                <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="?sim, telefon veya potansiyel m?Ã…Å¸teri kodu ara..."
                   className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                 {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></button>}
               </div>
@@ -1315,9 +1315,9 @@ const handlePayCommission = async () => {
               {/* Filters */}
               <div className="space-y-2">
                 <div>
-                 <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Duruma gÃ¶re filtrele</p>
+                 <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Duruma g?re filtrele</p>
                   <div className="flex gap-1.5 flex-wrap">
-                    {[{ key: 'all', label: 'TÃ¼mÃ¼' }, ...Object.entries(STATUS_CONFIG).map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
+                    {[{ key: 'all', label: 'T?m?' }, ...Object.entries(STATUS_CONFIG).map(([k, v]: any) => ({ key: k, label: v.label }))].map(f => (
                       <button key={f.key} onClick={() => setFilterStatus(f.key)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterStatus === f.key ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}>
                         {f.label} ({f.key === 'all' ? leads.length : leads.filter(l => l.status === f.key).length})
@@ -1329,10 +1329,10 @@ const handlePayCommission = async () => {
                   <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Randevu Tarihi</p>
                   <div className="flex gap-1.5 flex-wrap">
                     {[
-                      { key: 'all', label: 'TÃ¼mÃ¼' },
-                      { key: 'today', label: 'â— BugÃ¼n', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d.getTime() === today.getTime() }).length },
-                      { key: 'this_week', label: 'â— Bu Hafta', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d >= today && d <= weekEnd }).length },
-                      { key: 'overdue', label: 'â— GeÃ§miÅŸ', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d < today }).length },
+                      { key: 'all', label: 'T?m?' },
+                      { key: 'today', label: 'Ã¢â€”Â Bug?n', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d.getTime() === today.getTime() }).length },
+                      { key: 'this_week', label: 'Ã¢â€”Â Bu Hafta', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d >= today && d <= weekEnd }).length },
+                      { key: 'overdue', label: 'Ã¢â€”Â Ge?miÃ…Å¸', count: leads.filter(l => { if (!l.appointment_at) return false; const d = new Date(l.appointment_at); d.setHours(0,0,0,0); return d < today }).length },
                     ].map(f => (
                       <button key={f.key} onClick={() => setFilterDate(f.key)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterDate === f.key ? 'bg-violet-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}>
@@ -1346,14 +1346,14 @@ const handlePayCommission = async () => {
                   <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Kaynak</p>
                   <div className="flex gap-1.5 flex-wrap">
                     {[
-                      { key: 'all', label: 'TÃ¼mÃ¼', color: filterSource === 'all' ? 'bg-gray-800 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300' },
-                      { key: 'manuel', label: 'âœï¸ Manuel', color: filterSource === 'manuel' ? 'bg-gray-700 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300' },
-                      { key: 'meta_form', label: 'ğŸ¯ Meta Form', color: filterSource === 'meta_form' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-200' },
-                      { key: 'whatsapp', label: 'ğŸ’¬ WhatsApp', color: filterSource === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-green-200' },
-                      { key: 'instagram_dm', label: 'ğŸ“¸ Instagram', color: filterSource === 'instagram_dm' ? 'bg-pink-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-pink-200' },
-                      { key: 'referral', label: 'ğŸ¤ Referans', color: filterSource === 'referral' ? 'bg-amber-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-amber-200' },
-                      { key: 'website', label: 'ğŸŒ Web', color: filterSource === 'website' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-indigo-200' },
-                      { key: 'google_ads', label: 'ğŸ” Google Ads', color: filterSource === 'google_ads' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-yellow-200' },
+                      { key: 'all', label: 'T?m?', color: filterSource === 'all' ? 'bg-gray-800 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300' },
+                      { key: 'manuel', label: 'Ã¢Å“ÂÃ¯Â¸Â Manuel', color: filterSource === 'manuel' ? 'bg-gray-700 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300' },
+                      { key: 'meta_form', label: 'ÄŸÅ¸ÂÂ¯ Meta Form', color: filterSource === 'meta_form' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-200' },
+                      { key: 'whatsapp', label: '?? WhatsApp', color: filterSource === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-green-200' },
+                      { key: 'instagram_dm', label: '?? Instagram', color: filterSource === 'instagram_dm' ? 'bg-pink-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-pink-200' },
+                      { key: 'referral', label: '?? Referans', color: filterSource === 'referral' ? 'bg-amber-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-amber-200' },
+                      { key: 'website', label: '?? Web', color: filterSource === 'website' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-indigo-200' },
+                      { key: 'google_ads', label: '?? Google Ads', color: filterSource === 'google_ads' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-yellow-200' },
                     ].map(f => (
                       <button key={f.key} onClick={() => setFilterSource(f.key)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${f.color}`}>
@@ -1368,19 +1368,19 @@ const handlePayCommission = async () => {
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 {filteredLeads.length === 0 ? (
                   <div className="p-16 text-center">
-                    <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">â—</div>
-                    <p className="text-gray-500 text-sm font-medium">SonuÃ§ bulunamadÄ±</p>
+                    <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">?</div>
+                    <p className="text-gray-500 text-sm font-medium">Sonu? bulunamad?</p>
                     {(searchQuery || filterStatus !== 'all' || filterDate !== 'all' || filterSource !== 'all') && <button onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterDate('all'); setFilterSource('all') }} className="mt-2 text-xs text-indigo-600 hover:underline">Filtreleri temizle</button>}
                   </div>
-                // â”€â”€â”€ BUNU BUL VE DEÄÄ°ÅTÄ°R â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// leadler-liste sekmesinde ÅŸu satÄ±rÄ± bul:
+                // ??? BUNU BUL VE DE???T?R ????????????????????????????????????????????????????
+// leadler-liste sekmesinde Ã…Å¸u sat?r? bul:
 //   ) : filteredLeads.map((lead, i) => (
 //     <div key={lead.id} onClick={() => openDetailModal(lead)}
 //       className={`px-5 py-4 flex items-center gap-4 cursor-pointer ...`}>
 //
-// O bloktan kapanÄ±ÅŸ parantezine kadar olan tÃ¼m kÄ±smÄ± sil,
-// yerine aÅŸaÄŸÄ±daki kodu yapÄ±ÅŸtÄ±r:
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// O bloktan kapan?Ã…Å¸ parantezine kadar olan t?m k?sm? sil,
+// yerine aÃ…Å¸aÃ„Å¸?daki kodu yap?Ã…Å¸t?r:
+// ?????????????????????????????????????????????????????????????????????????????
 
                 ) : filteredLeads.map((lead, i) => {
                   const assignedMember = teamMembers.find(m => m.user_id === lead.assigned_to)
@@ -1401,35 +1401,35 @@ const handlePayCommission = async () => {
                       {/* Avatar + kaynak ikonu */}
                       <div className="relative flex-shrink-0 mt-0.5">
                         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center">
-                          <span className="text-indigo-600 text-sm font-semibold">{(lead.full_name || 'Ä°').charAt(0)}</span>
+                          <span className="text-indigo-600 text-sm font-semibold">{(lead.full_name || '?').charAt(0)}</span>
                         </div>
                         <span className="absolute -bottom-1 -right-1 text-xs leading-none">
-                          {lead.source === 'meta_form' ? 'ğŸ¯' : lead.source === 'whatsapp' ? 'ğŸ’¬' : lead.source === 'instagram_dm' ? 'ğŸ“¸' : lead.source === 'referral' ? 'ğŸ¤' : lead.source === 'website' ? 'ğŸŒ' : lead.source === 'google_ads' ? 'ğŸ”' : 'âœï¸'}                        </span>
+                          {lead.source === 'meta_form' ? 'ÄŸÅ¸ÂÂ¯' : lead.source === 'whatsapp' ? '??' : lead.source === 'instagram_dm' ? '??' : lead.source === 'referral' ? '??' : lead.source === 'website' ? '??' : lead.source === 'google_ads' ? '??' : 'Ã¢Å“ÂÃ¯Â¸Â'}                        </span>
                       </div>
 
                       {/* Ana bilgi */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <p className="text-sm font-semibold text-gray-900 truncate">{lead.full_name || 'Ä°simsiz'}</p>
+                          <p className="text-sm font-semibold text-gray-900 truncate">{lead.full_name || '?simsiz'}</p>
                           <SourceBadge source={lead.source} />
                           {isStale && (
                             <span className="flex items-center gap-1 text-xs text-amber-600 font-medium bg-amber-100 px-1.5 py-0.5 rounded-md flex-shrink-0">
-                              â³ {daysSinceCreated}g
+                              Ã¢ÂÂ³ {daysSinceCreated}g
                             </span>
                           )}
                           {hasAppointmentSoon && (
                             <span className="text-xs text-violet-600 font-medium bg-violet-100 px-1.5 py-0.5 rounded-md flex-shrink-0">
-                              ğŸ“… YakÄ±n
+                              ÄŸÅ¸â€œâ€¦ Yak?n
                             </span>
                           )}
                           {isAppointmentOverdue && (
                             <span className="text-xs text-red-500 font-medium bg-red-50 px-1.5 py-0.5 rounded-md flex-shrink-0">
-                              âš  GeÃ§ti
+                              Ã¢Å¡Â  Ge?ti
                             </span>
                           )}
                         </div>
 
-                        {/* Ä°letiÅŸim bilgileri */}
+                        {/* ?letiÃ…Å¸im bilgileri */}
                         <div className="flex items-center gap-3 mb-1">
                           <a href={`tel:${lead.phone}`} onClick={e => e.stopPropagation()}
                             className="text-xs text-gray-500 hover:text-indigo-600 transition-colors flex items-center gap-1">
@@ -1444,7 +1444,7 @@ const handlePayCommission = async () => {
                           )}
                         </div>
 
-                        {/* SatÄ±ÅŸÃ§Ä± & tarih bilgisi */}
+                        {/* Sat?Ã…Å¸?? & tarih bilgisi */}
                         <div className="flex items-center gap-3">
                           {assignedMember ? (
                             <span className="text-xs text-indigo-500 font-medium flex items-center gap-1">
@@ -1452,15 +1452,15 @@ const handlePayCommission = async () => {
                               {assignedMember.profiles?.full_name}
                             </span>
                           ) : (
-                            <span className="text-xs text-amber-500 font-medium">âš  AtanmamÄ±ÅŸ</span>
+                            <span className="text-xs text-amber-500 font-medium">Ã¢Å¡Â  Atanmam?Ã…Å¸</span>
                           )}
-                          <span className="text-xs text-gray-300">Â·</span>
+                          <span className="text-xs text-gray-300">?</span>
                           <span className="text-xs text-gray-400">{new Date(lead.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}</span>
                           {lead.appointment_at && (
                             <>
-                              <span className="text-xs text-gray-300">Â·</span>
+                              <span className="text-xs text-gray-300">?</span>
                               <span className={`text-xs font-medium ${isAppointmentOverdue ? 'text-red-500' : 'text-violet-600'}`}>
-                                ğŸ“… {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                ÄŸÅ¸â€œâ€¦ {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </>
                           )}
@@ -1468,22 +1468,22 @@ const handlePayCommission = async () => {
 
                         {/* Not varsa */}
                         {lead.note && (
-                          <p className="text-xs text-gray-400 mt-1 truncate max-w-sm">ğŸ’¬ {lead.note}</p>
+                          <p className="text-xs text-gray-400 mt-1 truncate max-w-sm">?? {lead.note}</p>
                         )}
                       </div>
 
-                      {/* SaÄŸ: badge + tutar + aksiyonlar */}
+                      {/* SaÃ„Å¸: badge + tutar + aksiyonlar */}
                       <div className="flex flex-col items-end gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-1.5">
                           <Badge status={lead.status} />
                           {lead.procedure_amount > 0 && (
                             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">
-                              â‚º{lead.procedure_amount.toLocaleString()}
+                              ?{lead.procedure_amount.toLocaleString()}
                             </span>
                           )}
                         </div>
 
-                        {/* Quick Action ButonlarÄ± â€” sadece hover'da gÃ¶rÃ¼nÃ¼r */}
+                        {/* Quick Action Butonlar? Ã¢â‚¬â€ sadece hover'da g?r?n?r */}
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           {/* Ara */}
                           <a href={`tel:${lead.phone}`}
@@ -1498,16 +1498,16 @@ const handlePayCommission = async () => {
                             title="WhatsApp">
                             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1C3.46 1 1 3.46 1 6.5c0 .97.25 1.88.69 2.67L1 12l2.9-.67A5.48 5.48 0 006.5 12C9.54 12 12 9.54 12 6.5S9.54 1 6.5 1zm2.7 7.5c-.11.3-.63.58-.87.61-.21.03-.48.04-.77-.05-.18-.05-.41-.13-.7-.26C5.47 8.32 4.5 7.1 4.42 7s-.6-.8-.6-1.52c0-.72.37-1.07.5-1.22.13-.15.28-.18.38-.18h.27c.09 0 .21-.03.33.25l.43 1.05c.04.09.07.19.01.3L5.5 5.9c-.07.1-.1.13-.05.23.25.45.54.86.9 1.2.42.4.87.67 1.4.85.1.03.2 0 .26-.07l.35-.42c.07-.1.16-.11.26-.07l1 .47c.1.04.17.1.2.19.03.1 0 .31-.1.57z" fill="currentColor"/></svg>
                           </a>
-                          {/* DÃ¼zenle */}
+                          {/* D?zenle */}
                           <button onClick={() => { setEditLead({...lead}); setShowEditModal(true) }}
                             className="p-1.5 hover:bg-blue-50 rounded-lg text-gray-300 hover:text-blue-500 transition-colors"
-                            title="DÃ¼zenle">
+                            title="D?zenle">
                             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M8.5 1.5l3 3-7 7H1.5v-3l7-7z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
                           </button>
-                          {/* Durum gÃ¼ncelle */}
+                          {/* Durum g?ncelle */}
                           <button onClick={() => { setSelectedLead(lead); loadLeadActivities(lead.id); setNewStatus(lead.status) }}
                             className="p-1.5 hover:bg-indigo-50 rounded-lg text-gray-300 hover:text-indigo-600 transition-colors"
-                            title="Durum gÃ¼ncelle">
+                            title="Durum g?ncelle">
                             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 7l3 3L12 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                           </button>
                         </div>
@@ -1519,29 +1519,29 @@ const handlePayCommission = async () => {
             </div>
           )}
 
-          {/* â”€â”€ LEAD DAÄITIMI â”€â”€ */}
+          {/* ?? LEAD DA?ITIMI ?? */}
           {activeTab === 'leadler-dagitim' && (
             <div className="bg-white rounded-2xl border border-gray-100">
               <div className="px-5 py-4 border-b border-gray-100">
-                <h3 className="font-semibold text-gray-900 text-sm">Potansiyel MÃ¼ÅŸteri DaÄŸÄ±tÄ±mÄ±</h3>
-                <p className="text-xs text-gray-400 mt-0.5">AtanmamÄ±ÅŸ potansiyel mÃ¼ÅŸterileri satÄ±ÅŸÃ§Ä±lara atayÄ±n</p>
+                <h3 className="font-semibold text-gray-900 text-sm">Potansiyel M?Ã…Å¸teri DaÃ„Å¸?t?m?</h3>
+                <p className="text-xs text-gray-400 mt-0.5">Atanmam?Ã…Å¸ potansiyel m?Ã…Å¸terileri sat?Ã…Å¸??lara atay?n</p>
                 <p className="text-xs text-gray-300 mt-1">
-                   Son gÃ¼ncelleme: {Math.round((new Date().getTime() - lastUpdated.getTime()) / 1000)} sn Ã¶nce
+                   Son g?ncelleme: {Math.round((new Date().getTime() - lastUpdated.getTime()) / 1000)} sn ?nce
                 </p>
               </div>
               {leads.filter(l => !l.assigned_to).length === 0 ? (
-                <div className="p-16 text-center"><div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-3 text-lg">âœ“</div><p className="text-gray-500 text-sm">TÃ¼m potansiyel mÃ¼ÅŸteriler atanmÄ±ÅŸ.</p></div>
+                <div className="p-16 text-center"><div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-3 text-lg">?</div><p className="text-gray-500 text-sm">T?m potansiyel m?Ã…Å¸teriler atanm?Ã…Å¸.</p></div>
               ) : leads.filter(l => !l.assigned_to).map((lead, i, arr) => (
                 <div key={lead.id} className={`px-5 py-4 flex items-center justify-between ${i < arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center"><span className="text-sm font-semibold text-orange-600">{(lead.full_name || 'Ä°').charAt(0)}</span></div>
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center"><span className="text-sm font-semibold text-orange-600">{(lead.full_name || '?').charAt(0)}</span></div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{lead.full_name || 'Ä°simsiz'}</p>
-                      <p className="text-xs text-gray-400">{lead.phone} Â· {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+                      <p className="text-sm font-medium text-gray-900">{lead.full_name || '?simsiz'}</p>
+                      <p className="text-xs text-gray-400">{lead.phone} ? {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
                     </div>
                   </div>
                   <Select value="" onChange={(e: any) => { if (e.target.value) handleAssignLead(lead.id, e.target.value) }} className="w-44">
-                    <option value="">SatÄ±ÅŸÃ§Ä± seÃ§...</option>
+                    <option value="">Sat?Ã…Å¸?? se?...</option>
                     {teamMembers.filter(m => m.role === 'agent').map(m => <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>)}
                   </Select>
                 </div>
@@ -1549,25 +1549,25 @@ const handlePayCommission = async () => {
             </div>
           )}
 
-          {/* â”€â”€ ÅUBELER â”€â”€ */}
+          {/* ?? ?UBELER ?? */}
           {activeTab === 'ekip-sube' && (
             <div className="space-y-4">
             <div className="flex items-center justify-between">
   <div>
-    <h2 className="text-base font-semibold text-gray-900">Åubeler</h2>
-    <p className="text-xs text-gray-400 mt-0.5">{branches.length} ÅŸube</p>
+    <h2 className="text-base font-semibold text-gray-900">?ubeler</h2>
+    <p className="text-xs text-gray-400 mt-0.5">{branches.length} Ã…Å¸ube</p>
   </div>
   <button onClick={() => setShowAddBranch(true)}
     className="flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm">
     <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-    Åube Ekle
+    ?ube Ekle
   </button>
 </div>
               {branchInviteLink && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
-                  <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm">âœ“</div>
+                  <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm">?</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-emerald-800">Åube oluÅŸturuldu!</p>
+                    <p className="text-sm font-medium text-emerald-800">?ube oluÃ…Å¸turuldu!</p>
                     <p className="text-xs text-emerald-600 truncate mt-0.5">{branchInviteLink}</p>
                   </div>
                   <button onClick={() => navigator.clipboard.writeText(branchInviteLink)} className="text-xs text-emerald-700 font-medium hover:text-emerald-900 bg-emerald-100 hover:bg-emerald-200 px-3 py-1.5 rounded-lg transition-colors flex-shrink-0">Kopyala</button>
@@ -1575,7 +1575,7 @@ const handlePayCommission = async () => {
               )}
               <div className="bg-white rounded-2xl border border-gray-100">
                 {branches.length === 0 ? (
-                  <div className="p-16 text-center"><p className="text-gray-400 text-sm">HenÃ¼z ÅŸube yok.</p></div>
+                  <div className="p-16 text-center"><p className="text-gray-400 text-sm">Hen?z Ã…Å¸ube yok.</p></div>
                 ) : branches.map((branch, i) => {
                   const branchColors = ['bg-indigo-100 text-indigo-600','bg-violet-100 text-violet-600','bg-emerald-100 text-emerald-600','bg-orange-100 text-orange-600']
                   const bc = branchColors[i % branchColors.length]
@@ -1584,7 +1584,7 @@ const handlePayCommission = async () => {
                     <div className={`w-9 h-9 rounded-xl ${bc} flex items-center justify-center flex-shrink-0`}><span className="font-semibold text-sm">{branch.branch_name?.charAt(0)}</span></div>
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-gray-900">{branch.branch_name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{branch.contact_name} Â· {branch.contact_email}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{branch.contact_name} ? {branch.contact_email}</p>
                       <p className="text-xs text-gray-400">Komisyon: %{branch.commission_value}</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -1597,31 +1597,31 @@ const handlePayCommission = async () => {
             </div>
           )}
 
-         {/* â”€â”€ SATIÅÃ‡ILAR â”€â”€ */}
+         {/* ?? SATI?Ãƒâ€¡ILAR ?? */}
         {activeTab === 'ekip-liste' && (
   <div className="space-y-4">
     <div className="flex items-center justify-between">
       <div>
-        <h2 className="text-base font-semibold text-gray-900">Ekip Ãœyeleri</h2>
-        <p className="text-xs text-gray-400 mt-0.5">{teamMembers.length} aktif satÄ±ÅŸÃ§Ä±</p>
+        <h2 className="text-base font-semibold text-gray-900">Ekip ÃƒÅ“yeleri</h2>
+        <p className="text-xs text-gray-400 mt-0.5">{teamMembers.length} aktif sat?Ã…Å¸??</p>
       </div>
       <div className="flex gap-2">
         <button onClick={() => setShowPaymentReport(true)}
           className="flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-medium rounded-xl transition-colors">
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 10h10M2 7h6M2 4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-          Ã–deme Raporu
+          Ãƒâ€“deme Raporu
         </button>
         <button onClick={() => setShowAddMember(true)}
           className="flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm">
           <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-          Ãœye Ekle
+          ÃƒÅ“ye Ekle
         </button>
       </div>
     </div>
  
     {teamMembers.length === 0 ? (
       <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
-        <p className="text-gray-400 text-sm">HenÃ¼z ekip Ã¼yesi yok.</p>
+        <p className="text-gray-400 text-sm">Hen?z ekip ?yesi yok.</p>
       </div>
     ) : (
       <div className="space-y-4">
@@ -1645,7 +1645,7 @@ const handlePayCommission = async () => {
  
           return (
             <div key={member.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-sm transition-all">
-              {/* Ãœst: SatÄ±ÅŸÃ§Ä± Bilgisi */}
+              {/* ÃƒÅ“st: Sat?Ã…Å¸?? Bilgisi */}
               <div className="px-5 py-4 flex items-center gap-4 border-b border-gray-50 cursor-pointer" onClick={() => setExpandedMembers(prev => prev.includes(member.id) ? prev.filter(id => id !== member.id) : [...prev, member.id])}>
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${ap} flex items-center justify-center flex-shrink-0`}>
                   <span className="font-bold text-sm">{member.profiles?.full_name?.charAt(0)}</span>
@@ -1654,17 +1654,17 @@ const handlePayCommission = async () => {
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold text-gray-900">{member.profiles?.full_name}</p>
                     <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium">
-                      {member.role === 'agent' ? 'SatÄ±ÅŸÃ§Ä±' : 'YÃ¶netici'}
+                      {member.role === 'agent' ? 'Sat?Ã…Å¸??' : 'Y?netici'}
                     </span>
                   </div>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {member.branches?.branch_name} Â· %{member.commission_rate} prim Â· {member.profiles?.email}
+                    {member.branches?.branch_name} ? %{member.commission_rate} prim ? {member.profiles?.email}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button onClick={() => { setHistoryMember(member); setShowPaymentHistory(true) }}
                     className="text-xs text-gray-500 font-medium hover:text-gray-700 px-3 py-1.5 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200">
-                    GeÃ§miÅŸ
+                    Ge?miÃ…Å¸
                   </button>
                   <button onClick={() => { setSelectedMember(member); setMemberTab('leads') }}
                     className="text-xs text-indigo-600 font-medium hover:text-indigo-700 px-3 py-1.5 hover:bg-indigo-50 rounded-lg transition-colors">
@@ -1682,56 +1682,56 @@ const handlePayCommission = async () => {
     <div className="px-5 py-3 grid grid-cols-4 gap-3 border-b border-gray-50">
       <div className="text-center">
         <p className="text-lg font-bold text-blue-600">{memberLeads.length}</p>
-        <p className="text-xs text-gray-400">Potansiyel MÃ¼ÅŸteri</p>
+        <p className="text-xs text-gray-400">Potansiyel M?Ã…Å¸teri</p>
       </div>
       <div className="text-center">
         <p className="text-lg font-bold text-emerald-600">{memberSales.length}</p>
-        <p className="text-xs text-gray-400">SatÄ±ÅŸ</p>
+        <p className="text-xs text-gray-400">Sat?Ã…Å¸</p>
       </div>
       <div className="text-center">
-        <p className="text-lg font-bold text-violet-600">â‚º{(memberRevenue/1000).toFixed(memberRevenue >= 10000 ? 0 : 1)}K</p>
+        <p className="text-lg font-bold text-violet-600">?{(memberRevenue/1000).toFixed(memberRevenue >= 10000 ? 0 : 1)}K</p>
         <p className="text-xs text-gray-400">Ciro</p>
       </div>
       <div className="text-center">
         <p className="text-lg font-bold text-gray-700">
           %{memberLeads.length > 0 ? ((memberSales.length / memberLeads.length) * 100).toFixed(0) : 0}
         </p>
-        <p className="text-xs text-gray-400">DÃ¶nÃ¼ÅŸÃ¼m</p>
+        <p className="text-xs text-gray-400">D?n?Ã…Å¸?m</p>
       </div>
     </div>
 
     <div className="px-5 py-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">HakediÅŸ Durumu</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">HakediÃ…Å¸ Durumu</p>
         {remaining > 0 && (
           <button
             onClick={() => { setPaymentMember(member); setPaymentAmount(remaining.toFixed(0)); setShowPaymentModal(true) }}
             className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-sm shadow-emerald-200">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M3 4l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Ã–deme Yap
+            Ãƒâ€“deme Yap
           </button>
         )}
         {remaining <= 0 && totalEarned > 0 && (
           <span className="flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-50 px-2.5 py-1 rounded-full">
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 5.5l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            TamamÄ± Ã–dendi
+            Tamam? Ãƒâ€“dendi
           </span>
         )}
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-3">
         <div className="bg-rose-50 rounded-xl p-3 border border-rose-100">
-          <p className="text-xs text-gray-400 mb-1">Toplam HakediÅŸ</p>
-          <p className="text-base font-bold text-rose-600">â‚º{totalEarned.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+          <p className="text-xs text-gray-400 mb-1">Toplam HakediÃ…Å¸</p>
+          <p className="text-base font-bold text-rose-600">?{totalEarned.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
         </div>
         <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
-          <p className="text-xs text-gray-400 mb-1">Ã–denen</p>
-          <p className="text-base font-bold text-emerald-600">â‚º{totalPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+          <p className="text-xs text-gray-400 mb-1">Ãƒâ€“denen</p>
+          <p className="text-base font-bold text-emerald-600">?{totalPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
         </div>
         <div className={`rounded-xl p-3 border ${remaining > 0 ? 'bg-amber-50 border-amber-100' : 'bg-gray-50 border-gray-100'}`}>
-          <p className="text-xs text-gray-400 mb-1">Kalan BorÃ§</p>
+          <p className="text-xs text-gray-400 mb-1">Kalan Bor?</p>
           <p className={`text-base font-bold ${remaining > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
-            â‚º{Math.max(0, remaining).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+            ?{Math.max(0, remaining).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
           </p>
         </div>
       </div>
@@ -1745,14 +1745,14 @@ const handlePayCommission = async () => {
             />
           </div>
           <div className="flex justify-between mt-1">
-            <p className="text-xs text-gray-400">%{totalEarned > 0 ? ((totalPaid / totalEarned) * 100).toFixed(0) : 0} Ã¶dendi</p>
-            <p className="text-xs text-gray-400">%{member.commission_rate} prim oranÄ±</p>
+            <p className="text-xs text-gray-400">%{totalEarned > 0 ? ((totalPaid / totalEarned) * 100).toFixed(0) : 0} ?dendi</p>
+            <p className="text-xs text-gray-400">%{member.commission_rate} prim oran?</p>
           </div>
         </div>
       )}
 
       {totalEarned === 0 && (
-        <p className="text-xs text-gray-300 text-center py-1">HenÃ¼z satÄ±ÅŸ yok â€” hakediÅŸ hesaplanamÄ±yor</p>
+        <p className="text-xs text-gray-300 text-center py-1">Hen?z sat?Ã…Å¸ yok Ã¢â‚¬â€ hakediÃ…Å¸ hesaplanam?yor</p>
       )}
     </div>
   </>
@@ -1771,10 +1771,10 @@ const handlePayCommission = async () => {
 {activeTab === 'pipeline' && (
   <div className="space-y-5">
   <div className="px-6">
-    <h2 className="text-base font-semibold text-gray-900">SatÄ±ÅŸ SÃ¼reci Takibi</h2>
-    <p className="text-xs text-gray-400 mt-0.5">Potansiyel mÃ¼ÅŸterilerinizin satÄ±ÅŸ sÃ¼recindeki konumunu gÃ¶rÃ¼n ve sÃ¼reci yÃ¶netin</p>
+    <h2 className="text-base font-semibold text-gray-900">Sat?Ã…Å¸ S?reci Takibi</h2>
+    <p className="text-xs text-gray-400 mt-0.5">Potansiyel m?Ã…Å¸terilerinizin sat?Ã…Å¸ s?recindeki konumunu g?r?n ve s?reci y?netin</p>
   </div>
-    {/* Ã–zet satÄ±rÄ± */}
+    {/* Ãƒâ€“zet sat?r? */}
     <div className="flex gap-3 flex-wrap">
       {statusColumns.map(status => {
         const count = leads.filter(l => l.status === status).length
@@ -1796,7 +1796,7 @@ const handlePayCommission = async () => {
         const config = STATUS_CONFIG[status]
         return (
          <div key={status} className="w-72 flex-shrink-0 bg-gray-50 rounded-2xl p-3 border border-gray-100">
-            {/* Kolon baÅŸlÄ±ÄŸÄ± */}
+            {/* Kolon baÃ…Å¸l?Ã„Å¸? */}
             <div className="flex items-center justify-between mb-3 px-1">
               <div className="flex items-center gap-2">
                 <span className={`w-2 h-2 rounded-full ${config?.dot}`} />
@@ -1811,7 +1811,7 @@ const handlePayCommission = async () => {
             <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto">
               {colLeads.length === 0 ? (
                 <div className="border border-dashed border-gray-200 rounded-xl p-4 text-center">
-                  <p className="text-xs text-gray-300">BoÅŸ</p>
+                  <p className="text-xs text-gray-300">BoÃ…Å¸</p>
                 </div>
              ) : (() => {
   const isExpanded = expandedColumns.includes(status)
@@ -1823,7 +1823,7 @@ const handlePayCommission = async () => {
         <div key={lead.id}
           onClick={() => { setSelectedLead(lead); loadLeadActivities(lead.id); setNewStatus(lead.status) }}
           className="bg-white border border-gray-100 rounded-xl p-3 cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all group">
-          <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">{lead.full_name || 'Ä°simsiz'}</p>
+          <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">{lead.full_name || '?simsiz'}</p>
           {lead.phone && <p className="text-xs text-gray-400 mt-0.5">{lead.phone}</p>}
           {lead.assigned_to && (
             <div className="flex items-center gap-1 mt-1.5">
@@ -1844,7 +1844,7 @@ const handlePayCommission = async () => {
         <button
           onClick={() => setExpandedColumns(prev => prev.filter(s => s !== status))}
           className="w-full text-xs text-gray-400 font-medium py-2 hover:bg-gray-50 rounded-xl border border-dashed border-gray-200 transition-colors">
-          Daha az gÃ¶ster
+          Daha az g?ster
         </button>
       )}
     </>
@@ -1857,20 +1857,20 @@ const handlePayCommission = async () => {
     </div>
   </div>
 )}
-{/* â”€â”€ WHATSAPP â”€â”€ */}
+{/* ?? WHATSAPP ?? */}
           {activeTab === 'whatsapp-leadler' && (
             <div className="space-y-4">
               <div>
-                <h2 className="text-base font-semibold text-gray-900">WhatsApp Potansiyel MÃ¼ÅŸterileri</h2>
-                <p className="text-xs text-gray-400 mt-0.5">WhatsApp'tan gelen otomatik potansiyel mÃ¼ÅŸteriler</p>
+                <h2 className="text-base font-semibold text-gray-900">WhatsApp Potansiyel M?Ã…Å¸terileri</h2>
+                <p className="text-xs text-gray-400 mt-0.5">WhatsApp'tan gelen otomatik potansiyel m?Ã…Å¸teriler</p>
               </div>
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 {leads.filter(l => l.source === 'whatsapp').length === 0 ? (
                   <div className="p-16 text-center">
-                    <p className="text-gray-500 text-sm font-medium">HenÃ¼z WhatsApp potansiyel mÃ¼ÅŸteri yok</p>
-                    <p className="text-xs text-gray-400 mt-1">WhatsApp baÄŸlantÄ±sÄ± kurulduktan sonra gelen mesajlar burada gÃ¶rÃ¼nÃ¼r</p>
+                    <p className="text-gray-500 text-sm font-medium">Hen?z WhatsApp potansiyel m?Ã…Å¸teri yok</p>
+                    <p className="text-xs text-gray-400 mt-1">WhatsApp baÃ„Å¸lant?s? kurulduktan sonra gelen mesajlar burada g?r?n?r</p>
                     <button onClick={() => setActiveTab('whatsapp-baglanti')} className="mt-3 text-xs text-green-600 font-medium hover:underline">
-                      WhatsApp BaÄŸla â†’
+                      WhatsApp BaÃ„Å¸la Ã¢â€ â€™
                     </button>
                   </div>
                 ) : leads.filter(l => l.source === 'whatsapp').map((lead, i, arr) => (
@@ -1880,9 +1880,9 @@ const handlePayCommission = async () => {
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="#22c55e"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'Ä°simsiz'}</p>
-                      <p className="text-xs text-gray-400">{lead.phone} Â· {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
-                      {lead.note && <p className="text-xs text-gray-400 truncate mt-0.5">ğŸ’¬ {lead.note}</p>}
+                      <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || '?simsiz'}</p>
+                      <p className="text-xs text-gray-400">{lead.phone} ? {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+                      {lead.note && <p className="text-xs text-gray-400 truncate mt-0.5">?? {lead.note}</p>}
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
                       <a href={`https://wa.me/90${lead.phone?.replace(/\D/g, '').replace(/^0/, '')}`}
@@ -1904,8 +1904,8 @@ const handlePayCommission = async () => {
     {
       key: 'wati',
       name: 'WATI',
-      logo: 'ğŸŸ¢',
-      desc: 'En kolay kurulum, TÃ¼rkiye\'de yaygÄ±n',
+      logo: 'ÄŸÅ¸Å¸Â¢',
+      desc: 'En kolay kurulum, T?rkiye\'de yayg?n',
       price: '$49/ay',
       url: 'https://wati.io',
       apiLabel: 'WATI API Key',
@@ -1915,9 +1915,9 @@ const handlePayCommission = async () => {
     {
       key: '360dialog',
       name: '360dialog',
-      logo: 'ğŸ”µ',
-      desc: 'Uygun fiyatlÄ±, geliÅŸtiriciler iÃ§in ideal',
-      price: 'â‚¬5/numara/ay',
+      logo: 'ÄŸÅ¸â€Âµ',
+      desc: 'Uygun fiyatl?, geliÃ…Å¸tiriciler i?in ideal',
+      price: 'Ã¢â€šÂ¬5/numara/ay',
       url: 'https://360dialog.com',
       apiLabel: '360dialog API Key',
       apiPlaceholder: 'sk_...',
@@ -1926,9 +1926,9 @@ const handlePayCommission = async () => {
     {
       key: 'twilio',
       name: 'Twilio',
-      logo: 'ğŸ”´',
-      desc: 'En esnek, kullandÄ±ÄŸÄ±n kadar Ã¶de',
-      price: 'KullandÄ±ÄŸÄ±n kadar',
+      logo: 'ÄŸÅ¸â€Â´',
+      desc: 'En esnek, kulland?Ã„Å¸?n kadar ?de',
+      price: 'Kulland?Ã„Å¸?n kadar',
       url: 'https://twilio.com',
       apiLabel: 'Twilio Auth Token',
       apiPlaceholder: 'AC...',
@@ -1937,9 +1937,9 @@ const handlePayCommission = async () => {
     {
       key: 'messagebird',
       name: 'MessageBird',
-      logo: 'ğŸŸ¡',
+      logo: 'ÄŸÅ¸Å¸Â¡',
       desc: 'Orta seviye, iyi dashboard',
-      price: 'KullandÄ±ÄŸÄ±n kadar',
+      price: 'Kulland?Ã„Å¸?n kadar',
       url: 'https://messagebird.com',
       apiLabel: 'MessageBird API Key',
       apiPlaceholder: 'live_...',
@@ -1975,13 +1975,13 @@ const handlePayCommission = async () => {
         <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
         <div className="relative">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-2xl">ğŸ’¬</div>
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-2xl">??</div>
             <div>
-              <p className="font-bold text-lg">WhatsApp BaÄŸlantÄ±sÄ±</p>
-              <p className="text-green-100 text-sm">Kendi servis saÄŸlayÄ±cÄ±nÄ±zla baÄŸlanÄ±n</p>
+              <p className="font-bold text-lg">WhatsApp BaÃ„Å¸lant?s?</p>
+              <p className="text-green-100 text-sm">Kendi servis saÃ„Å¸lay?c?n?zla baÃ„Å¸lan?n</p>
             </div>
           </div>
-          <p className="text-green-100 text-sm">WhatsApp'a gelen mesajlar otomatik olarak lead'e dÃ¶nÃ¼ÅŸÃ¼r. Servis Ã¼cretini doÄŸrudan saÄŸlayÄ±cÄ±ya Ã¶dersiniz.</p>
+          <p className="text-green-100 text-sm">WhatsApp'a gelen mesajlar otomatik olarak lead'e d?n?Ã…Å¸?r. Servis ?cretini doÃ„Å¸rudan saÃ„Å¸lay?c?ya ?dersiniz.</p>
         </div>
       </div>
 
@@ -1992,13 +1992,13 @@ const handlePayCommission = async () => {
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9l5 5 10-10" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-900">{selected?.name} BaÄŸlandÄ±</p>
+              <p className="text-sm font-semibold text-gray-900">{selected?.name} BaÃ„Å¸land?</p>
               <p className="text-xs text-emerald-600">WhatsApp entegrasyonu aktif</p>
             </div>
           </div>
           <div className="bg-gray-50 rounded-xl p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-400">Servis SaÄŸlayÄ±cÄ±</p>
+              <p className="text-xs text-gray-400">Servis SaÃ„Å¸lay?c?</p>
               <p className="text-xs font-semibold text-gray-700">{selected?.name}</p>
             </div>
             <div className="flex items-center justify-between">
@@ -2021,20 +2021,20 @@ const handlePayCommission = async () => {
           </div>
           <button onClick={() => { setWaConnected(false); setWaApiKey(''); setWaProvider('') }}
             className="w-full py-2.5 rounded-xl text-sm font-medium border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
-            BaÄŸlantÄ±yÄ± Kes
+            BaÃ„Å¸lant?y? Kes
           </button>
         </div>
       ) : (
         <div className="space-y-4">
 
-     {/* ADIM 1: SaÄŸlayÄ±cÄ± seÃ§ */}
+     {/* ADIM 1: SaÃ„Å¸lay?c? se? */}
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 {[
-                  { num: 1, label: 'SaÄŸlayÄ±cÄ± SeÃ§' },
+                  { num: 1, label: 'SaÃ„Å¸lay?c? Se?' },
                   { num: 2, label: 'API Key Gir' },
-                  { num: 3, label: 'BaÄŸlan' },
+                  { num: 3, label: 'BaÃ„Å¸lan' },
                 ].map((step, i) => {
                   const currentStep = !waProvider ? 1 : !waApiKey.trim() ? 2 : 3
                   const done = step.num < currentStep
@@ -2042,7 +2042,7 @@ const handlePayCommission = async () => {
                   return (
                     <div key={step.num} className="flex items-center gap-2">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${done ? 'bg-green-500 text-white' : active ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                        {done ? 'âœ“' : step.num}
+                        {done ? '?' : step.num}
                       </div>
                       <span className={`text-xs font-medium ${active ? 'text-gray-900' : 'text-gray-400'}`}>{step.label}</span>
                       {i < 2 && <div className={`h-px w-8 ${done ? 'bg-green-400' : 'bg-gray-200'}`} />}
@@ -2055,7 +2055,7 @@ const handlePayCommission = async () => {
             <div className="p-6">
               {!waProvider ? (
                 <div className="space-y-3">
-                  <p className="text-sm font-semibold text-gray-900 mb-4">Hangi servisi kullanÄ±yorsunuz?</p>
+                  <p className="text-sm font-semibold text-gray-900 mb-4">Hangi servisi kullan?yorsunuz?</p>
                   {providers.map(p => (
                     <button key={p.key} onClick={() => setWaProvider(p.key)}
                       className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-gray-100 hover:border-green-400 hover:bg-green-50/30 text-left transition-all group">
@@ -2081,17 +2081,17 @@ const handlePayCommission = async () => {
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </button>
                       <span className="text-xl">{p.logo}</span>
-                      <p className="text-sm font-semibold text-gray-900">{p.name} ile BaÄŸlan</p>
+                      <p className="text-sm font-semibold text-gray-900">{p.name} ile BaÃ„Å¸lan</p>
                     </div>
 
                     <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
-                      <span className="text-lg">â„¹ï¸</span>
+                      <span className="text-lg">Ã¢â€Â¹Ã¯Â¸Â</span>
                       <div>
-                        <p className="text-xs font-semibold text-gray-800">{p.name} hesabÄ±nÄ±z yok mu?</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Ã–nce {p.name}'e kaydolun, API key alÄ±n.</p>
+                        <p className="text-xs font-semibold text-gray-800">{p.name} hesab?n?z yok mu?</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Ãƒâ€“nce {p.name}'e kaydolun, API key al?n.</p>
                         <div className="flex gap-3 mt-2">
-                          <a href={p.url} target="_blank" rel="noopener noreferrer" className="text-xs text-green-600 font-medium hover:underline">{p.name}'e Kaydol â†’</a>
-                          <a href={p.docsUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:underline">DÃ¶kÃ¼man</a>
+                          <a href={p.url} target="_blank" rel="noopener noreferrer" className="text-xs text-green-600 font-medium hover:underline">{p.name}'e Kaydol Ã¢â€ â€™</a>
+                          <a href={p.docsUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:underline">D?k?man</a>
                         </div>
                       </div>
                     </div>
@@ -2109,14 +2109,14 @@ const handlePayCommission = async () => {
                         <button onClick={() => navigator.clipboard.writeText('https://datapilot-omega.vercel.app/api/whatsapp/webhook')}
                           className="text-xs text-blue-600 font-medium hover:underline flex-shrink-0">Kopyala</button>
                       </div>
-                      <p className="text-xs text-blue-500 mt-1">Bu URL'yi {p.name} panelindeki webhook ayarlarÄ±na ekleyin.</p>
+                      <p className="text-xs text-blue-500 mt-1">Bu URL'yi {p.name} panelindeki webhook ayarlar?na ekleyin.</p>
                     </div>
 
                     <button onClick={handleConnect} disabled={!waApiKey.trim() || waConnecting}
                       className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                       {waConnecting ? (
-                        <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>BaÄŸlanÄ±yor...</>
-                      ) : <>ğŸ’¬ {p.name} ile BaÄŸlan</>}
+                        <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>BaÃ„Å¸lan?yor...</>
+                      ) : <>?? {p.name} ile BaÃ„Å¸lan</>}
                     </button>
                   </div>
                 )
@@ -2128,14 +2128,14 @@ const handlePayCommission = async () => {
     </div>
   )
 })()}
-{/* â”€â”€ GOOGLE ADS â”€â”€ */}
+{/* ?? GOOGLE ADS ?? */}
 {activeTab === 'google-leadler' && (() => {
   const googleLeads = leads.filter(l => l.source === 'google_ads')
   const lastLead = googleLeads[0]
   const mockCampaigns = [
-    { name: 'Yaz KampanyasÄ±', status: 'active', budget: 500 },
+    { name: 'Yaz Kampanyas?', status: 'active', budget: 500 },
     { name: 'Lead Toplama', status: 'paused', budget: 300 },
-    { name: 'Marka BilinirliÄŸi', status: 'active', budget: 750 },
+    { name: 'Marka BilinirliÃ„Å¸i', status: 'active', budget: 750 },
   ]
   const activeCampaigns = mockCampaigns.filter(c => c.status === 'active').length
 
@@ -2146,7 +2146,7 @@ return (
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-semibold text-gray-900">Google Ads Leadleri</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Google Ads kampanyalarÄ±ndan gelen potansiyel mÃ¼ÅŸteriler</p>
+          <p className="text-xs text-gray-400 mt-0.5">Google Ads kampanyalar?ndan gelen potansiyel m?Ã…Å¸teriler</p>
         </div>
         <button onClick={() => loadData()}
           className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-medium rounded-xl transition-colors">
@@ -2154,12 +2154,12 @@ return (
         </button>
       </div>
 
-      {/* Ã–zet kartlar */}
+      {/* Ãƒâ€“zet kartlar */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Google Ads Lead', value: googleLeads.length, sub: 'toplam', color: 'text-yellow-600', bg: 'from-yellow-50 to-white', border: 'border-yellow-100', icon: 'ğŸ”' },
-          { label: 'Aktif Kampanya', value: activeCampaigns, sub: `${mockCampaigns.length} kampanya`, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100', icon: 'ğŸ“£' },
-          { label: 'Son Lead', value: lastLead ? new Date(lastLead.created_at).toLocaleDateString('tr-TR') : 'â€”', sub: lastLead ? lastLead.full_name : 'HenÃ¼z yok', color: 'text-indigo-600', bg: 'from-indigo-50 to-white', border: 'border-indigo-100', icon: 'â±' },
+          { label: 'Google Ads Lead', value: googleLeads.length, sub: 'toplam', color: 'text-yellow-600', bg: 'from-yellow-50 to-white', border: 'border-yellow-100', icon: '??' },
+          { label: 'Aktif Kampanya', value: activeCampaigns, sub: `${mockCampaigns.length} kampanya`, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100', icon: 'ÄŸÅ¸â€œÂ£' },
+          { label: 'Son Lead', value: lastLead ? new Date(lastLead.created_at).toLocaleDateString('tr-TR') : 'Ã¢â‚¬â€', sub: lastLead ? lastLead.full_name : 'Hen?z yok', color: 'text-indigo-600', bg: 'from-indigo-50 to-white', border: 'border-indigo-100', icon: 'Ã¢ÂÂ±' },
         ].map(card => (
           <div key={card.label} className={`bg-gradient-to-br ${card.bg} border ${card.border} rounded-2xl p-5`}>
             <span className="text-2xl">{card.icon}</span>
@@ -2174,14 +2174,14 @@ return (
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="font-semibold text-gray-900 text-sm">Kampanyalar</h3>
-          <button onClick={() => setActiveTab('google-baglanti')} className="text-xs text-yellow-600 font-medium hover:underline">BaÄŸlantÄ±yÄ± YÃ¶net â†’</button>
+          <button onClick={() => setActiveTab('google-baglanti')} className="text-xs text-yellow-600 font-medium hover:underline">BaÃ„Å¸lant?y? Y?net Ã¢â€ â€™</button>
         </div>
         {mockCampaigns.map((c, i) => (
           <div key={i} className={`px-5 py-3.5 flex items-center gap-4 ${i < mockCampaigns.length - 1 ? 'border-b border-gray-50' : ''}`}>
-            <div className="w-8 h-8 rounded-xl bg-yellow-50 flex items-center justify-center flex-shrink-0 text-base">ğŸ“£</div>
+            <div className="w-8 h-8 rounded-xl bg-yellow-50 flex items-center justify-center flex-shrink-0 text-base">ÄŸÅ¸â€œÂ£</div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">{c.name}</p>
-              <p className="text-xs text-gray-400">GÃ¼nlÃ¼k bÃ¼tÃ§e: â‚º{c.budget}</p>
+              <p className="text-xs text-gray-400">G?nl?k b?t?e: ?{c.budget}</p>
             </div>
             <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${c.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
               {c.status === 'active' ? 'Aktif' : 'Pasif'}
@@ -2197,17 +2197,17 @@ return (
         </div>
         {googleLeads.length === 0 ? (
           <div className="p-16 text-center">
-            <div className="text-3xl mb-3">ğŸ”</div>
-            <p className="text-gray-500 text-sm font-medium">HenÃ¼z Google Ads lead yok</p>
-            <button onClick={() => setActiveTab('google-baglanti')} className="mt-4 text-xs text-yellow-600 font-medium hover:underline">Google Ads BaÄŸla â†’</button>
+            <div className="text-3xl mb-3">??</div>
+            <p className="text-gray-500 text-sm font-medium">Hen?z Google Ads lead yok</p>
+            <button onClick={() => setActiveTab('google-baglanti')} className="mt-4 text-xs text-yellow-600 font-medium hover:underline">Google Ads BaÃ„Å¸la Ã¢â€ â€™</button>
           </div>
         ) : googleLeads.map((lead, i, arr) => (
           <div key={lead.id} onClick={() => openDetailModal(lead)}
             className={`px-5 py-3.5 flex items-center gap-3 hover:bg-yellow-50/30 cursor-pointer transition-colors ${i < arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
-            <div className="w-8 h-8 rounded-xl bg-yellow-50 flex items-center justify-center flex-shrink-0 text-base">ğŸ”</div>
+            <div className="w-8 h-8 rounded-xl bg-yellow-50 flex items-center justify-center flex-shrink-0 text-base">??</div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'Ä°simsiz'}</p>
-              <p className="text-xs text-gray-400">{lead.phone} Â· {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+              <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || '?simsiz'}</p>
+              <p className="text-xs text-gray-400">{lead.phone} ? {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
               <Badge status={lead.status} />
@@ -2222,20 +2222,20 @@ return (
 {activeTab === 'google-baglanti' && (() => {
   const googleLeads = leads.filter(l => l.source === 'google_ads')
   const mockCampaigns = [
-    { name: 'Yaz KampanyasÄ±', status: 'active', budget: 500 },
+    { name: 'Yaz Kampanyas?', status: 'active', budget: 500 },
     { name: 'Lead Toplama', status: 'paused', budget: 300 },
-    { name: 'Marka BilinirliÄŸi', status: 'active', budget: 750 },
+    { name: 'Marka BilinirliÃ„Å¸i', status: 'active', budget: 750 },
   ]
 
   return (
 <div className="space-y-5 max-w-3xl">
-      {/* Header kartÄ± */}
+      {/* Header kart? */}
       <div className="bg-gradient-to-br from-yellow-400 to-orange-400 rounded-2xl p-6 text-white relative overflow-hidden">
         <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
         <div className="relative">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-2xl">ğŸ”</div>
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-2xl">??</div>
               <div>
                 <p className="font-bold text-lg">Google Ads</p>
                 <p className="text-yellow-100 text-sm">Lead form entegrasyonu</p>
@@ -2243,14 +2243,14 @@ return (
             </div>
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${googleConnected ? 'bg-emerald-400/20 text-emerald-200' : 'bg-white/10 text-yellow-200'}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${googleConnected ? 'bg-emerald-400 animate-pulse' : 'bg-yellow-300'}`} />
-              {googleConnected ? 'BaÄŸlÄ±' : 'BaÄŸlÄ± DeÄŸil'}
+              {googleConnected ? 'BaÃ„Å¸l?' : 'BaÃ„Å¸l? DeÃ„Å¸il'}
             </div>
           </div>
-          <p className="text-yellow-100 text-sm">Google Ads kampanyalarÄ±nÄ±zdan gelen leadleri otomatik olarak sisteme Ã§ekin.</p>
+          <p className="text-yellow-100 text-sm">Google Ads kampanyalar?n?zdan gelen leadleri otomatik olarak sisteme ?ekin.</p>
         </div>
       </div>
 
-      {/* BaÄŸlantÄ± durumu */}
+      {/* BaÃ„Å¸lant? durumu */}
       {googleConnected ? (
         <div className="space-y-4">
           {/* Hesap bilgisi */}
@@ -2260,13 +2260,13 @@ return (
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9l5 5 10-10" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">Google Ads BaÄŸlandÄ±</p>
-                <p className="text-xs text-emerald-600">HesabÄ±nÄ±z aktif ve senkronize</p>
+                <p className="text-sm font-semibold text-gray-900">Google Ads BaÃ„Å¸land?</p>
+                <p className="text-xs text-emerald-600">Hesab?n?z aktif ve senkronize</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-gray-50 rounded-xl p-3">
-                <p className="text-xs text-gray-400 mb-1">Hesap AdÄ±</p>
+                <p className="text-xs text-gray-400 mb-1">Hesap Ad?</p>
                 <p className="text-sm font-medium text-gray-900">Demo Google Ads Account</p>
               </div>
               <div className="bg-gray-50 rounded-xl p-3">
@@ -2291,10 +2291,10 @@ return (
             </div>
             {mockCampaigns.map((c, i) => (
               <div key={i} className={`px-5 py-3.5 flex items-center gap-4 ${i < mockCampaigns.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                <div className="w-8 h-8 rounded-xl bg-yellow-50 flex items-center justify-center flex-shrink-0">ğŸ“£</div>
+                <div className="w-8 h-8 rounded-xl bg-yellow-50 flex items-center justify-center flex-shrink-0">ÄŸÅ¸â€œÂ£</div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">{c.name}</p>
-                  <p className="text-xs text-gray-400">GÃ¼nlÃ¼k bÃ¼tÃ§e: â‚º{c.budget}</p>
+                  <p className="text-xs text-gray-400">G?nl?k b?t?e: ?{c.budget}</p>
                 </div>
                 <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${c.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
                   {c.status === 'active' ? 'Aktif' : 'Pasif'}
@@ -2306,26 +2306,26 @@ return (
           <button
             onClick={() => setGoogleConnected(false)}
             className="w-full py-3 rounded-xl text-sm font-medium border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
-            BaÄŸlantÄ±yÄ± Kes
+            BaÃ„Å¸lant?y? Kes
           </button>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
           <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-            <span className="text-2xl">ğŸš§</span>
+            <span className="text-2xl">ÄŸÅ¸Å¡Â§</span>
             <div>
-              <p className="text-sm font-semibold text-gray-900">API Entegrasyonu YakÄ±nda</p>
-              <p className="text-xs text-gray-500 mt-0.5">Google Ads API entegrasyonu hazÄ±rlanÄ±yor. Åimdilik demo baÄŸlantÄ±sÄ±nÄ± deneyebilirsiniz.</p>
+              <p className="text-sm font-semibold text-gray-900">API Entegrasyonu Yak?nda</p>
+              <p className="text-xs text-gray-500 mt-0.5">Google Ads API entegrasyonu haz?rlan?yor. ?imdilik demo baÃ„Å¸lant?s?n? deneyebilirsiniz.</p>
             </div>
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-gray-700 mb-3">Åu an ne yapabilirsiniz?</p>
+            <p className="text-sm font-semibold text-gray-700 mb-3">?u an ne yapabilirsiniz?</p>
             <div className="space-y-2">
               {[
-                { icon: 'âœï¸', text: 'Lead eklerken kaynak olarak "Google Ads" seÃ§in' },
-                { icon: 'ğŸ“Š', text: 'Google Ads leadlerini listede filtreleyin' },
-                { icon: 'ğŸ“ˆ', text: 'Performans raporlarÄ±nda Google Ads leadlerini takip edin' },
+                { icon: 'Ã¢Å“ÂÃ¯Â¸Â', text: 'Lead eklerken kaynak olarak "Google Ads" se?in' },
+                { icon: 'ÄŸÅ¸â€œÅ ', text: 'Google Ads leadlerini listede filtreleyin' },
+                { icon: 'ÄŸÅ¸â€œË†', text: 'Performans raporlar?nda Google Ads leadlerini takip edin' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                   <span className="text-lg">{item.icon}</span>
@@ -2339,23 +2339,23 @@ return (
             onClick={() => setGoogleConnected(true)}
             className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v6M4 4l3-3 3 3M2 10h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Google Ads HesabÄ±nÄ± BaÄŸla (Demo)
+            Google Ads Hesab?n? BaÃ„Å¸la (Demo)
           </button>
         </div>
       )}
     </div>
   )
 })()}
-          {/* â”€â”€ META â”€â”€ */}
+          {/* ?? META ?? */}
 
           {activeTab === 'meta-baglanti' && profile?.id && <MetaConnect ownerId={profile.id} />}
           {activeTab === 'meta-kampanyalar' && (() => {
-            // SeÃ§ilen periyoda gÃ¶re filtrele
+            // Se?ilen periyoda g?re filtrele
             const days = parseInt(adSpendPeriod)
             const since = new Date(); since.setDate(since.getDate() - days)
             const filtered = adSpend.filter(r => new Date(r.date) >= since)
 
-            // Kampanya bazÄ±nda topla
+            // Kampanya baz?nda topla
             const campaignMap: Record<string, any> = {}
             filtered.forEach(r => {
               if (!campaignMap[r.campaign_id]) {
@@ -2389,11 +2389,11 @@ return (
                 {/* Header */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-base font-semibold text-gray-900">Kampanya PerformansÄ±</h2>
-                    {lastSync && <p className="text-xs text-gray-400 mt-0.5">Son gÃ¼ncelleme: {lastSync}</p>}
+                    <h2 className="text-base font-semibold text-gray-900">Kampanya Performans?</h2>
+                    {lastSync && <p className="text-xs text-gray-400 mt-0.5">Son g?ncelleme: {lastSync}</p>}
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Periyot seÃ§ici */}
+                    {/* Periyot se?ici */}
                     <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
                       {([['7', '7G'], ['30', '30G'], ['90', '90G']] as const).map(([val, label]) => (
                         <button key={val} onClick={() => setAdSpendPeriod(val)}
@@ -2408,20 +2408,20 @@ return (
                       <svg className={adSpendSyncing ? 'animate-spin' : ''} width="13" height="13" viewBox="0 0 13 13" fill="none">
                         <path d="M11 6.5A4.5 4.5 0 012.5 4M2 2v2.5H4.5M2 6.5a4.5 4.5 0 008.5 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      {adSpendSyncing ? 'Senkronize ediliyor...' : 'Åimdi GÃ¼ncelle'}
+                      {adSpendSyncing ? 'Senkronize ediliyor...' : '?imdi G?ncelle'}
                     </button>
                   </div>
                 </div>
 
-                {/* Meta baÄŸlÄ± deÄŸilse uyarÄ± */}
+                {/* Meta baÃ„Å¸l? deÃ„Å¸ilse uyar? */}
                 {!metaConn?.access_token && (
                   <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 flex items-center gap-4">
-                    <span className="text-3xl">âš ï¸</span>
+                    <span className="text-3xl">Ã¢Å¡Â Ã¯Â¸Â</span>
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">Meta hesabÄ± baÄŸlÄ± deÄŸil</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Kampanya verilerini gÃ¶rmek iÃ§in Meta hesabÄ±nÄ± baÄŸla.</p>
+                      <p className="text-sm font-semibold text-gray-900">Meta hesab? baÃ„Å¸l? deÃ„Å¸il</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Kampanya verilerini g?rmek i?in Meta hesab?n? baÃ„Å¸la.</p>
                       <button onClick={() => setActiveTab('meta-baglanti')}
-                        className="mt-2 text-xs text-blue-600 font-medium hover:underline">Meta BaÄŸlantÄ±sÄ±na Git â†’</button>
+                        className="mt-2 text-xs text-blue-600 font-medium hover:underline">Meta BaÃ„Å¸lant?s?na Git Ã¢â€ â€™</button>
                     </div>
                   </div>
                 )}
@@ -2432,24 +2432,24 @@ return (
                     <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0" stroke="#3b82f6" strokeWidth="1.5"/><path d="M12 8v4l3 3" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/></svg>
                     </div>
-                    <p className="text-gray-600 text-sm font-medium">HenÃ¼z veri yok</p>
-                    <p className="text-gray-400 text-xs mt-1 mb-4">Meta hesabÄ± baÄŸlÄ±. Ä°lk veriyi Ã§ekmek iÃ§in gÃ¼ncelle.</p>
+                    <p className="text-gray-600 text-sm font-medium">Hen?z veri yok</p>
+                    <p className="text-gray-400 text-xs mt-1 mb-4">Meta hesab? baÃ„Å¸l?. ?lk veriyi ?ekmek i?in g?ncelle.</p>
                     <button onClick={handleSyncAdSpend} disabled={adSpendSyncing}
                       className="px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-700 transition-colors font-medium">
-                      {adSpendSyncing ? 'Ã‡ekiliyor...' : 'Veriyi Ã‡ek'}
+                      {adSpendSyncing ? 'Ãƒâ€¡ekiliyor...' : 'Veriyi Ãƒâ€¡ek'}
                     </button>
                   </div>
                 )}
 
-                {/* ROI & Ã–zet kartlar */}
+                {/* ROI & Ãƒâ€“zet kartlar */}
                 {adSpend.length > 0 && (
                   <>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                       {[
-                        { label: 'Toplam Harcama', value: `â‚º${totalSpend.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, sub: `${days} gÃ¼n`, color: 'text-red-600', bg: 'from-red-50 to-white', border: 'border-red-100', icon: 'ğŸ’¸' },
-                        { label: 'Meta Geliri', value: `â‚º${metaRevenue.toLocaleString()}`, sub: `${metaSales.length} satÄ±ÅŸ`, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100', icon: 'ğŸ’°' },
-                        { label: 'ROI', value: `%${roi.toFixed(1)}`, sub: totalSpend > 0 ? (roi >= 0 ? 'KÃ¢rlÄ±' : 'ZararlÄ±') : 'â€”', color: roi >= 0 ? 'text-emerald-600' : 'text-red-600', bg: roi >= 0 ? 'from-emerald-50 to-white' : 'from-red-50 to-white', border: roi >= 0 ? 'border-emerald-100' : 'border-red-100', icon: roi >= 0 ? 'ğŸ“ˆ' : 'ğŸ“‰' },
-                        { label: 'Potansiyel MÃ¼ÅŸteri BaÅŸÄ± Maliyet', value: cpl > 0 ? `â‚º${cpl.toFixed(0)}` : 'â€”', sub: `${metaLeads} meta potansiyel mÃ¼ÅŸteri`, color: 'text-blue-600', bg: 'from-blue-50 to-white', border: 'border-blue-100', icon: 'ğŸ¯' },
+                        { label: 'Toplam Harcama', value: `?${totalSpend.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, sub: `${days} g?n`, color: 'text-red-600', bg: 'from-red-50 to-white', border: 'border-red-100', icon: 'ÄŸÅ¸â€™Â¸' },
+                        { label: 'Meta Geliri', value: `?${metaRevenue.toLocaleString()}`, sub: `${metaSales.length} sat?Ã…Å¸`, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100', icon: 'ÄŸÅ¸â€™Â°' },
+                        { label: 'ROI', value: `%${roi.toFixed(1)}`, sub: totalSpend > 0 ? (roi >= 0 ? 'K?rl?' : 'Zararl?') : 'Ã¢â‚¬â€', color: roi >= 0 ? 'text-emerald-600' : 'text-red-600', bg: roi >= 0 ? 'from-emerald-50 to-white' : 'from-red-50 to-white', border: roi >= 0 ? 'border-emerald-100' : 'border-red-100', icon: roi >= 0 ? 'ÄŸÅ¸â€œË†' : 'ÄŸÅ¸â€œâ€°' },
+                        { label: 'Potansiyel M?Ã…Å¸teri BaÃ…Å¸? Maliyet', value: cpl > 0 ? `?${cpl.toFixed(0)}` : 'Ã¢â‚¬â€', sub: `${metaLeads} meta potansiyel m?Ã…Å¸teri`, color: 'text-blue-600', bg: 'from-blue-50 to-white', border: 'border-blue-100', icon: 'ÄŸÅ¸ÂÂ¯' },
                      ].map((card: any) => (
                         <div key={card.label} className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-5 border ${card.border} hover:shadow-md transition-all`}>
                         <div className={`w-9 h-9 ${card.iconBg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
@@ -2460,12 +2460,12 @@ return (
 ))}
                     </div>
 
-                    {/* Ä°kincil metrikler */}
+                    {/* ?kincil metrikler */}
                     <div className="grid grid-cols-3 gap-3">
                       {[
-                        { label: 'Toplam GÃ¶sterim', value: totalImpressions.toLocaleString(), icon: 'ğŸ‘' },
-                        { label: 'Toplam TÄ±klama', value: totalClicks.toLocaleString(), icon: 'ğŸ–±' },
-                        { label: 'SatÄ±ÅŸ BaÅŸÄ± Maliyet', value: cps > 0 ? `â‚º${cps.toFixed(0)}` : 'â€”', icon: 'ğŸ·' },
+                        { label: 'Toplam G?sterim', value: totalImpressions.toLocaleString(), icon: 'ÄŸÅ¸â€˜Â' },
+                        { label: 'Toplam T?klama', value: totalClicks.toLocaleString(), icon: 'ÄŸÅ¸â€“Â±' },
+                        { label: 'Sat?Ã…Å¸ BaÃ…Å¸? Maliyet', value: cps > 0 ? `?${cps.toFixed(0)}` : 'Ã¢â‚¬â€', icon: 'ÄŸÅ¸ÂÂ·' },
                       ].map(m => (
                         <div key={m.label} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3">
                           <span className="text-2xl">{m.icon}</span>
@@ -2481,8 +2481,8 @@ return (
                     {campaigns.length > 0 && (
                       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                         <div className="px-5 py-4 border-b border-gray-50">
-                          <p className="text-sm font-semibold text-gray-900">Kampanya DetayÄ±</p>
-                          <p className="text-xs text-gray-400 mt-0.5">Son {days} gÃ¼n Â· {campaigns.length} kampanya</p>
+                          <p className="text-sm font-semibold text-gray-900">Kampanya Detay?</p>
+                          <p className="text-xs text-gray-400 mt-0.5">Son {days} g?n ? {campaigns.length} kampanya</p>
                         </div>
                         <div className="overflow-x-auto">
                           <table className="w-full">
@@ -2490,8 +2490,8 @@ return (
                               <tr className="bg-gray-50 border-b border-gray-100">
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400">Kampanya</th>
                                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">Harcama</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">GÃ¶sterim</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">TÄ±klama</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">G?sterim</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">T?klama</th>
                                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">CTR</th>
                                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">Pay</th>
                               </tr>
@@ -2508,7 +2508,7 @@ return (
                                         <p className="text-sm text-gray-800 font-medium truncate max-w-[180px]">{c.campaign_name}</p>
                                       </div>
                                     </td>
-                                    <td className="px-4 py-3 text-right text-sm font-semibold text-red-600">â‚º{c.spend.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                                    <td className="px-4 py-3 text-right text-sm font-semibold text-red-600">?{c.spend.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
                                     <td className="px-4 py-3 text-right text-sm text-gray-600">{c.impressions.toLocaleString()}</td>
                                     <td className="px-4 py-3 text-right text-sm text-gray-600">{c.clicks.toLocaleString()}</td>
                                     <td className="px-4 py-3 text-right text-sm text-gray-600">%{ctr}</td>
@@ -2548,16 +2548,16 @@ return (
                 <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <MetaLogo size={28} className="text-blue-600" />
                 </div>
-                <p className="text-gray-700 font-semibold mb-1">Meta BaÄŸlantÄ±sÄ± Gerekli</p>
-                <p className="text-sm text-gray-400 mb-4">Ã–nce Meta hesabÄ±nÄ± baÄŸlamalÄ±sÄ±n.</p>
-                <button onClick={() => setActiveTab('meta-baglanti')} className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-xl font-medium hover:bg-indigo-700 transition-colors">Meta BaÄŸlantÄ±sÄ±na Git â†’</button>
+                <p className="text-gray-700 font-semibold mb-1">Meta BaÃ„Å¸lant?s? Gerekli</p>
+                <p className="text-sm text-gray-400 mb-4">Ãƒâ€“nce Meta hesab?n? baÃ„Å¸lamal?s?n.</p>
+                <button onClick={() => setActiveTab('meta-baglanti')} className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-xl font-medium hover:bg-indigo-700 transition-colors">Meta BaÃ„Å¸lant?s?na Git Ã¢â€ â€™</button>
               </div>
             )
 
             return (
               <div className="space-y-5">
 
-                {/* Webhook durum kartÄ± */}
+                {/* Webhook durum kart? */}
                 <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 text-white relative overflow-hidden">
                   <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/5 rounded-full" />
                   <div className="relative flex items-center gap-4">
@@ -2569,51 +2569,51 @@ return (
                         <p className="font-semibold text-white">Meta Webhook Aktif</p>
                         <span className="flex items-center gap-1 bg-emerald-400/20 text-emerald-300 text-xs px-2 py-0.5 rounded-full font-medium">
                           <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                          CanlÄ±
+                          Canl?
                         </span>
                       </div>
-                      <p className="text-blue-200 text-sm">Potansiyel mÃ¼ÅŸteri formunu dolduranlar otomatik olarak sisteme dÃ¼ÅŸÃ¼yor</p>
+                      <p className="text-blue-200 text-sm">Potansiyel m?Ã…Å¸teri formunu dolduranlar otomatik olarak sisteme d?Ã…Å¸?yor</p>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-2xl font-bold">{metaLeads.length}</p>
-                      <p className="text-blue-300 text-xs">toplam Meta potansiyel mÃ¼ÅŸteri</p>
+                      <p className="text-blue-300 text-xs">toplam Meta potansiyel m?Ã…Å¸teri</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Ã–zet kartlar */}
+                {/* Ãƒâ€“zet kartlar */}
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-white rounded-2xl border border-blue-100 p-5 bg-gradient-to-br from-blue-50 to-white">
                     <p className="text-xs text-gray-400 mb-1">Bu Ay Gelen</p>
                     <p className="text-2xl font-bold text-blue-600">{metaLeadsThisMonth.length}</p>
-                    <p className="text-xs text-gray-400 mt-1">Meta potansiyel mÃ¼ÅŸteri formu</p>
+                    <p className="text-xs text-gray-400 mt-1">Meta potansiyel m?Ã…Å¸teri formu</p>
                   </div>
                   <div className="bg-white rounded-2xl border border-emerald-100 p-5 bg-gradient-to-br from-emerald-50 to-white">
-                    <p className="text-xs text-gray-400 mb-1">SatÄ±ÅŸa DÃ¶nen</p>
+                    <p className="text-xs text-gray-400 mb-1">Sat?Ã…Å¸a D?nen</p>
                     <p className="text-2xl font-bold text-emerald-600">{metaSales.length}</p>
                     <p className="text-xs text-gray-400 mt-1">
-                      {metaLeads.length > 0 ? `%${((metaSales.length / metaLeads.length) * 100).toFixed(1)} dÃ¶nÃ¼ÅŸÃ¼m` : 'HenÃ¼z potansiyel mÃ¼ÅŸteri yok'}
+                      {metaLeads.length > 0 ? `%${((metaSales.length / metaLeads.length) * 100).toFixed(1)} d?n?Ã…Å¸?m` : 'Hen?z potansiyel m?Ã…Å¸teri yok'}
                     </p>
                   </div>
                   <div className="bg-white rounded-2xl border border-violet-100 p-5 bg-gradient-to-br from-violet-50 to-white">
                     <p className="text-xs text-gray-400 mb-1">Meta Cirosu</p>
                     <p className="text-2xl font-bold text-violet-600">
-                      â‚º{metaSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0).toLocaleString()}
+                      ?{metaSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0).toLocaleString()}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">toplam satÄ±ÅŸ tutarÄ±</p>
+                    <p className="text-xs text-gray-400 mt-1">toplam sat?Ã…Å¸ tutar?</p>
                   </div>
                 </div>
 
-                {/* Meta potansiyel mÃ¼ÅŸteri listesi */}
+                {/* Meta potansiyel m?Ã…Å¸teri listesi */}
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                   <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold text-gray-900 text-sm">Meta'dan Gelen Potansiyel MÃ¼ÅŸteriler</h3>
+                      <h3 className="font-semibold text-gray-900 text-sm">Meta'dan Gelen Potansiyel M?Ã…Å¸teriler</h3>
                       <p className="text-xs text-gray-400 mt-0.5">Webhook ile otomatik kaydedildi</p>
                     </div>
                     <button onClick={() => setActiveTab('leadler-liste')}
                       className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
-                      TÃ¼mÃ¼nÃ¼ GÃ¶r â†’
+                      T?m?n? G?r Ã¢â€ â€™
                     </button>
                   </div>
                   {metaLeads.length === 0 ? (
@@ -2621,8 +2621,8 @@ return (
                       <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
                         <MetaLogo size={24} className="text-blue-500" />
                       </div>
-                      <p className="text-gray-500 text-sm font-medium">HenÃ¼z Meta'dan Potansiyel MÃ¼ÅŸteri gelmedi</p>
-                      <p className="text-xs text-gray-400 mt-1">Reklam formunu dolduran biri olduÄŸunda otomatik buraya dÃ¼ÅŸecek</p>
+                      <p className="text-gray-500 text-sm font-medium">Hen?z Meta'dan Potansiyel M?Ã…Å¸teri gelmedi</p>
+                      <p className="text-xs text-gray-400 mt-1">Reklam formunu dolduran biri olduÃ„Å¸unda otomatik buraya d?Ã…Å¸ecek</p>
                     </div>
                   ) : metaLeads.slice(0, 10).map((lead: any, idx: number) => {
                     const avatarColors = ['bg-blue-100 text-blue-600','bg-violet-100 text-violet-600','bg-emerald-100 text-emerald-600','bg-orange-100 text-orange-600','bg-pink-100 text-pink-600']
@@ -2631,10 +2631,10 @@ return (
                       <div key={lead.id} onClick={() => openDetailModal(lead)}
                         className="px-5 py-3.5 flex items-center gap-3 border-b border-gray-50 last:border-0 hover:bg-blue-50/30 cursor-pointer transition-colors">
                         <div className={`w-8 h-8 rounded-lg ${ac} flex items-center justify-center flex-shrink-0`}>
-                          <span className="text-xs font-bold">{(lead.full_name || 'Ä°').charAt(0)}</span>
+                          <span className="text-xs font-bold">{(lead.full_name || '?').charAt(0)}</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'Ä°simsiz'}</p>
+                          <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || '?simsiz'}</p>
                           <p className="text-xs text-gray-400">{lead.phone}</p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -2650,11 +2650,11 @@ return (
             )
           })()}
 
-          {/* â”€â”€ PERFORMANS â”€â”€ */}
+          {/* ?? PERFORMANS ?? */}
 {activeTab === 'performans-genel' && (() => {
             const now = new Date()
 
-            // â”€â”€ Filtre aralÄ±ÄŸÄ± â”€â”€
+            // ?? Filtre aral?Ã„Å¸? ??
             const getPeriodRange = () => {
               const end = new Date(); end.setHours(23,59,59,999)
               if (perfPeriod === 'today') { const s = new Date(); s.setHours(0,0,0,0); return { start: s, end } }
@@ -2673,7 +2673,7 @@ return (
             const { start: rangeStart, end: rangeEnd } = getPeriodRange()
             const filteredLeads = leads.filter(l => { const d = new Date(l.created_at); return d >= rangeStart && d <= rangeEnd })
 
-            // â”€â”€ Grafik iÃ§in aylar â”€â”€
+            // ?? Grafik i?in aylar ??
             const monthCount = perfPeriod === 'today' || perfPeriod === '7day' ? 1 : perfPeriod === '1month' ? 1 : perfPeriod === '3month' ? 3 : perfPeriod === '1year' ? 12 : 6
             const months = Array.from({ length: monthCount }, (_, i) => {
               const d = new Date(now.getFullYear(), now.getMonth() - (monthCount - 1 - i), 1)
@@ -2691,10 +2691,10 @@ return (
             const convRate = totalLeads > 0 ? ((totalSales / totalLeads) * 100).toFixed(1) : '0'
             const statusDist = [
               { key: 'new', label: 'Yeni', color: '#6366f1' },
-              { key: 'called', label: 'ArandÄ±', color: '#f59e0b' },
+              { key: 'called', label: 'Arand?', color: '#f59e0b' },
               { key: 'appointment_scheduled', label: 'Randevu', color: '#8b5cf6' },
-              { key: 'procedure_done', label: 'SatÄ±ÅŸ', color: '#10b981' },
-              { key: 'cancelled', label: 'Ä°ptal', color: '#f87171' },
+              { key: 'procedure_done', label: 'Sat?Ã…Å¸', color: '#10b981' },
+              { key: 'cancelled', label: '?ptal', color: '#f87171' },
             ].map(s => ({ ...s, count: filteredLeads.filter(l => l.status === s.key).length }))
             const branchPerf = branches.map(b => {
               const bLeads = filteredLeads.filter(l => l.branch_id === b.id)
@@ -2709,18 +2709,18 @@ return (
             return (
               <div className="space-y-5">
 
-                {/* â”€â”€ Filtre Bar â”€â”€ */}
+                {/* ?? Filtre Bar ?? */}
                 <div className="bg-white rounded-2xl border border-gray-100 px-5 py-3.5 flex items-center gap-3 flex-wrap">
-                  <span className="text-xs font-medium text-gray-500 flex-shrink-0">DÃ¶nem:</span>
+                  <span className="text-xs font-medium text-gray-500 flex-shrink-0">D?nem:</span>
                   <div className="flex gap-1 flex-wrap">
                     {[
-                      { key: 'today', label: 'BugÃ¼n' },
-                      { key: '7day', label: 'Son 7 GÃ¼n' },
+                      { key: 'today', label: 'Bug?n' },
+                      { key: '7day', label: 'Son 7 G?n' },
                       { key: '1month', label: 'Bu Ay' },
                       { key: '3month', label: 'Son 3 Ay' },
                       { key: '6month', label: 'Son 6 Ay' },
-                      { key: '1year', label: 'Bu YÄ±l' },
-                      { key: 'custom', label: 'Ã–zel' },
+                      { key: '1year', label: 'Bu Y?l' },
+                      { key: 'custom', label: 'Ãƒâ€“zel' },
                     ].map(p => (
                       <button key={p.key} onClick={() => setPerfPeriod(p.key)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${perfPeriod === p.key ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'}`}>
@@ -2732,7 +2732,7 @@ return (
                     <div className="flex items-center gap-2 ml-auto">
                       <input type="date" value={perfStartDate} onChange={e => setPerfStartDate(e.target.value)}
                         className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                      <span className="text-xs text-gray-400">â€”</span>
+                      <span className="text-xs text-gray-400">Ã¢â‚¬â€</span>
                       <input type="date" value={perfEndDate} onChange={e => setPerfEndDate(e.target.value)}
                         className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                     </div>
@@ -2741,10 +2741,10 @@ return (
 
                 <div className="grid grid-cols-4 gap-4">
                   {[
-                    { label: 'Toplam Potansiyel MÃ¼ÅŸteri', value: totalLeads, sub: 'SeÃ§ili dÃ¶nem', color: 'text-indigo-600', bg: 'from-indigo-50 to-white', icon: 'â—ˆ' },
-                    { label: 'Toplam SatÄ±ÅŸ', value: totalSales, sub: convRate + '% dÃ¶nÃ¼ÅŸÃ¼m', color: 'text-emerald-600', bg: 'from-emerald-50 to-white', icon: 'â—‰' },
-                    { label: 'Toplam Ciro', value: 'â‚º' + totalRevenue.toLocaleString(), sub: 'OnaylÄ± satÄ±ÅŸlar', color: 'text-violet-600', bg: 'from-violet-50 to-white', icon: 'â—' },
-                    { label: 'Ort. SatÄ±ÅŸ', value: totalSales > 0 ? 'â‚º' + Math.round(totalRevenue / totalSales).toLocaleString() : 'â€”', sub: 'SatÄ±ÅŸ baÅŸÄ±na', color: 'text-amber-600', bg: 'from-amber-50 to-white', icon: 'â—' },
+                    { label: 'Toplam Potansiyel M?Ã…Å¸teri', value: totalLeads, sub: 'Se?ili d?nem', color: 'text-indigo-600', bg: 'from-indigo-50 to-white', icon: '?' },
+                    { label: 'Toplam Sat?Ã…Å¸', value: totalSales, sub: convRate + '% d?n?Ã…Å¸?m', color: 'text-emerald-600', bg: 'from-emerald-50 to-white', icon: '?' },
+                    { label: 'Toplam Ciro', value: '?' + totalRevenue.toLocaleString(), sub: 'Onayl? sat?Ã…Å¸lar', color: 'text-violet-600', bg: 'from-violet-50 to-white', icon: '?' },
+                    { label: 'Ort. Sat?Ã…Å¸', value: totalSales > 0 ? '?' + Math.round(totalRevenue / totalSales).toLocaleString() : 'Ã¢â‚¬â€', sub: 'Sat?Ã…Å¸ baÃ…Å¸?na', color: 'text-amber-600', bg: 'from-amber-50 to-white', icon: '?' },
                   ].map(k => (
                     <div key={k.label} className={'bg-gradient-to-br ' + k.bg + ' rounded-2xl border border-gray-100 p-5'}>
                       <div className="flex items-center justify-between mb-3">
@@ -2759,12 +2759,12 @@ return (
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h3 className="font-semibold text-gray-900">Potansiyel MÃ¼ÅŸteri ve SatÄ±ÅŸ Trendi</h3>
+                      <h3 className="font-semibold text-gray-900">Potansiyel M?Ã…Å¸teri ve Sat?Ã…Å¸ Trendi</h3>
                       <p className="text-xs text-gray-400 mt-0.5">Son 6 ay</p>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-gray-500">
                       <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-indigo-300 inline-block" /> Lead</span>
-                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-emerald-400 inline-block" /> SatÄ±ÅŸ</span>
+                      <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-emerald-400 inline-block" /> Sat?Ã…Å¸</span>
                     </div>
                   </div>
                   <svg width={chartW} height={chartH + 30} viewBox={'0 0 ' + chartW + ' ' + (chartH + 30)}>
@@ -2788,16 +2788,16 @@ return (
                 </div>
                 <div className="grid grid-cols-2 gap-5">
                   <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                    <h3 className="font-semibold text-gray-900 mb-4">Durum DaÄŸÄ±lÄ±mÄ±</h3>
+                    <h3 className="font-semibold text-gray-900 mb-4">Durum DaÃ„Å¸?l?m?</h3>
                     {totalLeads === 0 ? (
-                      <p className="text-sm text-gray-400 text-center py-6">HenÃ¼z potansiyel mÃ¼ÅŸteri yok.</p>
+                      <p className="text-sm text-gray-400 text-center py-6">Hen?z potansiyel m?Ã…Å¸teri yok.</p>
                     ) : (
                       <div className="space-y-3">
                         {statusDist.map(s => (
                           <div key={s.key}>
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-xs font-medium text-gray-600">{s.label}</span>
-                              <span className="text-xs text-gray-400">{s.count} Â· %{totalLeads > 0 ? ((s.count / totalLeads) * 100).toFixed(0) : 0}</span>
+                              <span className="text-xs text-gray-400">{s.count} ? %{totalLeads > 0 ? ((s.count / totalLeads) * 100).toFixed(0) : 0}</span>
                             </div>
                             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                               <div className="h-full rounded-full" style={{ width: (totalLeads > 0 ? (s.count / totalLeads) * 100 : 0) + '%', backgroundColor: s.color }} />
@@ -2808,7 +2808,7 @@ return (
                     )}
                   </div>
                   <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                    <h3 className="font-semibold text-gray-900 mb-4">AylÄ±k Ciro</h3>
+                    <h3 className="font-semibold text-gray-900 mb-4">Ayl?k Ciro</h3>
                     <div className="space-y-2">
                       {monthlyData.map((m, i) => (
                         <div key={i} className="flex items-center gap-3">
@@ -2816,11 +2816,11 @@ return (
                           <div className="flex-1 h-6 bg-gray-50 rounded-lg overflow-hidden">
                             <div className="h-full bg-gradient-to-r from-violet-400 to-violet-500 rounded-lg flex items-center px-2"
                               style={{ width: (maxRevenue > 0 ? (m.revenue / maxRevenue) * 100 : 0) + '%', minWidth: m.revenue > 0 ? '2rem' : '0' }}>
-                              {m.revenue > 0 && <span className="text-white text-xs font-medium whitespace-nowrap">{'â‚º' + (m.revenue / 1000).toFixed(0) + 'K'}</span>}
+                              {m.revenue > 0 && <span className="text-white text-xs font-medium whitespace-nowrap">{'?' + (m.revenue / 1000).toFixed(0) + 'K'}</span>}
                             </div>
                           </div>
                           <span className="text-xs font-semibold text-gray-700 w-16 text-right flex-shrink-0">
-                            {m.revenue > 0 ? 'â‚º' + m.revenue.toLocaleString() : 'â€”'}
+                            {m.revenue > 0 ? '?' + m.revenue.toLocaleString() : 'Ã¢â‚¬â€'}
                           </span>
                         </div>
                       ))}
@@ -2830,7 +2830,7 @@ return (
                 {branches.length > 1 && (
                   <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-100">
-                      <h3 className="font-semibold text-gray-900">Åube KarÅŸÄ±laÅŸtÄ±rmasÄ±</h3>
+                      <h3 className="font-semibold text-gray-900">?ube KarÃ…Å¸?laÃ…Å¸t?rmas?</h3>
                     </div>
                     <div className="divide-y divide-gray-50">
                       {branchPerf.sort((a, b) => b.sales - a.sales).map((b, i) => (
@@ -2841,13 +2841,13 @@ return (
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900">{b.name}</p>
                             <div className="flex gap-3 mt-0.5">
-                              <span className="text-xs text-indigo-600">{b.leads} potansiyel mÃ¼ÅŸteri</span>
-                              <span className="text-xs text-emerald-600">{b.sales} satÄ±ÅŸ</span>
-                              <span className="text-xs text-gray-400">%{b.rate} dÃ¶nÃ¼ÅŸÃ¼m</span>
+                              <span className="text-xs text-indigo-600">{b.leads} potansiyel m?Ã…Å¸teri</span>
+                              <span className="text-xs text-emerald-600">{b.sales} sat?Ã…Å¸</span>
+                              <span className="text-xs text-gray-400">%{b.rate} d?n?Ã…Å¸?m</span>
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <p className="text-sm font-semibold text-gray-900">{b.revenue > 0 ? 'â‚º' + b.revenue.toLocaleString() : 'â€”'}</p>
+                            <p className="text-sm font-semibold text-gray-900">{b.revenue > 0 ? '?' + b.revenue.toLocaleString() : 'Ã¢â‚¬â€'}</p>
                             <p className="text-xs text-gray-400">ciro</p>
                           </div>
                         </div>
@@ -2859,7 +2859,7 @@ return (
             )
           })()}
 
-          {/* â”€â”€ PERFORMANS KARÅILAÅTIRMA â”€â”€ */}
+          {/* ?? PERFORMANS KAR?ILA?TIRMA ?? */}
           {activeTab === 'performans-karsilastirma' && (() => {
             const now = new Date()
 
@@ -2869,14 +2869,14 @@ return (
                 const thisEnd = new Date(now); thisEnd.setHours(23,59,59,999)
                 const lastStart = new Date(thisStart); lastStart.setDate(lastStart.getDate() - 7)
                 const lastEnd = new Date(thisStart); lastEnd.setDate(lastEnd.getDate() - 1); lastEnd.setHours(23,59,59,999)
-                return { current: { start: thisStart, end: thisEnd, label: 'Bu Hafta' }, previous: { start: lastStart, end: lastEnd, label: 'GeÃ§en Hafta' } }
+                return { current: { start: thisStart, end: thisEnd, label: 'Bu Hafta' }, previous: { start: lastStart, end: lastEnd, label: 'Ge?en Hafta' } }
               }
               if (key === 'month') {
                 const thisStart = new Date(now.getFullYear(), now.getMonth(), 1)
                 const thisEnd = new Date(now); thisEnd.setHours(23,59,59,999)
                 const lastStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
                 const lastEnd = new Date(now.getFullYear(), now.getMonth(), 0); lastEnd.setHours(23,59,59,999)
-                return { current: { start: thisStart, end: thisEnd, label: 'Bu Ay' }, previous: { start: lastStart, end: lastEnd, label: 'GeÃ§en Ay' } }
+                return { current: { start: thisStart, end: thisEnd, label: 'Bu Ay' }, previous: { start: lastStart, end: lastEnd, label: 'Ge?en Ay' } }
               }
               if (key === 'quarter') {
                 const qMonth = Math.floor(now.getMonth() / 3) * 3
@@ -2884,14 +2884,14 @@ return (
                 const thisEnd = new Date(now); thisEnd.setHours(23,59,59,999)
                 const lastStart = new Date(now.getFullYear(), qMonth - 3, 1)
                 const lastEnd = new Date(now.getFullYear(), qMonth, 0); lastEnd.setHours(23,59,59,999)
-                return { current: { start: thisStart, end: thisEnd, label: 'Bu Ã‡eyrek' }, previous: { start: lastStart, end: lastEnd, label: 'GeÃ§en Ã‡eyrek' } }
+                return { current: { start: thisStart, end: thisEnd, label: 'Bu Ãƒâ€¡eyrek' }, previous: { start: lastStart, end: lastEnd, label: 'Ge?en Ãƒâ€¡eyrek' } }
               }
               // year
               const thisStart = new Date(now.getFullYear(), 0, 1)
               const thisEnd = new Date(now); thisEnd.setHours(23,59,59,999)
               const lastStart = new Date(now.getFullYear() - 1, 0, 1)
               const lastEnd = new Date(now.getFullYear() - 1, 11, 31); lastEnd.setHours(23,59,59,999)
-              return { current: { start: thisStart, end: thisEnd, label: 'Bu YÄ±l' }, previous: { start: lastStart, end: lastEnd, label: 'GeÃ§en YÄ±l' } }
+              return { current: { start: thisStart, end: thisEnd, label: 'Bu Y?l' }, previous: { start: lastStart, end: lastEnd, label: 'Ge?en Y?l' } }
             }
 
             const { current, previous } = getPeriods(compPeriodA)
@@ -2915,10 +2915,10 @@ return (
             }
 
             const metrics = [
-              { label: 'Potansiyel MÃ¼ÅŸteri', cur: cur.leads, prev: prev.leads, format: (v: number) => v.toString(), color: 'indigo', icon: 'â—ˆ' },
-              { label: 'SatÄ±ÅŸ', cur: cur.sales, prev: prev.sales, format: (v: number) => v.toString(), color: 'emerald', icon: 'â—‰' },
-              { label: 'Ciro', cur: cur.revenue, prev: prev.revenue, format: (v: number) => 'â‚º' + v.toLocaleString(), color: 'violet', icon: 'â—' },
-              { label: 'DÃ¶nÃ¼ÅŸÃ¼m', cur: cur.conv, prev: prev.conv, format: (v: number) => '%' + v.toFixed(1), color: 'amber', icon: 'â—' },
+              { label: 'Potansiyel M?Ã…Å¸teri', cur: cur.leads, prev: prev.leads, format: (v: number) => v.toString(), color: 'indigo', icon: '?' },
+              { label: 'Sat?Ã…Å¸', cur: cur.sales, prev: prev.sales, format: (v: number) => v.toString(), color: 'emerald', icon: '?' },
+              { label: 'Ciro', cur: cur.revenue, prev: prev.revenue, format: (v: number) => '?' + v.toLocaleString(), color: 'violet', icon: '?' },
+              { label: 'D?n?Ã…Å¸?m', cur: cur.conv, prev: prev.conv, format: (v: number) => '%' + v.toFixed(1), color: 'amber', icon: '?' },
             ]
 
             const colorMap: any = {
@@ -2928,7 +2928,7 @@ return (
               amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-100' },
             }
 
-            // SatÄ±ÅŸÃ§Ä± karÅŸÄ±laÅŸtÄ±rmasÄ±
+            // Sat?Ã…Å¸?? karÃ…Å¸?laÃ…Å¸t?rmas?
             const memberPerf = teamMembers.map((tm: any) => {
               const mCur = currentLeads.filter(l => l.assigned_to === tm.user_id)
               const mPrev = previousLeads.filter(l => l.assigned_to === tm.user_id)
@@ -2938,8 +2938,8 @@ return (
               const mPrevRevenue = mPrevSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
               const salesDiff = diff(mCurSales.length, mPrevSales.length)
               return {
-                name: tm.profiles?.full_name || 'â€”',
-                branch: tm.branches?.branch_name || 'â€”',
+                name: tm.profiles?.full_name || 'Ã¢â‚¬â€',
+                branch: tm.branches?.branch_name || 'Ã¢â‚¬â€',
                 curLeads: mCur.length, prevLeads: mPrev.length,
                 curSales: mCurSales.length, prevSales: mPrevSales.length,
                 curRevenue: mCurRevenue, prevRevenue: mPrevRevenue,
@@ -2950,15 +2950,15 @@ return (
             return (
               <div className="space-y-5">
 
-                {/* DÃ¶nem SeÃ§ici */}
+                {/* D?nem Se?ici */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-4">
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">KarÅŸÄ±laÅŸtÄ±rma DÃ¶nemi</p>
+                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">KarÃ…Å¸?laÃ…Å¸t?rma D?nemi</p>
                   <div className="flex gap-2 flex-wrap">
                     {[
-                      { key: 'week', label: 'HaftalÄ±k', sub: 'Bu hafta vs geÃ§en hafta' },
-                      { key: 'month', label: 'AylÄ±k', sub: 'Bu ay vs geÃ§en ay' },
-                      { key: 'quarter', label: 'Ã‡eyreklik', sub: 'Bu Ã§eyrek vs geÃ§en Ã§eyrek' },
-                      { key: 'year', label: 'YÄ±llÄ±k', sub: 'Bu yÄ±l vs geÃ§en yÄ±l' },
+                      { key: 'week', label: 'Haftal?k', sub: 'Bu hafta vs ge?en hafta' },
+                      { key: 'month', label: 'Ayl?k', sub: 'Bu ay vs ge?en ay' },
+                      { key: 'quarter', label: 'Ãƒâ€¡eyreklik', sub: 'Bu ?eyrek vs ge?en ?eyrek' },
+                      { key: 'year', label: 'Y?ll?k', sub: 'Bu y?l vs ge?en y?l' },
                     ].map(p => (
                       <button key={p.key} onClick={() => setCompPeriodA(p.key)}
                         className={`flex-1 min-w-[120px] px-4 py-3 rounded-xl border-2 text-left transition-all ${compPeriodA === p.key ? 'border-indigo-500 bg-indigo-50' : 'border-gray-100 hover:border-indigo-200 bg-white'}`}>
@@ -2969,7 +2969,7 @@ return (
                   </div>
                 </div>
 
-                {/* DÃ¶nem Etiketleri */}
+                {/* D?nem Etiketleri */}
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold">
                     <span className="w-2 h-2 bg-white rounded-full" />
@@ -2982,7 +2982,7 @@ return (
                   </div>
                 </div>
 
-                {/* Metrik KartlarÄ± */}
+                {/* Metrik Kartlar? */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {metrics.map(m => {
                     const d = diff(m.cur, m.prev)
@@ -2995,7 +2995,7 @@ return (
                           <span className={`text-lg ${c.text}`}>{m.icon}</span>
                           {d !== null && (
                             <span className={`text-xs font-bold px-2 py-1 rounded-full ${up ? 'bg-emerald-100 text-emerald-700' : down ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-                              {up ? 'â†‘' : down ? 'â†“' : '='} %{Math.abs(d).toFixed(0)}
+                              {up ? 'Ã¢â€ â€˜' : down ? 'Ã¢â€ â€œ' : '='} %{Math.abs(d).toFixed(0)}
                             </span>
                           )}
                         </div>
@@ -3007,14 +3007,14 @@ return (
                   })}
                 </div>
 
-                {/* GÃ¶rsel Bar KarÅŸÄ±laÅŸtÄ±rmasÄ± */}
+                {/* G?rsel Bar KarÃ…Å¸?laÃ…Å¸t?rmas? */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                  <h3 className="font-semibold text-gray-900 mb-5">DetaylÄ± KarÅŸÄ±laÅŸtÄ±rma</h3>
+                  <h3 className="font-semibold text-gray-900 mb-5">Detayl? KarÃ…Å¸?laÃ…Å¸t?rma</h3>
                   <div className="space-y-5">
                     {[
-                      { label: 'Potansiyel MÃ¼ÅŸteri', cur: cur.leads, prev: prev.leads, max: Math.max(cur.leads, prev.leads, 1), curColor: 'bg-indigo-500', prevColor: 'bg-indigo-200', format: (v: number) => v.toString() },
-                      { label: 'SatÄ±ÅŸ', cur: cur.sales, prev: prev.sales, max: Math.max(cur.sales, prev.sales, 1), curColor: 'bg-emerald-500', prevColor: 'bg-emerald-200', format: (v: number) => v.toString() },
-                      { label: 'Ciro', cur: cur.revenue, prev: prev.revenue, max: Math.max(cur.revenue, prev.revenue, 1), curColor: 'bg-violet-500', prevColor: 'bg-violet-200', format: (v: number) => 'â‚º' + v.toLocaleString() },
+                      { label: 'Potansiyel M?Ã…Å¸teri', cur: cur.leads, prev: prev.leads, max: Math.max(cur.leads, prev.leads, 1), curColor: 'bg-indigo-500', prevColor: 'bg-indigo-200', format: (v: number) => v.toString() },
+                      { label: 'Sat?Ã…Å¸', cur: cur.sales, prev: prev.sales, max: Math.max(cur.sales, prev.sales, 1), curColor: 'bg-emerald-500', prevColor: 'bg-emerald-200', format: (v: number) => v.toString() },
+                      { label: 'Ciro', cur: cur.revenue, prev: prev.revenue, max: Math.max(cur.revenue, prev.revenue, 1), curColor: 'bg-violet-500', prevColor: 'bg-violet-200', format: (v: number) => '?' + v.toLocaleString() },
                     ].map(m => (
                       <div key={m.label}>
                         <div className="flex items-center justify-between mb-2">
@@ -3049,12 +3049,12 @@ return (
                   </div>
                 </div>
 
-                {/* SatÄ±ÅŸÃ§Ä± KarÅŸÄ±laÅŸtÄ±rmasÄ± */}
+                {/* Sat?Ã…Å¸?? KarÃ…Å¸?laÃ…Å¸t?rmas? */}
                 {teamMembers.length > 0 && (
                   <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                       <div>
-                        <h3 className="font-semibold text-gray-900">SatÄ±ÅŸÃ§Ä± PerformansÄ±</h3>
+                        <h3 className="font-semibold text-gray-900">Sat?Ã…Å¸?? Performans?</h3>
                         <p className="text-xs text-gray-400 mt-0.5">{current.label} vs {previous.label}</p>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-gray-400">
@@ -3084,12 +3084,12 @@ return (
                               <div className="flex items-center gap-3 flex-shrink-0">
                                 {m.salesDiff !== null && (
                                   <span className={`text-xs font-bold px-2 py-1 rounded-full ${up ? 'bg-emerald-100 text-emerald-700' : down ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-                                    {up ? 'â†‘' : down ? 'â†“' : '='} %{Math.abs(m.salesDiff).toFixed(0)}
+                                    {up ? 'Ã¢â€ â€˜' : down ? 'Ã¢â€ â€œ' : '='} %{Math.abs(m.salesDiff).toFixed(0)}
                                   </span>
                                 )}
                                 <div className="text-right">
                                   <p className="text-sm font-bold text-emerald-600">{m.curSales} <span className="text-gray-300 font-normal">/ {m.prevSales}</span></p>
-                                  <p className="text-xs text-gray-400">satÄ±ÅŸ</p>
+                                  <p className="text-xs text-gray-400">sat?Ã…Å¸</p>
                                 </div>
                                 <div className="text-right">
                                   <p className="text-sm font-semibold text-indigo-600">{m.curLeads} <span className="text-gray-300 font-normal">/ {m.prevLeads}</span></p>
@@ -3120,11 +3120,11 @@ return (
             )
           })()}
 
-          {/* â”€â”€ KÃ‚R ANALÄ°ZÄ° â”€â”€ */}
+          {/* ?? KÃƒâ€šR ANAL?Z? ?? */}
           {activeTab === 'performans-kar' && (() => {
             const now = new Date()
 
-            // DÃ¶nem filtresi â€” genel ile aynÄ± state paylaÅŸÄ±r
+            // D?nem filtresi Ã¢â‚¬â€ genel ile ayn? state paylaÃ…Å¸?r
             const getPeriodRange = () => {
               const end = new Date(); end.setHours(23,59,59,999)
               if (perfPeriod === 'today') { const s = new Date(); s.setHours(0,0,0,0); return { start: s, end } }
@@ -3147,7 +3147,7 @@ return (
             // Toplam ciro
             const totalRevenue = soldLeads.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
 
-            // SatÄ±ÅŸÃ§Ä± prim hesabÄ±
+            // Sat?Ã…Å¸?? prim hesab?
             const memberEarnings = teamMembers.map((tm: any) => {
               const branch = branches.find((b: any) => b.id === tm.branch_id)
               const commModel = branch?.commission_model || 'fixed_rate'
@@ -3161,8 +3161,8 @@ return (
               else if (commModel === 'per_lead') prim = mLeads.length * commValue
 
               return {
-                name: tm.profiles?.full_name || tm.profiles?.email || 'â€”',
-                branch: branch?.branch_name || 'â€”',
+                name: tm.profiles?.full_name || tm.profiles?.email || 'Ã¢â‚¬â€',
+                branch: branch?.branch_name || 'Ã¢â‚¬â€',
                 leads: mLeads.length,
                 sales: mSales.length,
                 revenue: mRevenue,
@@ -3176,22 +3176,22 @@ return (
             const netProfit = totalRevenue - totalPrim
 
             const periodLabels: any = {
-              today: 'BugÃ¼n', '7day': 'Son 7 GÃ¼n', '1month': 'Bu Ay',
-              '3month': 'Son 3 Ay', '6month': 'Son 6 Ay', '1year': 'Bu YÄ±l', custom: 'Ã–zel DÃ¶nem'
+              today: 'Bug?n', '7day': 'Son 7 G?n', '1month': 'Bu Ay',
+              '3month': 'Son 3 Ay', '6month': 'Son 6 Ay', '1year': 'Bu Y?l', custom: 'Ãƒâ€“zel D?nem'
             }
 
             return (
               <div className="space-y-5">
 
-                {/* DÃ¶nem Filtresi */}
+                {/* D?nem Filtresi */}
                 <div className="bg-white rounded-2xl border border-gray-100 px-5 py-3.5 flex items-center gap-3 flex-wrap">
-                  <span className="text-xs font-medium text-gray-500 flex-shrink-0">DÃ¶nem:</span>
+                  <span className="text-xs font-medium text-gray-500 flex-shrink-0">D?nem:</span>
                   <div className="flex gap-1 flex-wrap">
                     {[
-                      { key: 'today', label: 'BugÃ¼n' }, { key: '7day', label: 'Son 7 GÃ¼n' },
+                      { key: 'today', label: 'Bug?n' }, { key: '7day', label: 'Son 7 G?n' },
                       { key: '1month', label: 'Bu Ay' }, { key: '3month', label: 'Son 3 Ay' },
-                      { key: '6month', label: 'Son 6 Ay' }, { key: '1year', label: 'Bu YÄ±l' },
-                      { key: 'custom', label: 'Ã–zel' },
+                      { key: '6month', label: 'Son 6 Ay' }, { key: '1year', label: 'Bu Y?l' },
+                      { key: 'custom', label: 'Ãƒâ€“zel' },
                     ].map(p => (
                       <button key={p.key} onClick={() => setPerfPeriod(p.key)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${perfPeriod === p.key ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'}`}>
@@ -3203,64 +3203,64 @@ return (
                     <div className="flex items-center gap-2 ml-auto">
                       <input type="date" value={perfStartDate} onChange={e => setPerfStartDate(e.target.value)}
                         className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                      <span className="text-xs text-gray-400">â€”</span>
+                      <span className="text-xs text-gray-400">Ã¢â‚¬â€</span>
                       <input type="date" value={perfEndDate} onChange={e => setPerfEndDate(e.target.value)}
                         className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                     </div>
                   )}
                 </div>
 
-                {/* Ana Ã–zet Kartlar */}
+                {/* Ana Ãƒâ€“zet Kartlar */}
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl border border-emerald-100 p-5">
                     <p className="text-xs text-gray-400 mb-1">Toplam Ciro</p>
-                    <p className="text-3xl font-bold text-emerald-600">â‚º{totalRevenue.toLocaleString()}</p>
-                    <p className="text-xs text-gray-400 mt-1">{soldLeads.length} satÄ±ÅŸ Â· {periodLabels[perfPeriod]}</p>
+                    <p className="text-3xl font-bold text-emerald-600">?{totalRevenue.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400 mt-1">{soldLeads.length} sat?Ã…Å¸ ? {periodLabels[perfPeriod]}</p>
                   </div>
                   <div className="bg-gradient-to-br from-rose-50 to-white rounded-2xl border border-rose-100 p-5">
                     <p className="text-xs text-gray-400 mb-1">Toplam Prim</p>
-                    <p className="text-3xl font-bold text-rose-500">â‚º{totalPrim.toLocaleString()}</p>
-                    <p className="text-xs text-gray-400 mt-1">{memberEarnings.length} satÄ±ÅŸÃ§Ä± Â· komisyon toplamÄ±</p>
+                    <p className="text-3xl font-bold text-rose-500">?{totalPrim.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400 mt-1">{memberEarnings.length} sat?Ã…Å¸?? ? komisyon toplam?</p>
                   </div>
                   <div className="bg-gradient-to-br from-indigo-50 to-white rounded-2xl border border-indigo-100 p-5 relative overflow-hidden">
                     <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, #4f46e5 1px, transparent 1px)', backgroundSize: '12px 12px' }} />
                     <p className="text-xs text-gray-400 mb-1">Sana Kalan</p>
-                    <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>â‚º{netProfit.toLocaleString()}</p>
+                    <p className={`text-3xl font-bold ${netProfit >= 0 ? 'text-indigo-600' : 'text-red-500'}`}>?{netProfit.toLocaleString()}</p>
                     <p className="text-xs text-gray-400 mt-1">
-                      {totalRevenue > 0 ? `%${((netProfit / totalRevenue) * 100).toFixed(1)} net oran` : 'HenÃ¼z satÄ±ÅŸ yok'}
+                      {totalRevenue > 0 ? `%${((netProfit / totalRevenue) * 100).toFixed(1)} net oran` : 'Hen?z sat?Ã…Å¸ yok'}
                     </p>
                   </div>
                 </div>
 
-                {/* GÃ¶rsel DaÄŸÄ±lÄ±m */}
+                {/* G?rsel DaÃ„Å¸?l?m */}
                 {totalRevenue > 0 && (
                   <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                    <p className="text-sm font-semibold text-gray-900 mb-4">Gelir DaÄŸÄ±lÄ±mÄ±</p>
+                    <p className="text-sm font-semibold text-gray-900 mb-4">Gelir DaÃ„Å¸?l?m?</p>
                     <div className="h-4 rounded-full overflow-hidden flex">
-                      <div className="h-full bg-indigo-500 transition-all" style={{ width: `${(netProfit / totalRevenue) * 100}%` }} title={`Sana kalan: â‚º${netProfit.toLocaleString()}`} />
-                      <div className="h-full bg-rose-400 transition-all" style={{ width: `${(totalPrim / totalRevenue) * 100}%` }} title={`Primler: â‚º${totalPrim.toLocaleString()}`} />
+                      <div className="h-full bg-indigo-500 transition-all" style={{ width: `${(netProfit / totalRevenue) * 100}%` }} title={`Sana kalan: ?${netProfit.toLocaleString()}`} />
+                      <div className="h-full bg-rose-400 transition-all" style={{ width: `${(totalPrim / totalRevenue) * 100}%` }} title={`Primler: ?${totalPrim.toLocaleString()}`} />
                     </div>
                     <div className="flex gap-6 mt-3">
                       <span className="flex items-center gap-2 text-xs text-gray-500"><span className="w-3 h-3 bg-indigo-500 rounded-sm inline-block" /> Sana kalan %{totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0}</span>
-                      <span className="flex items-center gap-2 text-xs text-gray-500"><span className="w-3 h-3 bg-rose-400 rounded-sm inline-block" /> SatÄ±ÅŸÃ§Ä± primleri %{totalRevenue > 0 ? ((totalPrim / totalRevenue) * 100).toFixed(1) : 0}</span>
+                      <span className="flex items-center gap-2 text-xs text-gray-500"><span className="w-3 h-3 bg-rose-400 rounded-sm inline-block" /> Sat?Ã…Å¸?? primleri %{totalRevenue > 0 ? ((totalPrim / totalRevenue) * 100).toFixed(1) : 0}</span>
                     </div>
                   </div>
                 )}
 
-                {/* SatÄ±ÅŸÃ§Ä± Prim DÃ¶kÃ¼mÃ¼ */}
+                {/* Sat?Ã…Å¸?? Prim D?k?m? */}
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold text-gray-900">SatÄ±ÅŸÃ§Ä± Prim DÃ¶kÃ¼mÃ¼</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">{periodLabels[perfPeriod]} Â· komisyon oranlarÄ±na gÃ¶re</p>
+                      <h3 className="font-semibold text-gray-900">Sat?Ã…Å¸?? Prim D?k?m?</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">{periodLabels[perfPeriod]} ? komisyon oranlar?na g?re</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-rose-500">â‚º{totalPrim.toLocaleString()}</p>
+                      <p className="text-sm font-bold text-rose-500">?{totalPrim.toLocaleString()}</p>
                       <p className="text-xs text-gray-400">toplam prim</p>
                     </div>
                   </div>
                   {memberEarnings.length === 0 ? (
-                    <p className="text-sm text-gray-400 text-center py-10">HenÃ¼z satÄ±ÅŸÃ§Ä± yok.</p>
+                    <p className="text-sm text-gray-400 text-center py-10">Hen?z sat?Ã…Å¸?? yok.</p>
                   ) : (
                     <div className="divide-y divide-gray-50">
                       {memberEarnings.map((m: any, i: number) => {
@@ -3273,10 +3273,10 @@ return (
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-gray-900">{m.name}</p>
-                                <p className="text-xs text-gray-400">{m.branch} Â· {m.commModel === 'fixed_rate' ? `%${m.commValue} oran` : `â‚º${m.commValue}/potansiyel mÃ¼ÅŸteri`}</p>
+                                <p className="text-xs text-gray-400">{m.branch} ? {m.commModel === 'fixed_rate' ? `%${m.commValue} oran` : `?${m.commValue}/potansiyel m?Ã…Å¸teri`}</p>
                               </div>
                               <div className="text-right flex-shrink-0">
-                                <p className="text-sm font-bold text-rose-500">â‚º{m.prim.toLocaleString()}</p>
+                                <p className="text-sm font-bold text-rose-500">?{m.prim.toLocaleString()}</p>
                                 <p className="text-xs text-gray-400">prim</p>
                               </div>
                             </div>
@@ -3285,9 +3285,9 @@ return (
                                 <div className="h-full bg-rose-400 rounded-full" style={{ width: `${(m.prim / maxPrim) * 100}%` }} />
                               </div>
                               <div className="flex gap-3 text-xs text-gray-400 flex-shrink-0">
-                                <span>{m.leads} potansiyel mÃ¼ÅŸteri</span>
-                                <span className="text-emerald-600 font-medium">{m.sales} satÄ±ÅŸ</span>
-                                <span>â‚º{m.revenue.toLocaleString()} ciro</span>
+                                <span>{m.leads} potansiyel m?Ã…Å¸teri</span>
+                                <span className="text-emerald-600 font-medium">{m.sales} sat?Ã…Å¸</span>
+                                <span>?{m.revenue.toLocaleString()} ciro</span>
                               </div>
                             </div>
                           </div>
@@ -3301,12 +3301,12 @@ return (
             )
           })()}
 
-          {/* â”€â”€ VERÄ° MERKEZÄ° â”€â”€ */}
-          {/* â”€â”€ VERÄ° YÃœKLE â”€â”€ */}
+          {/* ?? VER? MERKEZ? ?? */}
+          {/* ?? VER? YÃƒÅ“KLE ?? */}
           {activeTab === 'veri-yukle' && (
             <div className="space-y-5 max-w-3xl">
 
-              {/* BaÅŸlÄ±k hero */}
+              {/* BaÃ…Å¸l?k hero */}
               <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-6 text-white relative overflow-hidden">
                 <div className="absolute -right-6 -top-6 w-36 h-36 bg-white/5 rounded-full" />
                 <div className="absolute -right-2 bottom-0 w-20 h-20 bg-white/5 rounded-full" />
@@ -3317,21 +3317,21 @@ return (
                     </div>
                     <span className="text-indigo-200 text-sm font-medium">Veri Merkezi</span>
                   </div>
-                  <h2 className="text-xl font-bold">Toplu Potansiyel MÃ¼ÅŸteri YÃ¼kle</h2>
-                  <p className="text-indigo-200 text-sm mt-1">Mevcut mÃ¼ÅŸteri veritabanÄ±nÄ± sisteme aktar. Ä°ki farklÄ± yÃ¶ntemle yÃ¼kleyebilirsin.</p>
+                  <h2 className="text-xl font-bold">Toplu Potansiyel M?Ã…Å¸teri Y?kle</h2>
+                  <p className="text-indigo-200 text-sm mt-1">Mevcut m?Ã…Å¸teri veritaban?n? sisteme aktar. ?ki farkl? y?ntemle y?kleyebilirsin.</p>
                 </div>
               </div>
 
-              {/* YÃ¶ntem seÃ§ici */}
+              {/* Y?ntem se?ici */}
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={() => setImportTab('manuel')}
                   className={`p-4 rounded-2xl border-2 text-left transition-all ${importTab === 'manuel' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white hover:border-indigo-200'}`}>
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${importTab === 'manuel' ? 'bg-indigo-100' : 'bg-gray-100'}`}>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="3" width="16" height="14" rx="2" stroke={importTab === 'manuel' ? '#6366f1' : '#9ca3af'} strokeWidth="1.5"/><path d="M6 7h8M6 10h8M6 13h5" stroke={importTab === 'manuel' ? '#6366f1' : '#9ca3af'} strokeWidth="1.25" strokeLinecap="round"/></svg>
                   </div>
-                  <p className={`text-sm font-bold ${importTab === 'manuel' ? 'text-indigo-700' : 'text-gray-700'}`}>Manuel GiriÅŸ</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Az sayÄ±da potansiyel mÃ¼ÅŸteri iÃ§in â€” tabloya direkt yaz</p>
-                  {importTab === 'manuel' && <span className="mt-2 inline-block text-xs bg-indigo-600 text-white px-2 py-0.5 rounded-full font-medium">SeÃ§ili</span>}
+                  <p className={`text-sm font-bold ${importTab === 'manuel' ? 'text-indigo-700' : 'text-gray-700'}`}>Manuel GiriÃ…Å¸</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Az say?da potansiyel m?Ã…Å¸teri i?in Ã¢â‚¬â€ tabloya direkt yaz</p>
+                  {importTab === 'manuel' && <span className="mt-2 inline-block text-xs bg-indigo-600 text-white px-2 py-0.5 rounded-full font-medium">Se?ili</span>}
                 </button>
 
                 <button onClick={() => setImportTab('excel')}
@@ -3339,22 +3339,22 @@ return (
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${importTab === 'excel' ? 'bg-emerald-100' : 'bg-gray-100'}`}>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 3h8l4 4v10a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z" stroke={importTab === 'excel' ? '#059669' : '#9ca3af'} strokeWidth="1.5"/><path d="M12 3v4h4" stroke={importTab === 'excel' ? '#059669' : '#9ca3af'} strokeWidth="1.5" strokeLinejoin="round"/><path d="M7 12l2 2 4-4" stroke={importTab === 'excel' ? '#059669' : '#9ca3af'} strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </div>
-                  <p className={`text-sm font-bold ${importTab === 'excel' ? 'text-emerald-700' : 'text-gray-700'}`}>Excel / CSV YÃ¼kle</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Elinde hazÄ±r data var â€” ÅŸablona aktar, yÃ¼kle</p>
-                  {importTab === 'excel' && <span className="mt-2 inline-block text-xs bg-emerald-600 text-white px-2 py-0.5 rounded-full font-medium">SeÃ§ili</span>}
+                  <p className={`text-sm font-bold ${importTab === 'excel' ? 'text-emerald-700' : 'text-gray-700'}`}>Excel / CSV Y?kle</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Elinde haz?r data var Ã¢â‚¬â€ Ã…Å¸ablona aktar, y?kle</p>
+                  {importTab === 'excel' && <span className="mt-2 inline-block text-xs bg-emerald-600 text-white px-2 py-0.5 rounded-full font-medium">Se?ili</span>}
                 </button>
               </div>
 
-              {/* â”€â”€ MANUEL GÄ°RÄ°Å â”€â”€ */}
+              {/* ?? MANUEL G?R?? ?? */}
               {importTab === 'manuel' && (
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                   <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">Potansiyel MÃ¼ÅŸteri Tablosu</p>
-                      <p className="text-xs text-gray-400 mt-0.5">Her satÄ±ra bir potansiyel mÃ¼ÅŸteri gir, kaynaÄŸÄ±nÄ± seÃ§</p>
+                      <p className="text-sm font-semibold text-gray-900">Potansiyel M?Ã…Å¸teri Tablosu</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Her sat?ra bir potansiyel m?Ã…Å¸teri gir, kaynaÃ„Å¸?n? se?</p>
                     </div>
                     <span className="text-xs bg-indigo-50 text-indigo-600 font-medium px-2.5 py-1 rounded-lg">
-                      {bulkRows.filter(r => r.full_name || r.phone).length} potansiyel hazÄ±r
+                      {bulkRows.filter(r => r.full_name || r.phone).length} potansiyel haz?r
                     </span>
                   </div>
 
@@ -3366,7 +3366,7 @@ return (
                           <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[160px]">Ad Soyad</th>
                           <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[140px]">Telefon</th>
                           <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[135px]">Kaynak</th>
-                          <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[130px]">Åube</th>
+                          <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[130px]">?ube</th>
                           <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[150px]">Not</th>
                           <th className="px-2 py-2.5 w-8"></th>
                         </tr>
@@ -3404,7 +3404,7 @@ return (
                               <div className="relative">
                                 <select value={row.branch_id} onChange={e => setBulkRows(prev => prev.map(r => r.id === row.id ? { ...r, branch_id: e.target.value } : r))}
                                   className="w-full appearance-none px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 pr-7">
-                                  <option value="">SeÃ§</option>
+                                  <option value="">Se?</option>
                                   {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
                                 </select>
                                 <svg className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -3433,7 +3433,7 @@ return (
                     <button onClick={() => setBulkRows(prev => [...prev, EMPTY_ROW()])}
                       className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
                       <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-                      SatÄ±r Ekle
+                      Sat?r Ekle
                     </button>
                     <button onClick={() => setBulkRows([EMPTY_ROW(), EMPTY_ROW(), EMPTY_ROW()])}
                       className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
@@ -3444,10 +3444,10 @@ return (
                   {bulkResult && (
                     <div className={`mx-5 mb-4 rounded-xl p-4 border ${bulkResult.errors.length === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
                       <div className="flex items-center gap-3">
-                        <span className="text-xl">{bulkResult.errors.length === 0 ? 'âœ…' : 'âš ï¸'}</span>
+                        <span className="text-xl">{bulkResult.errors.length === 0 ? 'Ã¢Å“â€¦' : 'Ã¢Å¡Â Ã¯Â¸Â'}</span>
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">{bulkResult.success} Potansiyel mÃ¼ÅŸteri baÅŸarÄ±yla kaydedildi</p>
-                          {bulkResult.errors.length > 0 && <p className="text-xs text-amber-700 mt-0.5">{bulkResult.errors.length} satÄ±rda hata</p>}
+                          <p className="text-sm font-semibold text-gray-900">{bulkResult.success} Potansiyel m?Ã…Å¸teri baÃ…Å¸ar?yla kaydedildi</p>
+                          {bulkResult.errors.length > 0 && <p className="text-xs text-amber-700 mt-0.5">{bulkResult.errors.length} sat?rda hata</p>}
                         </div>
                       </div>
                     </div>
@@ -3459,23 +3459,23 @@ return (
                       {bulkLoading ? (
                         <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>Kaydediliyor...</>
                       ) : (
-                        <><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 8l4 4 7-7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>{bulkRows.filter(r => r.full_name || r.phone).length} Potansiyel MÃ¼ÅŸteriyi Kaydet</>
+                        <><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 8l4 4 7-7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>{bulkRows.filter(r => r.full_name || r.phone).length} Potansiyel M?Ã…Å¸teriyi Kaydet</>
                       )}
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* â”€â”€ EXCEL YÃœKLE â”€â”€ */}
+              {/* ?? EXCEL YÃƒÅ“KLE ?? */}
               {importTab === 'excel' && (
                 <div className="space-y-4">
 
-                  {/* AdÄ±mlar */}
+                  {/* Ad?mlar */}
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { step: '1', icon: 'â¬‡ï¸', title: 'Åablonu Ä°ndir', desc: 'Excel ÅŸablonunu indir', color: 'from-blue-50 to-indigo-50 border-blue-100' },
-                      { step: '2', icon: 'âœï¸', title: 'Doldur', desc: 'Mevcut datanÄ± kopyala yapÄ±ÅŸtÄ±r', color: 'from-violet-50 to-purple-50 border-violet-100' },
-                      { step: '3', icon: 'ğŸš€', title: 'YÃ¼kle', desc: 'DosyayÄ± seÃ§ ve aktar', color: 'from-emerald-50 to-teal-50 border-emerald-100' },
+                      { step: '1', icon: 'Ã¢Â¬â€¡Ã¯Â¸Â', title: '?ablonu ?ndir', desc: 'Excel Ã…Å¸ablonunu indir', color: 'from-blue-50 to-indigo-50 border-blue-100' },
+                      { step: '2', icon: 'Ã¢Å“ÂÃ¯Â¸Â', title: 'Doldur', desc: 'Mevcut datan? kopyala yap?Ã…Å¸t?r', color: 'from-violet-50 to-purple-50 border-violet-100' },
+                      { step: '3', icon: 'ÄŸÅ¸Å¡â‚¬', title: 'Y?kle', desc: 'Dosyay? se? ve aktar', color: 'from-emerald-50 to-teal-50 border-emerald-100' },
                     ].map(s => (
                       <div key={s.step} className={`bg-gradient-to-br ${s.color} border rounded-xl p-4 text-center`}>
                         <span className="text-2xl">{s.icon}</span>
@@ -3485,14 +3485,14 @@ return (
                     ))}
                   </div>
 
-                  {/* Åablon indir */}
+                  {/* ?ablon indir */}
                   <div className="bg-white rounded-2xl border border-gray-100 p-5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">1. Åablonu Ä°ndir</p>
-                        <p className="text-xs text-gray-400 mt-0.5">SÃ¼tun baÅŸlÄ±klarÄ± hazÄ±r, sadece verilerini yapÄ±ÅŸtÄ±r</p>
+                        <p className="text-sm font-semibold text-gray-900">1. ?ablonu ?ndir</p>
+                        <p className="text-xs text-gray-400 mt-0.5">S?tun baÃ…Å¸l?klar? haz?r, sadece verilerini yap?Ã…Å¸t?r</p>
                         <div className="flex flex-wrap gap-1.5 mt-2">
-                          {['Ad Soyad', 'Telefon', 'E-posta', 'Kaynak', 'Not', 'Åube AdÄ±'].map(col => (
+                          {['Ad Soyad', 'Telefon', 'E-posta', 'Kaynak', 'Not', '?ube Ad?'].map(col => (
                             <span key={col} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-medium">{col}</span>
                           ))}
                         </div>
@@ -3500,26 +3500,26 @@ return (
                       <button onClick={downloadTemplate}
                         className="flex-shrink-0 flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        Ä°ndir
+                        ?ndir
                       </button>
                     </div>
                   </div>
 
-                  {/* Dosya yÃ¼kle */}
+                  {/* Dosya y?kle */}
                   <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
-                    <p className="text-sm font-semibold text-gray-900">2. DoldurulmuÅŸ DosyayÄ± YÃ¼kle</p>
+                    <p className="text-sm font-semibold text-gray-900">2. DoldurulmuÃ…Å¸ Dosyay? Y?kle</p>
 
-                    {/* VarsayÄ±lan satÄ±ÅŸÃ§Ä± seÃ§ici */}
+                    {/* Varsay?lan sat?Ã…Å¸?? se?ici */}
                     <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
                       <div className="flex items-start gap-3">
-                        <span className="text-lg mt-0.5">ğŸ‘¤</span>
+                        <span className="text-lg mt-0.5">??</span>
                         <div className="flex-1">
-                          <p className="text-sm font-semibold text-gray-800">VarsayÄ±lan SatÄ±ÅŸÃ§Ä±</p>
-                          <p className="text-xs text-gray-500 mt-0.5 mb-2">Excel'de "SatÄ±ÅŸÃ§Ä±" sÃ¼tunu doluysa o isim Ã¶ncelikli atanÄ±r. BoÅŸ satirlar iÃ§in buradan seÃ§.</p>
+                          <p className="text-sm font-semibold text-gray-800">Varsay?lan Sat?Ã…Å¸??</p>
+                          <p className="text-xs text-gray-500 mt-0.5 mb-2">Excel'de "Sat?Ã…Å¸??" s?tunu doluysa o isim ?ncelikli atan?r. BoÃ…Å¸ satirlar i?in buradan se?.</p>
                           <div className="relative">
                             <select value={xlsxDefaultAgent} onChange={e => setXlsxDefaultAgent(e.target.value)}
                               className="w-full appearance-none bg-white border border-amber-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 pr-8">
-                              <option value="">â€” Atama yapma (satÄ±ÅŸÃ§Ä±sÄ±z kaydet) â€”</option>
+                              <option value="">Ã¢â‚¬â€ Atama yapma (sat?Ã…Å¸??s?z kaydet) Ã¢â‚¬â€</option>
                               {teamMembers.filter(m => m.role === 'agent' || m.role === 'team').map(m => (
                                 <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>
                               ))}
@@ -3538,23 +3538,23 @@ return (
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 7a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#059669" strokeWidth="1.5"/></svg>
                           </div>
                           <p className="text-sm font-semibold text-emerald-700">{xlsxFile.name}</p>
-                          <p className="text-xs text-emerald-500 mt-0.5">{xlsxPreview.length > 0 ? `${xlsxPreview.length}+ satÄ±r okundu` : 'Okunuyor...'} Â· deÄŸiÅŸtirmek iÃ§in tÄ±kla</p>
+                          <p className="text-xs text-emerald-500 mt-0.5">{xlsxPreview.length > 0 ? `${xlsxPreview.length}+ sat?r okundu` : 'Okunuyor...'} ? deÃ„Å¸iÃ…Å¸tirmek i?in t?kla</p>
                         </div>
                       ) : (
                         <div className="text-center px-4">
                           <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-2">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#9ca3af" strokeWidth="1.5"/><path d="M12 11v5M9.5 13.5l2.5-2.5 2.5 2.5" stroke="#9ca3af" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
                           </div>
-                          <p className="text-sm font-medium text-gray-500">DosyayÄ± buraya sÃ¼rÃ¼kle veya tÄ±kla</p>
-                          <p className="text-xs text-gray-400 mt-1">.xlsx, .xls, .csv â€” max 10MB</p>
+                          <p className="text-sm font-medium text-gray-500">Dosyay? buraya s?r?kle veya t?kla</p>
+                          <p className="text-xs text-gray-400 mt-1">.xlsx, .xls, .csv Ã¢â‚¬â€ max 10MB</p>
                         </div>
                       )}
                     </label>
 
-                    {/* Ã–nizleme */}
+                    {/* Ãƒâ€“nizleme */}
                     {xlsxPreview.length > 0 && (
                       <div>
-                        <p className="text-xs font-medium text-gray-500 mb-2">ğŸ“‹ Ã–nizleme (ilk {xlsxPreview.length} satÄ±r)</p>
+                        <p className="text-xs font-medium text-gray-500 mb-2">ÄŸÅ¸â€œâ€¹ Ãƒâ€“nizleme (ilk {xlsxPreview.length} sat?r)</p>
                         <div className="overflow-x-auto rounded-xl border border-gray-100 bg-gray-50">
                           <table className="w-full text-xs">
                             <thead>
@@ -3578,14 +3578,14 @@ return (
                       </div>
                     )}
 
-                    {/* SonuÃ§ */}
+                    {/* Sonu? */}
                     {xlsxResult && (
                       <div className={`rounded-xl p-4 border ${xlsxResult.errors.length === 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
                         <div className="flex items-center gap-3 mb-1">
-                          <span className="text-xl">{xlsxResult.errors.length === 0 ? 'âœ…' : 'âš ï¸'}</span>
+                          <span className="text-xl">{xlsxResult.errors.length === 0 ? 'Ã¢Å“â€¦' : 'Ã¢Å¡Â Ã¯Â¸Â'}</span>
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">{xlsxResult.success} potansiyel mÃ¼ÅŸteri baÅŸarÄ±yla aktarÄ±ldÄ±</p>
-                            {xlsxResult.errors.length > 0 && <p className="text-xs text-amber-700">{xlsxResult.errors.length} satÄ±rda hata oluÅŸtu</p>}
+                            <p className="text-sm font-semibold text-gray-900">{xlsxResult.success} potansiyel m?Ã…Å¸teri baÃ…Å¸ar?yla aktar?ld?</p>
+                            {xlsxResult.errors.length > 0 && <p className="text-xs text-amber-700">{xlsxResult.errors.length} sat?rda hata oluÃ…Å¸tu</p>}
                           </div>
                         </div>
                         {xlsxResult.errors.slice(0, 3).map((e, i) => (
@@ -3597,9 +3597,9 @@ return (
                     <button onClick={handleXlsxSubmit} disabled={!xlsxFile || xlsxLoading}
                       className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                       {xlsxLoading ? (
-                        <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>AktarÄ±lÄ±yor...</>
+                        <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>Aktar?l?yor...</>
                       ) : (
-                        <><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 10V1M4 4l3.5-3.5L11 4M2 13h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>Potansiyel MÃ¼ÅŸterileri Sisteme Aktar</>
+                        <><svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 10V1M4 4l3.5-3.5L11 4M2 13h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>Potansiyel M?Ã…Å¸terileri Sisteme Aktar</>
                       )}
                     </button>
                   </div>
@@ -3608,13 +3608,13 @@ return (
             </div>
           )}
 
-          {/* â”€â”€ VERÄ° SETLERÄ°M â”€â”€ */}
+          {/* ?? VER? SETLER?M ?? */}
           {activeTab === 'veri-setlerim' && (
             <div className="space-y-4 max-w-2xl">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-base font-semibold text-gray-900">Veri Setlerim</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Toplu potansiyel mÃ¼ÅŸteri giriÅŸ geÃ§miÅŸin</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Toplu potansiyel m?Ã…Å¸teri giriÃ…Å¸ ge?miÃ…Å¸in</p>
                 </div>
                 <button onClick={() => setActiveTab('veri-yukle')}
                   className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1.5">
@@ -3630,11 +3630,11 @@ return (
                     <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#9ca3af" strokeWidth="1.5"/></svg>
                     </div>
-                    <p className="text-gray-500 text-sm font-medium">HenÃ¼z veri seti yok</p>
-                    <p className="text-gray-400 text-xs mt-1">Veri YÃ¼kle sekmesinden ilk aktarÄ±mÄ±nÄ± yap</p>
+                    <p className="text-gray-500 text-sm font-medium">Hen?z veri seti yok</p>
+                    <p className="text-gray-400 text-xs mt-1">Veri Y?kle sekmesinden ilk aktar?m?n? yap</p>
                     <button onClick={() => setActiveTab('veri-yukle')}
                       className="mt-4 px-4 py-2 bg-indigo-600 text-white text-sm rounded-xl hover:bg-indigo-700 transition-colors font-medium">
-                      Veri YÃ¼kle
+                      Veri Y?kle
                     </button>
                   </div>
                 )
@@ -3657,9 +3657,9 @@ return (
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-gray-900 truncate">{setName}</p>
                             <div className="flex gap-3 mt-1">
-                              <span className="text-xs text-indigo-600 font-medium">{setLeads.length} potansiyel mÃ¼ÅŸteri</span>
-                              <span className="text-xs text-emerald-600 font-medium">{setDone} satÄ±ÅŸ</span>
-                              <span className="text-xs text-gray-400">%{conv} dÃ¶nÃ¼ÅŸÃ¼m</span>
+                              <span className="text-xs text-indigo-600 font-medium">{setLeads.length} potansiyel m?Ã…Å¸teri</span>
+                              <span className="text-xs text-emerald-600 font-medium">{setDone} sat?Ã…Å¸</span>
+                              <span className="text-xs text-gray-400">%{conv} d?n?Ã…Å¸?m</span>
                             </div>
                             <div className="w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden mt-1.5">
                               <div className="h-full bg-emerald-400 rounded-full transition-all" style={{ width: `${conv}%` }} />
@@ -3676,18 +3676,18 @@ return (
               })()}
             </div>
           )}
-          {/* â”€â”€ FATURALARIM â”€â”€ */}
+          {/* ?? FATURALARIM ?? */}
 {activeTab === 'faturalarim' && (
   <div className="space-y-5 max-w-3xl">
     <div>
-      <h2 className="text-base font-semibold text-gray-900">FaturalarÄ±m</h2>
-      <p className="text-xs text-gray-400 mt-0.5">HesabÄ±nÄ±za kesilen faturalar</p>
+      <h2 className="text-base font-semibold text-gray-900">Faturalar?m</h2>
+      <p className="text-xs text-gray-400 mt-0.5">Hesab?n?za kesilen faturalar</p>
     </div>
 
     {customerInvoices.length === 0 ? (
       <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
-        <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">â—§</div>
-        <p className="text-gray-500 text-sm font-medium">HenÃ¼z fatura yok</p>
+        <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">?</div>
+        <p className="text-gray-500 text-sm font-medium">Hen?z fatura yok</p>
       </div>
     ) : (
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
@@ -3696,22 +3696,22 @@ return (
             <div className="col-span-2">Fatura</div>
             <div className="text-right">Tutar</div>
             <div className="text-center">Durum</div>
-            <div className="text-right">Ä°ÅŸlem</div>
+            <div className="text-right">?Ã…Å¸lem</div>
           </div>
         </div>
         {customerInvoices.map((inv, i) => {
           const statusMap: any = {
             pending: { label: 'Bekliyor', color: 'bg-amber-50 text-amber-700 border border-amber-200' },
             awaiting_approval: { label: 'Onay Bekliyor', color: 'bg-blue-50 text-blue-700 border border-blue-200' },
-            paid: { label: 'Ã–dendi', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-            overdue: { label: 'GecikmiÅŸ', color: 'bg-red-50 text-red-700 border border-red-200' },
+            paid: { label: 'Ãƒâ€“dendi', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+            overdue: { label: 'GecikmiÃ…Å¸', color: 'bg-red-50 text-red-700 border border-red-200' },
           }
           const st = statusMap[inv.status] || statusMap.pending
-          const issuedBy = inv.issued_by_role === 'superadmin' ? 'DataPilot' : 'ReklamcÄ±'
+          const issuedBy = inv.issued_by_role === 'superadmin' ? 'DataPilot' : 'Reklamc?'
           return (
             <div key={inv.id} className={`px-5 py-4 grid grid-cols-5 gap-2 items-center hover:bg-gray-50/50 transition-colors ${i < customerInvoices.length - 1 ? 'border-b border-gray-50' : ''}`}>
               <div className="col-span-2">
-                <p className="text-sm font-semibold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
+                <p className="text-sm font-semibold text-gray-900">?{inv.total_amount?.toLocaleString()}</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs text-gray-400">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</span>
                   <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${inv.issued_by_role === 'superadmin' ? 'bg-violet-50 text-violet-600' : 'bg-amber-50 text-amber-600'}`}>
@@ -3720,7 +3720,7 @@ return (
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
+                <p className="text-sm font-bold text-gray-900">?{inv.total_amount?.toLocaleString()}</p>
               </div>
               <div className="text-center">
                 <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${st.color}`}>{st.label}</span>
@@ -3735,14 +3735,14 @@ return (
                       setCustomerInvoices(invoicesData || [])
                     }}
                     className="text-xs text-blue-600 font-medium px-3 py-1.5 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200">
-                    Ã–deme YaptÄ±m
+                    Ãƒâ€“deme Yapt?m
                   </button>
                 )}
                 {inv.status === 'awaiting_approval' && (
                   <span className="text-xs text-gray-400">Onay bekleniyor...</span>
                 )}
                 {inv.status === 'paid' && (
-                  <span className="text-xs text-emerald-600 font-medium">âœ“ OnaylandÄ±</span>
+                  <span className="text-xs text-emerald-600 font-medium">? Onayland?</span>
                 )}
               </div>
             </div>
@@ -3752,11 +3752,11 @@ return (
     )}
   </div>
 )}
-          {/* â”€â”€ AYARLAR â”€â”€ */}
+          {/* ?? AYARLAR ?? */}
           {activeTab === 'ayarlar' && (
             <div className="max-w-2xl space-y-5">
 
-              {/* Logo & Profil BaÅŸlÄ±k */}
+              {/* Logo & Profil BaÃ…Å¸l?k */}
               <div className="bg-white rounded-2xl border border-gray-100 p-6">
                 <h3 className="font-semibold text-gray-900 mb-5">Firma Profili</h3>
                 <div className="flex items-center gap-5 mb-6">
@@ -3780,17 +3780,17 @@ return (
                   <div>
                     <p className="font-semibold text-gray-900">{profile?.company_name || profile?.full_name}</p>
                     <p className="text-sm text-gray-400 mt-0.5">{profile?.email}</p>
-                    <p className="text-xs text-gray-400 mt-1">PNG, JPG Â· Max 2MB</p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG ? Max 2MB</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <Input label="Ad Soyad *" value={settingsName} onChange={(e: any) => setSettingsName(e.target.value)} placeholder="Ad Soyad" />
                   <Input label="E-posta" value={profile?.email || ''} readOnly className="opacity-60" />
-                  <Input label="Firma AdÄ±" value={settingsCompany} onChange={(e: any) => setSettingsCompany(e.target.value)} placeholder="Firma A.Å." />
+                  <Input label="Firma Ad?" value={settingsCompany} onChange={(e: any) => setSettingsCompany(e.target.value)} placeholder="Firma A.?." />
                   <Input label="Telefon" value={settingsPhone} onChange={(e: any) => setSettingsPhone(e.target.value)} placeholder="+90 555 000 0000" />
                   <div className="col-span-2">
-                    <Input label="SektÃ¶r" value={settingsSector} onChange={(e: any) => setSettingsSector(e.target.value)} placeholder="Estetik, DiÅŸ, Emlak..." />
+                    <Input label="Sekt?r" value={settingsSector} onChange={(e: any) => setSettingsSector(e.target.value)} placeholder="Estetik, DiÃ…Å¸, Emlak..." />
                   </div>
                 </div>
 
@@ -3802,18 +3802,18 @@ return (
 
                 <div className="flex justify-end mt-5">
                   <Btn onClick={handleSaveProfile} disabled={settingsSaving}>
-                    {settingsSaving ? 'Kaydediliyor...' : 'DeÄŸiÅŸiklikleri Kaydet'}
+                    {settingsSaving ? 'Kaydediliyor...' : 'DeÃ„Å¸iÃ…Å¸iklikleri Kaydet'}
                   </Btn>
                 </div>
               </div>
 
-              {/* Åifre DeÄŸiÅŸtir */}
+              {/* ?ifre DeÃ„Å¸iÃ…Å¸tir */}
               <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                <h3 className="font-semibold text-gray-900 mb-5">Åifre DeÄŸiÅŸtir</h3>
+                <h3 className="font-semibold text-gray-900 mb-5">?ifre DeÃ„Å¸iÃ…Å¸tir</h3>
                 <div className="space-y-4">
-                  <Input label="Mevcut Åifre" type="password" value={settingsOldPassword} onChange={(e: any) => setSettingsOldPassword(e.target.value)} placeholder="Mevcut ÅŸifreniz" />
-                  <Input label="Yeni Åifre" type="password" value={settingsNewPassword} onChange={(e: any) => setSettingsNewPassword(e.target.value)} placeholder="En az 6 karakter" />
-                  <Input label="Yeni Åifre (Tekrar)" type="password" value={settingsNewPassword2} onChange={(e: any) => setSettingsNewPassword2(e.target.value)} placeholder="Åifreyi tekrar girin" />
+                  <Input label="Mevcut ?ifre" type="password" value={settingsOldPassword} onChange={(e: any) => setSettingsOldPassword(e.target.value)} placeholder="Mevcut Ã…Å¸ifreniz" />
+                  <Input label="Yeni ?ifre" type="password" value={settingsNewPassword} onChange={(e: any) => setSettingsNewPassword(e.target.value)} placeholder="En az 6 karakter" />
+                  <Input label="Yeni ?ifre (Tekrar)" type="password" value={settingsNewPassword2} onChange={(e: any) => setSettingsNewPassword2(e.target.value)} placeholder="?ifreyi tekrar girin" />
                 </div>
 
                 {passwordMsg && (
@@ -3824,14 +3824,14 @@ return (
 
                 <div className="flex justify-end mt-5">
                   <Btn onClick={handleChangePassword} disabled={!settingsOldPassword || !settingsNewPassword || !settingsNewPassword2}>
-                    Åifreyi GÃ¼ncelle
+                    ?ifreyi G?ncelle
                   </Btn>
                 </div>
               </div>
 {/* Plan Bilgisi */}
 <div className="bg-white rounded-2xl border border-gray-100 p-6">
   <div className="flex items-center justify-between mb-4">
-    <h3 className="font-semibold text-gray-900">Abonelik & KullanÄ±m</h3>
+    <h3 className="font-semibold text-gray-900">Abonelik & Kullan?m</h3>
     {(() => {
       const plan = profile?.subscriptions?.[0]?.plan || 'starter'
       const cfg: any = {
@@ -3852,14 +3852,14 @@ return (
         </main>
       </div>
 
-      {/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ MODALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ??????????????????? MODALS ??????????????????????? */}
 
-      {/* â”€â”€ ÅUBE EKLE â”€â”€ */}
+      {/* ?? ?UBE EKLE ?? */}
 <Modal open={showPaymentModal} onClose={() => { setShowPaymentModal(false); setPaymentMember(null); setPaymentAmount(''); setPaymentNote('') }}
-  title="Ödeme Yap" subtitle={paymentMember?.profiles?.full_name}>
+  title="Ã–deme Yap" subtitle={paymentMember?.profiles?.full_name}>
   {paymentMember && (
     <div className="p-6 space-y-4">
-      {/* Özet */}
+      {/* Ã–zet */}
       {(() => {
         const mSales = leads.filter(l => l.assigned_to === paymentMember.user_id && l.status === 'procedure_done')
         const mRevenue = mSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
@@ -3868,14 +3868,14 @@ return (
         const remaining = totalEarned - totalPaid
         return (
           <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-xl p-4 border border-indigo-100">
-            <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">{paymentMember.profiles?.full_name} · Hakediş Özeti</p>
+            <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">{paymentMember.profiles?.full_name} Â· HakediÅŸ Ã–zeti</p>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <p className="text-xs text-gray-400">Toplam Hakediş</p>
+                <p className="text-xs text-gray-400">Toplam HakediÅŸ</p>
                 <p className="text-sm font-bold text-gray-900">?{totalEarned.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400">Ödenen</p>
+                <p className="text-xs text-gray-400">Ã–denen</p>
                 <p className="text-sm font-bold text-emerald-600">?{totalPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
               </div>
               <div>
@@ -3888,7 +3888,7 @@ return (
       })()}
  
       <div>
-        <label className="block text-xs font-medium text-gray-500 mb-1.5">Ödeme Tutarı (?) *</label>
+        <label className="block text-xs font-medium text-gray-500 mb-1.5">Ã–deme TutarÄ± (?) *</label>
         <input
           type="number"
           value={paymentAmount}
@@ -3904,13 +3904,13 @@ return (
           onChange={e => setPaymentNote(e.target.value)}
           rows={2}
           className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-          placeholder="Örn: Mart ayı prim ödemesi"
+          placeholder="Ã–rn: Mart ayÄ± prim Ã¶demesi"
         />
       </div>
       <div className="flex gap-3 pt-1">
-        <Btn variant="secondary" className="flex-1" onClick={() => { setShowPaymentModal(false); setPaymentMember(null) }}>İptal</Btn>
+        <Btn variant="secondary" className="flex-1" onClick={() => { setShowPaymentModal(false); setPaymentMember(null) }}>Ä°ptal</Btn>
         <Btn variant="success" className="flex-1" onClick={handlePayCommission} disabled={paymentSaving || !paymentAmount || parseFloat(paymentAmount) <= 0}>
-          {paymentSaving ? 'Kaydediliyor...' : '? Ödendi Olarak İşaretle'}
+          {paymentSaving ? 'Kaydediliyor...' : '? Ã–dendi Olarak Ä°ÅŸaretle'}
         </Btn>
       </div>
     </div>
@@ -3918,7 +3918,7 @@ return (
 </Modal>
  
 <Modal open={showPaymentHistory} onClose={() => { setShowPaymentHistory(false); setHistoryMember(null) }}
-  title="Ödeme Geçmişi" subtitle={historyMember?.profiles?.full_name} size="md">
+  title="Ã–deme GeÃ§miÅŸi" subtitle={historyMember?.profiles?.full_name} size="md">
   {historyMember && (
     <div className="p-6">
       {(() => {
@@ -3930,32 +3930,32 @@ return (
  
         return (
           <>
-            {/* Özet */}
+            {/* Ã–zet */}
             <div className="grid grid-cols-3 gap-3 mb-5">
               <div className="bg-rose-50 rounded-xl p-3 text-center border border-rose-100">
                 <p className="text-base font-bold text-rose-600">?{totalEarned.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Toplam Hakediş</p>
+                <p className="text-xs text-gray-400 mt-0.5">Toplam HakediÅŸ</p>
               </div>
               <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100">
                 <p className="text-base font-bold text-emerald-600">?{totalPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Ödenen</p>
+                <p className="text-xs text-gray-400 mt-0.5">Ã–denen</p>
               </div>
               <div className={`rounded-xl p-3 text-center border ${(totalEarned - totalPaid) > 0 ? 'bg-amber-50 border-amber-100' : 'bg-gray-50 border-gray-100'}`}>
                 <p className={`text-base font-bold ${(totalEarned - totalPaid) > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
                   ?{Math.max(0, totalEarned - totalPaid).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">Kalan Borç</p>
+                <p className="text-xs text-gray-400 mt-0.5">Kalan BorÃ§</p>
               </div>
             </div>
  
-            {/* İşlem listesi */}
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ödeme Geçmişi</p>
+            {/* Ä°ÅŸlem listesi */}
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ã–deme GeÃ§miÅŸi</p>
             {payments.length === 0 ? (
               <div className="text-center py-10">
                 <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="#9ca3af" strokeWidth="1.5"/><path d="M2 8h16" stroke="#9ca3af" strokeWidth="1.5"/></svg>
                 </div>
-                <p className="text-sm text-gray-400">Henüz ödeme yapılmamış.</p>
+                <p className="text-sm text-gray-400">HenÃ¼z Ã¶deme yapÄ±lmamÄ±ÅŸ.</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -3972,18 +3972,18 @@ return (
                       <p className="text-xs text-gray-400">
                         {new Date(p.paid_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </p>
-                      <p className="text-xs text-emerald-500 font-medium">Ödendi</p>
+                      <p className="text-xs text-emerald-500 font-medium">Ã–dendi</p>
                     </div>
                   </div>
                 ))}
               </div>
             )}
  
-            {/* Yeni ödeme butonu */}
+            {/* Yeni Ã¶deme butonu */}
             {(totalEarned - totalPaid) > 0 && (
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <Btn variant="success" className="w-full" onClick={() => { setShowPaymentHistory(false); setPaymentMember(historyMember); setPaymentAmount((totalEarned - totalPaid).toFixed(0)); setShowPaymentModal(true) }}>
-                  Ödeme Yap ›
+                  Ã–deme Yap â€º
                 </Btn>
               </div>
             )}
@@ -3993,34 +3993,34 @@ return (
     </div>
   )}
 </Modal>
-      <Modal open={showAddBranch} onClose={() => setShowAddBranch(false)} title="Yeni Åube" subtitle="Åube bilgilerini girin">
+      <Modal open={showAddBranch} onClose={() => setShowAddBranch(false)} title="Yeni ?ube" subtitle="?ube bilgilerini girin">
         <form onSubmit={handleAddBranch} className="p-6 space-y-4">
-          <Input label="Åube AdÄ± *" value={branchName} onChange={(e: any) => setBranchName(e.target.value)} required placeholder="Ä°stanbul Åubesi" />
+          <Input label="?ube Ad? *" value={branchName} onChange={(e: any) => setBranchName(e.target.value)} required placeholder="?stanbul ?ubesi" />
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Ä°letiÅŸim KiÅŸisi" value={branchContact} onChange={(e: any) => setBranchContact(e.target.value)} placeholder="Ad Soyad" />
+            <Input label="?letiÃ…Å¸im KiÃ…Å¸isi" value={branchContact} onChange={(e: any) => setBranchContact(e.target.value)} placeholder="Ad Soyad" />
             <Input label="E-posta" type="email" value={branchEmail} onChange={(e: any) => setBranchEmail(e.target.value)} placeholder="sube@email.com" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Select label="Komisyon Modeli" value={commissionModel} onChange={(e: any) => setCommissionModel(e.target.value)}>
               <option value="fixed_rate">Sabit Oran</option>
-              <option value="per_lead">Potansiyel MÃ¼ÅŸteri BaÅŸÄ±na</option>
+              <option value="per_lead">Potansiyel M?Ã…Å¸teri BaÃ…Å¸?na</option>
             </Select>
-            <Input label="Komisyon DeÄŸeri" type="number" value={commissionValue} onChange={(e: any) => setCommissionValue(e.target.value)} placeholder="10" />
+            <Input label="Komisyon DeÃ„Å¸eri" type="number" value={commissionValue} onChange={(e: any) => setCommissionValue(e.target.value)} placeholder="10" />
           </div>
           <div className="flex gap-3 pt-2">
-            <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddBranch(false)}>Ä°ptal</Btn>
-            <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'OluÅŸturuluyor...' : 'Åube OluÅŸtur'}</Btn>
+            <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddBranch(false)}>?ptal</Btn>
+            <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'OluÃ…Å¸turuluyor...' : '?ube OluÃ…Å¸tur'}</Btn>
           </div>
         </form>
       </Modal>
 
-      {/* â”€â”€ ÃœYE EKLE â”€â”€ */}
-      <Modal open={showAddMember} onClose={() => setShowAddMember(false)} title="Ekip Ãœyesi Ekle" subtitle="Yeni satÄ±ÅŸÃ§Ä± veya yÃ¶netici ekleyin">
+      {/* ?? ÃƒÅ“YE EKLE ?? */}
+      <Modal open={showAddMember} onClose={() => setShowAddMember(false)} title="Ekip ÃƒÅ“yesi Ekle" subtitle="Yeni sat?Ã…Å¸?? veya y?netici ekleyin">
         <form onSubmit={handleAddMember} className="p-6 space-y-4">
           <div>
             <p className="text-xs font-medium text-gray-500 mb-2">Rol</p>
             <div className="grid grid-cols-2 gap-2">
-              {[{ key: 'agent', label: 'ğŸ‘¤ SatÄ±ÅŸÃ§Ä±' }, { key: 'manager', label: 'ğŸ‘” YÃ¶netici' }].map(r => (
+              {[{ key: 'agent', label: '?? Sat?Ã…Å¸??' }, { key: 'manager', label: 'ÄŸÅ¸â€˜â€ Y?netici' }].map(r => (
                 <button key={r.key} type="button" onClick={() => setMemberRole(r.key)}
                   className={`py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${memberRole === r.key ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
                   {r.label}
@@ -4030,36 +4030,36 @@ return (
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input label="Ad Soyad *" value={memberName} onChange={(e: any) => setMemberName(e.target.value)} required placeholder="Ad Soyad" />
-            <Select label="Åube *" value={memberBranch} onChange={(e: any) => setMemberBranch(e.target.value)} required>
-              <option value="">Åube seÃ§in...</option>
+            <Select label="?ube *" value={memberBranch} onChange={(e: any) => setMemberBranch(e.target.value)} required>
+              <option value="">?ube se?in...</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
             </Select>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input label="E-posta *" type="email" value={memberEmail} onChange={(e: any) => setMemberEmail(e.target.value)} required placeholder="satis@email.com" />
-            <Input label="Åifre *" type="password" value={memberPassword} onChange={(e: any) => setMemberPassword(e.target.value)} required placeholder="En az 6 karakter" />
+            <Input label="?ifre *" type="password" value={memberPassword} onChange={(e: any) => setMemberPassword(e.target.value)} required placeholder="En az 6 karakter" />
           </div>
-          <Input label="Prim OranÄ± (%)" type="number" value={memberCommission} onChange={(e: any) => setMemberCommission(e.target.value)} placeholder="10" />
+          <Input label="Prim Oran? (%)" type="number" value={memberCommission} onChange={(e: any) => setMemberCommission(e.target.value)} placeholder="10" />
           <div className="flex gap-3 pt-2">
-            <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddMember(false)}>Ä°ptal</Btn>
-            <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Ekleniyor...' : 'Ãœye Ekle'}</Btn>
+            <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddMember(false)}>?ptal</Btn>
+            <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Ekleniyor...' : 'ÃƒÅ“ye Ekle'}</Btn>
           </div>
         </form>
       </Modal>
 
-      {/* â”€â”€ LEAD EKLE â”€â”€ */}
-      <Modal open={showAddLead} onClose={() => setShowAddLead(false)} title="Yeni Potansiyel MÃ¼ÅŸteri" subtitle="Manuel potansiyel mÃ¼ÅŸteri ekleyin" size="lg">
+      {/* ?? LEAD EKLE ?? */}
+      <Modal open={showAddLead} onClose={() => setShowAddLead(false)} title="Yeni Potansiyel M?Ã…Å¸teri" subtitle="Manuel potansiyel m?Ã…Å¸teri ekleyin" size="lg">
         <form onSubmit={handleAddLead} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Input label="Ad Soyad *" value={leadName} onChange={(e: any) => setLeadName(e.target.value)} required placeholder="Ad Soyad" />
             <Input label="Telefon *" value={leadPhone} onChange={(e: any) => setLeadPhone(e.target.value)} required placeholder="05xx xxx xx xx" />
             <Input label="E-posta" type="email" value={leadEmail} onChange={(e: any) => setLeadEmail(e.target.value)} placeholder="ornek@email.com" />
-           <Select label="Åube" value={leadBranch} onChange={(e: any) => setLeadBranch(e.target.value)}>
-              <option value="">Åube seÃ§in...</option>
+           <Select label="?ube" value={leadBranch} onChange={(e: any) => setLeadBranch(e.target.value)}>
+              <option value="">?ube se?in...</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
             </Select>
             <Select label="Kaynak" value={leadSource} onChange={(e: any) => setLeadSource(e.target.value)}>
-              <option value="manual">Manuel GiriÅŸ</option>
+              <option value="manual">Manuel GiriÃ…Å¸</option>
               <option value="meta_form">Meta Form</option>
               <option value="instagram_dm">Instagram DM</option>
               <option value="whatsapp">WhatsApp</option>
@@ -4067,7 +4067,7 @@ return (
               <option value="referral">Referans</option>
               <option value="google_ads">Google Ads</option>
             </Select>
-            <Select label="SatÄ±ÅŸÃ§Ä±ya Ata" value={leadAssignTo} onChange={(e: any) => setLeadAssignTo(e.target.value)}>
+            <Select label="Sat?Ã…Å¸??ya Ata" value={leadAssignTo} onChange={(e: any) => setLeadAssignTo(e.target.value)}>
               <option value="">Atama yapma</option>
               {teamMembers.filter(m => m.role === 'agent').map(m => <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>)}
             </Select>
@@ -4078,14 +4078,14 @@ return (
               className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
           </div>
           <div className="flex gap-3 pt-2">
-            <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddLead(false)}>Ä°ptal</Btn>
-            <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Ekleniyor...' : 'Potansiyel MÃ¼ÅŸteri Ekle'}</Btn>
+            <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddLead(false)}>?ptal</Btn>
+            <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Ekleniyor...' : 'Potansiyel M?Ã…Å¸teri Ekle'}</Btn>
           </div>
         </form>
       </Modal>
 
-      {/* â”€â”€ DURUM GÃœNCELLE â”€â”€ */}
-      <Modal open={!!selectedLead} onClose={() => setSelectedLead(null)} title={selectedLead?.full_name || 'Potansiyel MÃ¼ÅŸteri'} subtitle={`${selectedLead?.lead_code || ''} Â· ${selectedLead?.phone || ''}`} size="2xl">
+      {/* ?? DURUM GÃƒÅ“NCELLE ?? */}
+      <Modal open={!!selectedLead} onClose={() => setSelectedLead(null)} title={selectedLead?.full_name || 'Potansiyel M?Ã…Å¸teri'} subtitle={`${selectedLead?.lead_code || ''} ? ${selectedLead?.phone || ''}`} size="2xl">
         <form onSubmit={handleUpdateStatus} className="p-6 space-y-4">
           {/* Temel bilgiler */}
           <div className="grid grid-cols-3 gap-3">
@@ -4104,14 +4104,14 @@ return (
           </div>
          <div className="max-h-40 overflow-y-auto space-y-2">
   {leadActivities.length === 0 ? (
-    <p className="text-xs text-gray-300 text-center py-2">HenÃ¼z not yok</p>
+    <p className="text-xs text-gray-300 text-center py-2">Hen?z not yok</p>
   ) : leadActivities.map(activity => (
     <div key={activity.id} className="flex gap-2 items-start bg-gray-50 rounded-xl px-3 py-2">
-      <span className="text-xs">{activity.type === 'note' ? 'ğŸ’¬' : 'â†”'}</span>
+      <span className="text-xs">{activity.type === 'note' ? '??' : '?'}</span>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-gray-700">{activity.content}</p>
         <p className="text-xs text-gray-400 mt-0.5">
-          {activity.profiles?.full_name} Â· {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          {activity.profiles?.full_name} ? {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
     </div>
@@ -4121,12 +4121,12 @@ return (
           <div className="flex gap-2">
             <a href={`tel:${selectedLead?.phone}`}
               className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
-              ğŸ“ Ara
+              ?? Ara
             </a>
             <a href={`https://wa.me/90${selectedLead?.phone?.replace(/\D/g, '').replace(/^0/, '')}`}
               target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
-              ğŸ’¬ WhatsApp
+              ?? WhatsApp
             </a>
           </div>
           <div>
@@ -4143,59 +4143,59 @@ return (
           </div>
           {newStatus === 'procedure_done' && (
             <div className="bg-emerald-50 rounded-xl p-4 space-y-3">
-              <p className="text-xs font-semibold text-emerald-700">SatÄ±ÅŸ DetaylarÄ±</p>
-              <Input label="Ä°ÅŸlem Tipi" value={procedureType} onChange={(e: any) => setProcedureType(e.target.value)} placeholder="Ã–rn: YÄ±llÄ±k Ã¼yelik" />
-              <Input label="Tutar (â‚º)" type="number" value={procedureAmount} onChange={(e: any) => setProcedureAmount(e.target.value)} placeholder="0" />
+              <p className="text-xs font-semibold text-emerald-700">Sat?Ã…Å¸ Detaylar?</p>
+              <Input label="?Ã…Å¸lem Tipi" value={procedureType} onChange={(e: any) => setProcedureType(e.target.value)} placeholder="Ãƒâ€“rn: Y?ll?k ?yelik" />
+              <Input label="Tutar (?)" type="number" value={procedureAmount} onChange={(e: any) => setProcedureAmount(e.target.value)} placeholder="0" />
             </div>
           )}
               {selectedLead?.status === 'procedure_done' && newStatus !== 'procedure_done' && (
             <div className="bg-amber-50 rounded-xl p-3 border border-amber-100">
-              <p className="text-xs font-semibold text-amber-700 mb-2">âš ï¸ SatÄ±ÅŸ Ä°ptal Nedeni</p>
-              <Input value={cancelReason} onChange={(e: any) => setCancelReason(e.target.value)} placeholder="Neden satÄ±ÅŸ iptal ediliyor?" />
+              <p className="text-xs font-semibold text-amber-700 mb-2">Ã¢Å¡Â Ã¯Â¸Â Sat?Ã…Å¸ ?ptal Nedeni</p>
+              <Input value={cancelReason} onChange={(e: any) => setCancelReason(e.target.value)} placeholder="Neden sat?Ã…Å¸ iptal ediliyor?" />
             </div>
           )}
           {newStatus === 'appointment_scheduled' && (
            <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
-  <p className="text-xs font-semibold text-violet-700 mb-3">ğŸ“… Randevu Tarihi</p>
+  <p className="text-xs font-semibold text-violet-700 mb-3">ÄŸÅ¸â€œâ€¦ Randevu Tarihi</p>
   <Input type="datetime-local" value={appointmentDate} onChange={(e: any) => setAppointmentDate(e.target.value)} />
 </div>
           )}
           {newStatus === 'cancelled' && (
-            <Input label="Ä°ptal Sebebi" value={cancelReason} onChange={(e: any) => setCancelReason(e.target.value)} placeholder="Sebebi yazÄ±n..." />
+            <Input label="?ptal Sebebi" value={cancelReason} onChange={(e: any) => setCancelReason(e.target.value)} placeholder="Sebebi yaz?n..." />
           )}
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1.5">Not</label>
-            <textarea value={statusNote} onChange={e => setStatusNote(e.target.value)} rows={2} placeholder="GÃ¶rÃ¼ÅŸme notu..."
+            <textarea value={statusNote} onChange={e => setStatusNote(e.target.value)} rows={2} placeholder="G?r?Ã…Å¸me notu..."
               className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
           </div>
            <div className="max-h-40 overflow-y-auto space-y-2">
   {leadActivities.length === 0 ? (
-    <p className="text-xs text-gray-300 text-center py-2">HenÃ¼z not yok</p>
+    <p className="text-xs text-gray-300 text-center py-2">Hen?z not yok</p>
   ) : leadActivities.map(activity => (
     <div key={activity.id} className="flex gap-2 items-start bg-gray-50 rounded-xl px-3 py-2">
-      <span className="text-xs">ğŸ’¬</span>
+      <span className="text-xs">??</span>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-gray-700">{activity.content}</p>
-        <p className="text-xs text-gray-400 mt-0.5">{activity.profiles?.full_name} Â· {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{activity.profiles?.full_name} ? {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
       </div>
     </div>
   ))}
 </div>
           <div className="flex gap-3 pt-2">
-            <Btn type="button" variant="secondary" className="flex-1" onClick={() => setSelectedLead(null)}>Ä°ptal</Btn>
+            <Btn type="button" variant="secondary" className="flex-1" onClick={() => setSelectedLead(null)}>?ptal</Btn>
             <Btn type="submit" className="flex-1" disabled={saving || !newStatus}>{saving ? 'Kaydediliyor...' : 'Kaydet'}</Btn>
           </div>
         </form>
       </Modal>
 
-      {/* â”€â”€ LEAD DETAY â”€â”€ */}
-      <Modal open={showDetailModal} onClose={() => setShowDetailModal(false)} title={detailLead?.full_name || 'Potansiyel MÃ¼ÅŸteri DetayÄ±'} subtitle={detailLead?.lead_code} size="lg">
+      {/* ?? LEAD DETAY ?? */}
+      <Modal open={showDetailModal} onClose={() => setShowDetailModal(false)} title={detailLead?.full_name || 'Potansiyel M?Ã…Å¸teri Detay?'} subtitle={detailLead?.lead_code} size="lg">
         {detailLead && (
           <div className="p-6 space-y-5">
             <div className="flex items-center gap-3">
               <Badge status={detailLead.status} />
               <SourceBadge source={detailLead.source} />
-              {detailLead.procedure_amount > 0 && <span className="text-sm font-semibold text-emerald-600">â‚º{detailLead.procedure_amount.toLocaleString()}</span>}
+              {detailLead.procedure_amount > 0 && <span className="text-sm font-semibold text-emerald-600">?{detailLead.procedure_amount.toLocaleString()}</span>}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-gray-50 rounded-xl p-3.5">
@@ -4226,9 +4226,9 @@ return (
               </div>
             )}
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ä°ÅŸlem GeÃ§miÅŸi</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">?Ã…Å¸lem Ge?miÃ…Å¸i</p>
               {leadHistory.length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-6">HenÃ¼z iÅŸlem yapÄ±lmamÄ±ÅŸ.</p>
+                <p className="text-xs text-gray-400 text-center py-6">Hen?z iÃ…Å¸lem yap?lmam?Ã…Å¸.</p>
               ) : (
                 <div className="space-y-2">
                   {leadHistory.map((h, i) => (
@@ -4244,7 +4244,7 @@ return (
                           <p className="text-xs text-gray-400">{new Date(h.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                         </div>
                         {h.note && <p className="text-xs text-gray-600 mt-1">{h.note}</p>}
-                        {h.profiles?.full_name && <p className="text-xs text-gray-400 mt-0.5">â€” {h.profiles.full_name}</p>}
+                        {h.profiles?.full_name && <p className="text-xs text-gray-400 mt-0.5">Ã¢â‚¬â€ {h.profiles.full_name}</p>}
                       </div>
                     </div>
                   ))}
@@ -4275,13 +4275,13 @@ return (
   </div>
   <div className="space-y-2 max-h-40 overflow-y-auto">
     {leadActivities.length === 0 ? (
-      <p className="text-xs text-gray-300 text-center py-2">HenÃ¼z not yok</p>
+      <p className="text-xs text-gray-300 text-center py-2">Hen?z not yok</p>
     ) : leadActivities.map(activity => (
       <div key={activity.id} className="flex gap-2 items-start bg-gray-50 rounded-xl px-3 py-2">
-        <span className="text-xs">ğŸ’¬</span>
+        <span className="text-xs">??</span>
         <div className="flex-1 min-w-0">
           <p className="text-xs text-gray-700">{activity.content}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{activity.profiles?.full_name} Â· {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+          <p className="text-xs text-gray-400 mt-0.5">{activity.profiles?.full_name} ? {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
         </div>
       </div>
     ))}
@@ -4296,32 +4296,32 @@ return (
               <button onClick={() => { setShowDetailModal(false); setEditLead({...detailLead}); setShowEditModal(true) }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-blue-100 text-blue-500 hover:bg-blue-50 hover:text-blue-700 text-xs font-medium transition-colors">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 1.5l2.5 2.5-6.5 6.5H1.5V8L8 1.5z" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                DÃ¼zenle
+                D?zenle
               </button>
       <Btn className="flex-1" onClick={() => { setShowDetailModal(false); setSelectedLead(detailLead); setNewStatus(detailLead.status); loadLeadActivities(detailLead.id) }}>
-  Durumu GÃ¼ncelle
+  Durumu G?ncelle
 </Btn>
             </div>
           </div>
         )}
       </Modal>
 
-      {/* â”€â”€ ÃœYE DETAY â”€â”€ */}
-      <Modal open={!!selectedMember} onClose={() => setSelectedMember(null)} title={selectedMember?.profiles?.full_name || 'Ekip Ãœyesi'} subtitle={selectedMember?.branches?.branch_name} size="lg">
+      {/* ?? ÃƒÅ“YE DETAY ?? */}
+      <Modal open={!!selectedMember} onClose={() => setSelectedMember(null)} title={selectedMember?.profiles?.full_name || 'Ekip ÃƒÅ“yesi'} subtitle={selectedMember?.branches?.branch_name} size="lg">
         {selectedMember && (
           <div className="p-6">
             <div className="flex gap-2 mb-5 border-b border-gray-100 pb-4">
               {(['leads', 'hakedis', 'loglar'] as const).map(tab => (
                 <button key={tab} onClick={() => setMemberTab(tab)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${memberTab === tab ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}>
-                  {tab === 'leads' ? 'Potansiyel MÃ¼ÅŸteriler' : tab === 'hakedis' ? 'HakediÅŸ' : 'Loglar'}
+                  {tab === 'leads' ? 'Potansiyel M?Ã…Å¸teriler' : tab === 'hakedis' ? 'HakediÃ…Å¸' : 'Loglar'}
                 </button>
               ))}
             </div>
             {memberTab === 'leads' && (
               <div className="space-y-2">
                 {leads.filter(l => l.assigned_to === selectedMember.user_id).length === 0 ? (
-                  <p className="text-gray-400 text-sm text-center py-8">Potansiyel mÃ¼ÅŸteri atanmamÄ±ÅŸ.</p>
+                  <p className="text-gray-400 text-sm text-center py-8">Potansiyel m?Ã…Å¸teri atanmam?Ã…Å¸.</p>
                 ) : leads.filter(l => l.assigned_to === selectedMember.user_id).map(lead => (
                   <div key={lead.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
                     <div>
@@ -4343,11 +4343,11 @@ return (
                   return (
                     <>
                       {[
-                        { label: 'Toplam Potansiyel MÃ¼ÅŸteri', value: mLeads.length, color: 'text-blue-600' },
-                        { label: 'Toplam SatÄ±ÅŸ', value: mSales.length, color: 'text-emerald-600' },
-                        { label: 'Toplam Ciro', value: `â‚º${mRevenue.toLocaleString()}`, color: 'text-gray-900' },
-                        { label: 'Prim OranÄ±', value: `%${selectedMember.commission_rate || 0}`, color: 'text-gray-900' },
-                        { label: 'Toplam Prim', value: `â‚º${commission.toLocaleString()}`, color: 'text-indigo-600', highlight: true },
+                        { label: 'Toplam Potansiyel M?Ã…Å¸teri', value: mLeads.length, color: 'text-blue-600' },
+                        { label: 'Toplam Sat?Ã…Å¸', value: mSales.length, color: 'text-emerald-600' },
+                        { label: 'Toplam Ciro', value: `?${mRevenue.toLocaleString()}`, color: 'text-gray-900' },
+                        { label: 'Prim Oran?', value: `%${selectedMember.commission_rate || 0}`, color: 'text-gray-900' },
+                        { label: 'Toplam Prim', value: `?${commission.toLocaleString()}`, color: 'text-indigo-600', highlight: true },
                       ].map(item => (
                         <div key={item.label} className={`flex items-center justify-between px-4 py-3 rounded-xl ${item.highlight ? 'bg-indigo-50' : 'bg-gray-50'}`}>
                           <p className="text-sm text-gray-600">{item.label}</p>
@@ -4359,23 +4359,23 @@ return (
                 })()}
               </div>
             )}
-            {memberTab === 'loglar' && <p className="text-gray-400 text-sm text-center py-8">Loglar yakÄ±nda eklenecek.</p>}
+            {memberTab === 'loglar' && <p className="text-gray-400 text-sm text-center py-8">Loglar yak?nda eklenecek.</p>}
           </div>
         )}
       </Modal>
 
-      {/* â”€â”€ SÄ°LME ONAY â”€â”€ */}
-      <Modal open={showDeleteConfirm} onClose={() => { setShowDeleteConfirm(false); setDeletingLeadId(null) }} title="Potansiyel MÃ¼ÅŸteri'yi Sil" subtitle="Bu iÅŸlem geri alÄ±namaz">
+      {/* ?? S?LME ONAY ?? */}
+      <Modal open={showDeleteConfirm} onClose={() => { setShowDeleteConfirm(false); setDeletingLeadId(null) }} title="Potansiyel M?Ã…Å¸teri'yi Sil" subtitle="Bu iÃ…Å¸lem geri al?namaz">
         <div className="p-6 space-y-4">
           <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex gap-3">
-            <span className="text-2xl flex-shrink-0">âš ï¸</span>
+            <span className="text-2xl flex-shrink-0">Ã¢Å¡Â Ã¯Â¸Â</span>
             <div>
               <p className="text-sm font-semibold text-gray-900">Emin misiniz?</p>
-              <p className="text-xs text-gray-500 mt-1">Bu potansiyel mÃ¼ÅŸteri ve tÃ¼m iÅŸlem geÃ§miÅŸi kalÄ±cÄ± olarak silinecek. Bu iÅŸlem geri alÄ±namaz.</p>
+              <p className="text-xs text-gray-500 mt-1">Bu potansiyel m?Ã…Å¸teri ve t?m iÃ…Å¸lem ge?miÃ…Å¸i kal?c? olarak silinecek. Bu iÃ…Å¸lem geri al?namaz.</p>
             </div>
           </div>
           <div className="flex gap-2">
-            <Btn variant="secondary" className="flex-1" onClick={() => { setShowDeleteConfirm(false); setDeletingLeadId(null) }}>VazgeÃ§</Btn>
+            <Btn variant="secondary" className="flex-1" onClick={() => { setShowDeleteConfirm(false); setDeletingLeadId(null) }}>Vazge?</Btn>
             <button onClick={handleDeleteLead}
               className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
               Evet, Sil
@@ -4384,8 +4384,8 @@ return (
         </div>
       </Modal>
 
-      {/* â”€â”€ LEAD DÃœZENLE â”€â”€ */}
-      <Modal open={showEditModal} onClose={() => { setShowEditModal(false); setEditLead(null) }} title="Potansiyel MÃ¼ÅŸteri DÃ¼zenle" subtitle={editLead?.lead_code}>
+      {/* ?? LEAD DÃƒÅ“ZENLE ?? */}
+      <Modal open={showEditModal} onClose={() => { setShowEditModal(false); setEditLead(null) }} title="Potansiyel M?Ã…Å¸teri D?zenle" subtitle={editLead?.lead_code}>
         {editLead && (
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -4409,34 +4409,34 @@ return (
                 <div className="relative">
                   <select value={editLead.source || 'manuel'} onChange={e => setEditLead((prev: any) => ({ ...prev, source: e.target.value }))}
                     className="w-full appearance-none px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 pr-8">
-                    <option value="manuel">âœï¸ Manuel</option>
-                    <option value="meta_form">ğŸ¯ Meta Form</option>
-                    <option value="whatsapp">ğŸ’¬ WhatsApp</option>
-                    <option value="instagram_dm">ğŸ“¸ Instagram</option>
-                    <option value="referral">ğŸ¤ Referans</option>
-                    <option value="website">ğŸŒ Web Sitesi</option>
-                    <option value="google_ads">ğŸ” Google Ads</option>
+                    <option value="manuel">Ã¢Å“ÂÃ¯Â¸Â Manuel</option>
+                    <option value="meta_form">ÄŸÅ¸ÂÂ¯ Meta Form</option>
+                    <option value="whatsapp">?? WhatsApp</option>
+                    <option value="instagram_dm">?? Instagram</option>
+                    <option value="referral">?? Referans</option>
+                    <option value="website">?? Web Sitesi</option>
+                    <option value="google_ads">?? Google Ads</option>
                   </select>
                   <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Åube</label>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">?ube</label>
                 <div className="relative">
                   <select value={editLead.branch_id || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, branch_id: e.target.value }))}
                     className="w-full appearance-none px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 pr-8">
-                    <option value="">Åube seÃ§</option>
+                    <option value="">?ube se?</option>
                     {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
                   </select>
                   <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </div>
               </div>
               <div className="col-span-2">
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Atanan SatÄ±ÅŸÃ§Ä±</label>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Atanan Sat?Ã…Å¸??</label>
                 <div className="relative">
                   <select value={editLead.assigned_to || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, assigned_to: e.target.value || null }))}
                     className="w-full appearance-none px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 pr-8">
-                    <option value="">â€” AtanmamÄ±ÅŸ â€”</option>
+                    <option value="">Ã¢â‚¬â€ Atanmam?Ã…Å¸ Ã¢â‚¬â€</option>
                     {teamMembers.filter(m => m.role === 'agent' || m.role === 'team').map(m => (
                       <option key={m.user_id} value={m.user_id}>{m.profiles?.full_name}</option>
                     ))}
@@ -4451,15 +4451,15 @@ return (
               </div>
                 {editLead.status === 'procedure_done' && (
                 <div className="col-span-2 border-t border-gray-100 pt-3">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">SatÄ±ÅŸ DetaylarÄ±</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Sat?Ã…Å¸ Detaylar?</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">Ä°ÅŸlem Tipi</label>
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">?Ã…Å¸lem Tipi</label>
                       <input value={editLead.procedure_type || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, procedure_type: e.target.value }))}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Ã–rn: YÄ±llÄ±k Ã¼yelik" />
+                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Ãƒâ€“rn: Y?ll?k ?yelik" />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">SatÄ±ÅŸ TutarÄ± (â‚º)</label>
+                      <label className="text-xs font-medium text-gray-500 mb-1 block">Sat?Ã…Å¸ Tutar? (?)</label>
                       <input type="number" value={editLead.procedure_amount || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, procedure_amount: parseFloat(e.target.value) || 0 }))}
                         className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="0" />
                     </div>
@@ -4468,7 +4468,7 @@ return (
               )}
             </div>
             <div className="flex gap-2 pt-1">
-              <Btn variant="secondary" className="flex-1" onClick={() => { setShowEditModal(false); setEditLead(null) }}>Ä°ptal</Btn>
+              <Btn variant="secondary" className="flex-1" onClick={() => { setShowEditModal(false); setEditLead(null) }}>?ptal</Btn>
               <Btn className="flex-1" onClick={handleEditLead} disabled={editLoading}>
                 {editLoading ? 'Kaydediliyor...' : 'Kaydet'}
               </Btn>
@@ -4476,29 +4476,29 @@ return (
           </div>
         )}
       </Modal>
-        {/* â”€â”€ Ã–DEME RAPORU â”€â”€ */}
-      <Modal open={showPaymentReport} onClose={() => setShowPaymentReport(false)} title="Ã–deme Raporu" subtitle="HakediÅŸ ve Ã¶deme geÃ§miÅŸi" size="xl">
+        {/* ?? Ãƒâ€“DEME RAPORU ?? */}
+      <Modal open={showPaymentReport} onClose={() => setShowPaymentReport(false)} title="Ãƒâ€“deme Raporu" subtitle="HakediÃ…Å¸ ve ?deme ge?miÃ…Å¸i" size="xl">
         <div className="p-6 space-y-5">
 
           {/* Filtreler */}
           <div className="grid grid-cols-2 gap-4">
-            <Select label="SatÄ±ÅŸÃ§Ä±" value={paymentReportMember} onChange={(e: any) => setPaymentReportMember(e.target.value)}>
-              <option value="all">TÃ¼m SatÄ±ÅŸÃ§Ä±lar</option>
+            <Select label="Sat?Ã…Å¸??" value={paymentReportMember} onChange={(e: any) => setPaymentReportMember(e.target.value)}>
+              <option value="all">T?m Sat?Ã…Å¸??lar</option>
               {teamMembers.map(m => <option key={m.id} value={m.id}>{m.profiles?.full_name}</option>)}
             </Select>
-            <Select label="DÃ¶nem" value={paymentReportPeriod} onChange={(e: any) => setPaymentReportPeriod(e.target.value)}>
-              <option value="all">TÃ¼m Zamanlar</option>
+            <Select label="D?nem" value={paymentReportPeriod} onChange={(e: any) => setPaymentReportPeriod(e.target.value)}>
+              <option value="all">T?m Zamanlar</option>
               <option value="this_month">Bu Ay</option>
-              <option value="last_month">GeÃ§en Ay</option>
-              <option value="this_year">Bu YÄ±l</option>
-              <option value="custom">Ã–zel Tarih</option>
+              <option value="last_month">Ge?en Ay</option>
+              <option value="this_year">Bu Y?l</option>
+              <option value="custom">Ãƒâ€“zel Tarih</option>
             </Select>
           </div>
 
           {paymentReportPeriod === 'custom' && (
             <div className="grid grid-cols-2 gap-3 bg-indigo-50 rounded-xl p-4">
-              <Input label="BaÅŸlangÄ±Ã§" type="date" value={paymentReportStart} onChange={(e: any) => setPaymentReportStart(e.target.value)} />
-              <Input label="BitiÅŸ" type="date" value={paymentReportEnd} onChange={(e: any) => setPaymentReportEnd(e.target.value)} />
+              <Input label="BaÃ…Å¸lang??" type="date" value={paymentReportStart} onChange={(e: any) => setPaymentReportStart(e.target.value)} />
+              <Input label="BitiÃ…Å¸" type="date" value={paymentReportEnd} onChange={(e: any) => setPaymentReportEnd(e.target.value)} />
             </div>
           )}
 
@@ -4529,7 +4529,7 @@ return (
               return matchesMember && matchesDate
             })
 
-            // Her satÄ±ÅŸÃ§Ä± iÃ§in Ã¶zet
+            // Her sat?Ã…Å¸?? i?in ?zet
             const memberSummaries = teamMembers
               .filter(m => paymentReportMember === 'all' || m.id === paymentReportMember)
               .map(m => {
@@ -4553,26 +4553,26 @@ return (
               memberSummaries.forEach(ms => {
                 if (ms.memberPayments.length === 0) {
                   rows.push({
-                    'SatÄ±ÅŸÃ§Ä±': ms.member.profiles?.full_name || '',
-                    'Åube': ms.member.branches?.branch_name || '',
-                    'Ã–deme Tarihi': 'â€”',
-                    'Ã–deme TutarÄ±': 0,
+                    'Sat?Ã…Å¸??': ms.member.profiles?.full_name || '',
+                    '?ube': ms.member.branches?.branch_name || '',
+                    'Ãƒâ€“deme Tarihi': 'Ã¢â‚¬â€',
+                    'Ãƒâ€“deme Tutar?': 0,
                     'Not': '',
-                    'Toplam HakediÅŸ': ms.totalEarned,
-                    'Toplam Ã–denen': ms.allPaid,
-                    'Kalan BorÃ§': Math.max(0, ms.remaining),
+                    'Toplam HakediÃ…Å¸': ms.totalEarned,
+                    'Toplam Ãƒâ€“denen': ms.allPaid,
+                    'Kalan Bor?': Math.max(0, ms.remaining),
                   })
                 } else {
                   ms.memberPayments.forEach((p, i) => {
                     rows.push({
-                      'SatÄ±ÅŸÃ§Ä±': i === 0 ? (ms.member.profiles?.full_name || '') : '',
-                      'Åube': i === 0 ? (ms.member.branches?.branch_name || '') : '',
-                      'Ã–deme Tarihi': new Date(p.paid_at).toLocaleDateString('tr-TR'),
-                      'Ã–deme TutarÄ±': p.amount,
+                      'Sat?Ã…Å¸??': i === 0 ? (ms.member.profiles?.full_name || '') : '',
+                      '?ube': i === 0 ? (ms.member.branches?.branch_name || '') : '',
+                      'Ãƒâ€“deme Tarihi': new Date(p.paid_at).toLocaleDateString('tr-TR'),
+                      'Ãƒâ€“deme Tutar?': p.amount,
                       'Not': p.note || '',
-                      'Toplam HakediÅŸ': i === 0 ? ms.totalEarned : '',
-                      'Toplam Ã–denen': i === 0 ? ms.allPaid : '',
-                      'Kalan BorÃ§': i === 0 ? Math.max(0, ms.remaining) : '',
+                      'Toplam HakediÃ…Å¸': i === 0 ? ms.totalEarned : '',
+                      'Toplam Ãƒâ€“denen': i === 0 ? ms.allPaid : '',
+                      'Kalan Bor?': i === 0 ? Math.max(0, ms.remaining) : '',
                     })
                   })
                 }
@@ -4580,7 +4580,7 @@ return (
               const ws = XLSX.utils.json_to_sheet(rows)
               ws['!cols'] = [20, 15, 14, 14, 25, 16, 14, 12].map(w => ({ wch: w }))
               const wb = XLSX.utils.book_new()
-              XLSX.utils.book_append_sheet(wb, ws, 'Ã–deme Raporu')
+              XLSX.utils.book_append_sheet(wb, ws, 'Ãƒâ€“deme Raporu')
               XLSX.writeFile(wb, `DataPilot_Odeme_Raporu_${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.xlsx`)
               setPaymentReportLoading(false)
             }
@@ -4591,13 +4591,13 @@ return (
               const { default: autoTable } = await import('jspdf-autotable')
               const doc = new jsPDF({ orientation: 'landscape' })
               doc.setFontSize(16); doc.setFont('helvetica', 'bold')
-              doc.text('DataPilot â€” Odeme Raporu', 14, 18)
+              doc.text('DataPilot Ã¢â‚¬â€ Odeme Raporu', 14, 18)
               doc.setFontSize(9); doc.setFont('helvetica', 'normal')
               doc.text(`Toplam Odenen: TL${totalPeriodPaid.toLocaleString()}  |  Kalan Borc: TL${totalRemaining.toLocaleString()}  |  ${memberSummaries.length} satisci`, 14, 26)
               const tableRows: any[] = []
               memberSummaries.forEach(ms => {
                 if (ms.memberPayments.length === 0) {
-                  tableRows.push([ms.member.profiles?.full_name || '', ms.member.branches?.branch_name || '', 'â€”', 'â€”', `TL${ms.totalEarned.toLocaleString()}`, `TL${ms.allPaid.toLocaleString()}`, `TL${Math.max(0, ms.remaining).toLocaleString()}`])
+                  tableRows.push([ms.member.profiles?.full_name || '', ms.member.branches?.branch_name || '', 'Ã¢â‚¬â€', 'Ã¢â‚¬â€', `TL${ms.totalEarned.toLocaleString()}`, `TL${ms.allPaid.toLocaleString()}`, `TL${Math.max(0, ms.remaining).toLocaleString()}`])
                 } else {
                   ms.memberPayments.forEach((p, i) => {
                     tableRows.push([
@@ -4626,40 +4626,40 @@ return (
 
             return (
               <>
-                {/* Ã–zet Kartlar */}
+                {/* Ãƒâ€“zet Kartlar */}
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-center">
-                    <p className="text-xs text-gray-400 mb-1">DÃ¶nem Ã–denen</p>
-                    <p className="text-xl font-bold text-emerald-600">â‚º{totalPeriodPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+                    <p className="text-xs text-gray-400 mb-1">D?nem Ãƒâ€“denen</p>
+                    <p className="text-xl font-bold text-emerald-600">?{totalPeriodPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
                   </div>
                   <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-center">
-                    <p className="text-xs text-gray-400 mb-1">Toplam Kalan BorÃ§</p>
-                    <p className="text-xl font-bold text-amber-600">â‚º{totalRemaining.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+                    <p className="text-xs text-gray-400 mb-1">Toplam Kalan Bor?</p>
+                    <p className="text-xl font-bold text-amber-600">?{totalRemaining.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
                   </div>
                   <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 text-center">
-                    <p className="text-xs text-gray-400 mb-1">Ä°ÅŸlem SayÄ±sÄ±</p>
+                    <p className="text-xs text-gray-400 mb-1">?Ã…Å¸lem Say?s?</p>
                     <p className="text-xl font-bold text-indigo-600">{filteredPayments.length}</p>
                   </div>
                 </div>
 
-                {/* SatÄ±ÅŸÃ§Ä± BazlÄ± Tablo */}
+                {/* Sat?Ã…Å¸?? Bazl? Tablo */}
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                   <div className="px-5 py-3 border-b border-gray-50 bg-gray-50/50">
                     <div className="grid grid-cols-7 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      <div className="col-span-2">SatÄ±ÅŸÃ§Ä±</div>
-                      <div className="text-right">HakediÅŸ</div>
-                      <div className="text-right">Ã–denen</div>
+                      <div className="col-span-2">Sat?Ã…Å¸??</div>
+                      <div className="text-right">HakediÃ…Å¸</div>
+                      <div className="text-right">Ãƒâ€“denen</div>
                       <div className="text-right">Kalan</div>
-                      <div className="col-span-2">Son Ã–deme</div>
+                      <div className="col-span-2">Son Ãƒâ€“deme</div>
                     </div>
                   </div>
                   {memberSummaries.length === 0 ? (
                     <div className="p-12 text-center">
-                      <p className="text-gray-400 text-sm">SeÃ§ilen kriterlere gÃ¶re sonuÃ§ bulunamadÄ±.</p>
+                      <p className="text-gray-400 text-sm">Se?ilen kriterlere g?re sonu? bulunamad?.</p>
                     </div>
                   ) : memberSummaries.map((ms, i) => (
                     <div key={ms.member.id} className={`${i < memberSummaries.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                      {/* SatÄ±ÅŸÃ§Ä± Ã–zet SatÄ±rÄ± */}
+                      {/* Sat?Ã…Å¸?? Ãƒâ€“zet Sat?r? */}
                       <div className="px-5 py-3 grid grid-cols-7 gap-2 items-center hover:bg-gray-50/50 transition-colors">
                         <div className="col-span-2 flex items-center gap-2">
                           <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
@@ -4671,24 +4671,24 @@ return (
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-rose-500">â‚º{ms.totalEarned.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+                          <p className="text-sm font-semibold text-rose-500">?{ms.totalEarned.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-emerald-600">â‚º{ms.allPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+                          <p className="text-sm font-semibold text-emerald-600">?{ms.allPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
                         </div>
                         <div className="text-right">
                           <p className={`text-sm font-semibold ${ms.remaining > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
-                            â‚º{Math.max(0, ms.remaining).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                            ?{Math.max(0, ms.remaining).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                           </p>
                         </div>
                         <div className="col-span-2 text-xs text-gray-400">
                           {ms.memberPayments.length > 0
                             ? new Date(ms.memberPayments[ms.memberPayments.length - 1].paid_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
-                            : 'â€” Ã–deme yok'}
+                            : 'Ã¢â‚¬â€ Ãƒâ€“deme yok'}
                         </div>
                       </div>
 
-                      {/* Ã–deme DetaylarÄ± */}
+                      {/* Ãƒâ€“deme Detaylar? */}
                       {ms.memberPayments.length > 0 && (
                         <div className="bg-gray-50/50 border-t border-gray-50 px-5 py-2 space-y-1.5">
                           {ms.memberPayments.map((p) => (
@@ -4699,7 +4699,7 @@ return (
                               <p className="text-xs text-gray-500 w-28 flex-shrink-0">
                                 {new Date(p.paid_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })}
                               </p>
-                              <p className="text-xs font-semibold text-emerald-600 w-24 flex-shrink-0">â‚º{p.amount.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+                              <p className="text-xs font-semibold text-emerald-600 w-24 flex-shrink-0">?{p.amount.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
                               {p.note && <p className="text-xs text-gray-400 truncate">{p.note}</p>}
                             </div>
                           ))}
@@ -4709,14 +4709,14 @@ return (
                   ))}
                 </div>
 
-                {/* Ä°ndir ButonlarÄ± */}
+                {/* ?ndir Butonlar? */}
                 <div className="flex gap-3">
                   <Btn variant="secondary" className="flex-1" onClick={() => setShowPaymentReport(false)}>Kapat</Btn>
                   <Btn variant="success" className="flex-1" onClick={downloadPaymentExcel} disabled={paymentReportLoading}>
-                    {paymentReportLoading ? 'HazÄ±rlanÄ±yor...' : 'ğŸ“— Excel Ä°ndir'}
+                    {paymentReportLoading ? 'Haz?rlan?yor...' : 'ÄŸÅ¸â€œâ€” Excel ?ndir'}
                   </Btn>
                   <Btn className="flex-1" onClick={downloadPaymentPDF} disabled={paymentReportLoading}>
-                    {paymentReportLoading ? 'HazÄ±rlanÄ±yor...' : 'ğŸ“• PDF Ä°ndir'}
+                    {paymentReportLoading ? 'Haz?rlan?yor...' : '?? PDF ?ndir'}
                   </Btn>
                 </div>
               </>
@@ -4724,50 +4724,50 @@ return (
           })()}
         </div>
       </Modal>
-      {/* â”€â”€ RAPOR â”€â”€ */}
-      <Modal open={showReportPanel} onClose={() => setShowReportPanel(false)} title="Rapor Ä°ndir" subtitle="Filtreleri ayarlayÄ±n ve indirin">
+      {/* ?? RAPOR ?? */}
+      <Modal open={showReportPanel} onClose={() => setShowReportPanel(false)} title="Rapor ?ndir" subtitle="Filtreleri ayarlay?n ve indirin">
         <div className="p-6 space-y-5">
-          <Select label="DÃ¶nem" value={reportPeriod} onChange={(e: any) => setReportPeriod(e.target.value)}>
-            <option value="today">BugÃ¼n</option>
+          <Select label="D?nem" value={reportPeriod} onChange={(e: any) => setReportPeriod(e.target.value)}>
+            <option value="today">Bug?n</option>
             <option value="this_week">Bu Hafta</option>
             <option value="this_month">Bu Ay</option>
-            <option value="last_month">GeÃ§en Ay</option>
-            <option value="custom">Ã–zel Tarih AralÄ±ÄŸÄ±</option>
+            <option value="last_month">Ge?en Ay</option>
+            <option value="custom">Ãƒâ€“zel Tarih Aral?Ã„Å¸?</option>
           </Select>
           {reportPeriod === 'custom' && (
             <div className="grid grid-cols-2 gap-3 bg-indigo-50 rounded-xl p-4">
-              <Input label="BaÅŸlangÄ±Ã§" type="date" value={reportStartDate} onChange={(e: any) => setReportStartDate(e.target.value)} />
-              <Input label="BitiÅŸ" type="date" value={reportEndDate} onChange={(e: any) => setReportEndDate(e.target.value)} />
+              <Input label="BaÃ…Å¸lang??" type="date" value={reportStartDate} onChange={(e: any) => setReportStartDate(e.target.value)} />
+              <Input label="BitiÃ…Å¸" type="date" value={reportEndDate} onChange={(e: any) => setReportEndDate(e.target.value)} />
             </div>
           )}
           <Select label="Durum Filtresi" value={reportStatus} onChange={(e: any) => setReportStatus(e.target.value)}>
-            <option value="all">TÃ¼m Durumlar</option>
+            <option value="all">T?m Durumlar</option>
             {Object.entries(STATUS_CONFIG).map(([k, v]: any) => <option key={k} value={k}>{v.label}</option>)}
           </Select>
           <div>
             <p className="text-xs font-medium text-gray-500 mb-2">Format</p>
             <div className="grid grid-cols-2 gap-3">
-              {[{ key: 'excel', label: 'Excel', icon: 'ğŸ“—', ext: '.xlsx' }, { key: 'pdf', label: 'PDF', icon: 'ğŸ“•', ext: '.pdf' }].map(f => (
+              {[{ key: 'excel', label: 'Excel', icon: 'ÄŸÅ¸â€œâ€”', ext: '.xlsx' }, { key: 'pdf', label: 'PDF', icon: '??', ext: '.pdf' }].map(f => (
                 <button key={f.key} onClick={() => setReportFormat(f.key)}
                   className={`p-4 rounded-xl border-2 text-left transition-all ${reportFormat === f.key ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'}`}>
                   <span className="text-xl block mb-1">{f.icon}</span>
                   <p className={`text-sm font-semibold ${reportFormat === f.key ? 'text-indigo-700' : 'text-gray-700'}`}>{f.label}</p>
-                  <p className="text-xs text-gray-400">{f.ext} dosyasÄ±</p>
+                  <p className="text-xs text-gray-400">{f.ext} dosyas?</p>
                 </button>
               ))}
             </div>
           </div>
           <div className="bg-gradient-to-r from-indigo-50 to-violet-50 rounded-xl p-4 flex items-center justify-between border border-indigo-100">
             <div>
-              <p className="text-xs text-gray-500">SeÃ§ilen kriterlere gÃ¶re</p>
+              <p className="text-xs text-gray-500">Se?ilen kriterlere g?re</p>
               <p className="text-xl font-bold text-indigo-600 mt-0.5">{getReportLeads().length} <span className="text-sm font-normal text-gray-500">lead</span></p>
             </div>
-            <span className="text-3xl">{reportFormat === 'excel' ? 'ğŸ“—' : 'ğŸ“•'}</span>
+            <span className="text-3xl">{reportFormat === 'excel' ? 'ÄŸÅ¸â€œâ€”' : '??'}</span>
           </div>
           <div className="flex gap-3">
-            <Btn variant="secondary" className="flex-1" onClick={() => setShowReportPanel(false)}>Ä°ptal</Btn>
+            <Btn variant="secondary" className="flex-1" onClick={() => setShowReportPanel(false)}>?ptal</Btn>
             <Btn variant="success" className="flex-1" onClick={reportFormat === 'excel' ? downloadExcel : downloadPDF} disabled={reportLoading || getReportLeads().length === 0}>
-              {reportLoading ? 'HazÄ±rlanÄ±yor...' : `${reportFormat === 'excel' ? 'ğŸ“—' : 'ğŸ“•'} Ä°ndir`}
+              {reportLoading ? 'Haz?rlan?yor...' : `${reportFormat === 'excel' ? 'ÄŸÅ¸â€œâ€”' : '??'} ?ndir`}
             </Btn>
           </div>
         </div>
