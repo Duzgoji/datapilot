@@ -219,7 +219,7 @@ const Btn = ({ variant = 'primary', size = 'md', children, className = '', ...pr
     success: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-200',
     ghost: 'hover:bg-gray-100 text-gray-600',
   }
- const sizes: any = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-2xl', '2xl': 'max-w-3xl' }
+ const sizes: any = { sm: 'px-3 py-1.5 text-xs', md: 'px-4 py-2.5 text-sm', lg: 'px-5 py-2.5 text-sm', xl: 'px-6 py-3 text-sm', '2xl': 'px-6 py-3 text-sm' }
   return (
     <button {...props} className={`inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}>
       {children}
@@ -2153,108 +2153,103 @@ const handlePayCommission = async () => {
       ) : (
         <div className="space-y-4">
 
-       {/* Servis seçimi */}
+     {/* ADIM 1: Sağlayıcı seç */}
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
-              <p className="text-sm font-semibold text-gray-900">Servis Sağlayıcı Seçin</p>
+            <div className="px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                {[
+                  { num: 1, label: 'Sağlayıcı Seç' },
+                  { num: 2, label: 'API Key Gir' },
+                  { num: 3, label: 'Bağlan' },
+                ].map((step, i) => {
+                  const currentStep = !waProvider ? 1 : !waApiKey.trim() ? 2 : 3
+                  const done = step.num < currentStep
+                  const active = step.num === currentStep
+                  return (
+                    <div key={step.num} className="flex items-center gap-2">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${done ? 'bg-green-500 text-white' : active ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                        {done ? '✓' : step.num}
+                      </div>
+                      <span className={`text-xs font-medium ${active ? 'text-gray-900' : 'text-gray-400'}`}>{step.label}</span>
+                      {i < 2 && <div className={`h-px w-8 ${done ? 'bg-green-400' : 'bg-gray-200'}`} />}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-            {providers.map((p, i) => (
-              <div key={p.key} className={`${i < providers.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                <button
-                  onClick={() => setWaProvider(waProvider === p.key ? '' : p.key)}
-                  className={`w-full flex items-center justify-between px-5 py-4 text-left transition-all hover:bg-gray-50/50 ${waProvider === p.key ? 'bg-green-50/50' : ''}`}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{p.logo}</span>
+
+            <div className="p-6">
+              {!waProvider ? (
+                <div className="space-y-3">
+                  <p className="text-sm font-semibold text-gray-900 mb-4">Hangi servisi kullanıyorsunuz?</p>
+                  {providers.map(p => (
+                    <button key={p.key} onClick={() => setWaProvider(p.key)}
+                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-gray-100 hover:border-green-400 hover:bg-green-50/30 text-left transition-all group">
+                      <span className="text-2xl">{p.logo}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 group-hover:text-green-700">{p.name}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{p.desc}</p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{p.price}</span>
+                        <svg className="text-gray-300 group-hover:text-green-500 transition-colors" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (() => {
+                const p = providers.find(pr => pr.key === waProvider)!
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 mb-5">
+                      <button onClick={() => { setWaProvider(''); setWaApiKey('') }}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-400">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </button>
+                      <span className="text-xl">{p.logo}</span>
+                      <p className="text-sm font-semibold text-gray-900">{p.name} ile Bağlan</p>
+                    </div>
+
+                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
+                      <span className="text-lg">ℹ️</span>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-800">{p.name} hesabınız yok mu?</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Önce {p.name}'e kaydolun, API key alın.</p>
+                        <div className="flex gap-3 mt-2">
+                          <a href={p.url} target="_blank" rel="noopener noreferrer" className="text-xs text-green-600 font-medium hover:underline">{p.name}'e Kaydol →</a>
+                          <a href={p.docsUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:underline">Döküman</a>
+                        </div>
+                      </div>
+                    </div>
+
                     <div>
-                      <p className={`text-sm font-semibold ${waProvider === p.key ? 'text-green-700' : 'text-gray-800'}`}>{p.name}</p>
-                      <p className="text-xs text-gray-400">{p.desc}</p>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">{p.apiLabel}</label>
+                      <input value={waApiKey} onChange={e => setWaApiKey(e.target.value)} placeholder={p.apiPlaceholder}
+                        className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono bg-gray-50" />
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${waProvider === p.key ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{p.price}</span>
-                    <svg className={`w-4 h-4 transition-transform text-gray-400 ${waProvider === p.key ? 'rotate-180 text-green-500' : ''}`} viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  </div>
-                </button>
-                {waProvider === p.key && (
-                  <div className="px-5 pb-4 bg-green-50/30 border-t border-green-100/50">
-                    <div className="flex gap-3 mt-3">
-                      <a href={p.url} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-green-600 font-medium hover:underline">
-                        {p.name}'e Kaydol →
-                      </a>
-                      <a href={p.docsUrl} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-gray-400 hover:underline">
-                        Döküman
-                      </a>
+
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                      <p className="text-xs font-semibold text-blue-700 mb-1">Webhook URL</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-mono text-blue-600 flex-1 truncate">https://datapilot-omega.vercel.app/api/whatsapp/webhook</p>
+                        <button onClick={() => navigator.clipboard.writeText('https://datapilot-omega.vercel.app/api/whatsapp/webhook')}
+                          className="text-xs text-blue-600 font-medium hover:underline flex-shrink-0">Kopyala</button>
+                      </div>
+                      <p className="text-xs text-blue-500 mt-1">Bu URL'yi {p.name} panelindeki webhook ayarlarına ekleyin.</p>
                     </div>
+
+                    <button onClick={handleConnect} disabled={!waApiKey.trim() || waConnecting}
+                      className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                      {waConnecting ? (
+                        <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>Bağlanıyor...</>
+                      ) : <>💬 {p.name} ile Bağlan</>}
+                    </button>
                   </div>
-                )}
-              </div>
-            ))}
+                )
+              })()}
+            </div>
           </div>
-          {/* Hesap yok uyarısı */}
-          {waProvider && (
-            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
-              <span className="text-xl">ℹ️</span>
-              <div>
-                <p className="text-sm font-semibold text-gray-800">{selected?.name} hesabınız yok mu?</p>
-                <p className="text-xs text-gray-500 mt-0.5">Önce {selected?.name}'e kaydolun, API key alın, buraya girin.</p>
-                <div className="flex gap-3 mt-2">
-                  <a href={selected?.url} target="_blank" rel="noopener noreferrer"
-                    className="text-xs text-green-600 font-medium hover:underline">
-                    {selected?.name}'e Kaydol →
-                  </a>
-                  <a href={selected?.docsUrl} target="_blank" rel="noopener noreferrer"
-                    className="text-xs text-gray-400 hover:underline">
-                    Döküman
-                  </a>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* API Key girişi */}
-          {waProvider && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">{selected?.apiLabel}</label>
-                <input
-                  value={waApiKey}
-                  onChange={e => setWaApiKey(e.target.value)}
-                  placeholder={selected?.apiPlaceholder}
-                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono"
-                />
-              </div>
-
-              {/* Webhook URL */}
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-                <p className="text-xs font-semibold text-blue-700 mb-1">Webhook URL</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-xs font-mono text-blue-600 flex-1 truncate">
-                    https://datapilot-omega.vercel.app/api/whatsapp/webhook
-                  </p>
-                  <button onClick={() => navigator.clipboard.writeText('https://datapilot-omega.vercel.app/api/whatsapp/webhook')}
-                    className="text-xs text-blue-600 font-medium hover:underline flex-shrink-0">
-                    Kopyala
-                  </button>
-                </div>
-                <p className="text-xs text-blue-500 mt-1">Bu URL'yi {selected?.name} panelindeki webhook ayarlarına ekleyin.</p>
-              </div>
-
-              <button
-                onClick={handleConnect}
-                disabled={!waApiKey.trim() || waConnecting}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
-                {waConnecting ? (
-                  <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>Bağlanıyor...</>
-                ) : (
-                  <>💬 {selected?.name} ile Bağlan</>
-                )}
-              </button>
-            </div>
-          )}
-
-        </div>
+             </div>
       )}
     </div>
   )
