@@ -2153,24 +2153,45 @@ const handlePayCommission = async () => {
       ) : (
         <div className="space-y-4">
 
-          {/* Servis seçimi */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <p className="text-sm font-semibold text-gray-900 mb-4">Servis Sağlayıcı Seçin</p>
-            <div className="grid grid-cols-2 gap-3">
-              {providers.map(p => (
-                <button key={p.key} onClick={() => setWaProvider(p.key)}
-                  className={`p-4 rounded-xl border-2 text-left transition-all ${waProvider === p.key ? 'border-green-500 bg-green-50' : 'border-gray-100 hover:border-green-200 bg-white'}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xl">{p.logo}</span>
-                    <span className={`text-sm font-bold ${waProvider === p.key ? 'text-green-700' : 'text-gray-700'}`}>{p.name}</span>
-                  </div>
-                  <p className="text-xs text-gray-400">{p.desc}</p>
-                  <p className={`text-xs font-semibold mt-1 ${waProvider === p.key ? 'text-green-600' : 'text-gray-500'}`}>{p.price}</p>
-                </button>
-              ))}
+       {/* Servis seçimi */}
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <p className="text-sm font-semibold text-gray-900">Servis Sağlayıcı Seçin</p>
             </div>
+            {providers.map((p, i) => (
+              <div key={p.key} className={`${i < providers.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                <button
+                  onClick={() => setWaProvider(waProvider === p.key ? '' : p.key)}
+                  className={`w-full flex items-center justify-between px-5 py-4 text-left transition-all hover:bg-gray-50/50 ${waProvider === p.key ? 'bg-green-50/50' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{p.logo}</span>
+                    <div>
+                      <p className={`text-sm font-semibold ${waProvider === p.key ? 'text-green-700' : 'text-gray-800'}`}>{p.name}</p>
+                      <p className="text-xs text-gray-400">{p.desc}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${waProvider === p.key ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{p.price}</span>
+                    <svg className={`w-4 h-4 transition-transform text-gray-400 ${waProvider === p.key ? 'rotate-180 text-green-500' : ''}`} viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                </button>
+                {waProvider === p.key && (
+                  <div className="px-5 pb-4 bg-green-50/30 border-t border-green-100/50">
+                    <div className="flex gap-3 mt-3">
+                      <a href={p.url} target="_blank" rel="noopener noreferrer"
+                        className="text-xs text-green-600 font-medium hover:underline">
+                        {p.name}'e Kaydol →
+                      </a>
+                      <a href={p.docsUrl} target="_blank" rel="noopener noreferrer"
+                        className="text-xs text-gray-400 hover:underline">
+                        Döküman
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-
           {/* Hesap yok uyarısı */}
           {waProvider && (
             <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
