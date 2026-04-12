@@ -2270,187 +2270,82 @@ const handlePayCommission = async () => {
   ]
   const activeCampaigns = mockCampaigns.filter(c => c.status === 'active').length
 
- return (
-    <div className="space-y-5 max-w-2xl">
+return (
+    <div className="space-y-5 max-w-4xl">
 
       {/* Header */}
-      <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 text-white relative overflow-hidden">
-        <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-        <div className="relative">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-2xl">💬</div>
-            <div>
-              <p className="font-bold text-lg">WhatsApp Bağlantısı</p>
-              <p className="text-green-100 text-sm">Kendi servis sağlayıcınızla bağlanın</p>
-            </div>
-          </div>
-          <p className="text-green-100 text-sm">WhatsApp'a gelen mesajlar otomatik olarak lead'e dönüşür. Servis ücretini doğrudan sağlayıcıya ödersiniz.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-gray-900">Google Ads Leadleri</h2>
+          <p className="text-xs text-gray-400 mt-0.5">Google Ads kampanyalarından gelen potansiyel müşteriler</p>
         </div>
+        <button onClick={() => loadData()}
+          className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-medium rounded-xl transition-colors">
+          Yenile
+        </button>
       </div>
 
-      {waConnected ? (
-        <div className="bg-white rounded-2xl border border-emerald-100 p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9l5 5 10-10" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-900">{providers.find(p => p.key === waProvider)?.name} Bağlandı</p>
-              <p className="text-xs text-emerald-600">WhatsApp entegrasyonu aktif</p>
-            </div>
+      {/* Özet kartlar */}
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: 'Google Ads Lead', value: googleLeads.length, sub: 'toplam', color: 'text-yellow-600', bg: 'from-yellow-50 to-white', border: 'border-yellow-100', icon: '🔍' },
+          { label: 'Aktif Kampanya', value: activeCampaigns, sub: `${mockCampaigns.length} kampanya`, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100', icon: '📣' },
+          { label: 'Son Lead', value: lastLead ? new Date(lastLead.created_at).toLocaleDateString('tr-TR') : '—', sub: lastLead ? lastLead.full_name : 'Henüz yok', color: 'text-indigo-600', bg: 'from-indigo-50 to-white', border: 'border-indigo-100', icon: '⏱' },
+        ].map(card => (
+          <div key={card.label} className={`bg-gradient-to-br ${card.bg} border ${card.border} rounded-2xl p-5`}>
+            <span className="text-2xl">{card.icon}</span>
+            <p className={`text-2xl font-bold ${card.color} mt-2`}>{card.value}</p>
+            <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
           </div>
-          <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-400">Servis Sağlayıcı</p>
-              <p className="text-xs font-semibold text-gray-700">{providers.find(p => p.key === waProvider)?.name}</p>
-            </div>
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-400">Webhook URL</p>
-              <div className="flex items-center gap-2">
-                <p className="text-xs font-mono text-gray-600 truncate max-w-[200px]">
-                  https://datapilot-omega.vercel.app/api/whatsapp/webhook
-                </p>
-                <button onClick={() => navigator.clipboard.writeText('https://datapilot-omega.vercel.app/api/whatsapp/webhook')}
-                  className="text-xs text-indigo-600 hover:underline">Kopyala</button>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-400">Durum</p>
-              <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                Aktif
-              </span>
-            </div>
-          </div>
-          <button onClick={() => { setWaConnected(false); setWaApiKey(''); setWaProvider('') }}
-            className="w-full py-2.5 rounded-xl text-sm font-medium border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
-            Bağlantıyı Kes
-          </button>
+        ))}
+      </div>
+
+      {/* Kampanyalar */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h3 className="font-semibold text-gray-900 text-sm">Kampanyalar</h3>
+          <button onClick={() => setActiveTab('google-baglanti')} className="text-xs text-yellow-600 font-medium hover:underline">Bağlantıyı Yönet →</button>
         </div>
-      ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        {mockCampaigns.map((c, i) => (
+          <div key={i} className={`px-5 py-3.5 flex items-center gap-4 ${i < mockCampaigns.length - 1 ? 'border-b border-gray-50' : ''}`}>
+            <div className="w-8 h-8 rounded-xl bg-yellow-50 flex items-center justify-center flex-shrink-0 text-base">📣</div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">{c.name}</p>
+              <p className="text-xs text-gray-400">Günlük bütçe: ₺{c.budget}</p>
+            </div>
+            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${c.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+              {c.status === 'active' ? 'Aktif' : 'Pasif'}
+            </span>
+          </div>
+        ))}
+      </div>
 
-          {/* Adım göstergesi */}
-          <div className="px-6 py-4 border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              {[
-                { num: 1, label: 'Sağlayıcı Seç' },
-                { num: 2, label: 'API Key Gir' },
-                { num: 3, label: 'Bağlan' },
-              ].map((step, i) => {
-                const currentStep = !waProvider ? 1 : !waApiKey.trim() ? 2 : 3
-                const done = step.num < currentStep
-                const active = step.num === currentStep
-                return (
-                  <div key={step.num} className="flex items-center gap-2">
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${done ? 'bg-green-500 text-white' : active ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                      {done ? '✓' : step.num}
-                    </div>
-                    <span className={`text-xs font-medium ${active ? 'text-gray-900' : 'text-gray-400'}`}>{step.label}</span>
-                    {i < 2 && <div className={`flex-1 h-px w-8 ${done ? 'bg-green-400' : 'bg-gray-200'}`} />}
-                  </div>
-                )
-              })}
+      {/* Lead listesi */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h3 className="font-semibold text-gray-900 text-sm">Gelen Leadler</h3>
+        </div>
+        {googleLeads.length === 0 ? (
+          <div className="p-16 text-center">
+            <div className="text-3xl mb-3">🔍</div>
+            <p className="text-gray-500 text-sm font-medium">Henüz Google Ads lead yok</p>
+            <button onClick={() => setActiveTab('google-baglanti')} className="mt-4 text-xs text-yellow-600 font-medium hover:underline">Google Ads Bağla →</button>
+          </div>
+        ) : googleLeads.map((lead, i, arr) => (
+          <div key={lead.id} onClick={() => openDetailModal(lead)}
+            className={`px-5 py-3.5 flex items-center gap-3 hover:bg-yellow-50/30 cursor-pointer transition-colors ${i < arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
+            <div className="w-8 h-8 rounded-xl bg-yellow-50 flex items-center justify-center flex-shrink-0 text-base">🔍</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
+              <p className="text-xs text-gray-400">{lead.phone} · {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
+              <Badge status={lead.status} />
             </div>
           </div>
-
-          <div className="p-6">
-
-            {/* ADIM 1: Sağlayıcı seç */}
-            {!waProvider && (
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-gray-900 mb-4">Hangi servisi kullanıyorsunuz?</p>
-                {providers.map(p => (
-                  <button key={p.key} onClick={() => setWaProvider(p.key)}
-                    className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-gray-100 hover:border-green-400 hover:bg-green-50/30 text-left transition-all group">
-                    <span className="text-2xl">{p.logo}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-800 group-hover:text-green-700">{p.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{p.desc}</p>
-                    </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{p.price}</span>
-                      <svg className="text-gray-300 group-hover:text-green-500 transition-colors" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* ADIM 2: API Key */}
-            {waProvider && !waConnected && (() => {
-              const p = providers.find(pr => pr.key === waProvider)!
-              return (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 mb-5">
-                    <button onClick={() => { setWaProvider(''); setWaApiKey('') }}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-400">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </button>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{p.logo}</span>
-                      <p className="text-sm font-semibold text-gray-900">{p.name} ile Bağlan</p>
-                    </div>
-                  </div>
-
-                  <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
-                    <span className="text-lg">ℹ️</span>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-800">{p.name} hesabınız yok mu?</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Önce {p.name}'e kaydolun, API key alın.</p>
-                      <div className="flex gap-3 mt-2">
-                        <a href={p.url} target="_blank" rel="noopener noreferrer"
-                          className="text-xs text-green-600 font-medium hover:underline">
-                          {p.name}'e Kaydol →
-                        </a>
-                        <a href={p.docsUrl} target="_blank" rel="noopener noreferrer"
-                          className="text-xs text-gray-400 hover:underline">
-                          Döküman
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">{p.apiLabel}</label>
-                    <input
-                      value={waApiKey}
-                      onChange={e => setWaApiKey(e.target.value)}
-                      placeholder={p.apiPlaceholder}
-                      className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono bg-gray-50"
-                    />
-                  </div>
-
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-                    <p className="text-xs font-semibold text-blue-700 mb-1">Webhook URL</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs font-mono text-blue-600 flex-1 truncate">
-                        https://datapilot-omega.vercel.app/api/whatsapp/webhook
-                      </p>
-                      <button onClick={() => navigator.clipboard.writeText('https://datapilot-omega.vercel.app/api/whatsapp/webhook')}
-                        className="text-xs text-blue-600 font-medium hover:underline flex-shrink-0">
-                        Kopyala
-                      </button>
-                    </div>
-                    <p className="text-xs text-blue-500 mt-1">Bu URL'yi {p.name} panelindeki webhook ayarlarına ekleyin.</p>
-                  </div>
-
-                  <button
-                    onClick={handleConnect}
-                    disabled={!waApiKey.trim() || waConnecting}
-                    className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
-                    {waConnecting ? (
-                      <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>Bağlanıyor...</>
-                    ) : (
-                      <>💬 {p.name} ile Bağlan</>
-                    )}
-                  </button>
-                </div>
-              )
-            })()}
-          </div>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   )
 })()}
