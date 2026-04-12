@@ -242,7 +242,7 @@ export default function CustomerPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['leadler', 'ekip'])
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [saving, setSaving] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [commissionPayments, setCommissionPayments] = useState<any[]>([])
@@ -997,16 +997,20 @@ const handlePayCommission = async () => {
   )
 
   // ─── RENDER ───────────────────────────────────────────────────────────────
-
+ const sidebarWidth = sidebarCollapsed ? '4rem' : '15rem'
   return (
-    <div className="min-h-screen bg-gray-50 flex" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+   <div
+  className="min-h-screen bg-gray-50"
+  style={{
+    fontFamily: "'DM Sans', system-ui, sans-serif",
+    ['--sidebar-width' as any]: sidebarWidth,
+  }}
+>
 
       {/* ── SIDEBAR ── */}
-      <aside
-        onMouseEnter={() => setSidebarCollapsed(false)}
-        onMouseLeave={() => setSidebarCollapsed(true)}
-        className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-gray-950 border-r border-gray-800 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-200 shadow-xl`}>
-
+     <aside
+  className="fixed inset-y-0 left-0 z-30 w-[var(--sidebar-width)] bg-gray-950 border-r border-gray-800 flex flex-col transition-all duration-200 shadow-xl"
+>
         {/* DataPilot Logo */}
         <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
           <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
@@ -1091,10 +1095,18 @@ const handlePayCommission = async () => {
       </aside>
 
       {/* ── MAIN ── */}
-      <div className="ml-16 flex-1 transition-all duration-200 min-w-0">
+      <div className="ml-[var(--sidebar-width)] min-w-0 transition-all duration-200">
 
         {/* Top bar */}
-<header className="h-14 bg-white/80 backdrop-blur-sm border-b border-gray-100 flex items-center px-6 sticky top-0 z-10 shadow-sm">
+<header className="h-14 bg-white/80 backdrop-blur-sm border-b border-gray-100 flex items-center px-6 sticky top-0 z-20 shadow-sm">
+<button
+  onClick={() => setSidebarCollapsed(prev => !prev)}
+  className="mr-3 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors"
+>
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+</button>
   <div className="flex items-center gap-1.5 text-sm text-gray-400">
     <span>DataPilot</span>
     {getPageTitle().split(' › ').map((part, i, arr) => (
