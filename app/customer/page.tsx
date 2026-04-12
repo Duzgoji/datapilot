@@ -2377,8 +2377,7 @@ const handlePayCommission = async () => {
   ]
 
   return (
-    <div className="space-y-5 max-w-2xl">
-
+<div className="space-y-5 max-w-3xl">
       {/* Header kartı */}
       <div className="bg-gradient-to-br from-yellow-400 to-orange-400 rounded-2xl p-6 text-white relative overflow-hidden">
         <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
