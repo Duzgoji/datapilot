@@ -2024,10 +2024,7 @@ const handlePayCommission = async () => {
             </div>
           )}
          {activeTab === 'whatsapp-baglanti' && (() => {
-  const [waProvider, setWaProvider] = useState<string>('')
-  const [waApiKey, setWaApiKey] = useState('')
-  const [waConnecting, setWaConnecting] = useState(false)
-  const [waConnected, setWaConnected] = useState(false)
+  
 
   const providers = [
     {
@@ -2351,7 +2348,6 @@ const handlePayCommission = async () => {
 })()}
 
 {activeTab === 'google-baglanti' && (() => {
-  const [googleConnected, setGoogleConnected] = useState(false)
   const googleLeads = leads.filter(l => l.source === 'google_ads')
   const mockCampaigns = [
     { name: 'Yaz Kampanyası', status: 'active', budget: 500 },
