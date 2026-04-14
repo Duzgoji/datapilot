@@ -1,12 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { LeadLimitError } from '@/lib/enforceLeadLimit'
+import { insertLeads } from '@/modules/leads/lead.repository'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// ── GET: Webhook verification ─────────────────────────────────────────────
+// GET: Webhook verification
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const mode = searchParams.get('hub.mode')
@@ -24,21 +26,51 @@ export async function GET(req: NextRequest) {
   return new NextResponse('Forbidden', { status: 403 })
 }
 
-// ── POST: Incoming messages ───────────────────────────────────────────────
+// POST: Incoming messages
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    console.log('[WhatsApp Webhook] Incoming payload:', JSON.stringify(body, null, 2))
 
     const entry = body?.entry?.[0]
     const changes = entry?.changes?.[0]
     const value = changes?.value
     const messages = value?.messages
+    const phoneNumberId = value?.metadata?.phone_number_id
 
     if (!messages || messages.length === 0) {
-      console.log('[WhatsApp Webhook] No messages found, skipping')
+      console.warn('[WhatsApp Webhook] Invalid payload', {
+        source: 'whatsapp',
+        reason: 'no_messages',
+      })
       return NextResponse.json({ status: 'ok' }, { status: 200 })
     }
+
+    if (!phoneNumberId) {
+      console.warn('[WhatsApp Webhook] Invalid payload', {
+        source: 'whatsapp',
+        reason: 'missing_phone_number_id',
+      })
+      return NextResponse.json({ status: 'ok' }, { status: 200 })
+    }
+
+    const { data: connection, error: connectionError } = await supabaseAdmin
+      .from('whatsapp_connections')
+      .select('owner_id, phone_number_id, is_active')
+      .eq('phone_number_id', phoneNumberId)
+      .eq('is_active', true)
+      .maybeSingle()
+
+    if (connectionError || !connection?.owner_id) {
+      console.warn('[WhatsApp Webhook] Missing connection mapping', {
+        source: 'whatsapp',
+        reason: 'missing_whatsapp_connection',
+        phone_number_id: phoneNumberId,
+        has_connection_error: !!connectionError,
+      })
+      return NextResponse.json({ status: 'ok' }, { status: 200 })
+    }
+
+    const ownerId = connection.owner_id
 
     for (const message of messages) {
       if (message.type !== 'text') {
@@ -49,12 +81,10 @@ export async function POST(req: NextRequest) {
       const phone = message.from
       const text = message.text?.body || ''
 
-      console.log('[WhatsApp Webhook] Message received:', { phone, text })
-
-      // Duplicate check
       const { data: existing } = await supabaseAdmin
         .from('leads')
         .select('id')
+        .eq('owner_id', ownerId)
         .eq('phone', phone)
         .eq('source', 'whatsapp')
         .limit(1)
@@ -64,31 +94,46 @@ export async function POST(req: NextRequest) {
         continue
       }
 
-      // Insert lead
       const leadCode = 'WA-' + Date.now().toString().slice(-6)
-      const { data: newLead, error } = await supabaseAdmin
-        .from('leads')
-        .insert({
-          lead_code: leadCode,
-          full_name: 'WhatsApp Kullanıcısı',
-          phone: phone,
-          source: 'whatsapp',
-          note: text,
-          status: 'new',
-        })
-        .select()
-        .single()
 
-      if (error) {
-        console.error('[WhatsApp Webhook] Lead insert error:', error)
-      } else {
-        console.log('[WhatsApp Webhook] Lead created:', newLead?.id)
+      try {
+        const { data: newLeads, error } = await insertLeads(
+          [
+            {
+              owner_id: ownerId,
+              lead_code: leadCode,
+              full_name: 'WhatsApp Kullanıcısı',
+              phone,
+              source: 'whatsapp',
+              note: text,
+              status: 'new',
+            },
+          ],
+          ownerId
+        )
+
+        if (error) {
+          console.error('[WhatsApp Webhook] Lead insert error:', error)
+        } else {
+          console.log('[WhatsApp Webhook] Lead created:', newLeads?.[0]?.id)
+        }
+      } catch (err: unknown) {
+        if (err instanceof LeadLimitError || (err instanceof Error && err.name === 'LeadLimitError')) {
+          console.error('[WhatsApp Webhook] Lead rejected', {
+            owner_id: ownerId,
+            source: 'whatsapp',
+            reason: 'lead_limit_exceeded',
+          })
+          continue
+        }
+
+        throw err
       }
     }
 
-    // Her zaman 200 dön — Meta aksi halde tekrar gönderir
+    // Always return 200 so the provider does not retry endlessly.
     return NextResponse.json({ status: 'ok' }, { status: 200 })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[WhatsApp Webhook] Unexpected error:', err)
     return NextResponse.json({ status: 'ok' }, { status: 200 })
   }

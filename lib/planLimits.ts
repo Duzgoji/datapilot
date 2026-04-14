@@ -1,4 +1,6 @@
-export const PLAN_LIMITS: Record<string, {
+export type PlanName = 'starter' | 'pro' | 'enterprise'
+
+export const PLAN_LIMITS: Record<PlanName, {
   label: string
   price: number
   maxUsers: number | null
@@ -28,6 +30,12 @@ export const PLAN_LIMITS: Record<string, {
   },
 }
 
-export const getPlanLimits = (plan: string) => {
-  return PLAN_LIMITS[plan] || PLAN_LIMITS['starter']
+export const VALID_PLANS = Object.keys(PLAN_LIMITS) as PlanName[]
+
+export function getPlanLimits(plan: PlanName) {
+  return PLAN_LIMITS[plan]
+}
+
+export function isValidPlan(plan: string | null | undefined): plan is PlanName {
+  return !!plan && VALID_PLANS.includes(plan as PlanName)
 }

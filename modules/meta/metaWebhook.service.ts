@@ -73,23 +73,32 @@ export async function processMetaWebhook(body: any) {
 
       console.log('ASSIGNABLE AGENT:', assignedTo)
 
-      const { error: upsertError } = await upsertLead({
-        owner_id: connection.owner_id,
-        assigned_to: assignedTo,
-        full_name: normalized.full_name,
-        phone: normalized.phone,
-        email: normalized.email,
-        source: 'meta',
-        meta_lead_id: leadId,
-        status: 'new',
-        created_at: new Date().toISOString(),
-      })
+   try {
+  const { error: upsertError } = await upsertLead({
+    owner_id: connection.owner_id,
+    assigned_to: assignedTo,
+    full_name: normalized.full_name,
+    phone: normalized.phone,
+    email: normalized.email,
+    source: 'meta',
+    meta_lead_id: leadId,
+    status: 'new',
+    created_at: new Date().toISOString(),
+  })
 
-      if (upsertError) {
-        console.log('LEAD UPSERT HATASI:', upsertError)
-      } else {
-        console.log('LEAD KAYDEDİLDİ / GÜNCELLENDİ:', leadId)
-      }
+  if (upsertError) {
+    console.log('LEAD UPSERT HATASI:', upsertError)
+  } else {
+    console.log('LEAD KAYDEDİLDİ / GÜNCELLENDİ:', leadId)
+  }
+} catch (err: any) {
+  if (err.name === 'LeadLimitError') {
+    console.warn(`[Meta Webhook] Lead limit aşıldı, owner: ${connection.owner_id}`)
+    continue
+  }
+  throw err
+}
+    
     }
   }
 }

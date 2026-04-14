@@ -1,13 +1,13 @@
-﻿'use client'
-import { getPlanLimits } from '@/lib/planLimits'
-import { getUserUsage, getBranchUsage, getMonthlyLeadUsage } from '@/lib/usageHelpers'
-import { checkLimit } from '@/lib/usageHelpers'
+'use client'
+
+import { getPlanLimits, isValidPlan, type PlanName } from '@/lib/planLimits'
+import { getUserUsage, getBranchUsage, getMonthlyLeadUsage, checkLimit, getCurrentPlan } from '@/lib/usageHelpers'
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import MetaConnect from '@/components/MetaConnect'
 import WhatsAppConnect from '@/components/WhatsAppConnect'
-import { checkLimitOrThrow } from '@/lib/usageHelpers'
+
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 
@@ -95,7 +95,7 @@ const Badge = ({ status }: { status: string }) => (
   </span>
 )
 
-const PlanUsageWidget = ({ ownerId, plan }: { ownerId: string, plan: string }) => {
+const PlanUsageWidget = ({ ownerId, plan }: { ownerId: string, plan: PlanName }) => {
   const [usage, setUsage] = useState<{ users: number, branches: number, leads: number } | null>(null)
   const limits = getPlanLimits(plan)
 
@@ -408,8 +408,21 @@ useEffect(() => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
     const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-    if (profileData?.role !== 'customer') { router.push('/login'); return }
-    setProfile(profileData)
+if (profileData?.role !== 'customer') { router.push('/login'); return }
+
+// Plan'ı ayrıca çek — profiles.select('*') subscriptions'ı join etmez
+const { data: subData } = await supabase
+  .from('subscriptions')
+  .select('plan')
+  .eq('owner_id', user.id)
+  .maybeSingle()
+
+const _resolvedPlan: PlanName = isValidPlan(subData?.plan) ? subData.plan : 'starter'
+if (!isValidPlan(subData?.plan)) {
+  console.warn(`[CustomerPage] Plan çözümlenemedi. owner: ${user.id}, raw: "${subData?.plan}" → starter`)
+}
+
+setProfile({ ...profileData, _resolvedPlan })
     setSettingsName(profileData?.full_name || '')
     setSettingsCompany(profileData?.company_name || '')
     setSettingsPhone(profileData?.phone || '')
@@ -795,6 +808,10 @@ const handlePayCommission = async () => {
     const validRows = bulkRows.filter(r => r.full_name.trim() || r.phone.trim())
     if (validRows.length === 0) { alert('En az 1 satır doldurmanız gerekiyor.'); return }
     setBulkLoading(true)
+    const { data: { user: bulkUser } } = await supabase.auth.getUser()
+if (!bulkUser) { setBulkLoading(false); return }
+const { allowed: bulkAllowed, message: bulkMsg } = await checkLimit(bulkUser.id, 'lead', validRows.length)
+if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
     setBulkResult(null)
     let success = 0
     const errors: string[] = []
@@ -852,15 +869,23 @@ const handlePayCommission = async () => {
     setXlsxPreview(rows.slice(0, 3))
   }
 
-  const handleXlsxSubmit = async () => {
-    if (!xlsxFile) return
-    setXlsxLoading(true)
-    setXlsxResult(null)
-    const XLSX = await import('xlsx')
-    const buffer = await xlsxFile.arrayBuffer()
-    const wb = XLSX.read(buffer)
-    const ws = wb.Sheets[wb.SheetNames[0]]
-    const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' })
+ const handleXlsxSubmit = async () => {
+  if (!xlsxFile) return
+  setXlsxLoading(true)
+  setXlsxResult(null)
+
+  const XLSX = await import('xlsx')
+  const buffer = await xlsxFile.arrayBuffer()
+  const wb = XLSX.read(buffer)
+  const ws = wb.Sheets[wb.SheetNames[0]]
+  const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' })
+
+  // ← Artık rows tanımlı, limit kontrolü burada yap
+  const { data: { user: xlsxUser } } = await supabase.auth.getUser()
+  if (!xlsxUser) { setXlsxLoading(false); return }
+  const { allowed: xlsxAllowed, message: xlsxMsg } = await checkLimit(xlsxUser.id, 'lead', rows.length)
+  if (!xlsxAllowed) { alert(xlsxMsg); setXlsxLoading(false); return }
+
     const branchMap: Record<string, string> = {}
     branches.forEach(b => { branchMap[b.branch_name?.toLowerCase().trim()] = b.id })
     // Satışçı adı → user_id haritası
@@ -999,18 +1024,20 @@ const handlePayCommission = async () => {
   // ─── RENDER ───────────────────────────────────────────────────────────────
  const sidebarWidth = sidebarCollapsed ? '4rem' : '15rem'
   return (
-    <div
-      className="min-h-screen bg-gray-50"
-      style={{
-        fontFamily: "'DM Sans', system-ui, sans-serif",
-        ['--sidebar-width' as any]: sidebarWidth,
-      }}
-    >
+   <div
+  className="min-h-screen bg-gray-50"
+  style={{
+    fontFamily: "'DM Sans', system-ui, sans-serif",
+    ['--sidebar-width' as any]: sidebarWidth,
+  }}
+>
 
       {/* ── SIDEBAR ── */}
-     <aside
-  className="fixed inset-y-0 left-0 z-30 w-[var(--sidebar-width)] bg-gray-950 border-r border-gray-800 flex flex-col transition-all duration-200 shadow-xl"
->
+      <aside
+        onMouseEnter={() => setSidebarCollapsed(false)}
+        onMouseLeave={() => setSidebarCollapsed(true)}
+        className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-gray-950 border-r border-gray-800 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-200 shadow-xl`}>
+
         {/* DataPilot Logo */}
         <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
           <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
@@ -1095,18 +1122,10 @@ const handlePayCommission = async () => {
       </aside>
 
       {/* ── MAIN ── */}
-      <div className="ml-[var(--sidebar-width)] min-w-0 transition-all duration-200">
+      <div className="ml-16 flex-1 transition-all duration-200 min-w-0">
 
         {/* Top bar */}
-<header className="h-14 bg-white/80 backdrop-blur-sm border-b border-gray-100 flex items-center px-6 sticky top-0 z-20 shadow-sm">
-<button
-  onClick={() => setSidebarCollapsed(prev => !prev)}
-  className="mr-3 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition-colors"
->
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-  </svg>
-</button>
+<header className="h-14 bg-white/80 backdrop-blur-sm border-b border-gray-100 flex items-center px-6 sticky top-0 z-10 shadow-sm">
   <div className="flex items-center gap-1.5 text-sm text-gray-400">
     <span>DataPilot</span>
     {getPageTitle().split(' › ').map((part, i, arr) => (
@@ -1203,8 +1222,8 @@ const handlePayCommission = async () => {
 </header>
 
         {/* Content */}
-        <main className="min-h-[calc(100vh-56px)] px-6 py-6" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
-          <div className="max-w-7xl mx-auto">
+       <div className="ml-16 min-h-screen" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
+       <main className="p-6">
           {/* ── DASHBOARD ── */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
@@ -1767,6 +1786,144 @@ const handlePayCommission = async () => {
   </div>
 )}
   
+<Modal open={showPaymentModal} onClose={() => { setShowPaymentModal(false); setPaymentMember(null); setPaymentAmount(''); setPaymentNote('') }}
+  title="Ödeme Yap" subtitle={paymentMember?.profiles?.full_name}>
+  {paymentMember && (
+    <div className="p-6 space-y-4">
+      {/* Özet */}
+      {(() => {
+        const mSales = leads.filter(l => l.assigned_to === paymentMember.user_id && l.status === 'procedure_done')
+        const mRevenue = mSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+        const totalEarned = mRevenue * ((paymentMember.commission_rate || 0) / 100)
+        const totalPaid = commissionPayments.filter(p => p.team_member_id === paymentMember.id).reduce((s: number, p: any) => s + (p.amount || 0), 0)
+        const remaining = totalEarned - totalPaid
+        return (
+          <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-xl p-4 border border-indigo-100">
+            <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">{paymentMember.profiles?.full_name} · Hakediş Özeti</p>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <p className="text-xs text-gray-400">Toplam Hakediş</p>
+                <p className="text-sm font-bold text-gray-900">₺{totalEarned.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">Ödenen</p>
+                <p className="text-sm font-bold text-emerald-600">₺{totalPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">Kalan</p>
+                <p className="text-sm font-bold text-amber-600">₺{Math.max(0, remaining).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+ 
+      <div>
+        <label className="block text-xs font-medium text-gray-500 mb-1.5">Ödeme Tutarı (₺) *</label>
+        <input
+          type="number"
+          value={paymentAmount}
+          onChange={e => setPaymentAmount(e.target.value)}
+          className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-gray-900"
+          placeholder="0"
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-gray-500 mb-1.5">Not (opsiyonel)</label>
+        <textarea
+          value={paymentNote}
+          onChange={e => setPaymentNote(e.target.value)}
+          rows={2}
+          className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+          placeholder="Örn: Mart ayı prim ödemesi"
+        />
+      </div>
+      <div className="flex gap-3 pt-1">
+        <Btn variant="secondary" className="flex-1" onClick={() => { setShowPaymentModal(false); setPaymentMember(null) }}>İptal</Btn>
+        <Btn variant="success" className="flex-1" onClick={handlePayCommission} disabled={paymentSaving || !paymentAmount || parseFloat(paymentAmount) <= 0}>
+          {paymentSaving ? 'Kaydediliyor...' : '✓ Ödendi Olarak İşaretle'}
+        </Btn>
+      </div>
+    </div>
+  )}
+</Modal>
+ 
+<Modal open={showPaymentHistory} onClose={() => { setShowPaymentHistory(false); setHistoryMember(null) }}
+  title="Ödeme Geçmişi" subtitle={historyMember?.profiles?.full_name} size="md">
+  {historyMember && (
+    <div className="p-6">
+      {(() => {
+        const payments = commissionPayments.filter(p => p.team_member_id === historyMember.id)
+        const mSales = leads.filter(l => l.assigned_to === historyMember.user_id && l.status === 'procedure_done')
+        const mRevenue = mSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
+        const totalEarned = mRevenue * ((historyMember.commission_rate || 0) / 100)
+        const totalPaid = payments.reduce((s: number, p: any) => s + (p.amount || 0), 0)
+ 
+        return (
+          <>
+            {/* Özet */}
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="bg-rose-50 rounded-xl p-3 text-center border border-rose-100">
+                <p className="text-base font-bold text-rose-600">₺{totalEarned.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+                <p className="text-xs text-gray-400 mt-0.5">Toplam Hakediş</p>
+              </div>
+              <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100">
+                <p className="text-base font-bold text-emerald-600">₺{totalPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+                <p className="text-xs text-gray-400 mt-0.5">Ödenen</p>
+              </div>
+              <div className={`rounded-xl p-3 text-center border ${(totalEarned - totalPaid) > 0 ? 'bg-amber-50 border-amber-100' : 'bg-gray-50 border-gray-100'}`}>
+                <p className={`text-base font-bold ${(totalEarned - totalPaid) > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
+                  ₺{Math.max(0, totalEarned - totalPaid).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">Kalan Borç</p>
+              </div>
+            </div>
+ 
+            {/* İşlem listesi */}
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ödeme Geçmişi</p>
+            {payments.length === 0 ? (
+              <div className="text-center py-10">
+                <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="#9ca3af" strokeWidth="1.5"/><path d="M2 8h16" stroke="#9ca3af" strokeWidth="1.5"/></svg>
+                </div>
+                <p className="text-sm text-gray-400">Henüz ödeme yapılmamış.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {payments.map((p, i) => (
+                  <div key={p.id} className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7l3.5 3.5 7.5-7" stroke="#059669" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900">₺{p.amount.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
+                      {p.note && <p className="text-xs text-gray-500 truncate">{p.note}</p>}
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-xs text-gray-400">
+                        {new Date(p.paid_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                      <p className="text-xs text-emerald-500 font-medium">Ödendi</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+ 
+            {/* Yeni ödeme butonu */}
+            {(totalEarned - totalPaid) > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <Btn variant="success" className="w-full" onClick={() => { setShowPaymentHistory(false); setPaymentMember(historyMember); setPaymentAmount((totalEarned - totalPaid).toFixed(0)); setShowPaymentModal(true) }}>
+                  Ödeme Yap →
+                </Btn>
+              </div>
+            )}
+          </>
+        )
+      })()}
+    </div>
+  )}
+</Modal>
 
 {activeTab === 'pipeline' && (
   <div className="space-y-5">
@@ -3833,166 +3990,28 @@ return (
   <div className="flex items-center justify-between mb-4">
     <h3 className="font-semibold text-gray-900">Abonelik & Kullanım</h3>
     {(() => {
-      const plan = profile?.subscriptions?.[0]?.plan || 'starter'
-      const cfg: any = {
-        starter: 'bg-gray-100 text-gray-600',
-        pro: 'bg-blue-50 text-blue-700',
-        enterprise: 'bg-purple-50 text-purple-700',
-      }
-      return <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${cfg[plan] || cfg.starter}`}>{plan}</span>
-    })()}
+  const plan = profile?._resolvedPlan ?? 'starter'  // ← const ekle
+  const cfg: any = {
+    starter: 'bg-gray-100 text-gray-600',
+    pro: 'bg-blue-50 text-blue-700',
+    enterprise: 'bg-purple-50 text-purple-700',
+  }
+  return <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${cfg[plan] || cfg.starter}`}>{plan}</span>
+})()}
   </div>
-  <PlanUsageWidget ownerId={profile?.id} plan={profile?.subscriptions?.[0]?.plan || 'starter'} />
+  <PlanUsageWidget ownerId={profile?.id} plan={profile?._resolvedPlan ?? 'starter'} />
 </div>
 
             </div>
           )}
 
-          </div>
         </main>
+        </div>
       </div>
 
       {/* ─────────────────── MODALS ─────────────────────── */}
 
       {/* ── ŞUBE EKLE ── */}
-<Modal open={showPaymentModal} onClose={() => { setShowPaymentModal(false); setPaymentMember(null); setPaymentAmount(''); setPaymentNote('') }}
-  title="�deme Yap" subtitle={paymentMember?.profiles?.full_name}>
-  {paymentMember && (
-    <div className="p-6 space-y-4">
-      {/* �zet */}
-      {(() => {
-        const mSales = leads.filter(l => l.assigned_to === paymentMember.user_id && l.status === 'procedure_done')
-        const mRevenue = mSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
-        const totalEarned = mRevenue * ((paymentMember.commission_rate || 0) / 100)
-        const totalPaid = commissionPayments.filter(p => p.team_member_id === paymentMember.id).reduce((s: number, p: any) => s + (p.amount || 0), 0)
-        const remaining = totalEarned - totalPaid
-        return (
-          <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-xl p-4 border border-indigo-100">
-            <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wider">{paymentMember.profiles?.full_name} � Hakedi� �zeti</p>
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <p className="text-xs text-gray-400">Toplam Hakedi�</p>
-                <p className="text-sm font-bold text-gray-900">?{totalEarned.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400">�denen</p>
-                <p className="text-sm font-bold text-emerald-600">?{totalPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400">Kalan</p>
-                <p className="text-sm font-bold text-amber-600">?{Math.max(0, remaining).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
-              </div>
-            </div>
-          </div>
-        )
-      })()}
- 
-      <div>
-        <label className="block text-xs font-medium text-gray-500 mb-1.5">�deme Tutar� (?) *</label>
-        <input
-          type="number"
-          value={paymentAmount}
-          onChange={e => setPaymentAmount(e.target.value)}
-          className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-gray-900"
-          placeholder="0"
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium text-gray-500 mb-1.5">Not (opsiyonel)</label>
-        <textarea
-          value={paymentNote}
-          onChange={e => setPaymentNote(e.target.value)}
-          rows={2}
-          className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-          placeholder="�rn: Mart ay� prim �demesi"
-        />
-      </div>
-      <div className="flex gap-3 pt-1">
-        <Btn variant="secondary" className="flex-1" onClick={() => { setShowPaymentModal(false); setPaymentMember(null) }}>�ptal</Btn>
-        <Btn variant="success" className="flex-1" onClick={handlePayCommission} disabled={paymentSaving || !paymentAmount || parseFloat(paymentAmount) <= 0}>
-          {paymentSaving ? 'Kaydediliyor...' : '? �dendi Olarak ��aretle'}
-        </Btn>
-      </div>
-    </div>
-  )}
-</Modal>
- 
-<Modal open={showPaymentHistory} onClose={() => { setShowPaymentHistory(false); setHistoryMember(null) }}
-  title="�deme Ge�mi�i" subtitle={historyMember?.profiles?.full_name} size="md">
-  {historyMember && (
-    <div className="p-6">
-      {(() => {
-        const payments = commissionPayments.filter(p => p.team_member_id === historyMember.id)
-        const mSales = leads.filter(l => l.assigned_to === historyMember.user_id && l.status === 'procedure_done')
-        const mRevenue = mSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
-        const totalEarned = mRevenue * ((historyMember.commission_rate || 0) / 100)
-        const totalPaid = payments.reduce((s: number, p: any) => s + (p.amount || 0), 0)
- 
-        return (
-          <>
-            {/* �zet */}
-            <div className="grid grid-cols-3 gap-3 mb-5">
-              <div className="bg-rose-50 rounded-xl p-3 text-center border border-rose-100">
-                <p className="text-base font-bold text-rose-600">?{totalEarned.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Toplam Hakedi�</p>
-              </div>
-              <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100">
-                <p className="text-base font-bold text-emerald-600">?{totalPaid.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
-                <p className="text-xs text-gray-400 mt-0.5">�denen</p>
-              </div>
-              <div className={`rounded-xl p-3 text-center border ${(totalEarned - totalPaid) > 0 ? 'bg-amber-50 border-amber-100' : 'bg-gray-50 border-gray-100'}`}>
-                <p className={`text-base font-bold ${(totalEarned - totalPaid) > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
-                  ?{Math.max(0, totalEarned - totalPaid).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">Kalan Bor�</p>
-              </div>
-            </div>
- 
-            {/* ��lem listesi */}
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">�deme Ge�mi�i</p>
-            {payments.length === 0 ? (
-              <div className="text-center py-10">
-                <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="#9ca3af" strokeWidth="1.5"/><path d="M2 8h16" stroke="#9ca3af" strokeWidth="1.5"/></svg>
-                </div>
-                <p className="text-sm text-gray-400">Hen�z �deme yap�lmam��.</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {payments.map((p, i) => (
-                  <div key={p.id} className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7l3.5 3.5 7.5-7" stroke="#059669" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900">?{p.amount.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</p>
-                      {p.note && <p className="text-xs text-gray-500 truncate">{p.note}</p>}
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-xs text-gray-400">
-                        {new Date(p.paid_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                      </p>
-                      <p className="text-xs text-emerald-500 font-medium">�dendi</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
- 
-            {/* Yeni �deme butonu */}
-            {(totalEarned - totalPaid) > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <Btn variant="success" className="w-full" onClick={() => { setShowPaymentHistory(false); setPaymentMember(historyMember); setPaymentAmount((totalEarned - totalPaid).toFixed(0)); setShowPaymentModal(true) }}>
-                  �deme Yap �
-                </Btn>
-              </div>
-            )}
-          </>
-        )
-      })()}
-    </div>
-  )}
-</Modal>
       <Modal open={showAddBranch} onClose={() => setShowAddBranch(false)} title="Yeni Şube" subtitle="Şube bilgilerini girin">
         <form onSubmit={handleAddBranch} className="p-6 space-y-4">
           <Input label="Şube Adı *" value={branchName} onChange={(e: any) => setBranchName(e.target.value)} required placeholder="İstanbul Şubesi" />
@@ -4776,6 +4795,3 @@ return (
     </div>
   )
 }
-
-
-

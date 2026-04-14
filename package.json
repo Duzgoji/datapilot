@@ -2,6 +2,18 @@
   "name": "datapilot",
   "version": "0.1.0",
   "private": true,
+  "description": "Production-oriented multi-tenant SaaS for lead collection, assignment, and pipeline management.",
+  "keywords": [
+    "datapilot",
+    "saas",
+    "nextjs",
+    "supabase",
+    "lead-management",
+    "multi-tenant",
+    "crm",
+    "meta-ads",
+    "whatsapp"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -1955,7 +1955,7 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
 
   const PLANS = [
     { key: 'starter', label: 'Starter', price: '₺2000', desc: '3 kullanıcı · 1 şube · 500 lead/ay', color: 'border-indigo-500 bg-indigo-50' },
-    { key: 'pro', label: 'Pro', price: '₺5.000', desc: '15 kullanıcı · 5 şube · sınırsız lead', color: 'border-violet-500 bg-violet-50' },
+    { key: 'pro', label: 'Pro', price: '₺5.500', desc: '15 kullanıcı · 5 şube · sınırsız lead', color: 'border-violet-500 bg-violet-50' },
     { key: 'enterprise', label: 'Enterprise', price: '₺15.000+', desc: 'Sınırsız her şey · AI rapor dahil', color: 'border-amber-500 bg-amber-50' },
     { key: 'trial', label: 'Deneme', price: 'Ücretsiz', desc: '14 gün · tüm özellikler', color: 'border-gray-300 bg-gray-50' },
   ]
