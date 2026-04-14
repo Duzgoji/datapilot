@@ -115,7 +115,13 @@ export async function POST(req: NextRequest) {
         if (error) {
           console.error('[WhatsApp Webhook] Lead insert error:', error)
         } else {
-          console.log('[WhatsApp Webhook] Lead created:', newLeads?.[0]?.id)
+          if (Array.isArray(newLeads) && newLeads.length > 0) {
+            console.log('[WhatsApp Webhook] Lead created:', newLeads[0].id)
+          } else {
+            console.warn('[WhatsApp Webhook] No lead returned after insert', {
+              source: 'whatsapp',
+            })
+          }
         }
       } catch (err: unknown) {
         if (err instanceof LeadLimitError || (err instanceof Error && err.name === 'LeadLimitError')) {

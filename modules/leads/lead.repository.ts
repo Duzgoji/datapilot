@@ -34,4 +34,5 @@ export async function insertLeads(leads: any[], ownerId: string) {
   return await supabaseAdmin
     .from('leads')
     .insert(leads)
+    .select('id')
 }
