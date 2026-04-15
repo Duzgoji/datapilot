@@ -175,15 +175,9 @@ export default function AgentPage() {
     return matchesStatus && matchesSearch && matchesDate
   })
   const sortedLeads = [...filteredLeads].sort((a, b) => {
-  const getDate = (l: any) => new Date(l.updated_at || l.created_at).getTime()
-  const aDays = Math.floor((Date.now() - getDate(a)) / (1000 * 60 * 60 * 24))
-  const bDays = Math.floor((Date.now() - getDate(b)) / (1000 * 60 * 60 * 24))
-  const aStale = aDays >= 2 && (a.status === 'new' || a.status === 'called')
-  const bStale = bDays >= 2 && (b.status === 'new' || b.status === 'called')
-  if (aStale && !bStale) return -1
-  if (!aStale && bStale) return 1
-  return getDate(a) - getDate(b)
-})
+    const getDate = (lead: any) => new Date(lead.updated_at || lead.created_at).getTime()
+    return getDate(b) - getDate(a)
+  })
   const totalSales = leads.filter(l => l.status === 'procedure_done').length
   const totalRevenue = leads.filter(l => l.status === 'procedure_done').reduce((s, l) => s + (l.procedure_amount || 0), 0)
   const commission = totalRevenue * ((teamMember?.commission_rate || 0) / 100)
@@ -375,16 +369,16 @@ export default function AgentPage() {
                 <h3 className="text-sm font-semibold text-gray-900">Son Potansiyel Müşteriler</h3>
                 <button onClick={() => setActiveTab('leadler')} className="text-xs text-indigo-600 font-medium">Tümü →</button>
               </div>
-              {leads.length === 0 ? (
+              {sortedLeads.length === 0 ? (
                 <div className="p-12 text-center">
                   <p className="text-gray-400 text-sm">Henüz potansiyel müşteri atanmadı.</p>
                 </div>
-              ) : leads.slice(0, 5).map((lead, i) => {
+              ) : sortedLeads.slice(0, 5).map((lead, i) => {
                 const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600','from-violet-100 to-purple-100 text-violet-600','from-emerald-100 to-teal-100 text-emerald-600','from-orange-100 to-amber-100 text-orange-600','from-pink-100 to-rose-100 text-rose-600']
                 const ac = avatarColors[i % avatarColors.length]
                 return (
                   <div key={lead.id} onClick={() => openUpdateModal(lead)}
-                    className={`px-5 py-3.5 flex items-center gap-3 cursor-pointer hover:bg-indigo-50/30 transition-colors ${i < Math.min(leads.length, 5) - 1 ? 'border-b border-gray-50' : ''}`}>
+                    className={`px-5 py-3.5 flex items-center gap-3 cursor-pointer hover:bg-indigo-50/30 transition-colors ${i < Math.min(sortedLeads.length, 5) - 1 ? 'border-b border-gray-50' : ''}`}>
                     <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${ac} flex items-center justify-center flex-shrink-0`}>
                       <span className="text-xs font-semibold">{(lead.full_name || 'İ').charAt(0)}</span>
                     </div>
