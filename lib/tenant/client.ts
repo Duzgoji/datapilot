@@ -50,3 +50,7 @@ export function logTenantWriteUsage(
 
   console.info('[Tenant Write] Canonical write used', payload)
 }
+
+export function getCanonicalCustomerId(tenant: Pick<TenantResolution, 'tenantId' | 'path'>) {
+  return tenant.path === 'legacy_profile_fallback' ? null : tenant.tenantId
+}

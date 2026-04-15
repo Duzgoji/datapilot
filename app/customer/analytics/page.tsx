@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { fetchTenantContext, logTenantWriteUsage } from '@/lib/tenant/client'
+import { fetchTenantContext, getCanonicalCustomerId, logTenantWriteUsage } from '@/lib/tenant/client'
 import { useRouter } from 'next/navigation'
 import MetaConnect from '@/components/MetaConnect'
 
@@ -191,6 +191,7 @@ const [branches, setBranches] = useState<any[]>([])
     if (!user) return
     const tenant = await fetchTenantContext(user.id)
     logTenantWriteUsage(tenant, 'customer_analytics', 'lead')
+    const canonicalCustomerId = getCanonicalCustomerId(tenant)
 
     const leadCode = 'DP-' + Date.now().toString().slice(-6)
 
@@ -205,7 +206,7 @@ const [branches, setBranches] = useState<any[]>([])
       source: leadSource,
       note: leadNote || null,
       status: 'new',
-      customer_id: tenant.tenantId,
+      customer_id: canonicalCustomerId,
     })
 
     setLeadName(''); setLeadPhone(''); setLeadEmail('')

@@ -2,7 +2,7 @@
 
 import { getPlanLimits, isValidPlan, type PlanName } from '@/lib/planLimits'
 import { getUserUsage, getBranchUsage, getMonthlyLeadUsage, checkLimit, getCurrentPlan } from '@/lib/usageHelpers'
-import { fetchTenantContext, logTenantWriteUsage } from '@/lib/tenant/client'
+import { fetchTenantContext, getCanonicalCustomerId, logTenantWriteUsage } from '@/lib/tenant/client'
 import type { TenantResolution } from '@/lib/tenant/resolveTenantId'
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
@@ -610,13 +610,14 @@ const loadNotifications = async () => {
     return
   }
   logTenantWriteUsage(tenant, 'customer_page', 'lead')
+  const canonicalCustomerId = getCanonicalCustomerId(tenant)
 
   const leadCode = 'DP-' + Date.now().toString().slice(-6)
   const { data: newLeadData, error } = await supabase.from('leads').insert({
     lead_code: leadCode, branch_id: leadBranch !== '' ? leadBranch : null, owner_id: tenant.tenantId,
     assigned_to: leadAssignTo || null, full_name: leadName, phone: leadPhone,
     email: leadEmail || null, source: leadSource, note: leadNote || null, status: 'new',
-    customer_id: tenant.tenantId,
+    customer_id: canonicalCustomerId,
   }).select().single()
   if (error) { alert(error.message); setSaving(false); return }
   if (!error) {
@@ -823,6 +824,7 @@ const tenant = await fetchTenantContext(bulkUser.id)
 const { allowed: bulkAllowed, message: bulkMsg } = await checkLimit(tenant.tenantId, 'lead', validRows.length)
 if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
     logTenantWriteUsage(tenant, 'customer_page', 'lead_import')
+    const canonicalCustomerId = getCanonicalCustomerId(tenant)
     setBulkResult(null)
     let success = 0
     const errors: string[] = []
@@ -836,7 +838,7 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
         note: row.note.trim() || null,
         branch_id: row.branch_id || branches[0]?.id || null,
         assigned_to: null, status: 'new', lead_code: leadCode,
-        owner_id: tenant.tenantId, customer_id: tenant.tenantId, import_set: setName,
+        owner_id: tenant.tenantId, customer_id: canonicalCustomerId, import_set: setName,
       })
       if (error) { errors.push(`Satır ${i + 1}: ${error.message}`); continue }
       success++
@@ -898,6 +900,7 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
   const { allowed: xlsxAllowed, message: xlsxMsg } = await checkLimit(tenant.tenantId, 'lead', rows.length)
   if (!xlsxAllowed) { alert(xlsxMsg); setXlsxLoading(false); return }
     logTenantWriteUsage(tenant, 'customer_page', 'lead_import')
+    const canonicalCustomerId = getCanonicalCustomerId(tenant)
 
     const branchMap: Record<string, string> = {}
     branches.forEach(b => { branchMap[b.branch_name?.toLowerCase().trim()] = b.id })
@@ -929,7 +932,7 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
         source, note: note || null,
         branch_id: branchId, assigned_to: assignedTo,
         status: 'new', lead_code: leadCode,
-        owner_id: tenant.tenantId, customer_id: tenant.tenantId, import_set: setName,
+        owner_id: tenant.tenantId, customer_id: canonicalCustomerId, import_set: setName,
       })
       if (error) { errors.push(`Satır ${i + 2}: ${error.message}`); continue }
       success++
