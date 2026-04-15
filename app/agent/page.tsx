@@ -50,6 +50,7 @@ export default function AgentPage() {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   const [selectedLead, setSelectedLead] = useState<any>(null)
+  const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null)
   const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [newStatus, setNewStatus] = useState('')
   const [newNote, setNewNote] = useState('')
@@ -130,6 +131,7 @@ export default function AgentPage() {
       })
     } catch (err) { console.error(err) }
     setShowUpdateModal(false)
+    setExpandedLeadId(null)
     setSelectedLead(null); setNewStatus(''); setNewNote(''); setProcedureAmount(''); setAppointmentDate(''); setAppointmentTime('')
     setSaving(false)
     loadData()
@@ -142,6 +144,27 @@ export default function AgentPage() {
     setNewNote(lead.note || '')
     setProcedureAmount(lead.procedure_amount?.toString() || '')
     setShowUpdateModal(true)
+  }
+
+  const toggleLeadAccordion = (lead: any) => {
+    if (expandedLeadId === lead.id) {
+      setExpandedLeadId(null)
+      setSelectedLead(null)
+      setNewStatus('')
+      setNewNote('')
+      setProcedureAmount('')
+      setAppointmentDate('')
+      setAppointmentTime('')
+      return
+    }
+
+    setExpandedLeadId(lead.id)
+    setSelectedLead(lead)
+    setNewStatus(lead.status === 'procedure_done' ? 'called' : lead.status)
+    setNewNote(lead.note || '')
+    setProcedureAmount(lead.procedure_amount?.toString() || '')
+    setAppointmentDate(lead.appointment_at ? new Date(lead.appointment_at).toISOString().slice(0, 10) : '')
+    setAppointmentTime(lead.appointment_at ? new Date(lead.appointment_at).toISOString().slice(11, 16) : '')
   }
 
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
@@ -485,7 +508,7 @@ export default function AgentPage() {
          return (
   <div
     key={lead.id}
-  onClick={() => openUpdateModal(lead)}
+  onClick={() => toggleLeadAccordion(lead)}
   className={`relative bg-white rounded-2xl border-2 p-4 cursor-pointer transition-all hover:shadow-md group
     ${stale ? 'border-amber-300 bg-amber-50/30' : 'border-gray-100 hover:border-indigo-200'}`}
 >
@@ -505,7 +528,12 @@ export default function AgentPage() {
                             <p className="text-xs text-gray-400 mt-0.5">{lead.phone}</p>
                           </div>
                         </div>
-                        <Badge status={lead.status} />
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Badge status={lead.status} />
+                          <svg className={`text-gray-300 transition-transform ${expandedLeadId === lead.id ? 'rotate-180' : ''}`} width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
                       </div>
 
                       {/* Etiketler */}
@@ -557,12 +585,78 @@ export default function AgentPage() {
                             className="p-1.5 hover:bg-green-50 rounded-lg text-gray-300 hover:text-green-600 transition-colors">
                             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1C3.46 1 1 3.46 1 6.5c0 .97.25 1.88.69 2.67L1 12l2.9-.67A5.48 5.48 0 006.5 12C9.54 12 12 9.54 12 6.5S9.54 1 6.5 1zm2.7 7.5c-.11.3-.63.58-.87.61-.21.03-.48.04-.77-.05-.18-.05-.41-.13-.7-.26C5.47 8.32 4.5 7.1 4.42 7s-.6-.8-.6-1.52c0-.72.37-1.07.5-1.22.13-.15.28-.18.38-.18h.27c.09 0 .21-.03.33.25l.43 1.05c.04.09.07.19.01.3L5.5 5.9c-.07.1-.1.13-.05.23.25.45.54.86.9 1.2.42.4.87.67 1.4.85.1.03.2 0 .26-.07l.35-.42c.07-.1.16-.11.26-.07l1 .47c.1.04.17.1.2.19.03.1 0 .31-.1.57z" fill="currentColor"/></svg>
                           </a>
-                          <button onClick={() => openUpdateModal(lead)}
+                          <button onClick={() => toggleLeadAccordion(lead)}
                             className="p-1.5 hover:bg-indigo-50 rounded-lg text-gray-300 hover:text-indigo-600 transition-colors">
                             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 7l3 3L12 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                           </button>
                         </div>
                       </div>
+
+                      {expandedLeadId === lead.id && selectedLead?.id === lead.id && (
+                        <div className="mt-4 pt-4 border-t border-gray-100 space-y-4" onClick={e => e.stopPropagation()}>
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="bg-gray-50 rounded-xl p-3">
+                              <p className="text-xs text-gray-400 mb-1">Kaynak</p>
+                              <p className="text-sm font-medium text-gray-900">{SOURCE_CONFIG[lead.source]?.label || lead.source || '-'}</p>
+                            </div>
+                            <div className="bg-gray-50 rounded-xl p-3">
+                              <p className="text-xs text-gray-400 mb-1">Tarih</p>
+                              <p className="text-sm font-medium text-gray-900">{lead.created_at ? new Date(lead.created_at).toLocaleDateString('tr-TR') : '-'}</p>
+                            </div>
+                            <div className="bg-gray-50 rounded-xl p-3">
+                              <p className="text-xs text-gray-400 mb-1">Mevcut Durum</p>
+                              <p className="text-sm font-medium text-gray-900">{STATUS_CONFIG[lead.status]?.label || '-'}</p>
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-xs font-medium text-gray-500 mb-2">Yeni Durum</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              {Object.entries(STATUS_CONFIG).filter(([key]) => key !== 'procedure_done').map(([key, val]: any) => (
+                                <button key={key} type="button" onClick={() => setNewStatus(key)}
+                                  className={`py-2.5 px-3 rounded-xl text-sm font-medium border-2 transition-all flex items-center gap-2 ${newStatus === key ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${val.dot}`} />{val.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {newStatus === 'appointment_scheduled' && (
+                            <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
+                              <p className="text-xs font-semibold text-violet-700 mb-3">Randevu Tarihi</p>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs text-gray-500 mb-1">Tarih</label>
+                                  <input type="date" value={appointmentDate} onChange={e => setAppointmentDate(e.target.value)}
+                                    className="w-full px-3 py-2.5 bg-white border border-violet-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs text-gray-500 mb-1">Saat</label>
+                                  <input type="time" value={appointmentTime} onChange={e => setAppointmentTime(e.target.value)}
+                                    className="w-full px-3 py-2.5 bg-white border border-violet-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1.5">Not</label>
+                            <textarea value={newNote} onChange={e => setNewNote(e.target.value)} rows={3} placeholder="Gorusme notu..."
+                              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+                          </div>
+
+                          <div className="flex gap-3">
+                            <button type="button" onClick={() => toggleLeadAccordion(lead)}
+                              className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
+                              Kapat
+                            </button>
+                            <button type="button" onClick={() => void handleUpdateLead({ preventDefault: () => {} } as React.FormEvent)} disabled={saving || !newStatus}
+                              className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
+                              {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
