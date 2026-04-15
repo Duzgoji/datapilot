@@ -54,3 +54,28 @@ export function logTenantWriteUsage(
 export function getCanonicalCustomerId(tenant: Pick<TenantResolution, 'tenantId' | 'path'>) {
   return tenant.path === 'legacy_profile_fallback' ? null : tenant.tenantId
 }
+
+export function resolveOperationalOwnerId(
+  tenant: TenantWriteContext,
+  source: string,
+  resource: string,
+  candidateOwnerId?: string | null
+) {
+  const normalizedCandidate = candidateOwnerId?.trim()
+
+  if (normalizedCandidate && normalizedCandidate !== tenant.tenantId) {
+    console.warn('[Tenant Write] Legacy fallback write used', {
+      source,
+      resource,
+      tenant_id: tenant.tenantId,
+      profile_id: tenant.profileId,
+      path: tenant.path,
+      chosen_owner_id: normalizedCandidate,
+      reason: 'branch_owner_compatibility',
+    })
+    return normalizedCandidate
+  }
+
+  logTenantWriteUsage(tenant, source, resource)
+  return tenant.tenantId
+}

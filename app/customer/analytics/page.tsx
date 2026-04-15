@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { fetchTenantContext, getCanonicalCustomerId, logTenantWriteUsage } from '@/lib/tenant/client'
+import { fetchTenantContext, getCanonicalCustomerId, logTenantWriteUsage, resolveOperationalOwnerId } from '@/lib/tenant/client'
 import { useRouter } from 'next/navigation'
 import MetaConnect from '@/components/MetaConnect'
 
@@ -190,7 +190,13 @@ const [branches, setBranches] = useState<any[]>([])
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const tenant = await fetchTenantContext(user.id)
-    logTenantWriteUsage(tenant, 'customer_analytics', 'lead')
+    const selectedBranchRecord = branches.find((branch: any) => branch.id === leadBranch)
+    const leadOwnerId = resolveOperationalOwnerId(
+      tenant,
+      'customer_analytics',
+      'lead',
+      selectedBranchRecord?.owner_id
+    )
     const canonicalCustomerId = getCanonicalCustomerId(tenant)
 
     const leadCode = 'DP-' + Date.now().toString().slice(-6)
@@ -198,7 +204,7 @@ const [branches, setBranches] = useState<any[]>([])
     await supabase.from('leads').insert({
       lead_code: leadCode,
       branch_id: leadBranch,
-      owner_id: tenant.tenantId,
+      owner_id: leadOwnerId,
       assigned_to: leadAssignTo || null,
       full_name: leadName,
       phone: leadPhone,

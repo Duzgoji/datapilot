@@ -2,7 +2,7 @@
 
 import { getPlanLimits, isValidPlan, type PlanName } from '@/lib/planLimits'
 import { getUserUsage, getBranchUsage, getMonthlyLeadUsage, checkLimit, getCurrentPlan } from '@/lib/usageHelpers'
-import { fetchTenantContext, getCanonicalCustomerId, logTenantWriteUsage } from '@/lib/tenant/client'
+import { fetchTenantContext, getCanonicalCustomerId, logTenantWriteUsage, resolveOperationalOwnerId } from '@/lib/tenant/client'
 import type { TenantResolution } from '@/lib/tenant/resolveTenantId'
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
@@ -609,12 +609,18 @@ const loadNotifications = async () => {
     setSaving(false)
     return
   }
-  logTenantWriteUsage(tenant, 'customer_page', 'lead')
+  const selectedBranchRecord = branches.find((branch: any) => branch.id === leadBranch)
+  const leadOwnerId = resolveOperationalOwnerId(
+    tenant,
+    'customer_page',
+    'lead',
+    selectedBranchRecord?.owner_id
+  )
   const canonicalCustomerId = getCanonicalCustomerId(tenant)
 
   const leadCode = 'DP-' + Date.now().toString().slice(-6)
   const { data: newLeadData, error } = await supabase.from('leads').insert({
-    lead_code: leadCode, branch_id: leadBranch !== '' ? leadBranch : null, owner_id: tenant.tenantId,
+    lead_code: leadCode, branch_id: leadBranch !== '' ? leadBranch : null, owner_id: leadOwnerId,
     assigned_to: leadAssignTo || null, full_name: leadName, phone: leadPhone,
     email: leadEmail || null, source: leadSource, note: leadNote || null, status: 'new',
     customer_id: canonicalCustomerId,
@@ -832,13 +838,15 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
     for (let i = 0; i < validRows.length; i++) {
       const row = validRows[i]
       const leadCode = 'LD' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 100)
+      const branchOwnerId = branches.find((branch: any) => branch.id === (row.branch_id || branches[0]?.id || null))?.owner_id
+      const leadOwnerId = resolveOperationalOwnerId(tenant, 'customer_page', 'lead_import', branchOwnerId)
       const { error } = await supabase.from('leads').insert({
         full_name: row.full_name.trim(), phone: row.phone.trim(),
         email: row.email.trim() || null, source: row.source || 'manuel',
         note: row.note.trim() || null,
         branch_id: row.branch_id || branches[0]?.id || null,
         assigned_to: null, status: 'new', lead_code: leadCode,
-        owner_id: tenant.tenantId, customer_id: canonicalCustomerId, import_set: setName,
+        owner_id: leadOwnerId, customer_id: canonicalCustomerId, import_set: setName,
       })
       if (error) { errors.push(`Satır ${i + 1}: ${error.message}`); continue }
       success++
@@ -927,12 +935,14 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
       const agentRaw = String(row['Satışçı'] || row['satisci'] || row['Satışçı Adı'] || '').toLowerCase().trim()
       const assignedTo = (agentRaw && agentMap[agentRaw]) ? agentMap[agentRaw] : (xlsxDefaultAgent || null)
       const leadCode = 'LD' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 100)
+      const branchOwnerId = branches.find((branch: any) => branch.id === branchId)?.owner_id
+      const leadOwnerId = resolveOperationalOwnerId(tenant, 'customer_page', 'lead_import', branchOwnerId)
       const { error } = await supabase.from('leads').insert({
         full_name: fullName, phone, email: email || null,
         source, note: note || null,
         branch_id: branchId, assigned_to: assignedTo,
         status: 'new', lead_code: leadCode,
-        owner_id: tenant.tenantId, customer_id: canonicalCustomerId, import_set: setName,
+        owner_id: leadOwnerId, customer_id: canonicalCustomerId, import_set: setName,
       })
       if (error) { errors.push(`Satır ${i + 2}: ${error.message}`); continue }
       success++
