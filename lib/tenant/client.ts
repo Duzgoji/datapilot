@@ -3,6 +3,11 @@
 import { supabase } from '@/lib/supabase/client'
 import type { TenantResolution } from './resolveTenantId'
 
+type TenantWriteContext = Pick<
+  TenantResolution,
+  'tenantId' | 'profileId' | 'path' | 'usedLegacy'
+>
+
 export async function fetchTenantContext(input: string): Promise<TenantResolution> {
   const {
     data: { session },
@@ -26,7 +31,7 @@ export async function fetchTenantContext(input: string): Promise<TenantResolutio
 }
 
 export function logTenantWriteUsage(
-  tenant: TenantResolution,
+  tenant: TenantWriteContext,
   source: string,
   resource: string
 ) {

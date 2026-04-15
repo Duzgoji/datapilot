@@ -3,6 +3,7 @@
 import { getPlanLimits, isValidPlan, type PlanName } from '@/lib/planLimits'
 import { getUserUsage, getBranchUsage, getMonthlyLeadUsage, checkLimit, getCurrentPlan } from '@/lib/usageHelpers'
 import { fetchTenantContext, logTenantWriteUsage } from '@/lib/tenant/client'
+import type { TenantResolution } from '@/lib/tenant/resolveTenantId'
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -96,12 +97,7 @@ const Badge = ({ status }: { status: string }) => (
   </span>
 )
 
-type TenantContextState = {
-  tenantId: string
-  profileId: string
-  readOwnerIds: string[]
-  writeOwnerId: string
-} | null
+type TenantContextState = TenantResolution | null
 
 const PlanUsageWidget = ({ ownerId, plan }: { ownerId: string, plan: PlanName }) => {
   const [usage, setUsage] = useState<{ users: number, branches: number, leads: number } | null>(null)
