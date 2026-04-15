@@ -1,69 +1,69 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 const faqs = [
   {
-    q: 'DataPilot hangi platformlarla entegre çalışır?',
-    a: 'Meta, Instagram, WhatsApp ve Google Ads entegrasyonları bulunmaktadır. Ayrıca Excel dosyası yükleme ve manuel veri girişi de desteklenir. Yeni entegrasyonlar roadmap doğrultusunda eklenmektedir.'
+    q: 'DataPilot hangi platformlarla entegre Ã§alÄ±ÅŸÄ±r?',
+    a: 'Meta, Instagram, WhatsApp ve Google Ads entegrasyonlarÄ± bulunmaktadÄ±r. AyrÄ±ca Excel dosyasÄ± yÃ¼kleme ve manuel veri giriÅŸi de desteklenir. Yeni entegrasyonlar roadmap doÄŸrultusunda eklenmektedir.'
   },
   {
-    q: 'Potansiyel müşteri verilerim güvende mi?',
-    a: 'Tüm verileriniz SSL şifreli bağlantı üzerinden iletilir ve güvenli sunucularda saklanır. Verilerinize yalnızca siz ve yetkilendirdiğiniz kişiler erişebilir. Verileriniz üçüncü taraflarla paylaşılmaz.'
+    q: 'Potansiyel mÃ¼ÅŸteri verilerim gÃ¼vende mi?',
+    a: 'TÃ¼m verileriniz SSL ÅŸifreli baÄŸlantÄ± Ã¼zerinden iletilir ve gÃ¼venli sunucularda saklanÄ±r. Verilerinize yalnÄ±zca siz ve yetkilendirdiÄŸiniz kiÅŸiler eriÅŸebilir. Verileriniz Ã¼Ã§Ã¼ncÃ¼ taraflarla paylaÅŸÄ±lmaz.'
   },
   {
-    q: 'Kaç kullanıcı ekleyebilirim?',
-    a: 'Seçtiğiniz pakete göre değişir. Starter pakette 2 kullanıcı, Pro pakette 10 kullanıcı, Enterprise pakette sınırsız kullanıcı ekleyebilirsiniz.'
+    q: 'KaÃ§ kullanÄ±cÄ± ekleyebilirim?',
+    a: 'Kullanim kapsami isletmenizin ihtiyacina gore planlanir. Demo ve teklif surecinde ekibiniz icin en uygun kurulum birlikte netlestirilir.'
   },
   {
-    q: 'Deneme süresi var mı?',
-    a: 'Evet. Uygun müşteriler için demo ve deneme süreci sunuyoruz. Detaylar için bizimle iletişime geçebilirsiniz.'
+    q: 'Deneme sÃ¼resi var mÄ±?',
+    a: 'Evet. Uygun mÃ¼ÅŸteriler iÃ§in demo ve deneme sÃ¼reci sunuyoruz. Detaylar iÃ§in bizimle iletiÅŸime geÃ§ebilirsiniz.'
   },
   {
-    q: 'İstediğim zaman iptal edebilir miyim?',
-    a: 'Evet, sözleşme ve kullanım koşullarınıza bağlı olarak iptal veya paket değişikliği yapılabilir. Detaylar için destek ekibimizle iletişime geçebilirsiniz.'
+    q: 'Ä°stediÄŸim zaman iptal edebilir miyim?',
+    a: 'Evet, sÃ¶zleÅŸme ve kullanÄ±m koÅŸullarÄ±nÄ±za baÄŸlÄ± olarak iptal veya paket deÄŸiÅŸikliÄŸi yapÄ±labilir. Detaylar iÃ§in destek ekibimizle iletiÅŸime geÃ§ebilirsiniz.'
   },
   {
     q: 'Teknik destek alabilir miyim?',
-    a: 'Tüm paketlerde e-posta desteği mevcuttur. Pro ve Enterprise paketlerde öncelikli destek ve daha hızlı yanıt süresi sunulmaktadır.'
+    a: 'Evet. Kurulum, onboarding ve kullanim surecinde destek ekibimizle birlikte ilerleyebilirsiniz. Ihtiyaciniza gore destek kapsami teklif surecinde netlestirilir.'
   },
 ]
 
 const plans = [
   {
     name: 'Starter',
-    price: '₺2.000',
+    price: 'â‚º2.000',
     period: '/ay',
-    desc: 'Küçük ekipler için ideal başlangıç paketi',
+    desc: 'KÃ¼Ã§Ã¼k ekipler iÃ§in ideal baÅŸlangÄ±Ã§ paketi',
     highlight: false,
-    features: ['2 kullanıcı', '1 şube', '400 potansiyel müşteri/ay', 'Meta entegrasyonu', 'Excel yükleme', 'Temel raporlar']
+    features: ['2 kullanÄ±cÄ±', '1 ÅŸube', '400 potansiyel mÃ¼ÅŸteri/ay', 'Meta entegrasyonu', 'Excel yÃ¼kleme', 'Temel raporlar']
   },
   {
     name: 'Pro',
-    price: '₺5.500',
+    price: 'â‚º5.500',
     period: '/ay',
-    desc: 'Büyüyen işletmeler için güçlü özellikler',
+    desc: 'BÃ¼yÃ¼yen iÅŸletmeler iÃ§in gÃ¼Ã§lÃ¼ Ã¶zellikler',
     highlight: true,
-    features: ['10 kullanıcı', '3 şube', '2000 potansiyel müşteri/ay', 'Meta entegrasyonu', 'Excel yükleme', 'Gelişmiş raporlar', 'Öncelikli destek']
+    features: ['10 kullanÄ±cÄ±', '3 ÅŸube', '2000 potansiyel mÃ¼ÅŸteri/ay', 'Meta entegrasyonu', 'Excel yÃ¼kleme', 'GeliÅŸmiÅŸ raporlar', 'Ã–ncelikli destek']
   },
   {
     name: 'Enterprise',
-    price: '₺15.000+',
+    price: 'â‚º15.000+',
     period: '/ay',
-    desc: 'Büyük kurumlar için özelleştirilebilir çözüm',
+    desc: 'BÃ¼yÃ¼k kurumlar iÃ§in Ã¶zelleÅŸtirilebilir Ã§Ã¶zÃ¼m',
     highlight: false,
-    features: ['Sınırsız kullanıcı', 'Sınırsız şube', 'Sınırsız potansiyel müşteri', 'Tüm entegrasyonlar', 'Özel AI modeli', 'Dedicated destek', 'SLA garantisi']
+    features: ['SÄ±nÄ±rsÄ±z kullanÄ±cÄ±', 'SÄ±nÄ±rsÄ±z ÅŸube', 'SÄ±nÄ±rsÄ±z potansiyel mÃ¼ÅŸteri', 'TÃ¼m entegrasyonlar', 'Ã–zel AI modeli', 'Dedicated destek', 'SLA garantisi']
   },
 ]
 
 const features = [
-  { icon: '🔗', title: 'Çoklu Kanal Entegrasyonu', desc: 'Meta, Instagram, WhatsApp ve Google Ads dahil tüm kanallardan gelen müşteri taleplerini otomatik olarak tek panelde toplayın.' },
-  { icon: '🤖', title: 'AI Analitik', desc: 'Satış performansınızı analiz edin, hangi kanalların ve ekiplerin daha iyi sonuç verdiğini kolayca görün.' },
-  { icon: '👥', title: 'Ekip Yönetimi', desc: 'Ekibinizi, satış süreçlerinizi ve müşteri dağıtımını tek panelden kolayca yönetin.' },
-  { icon: '📂', title: 'Veri Merkezi', desc: 'Excel ve diğer veri kaynaklarınızı içe aktarın, tüm müşteri verinizi tek yerde yönetin.' },
-  { icon: '📊', title: 'Gelişmiş Raporlar', desc: 'Günlük, haftalık ve aylık raporlarla işinizin performansını net bir şekilde takip edin.' },
-  { icon: '🔒', title: 'Güvenli & Hızlı', desc: 'Güvenli altyapı ve hızlı performans ile verileriniz her zaman koruma altında.' },
+  { icon: 'ğŸ”—', title: 'Ã‡oklu Kanal Entegrasyonu', desc: 'Meta, Instagram, WhatsApp ve Google Ads dahil tÃ¼m kanallardan gelen mÃ¼ÅŸteri taleplerini otomatik olarak tek panelde toplayÄ±n.' },
+  { icon: 'ğŸ¤–', title: 'AI Analitik', desc: 'SatÄ±ÅŸ performansÄ±nÄ±zÄ± analiz edin, hangi kanallarÄ±n ve ekiplerin daha iyi sonuÃ§ verdiÄŸini kolayca gÃ¶rÃ¼n.' },
+  { icon: 'ğŸ‘¥', title: 'Ekip YÃ¶netimi', desc: 'Ekibinizi, satÄ±ÅŸ sÃ¼reÃ§lerinizi ve mÃ¼ÅŸteri daÄŸÄ±tÄ±mÄ±nÄ± tek panelden kolayca yÃ¶netin.' },
+  { icon: 'ğŸ“‚', title: 'Veri Merkezi', desc: 'Excel ve diÄŸer veri kaynaklarÄ±nÄ±zÄ± iÃ§e aktarÄ±n, tÃ¼m mÃ¼ÅŸteri verinizi tek yerde yÃ¶netin.' },
+  { icon: 'ğŸ“Š', title: 'GeliÅŸmiÅŸ Raporlar', desc: 'GÃ¼nlÃ¼k, haftalÄ±k ve aylÄ±k raporlarla iÅŸinizin performansÄ±nÄ± net bir ÅŸekilde takip edin.' },
+  { icon: 'ğŸ”’', title: 'GÃ¼venli & HÄ±zlÄ±', desc: 'GÃ¼venli altyapÄ± ve hÄ±zlÄ± performans ile verileriniz her zaman koruma altÄ±nda.' },
 ]
 
 function DashboardMockup() {
@@ -89,7 +89,7 @@ function DashboardMockup() {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mb-2">
               <span className="text-white font-bold text-sm">D</span>
             </div>
-            {['▣', '◈', '◉', '⊞', '◎'].map((icon, i) => (
+            {['â–£', 'â—ˆ', 'â—‰', 'âŠ', 'â—'].map((icon, i) => (
               <div key={i} className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs cursor-pointer transition-all ${i === 0 ? 'bg-blue-600/20 text-blue-400' : 'text-white/20 hover:text-white/40'}`}>
                 {icon}
               </div>
@@ -98,20 +98,20 @@ function DashboardMockup() {
           <div className="flex-1 p-5 min-w-0">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <p className="text-white/40 text-xs mb-0.5">Hoş geldiniz,</p>
-                <h3 className="text-white font-semibold text-sm">Günaydın, Ahmet Bey 👋</h3>
+                <p className="text-white/40 text-xs mb-0.5">HoÅŸ geldiniz,</p>
+                <h3 className="text-white font-semibold text-sm">GÃ¼naydÄ±n, Ahmet Bey ğŸ‘‹</h3>
               </div>
               <div className="flex items-center gap-2">
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-1.5 text-blue-400 text-xs font-medium">
-                  + Yeni Potansiyel Müşteri
+                  + Yeni Potansiyel MÃ¼ÅŸteri
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-4 gap-3 mb-5">
               {[
-                { label: 'Toplam Potansiyel Müşteri', value: '1.284', change: '+12%', up: true },
+                { label: 'Toplam Potansiyel MÃ¼ÅŸteri', value: '1.284', change: '+12%', up: true },
                 { label: 'Bu Ay', value: '247', change: '+8%', up: true },
-                { label: 'Dönüşüm', value: '%34', change: '+3%', up: true },
+                { label: 'DÃ¶nÃ¼ÅŸÃ¼m', value: '%34', change: '+3%', up: true },
                 { label: 'Bekleyen', value: '58', change: '-5', up: false },
               ].map((stat, i) => (
                 <div key={i} className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
@@ -124,25 +124,25 @@ function DashboardMockup() {
             <div className="grid grid-cols-5 gap-3">
               <div className="col-span-3 bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-white/60 text-[11px] font-medium">Haftalık Lead Trendi</p>
-                  <span className="text-blue-400 text-[10px]">Son 7 gün</span>
+                  <p className="text-white/60 text-[11px] font-medium">HaftalÄ±k Lead Trendi</p>
+                  <span className="text-blue-400 text-[10px]">Son 7 gÃ¼n</span>
                 </div>
                 <div className="flex items-end gap-1.5 h-16">
                   {[40, 65, 45, 80, 55, 90, 72].map((h, i) => (
                     <div key={i} className="flex-1 flex flex-col justify-end gap-0.5">
                       <div className={`rounded-sm w-full transition-all ${i === 5 ? 'bg-blue-500' : 'bg-white/10'}`} style={{ height: `${h}%` }} />
-                      <p className="text-white/20 text-[8px] text-center">{['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'][i]}</p>
+                      <p className="text-white/20 text-[8px] text-center">{['Pzt', 'Sal', 'Ã‡ar', 'Per', 'Cum', 'Cmt', 'Paz'][i]}</p>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="col-span-2 bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
-                <p className="text-white/60 text-[11px] font-medium mb-2">Son Potansiyel müşteriler</p>
+                <p className="text-white/60 text-[11px] font-medium mb-2">Son Potansiyel mÃ¼ÅŸteriler</p>
                 <div className="space-y-2">
                   {[
                     { name: 'Mehmet Y.', status: 'Yeni', color: 'blue' },
-                    { name: 'Ayşe K.', status: 'Takipte', color: 'yellow' },
-                    { name: 'Ali R.', status: 'Satıldı', color: 'green' },
+                    { name: 'AyÅŸe K.', status: 'Takipte', color: 'yellow' },
+                    { name: 'Ali R.', status: 'SatÄ±ldÄ±', color: 'green' },
                     { name: 'Fatma S.', status: 'Yeni', color: 'blue' },
                   ].map((lead, i) => (
                     <div key={i} className="flex items-center justify-between">
@@ -163,7 +163,7 @@ function DashboardMockup() {
       </div>
       <div className="absolute -bottom-4 -right-4 bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-green-900/50 flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-        Canlı Veri
+        CanlÄ± Veri
       </div>
     </div>
   )
@@ -174,7 +174,7 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [chatOpen, setChatOpen] = useState(false)
   const [chatMessages, setChatMessages] = useState<{ role: string, text: string }[]>([
-    { role: 'ai', text: 'Merhaba! DataPilot hakkında merak ettiğiniz her şeyi sorabilirsiniz 😊' }
+    { role: 'ai', text: 'Merhaba! DataPilot hakkÄ±nda merak ettiÄŸiniz her ÅŸeyi sorabilirsiniz ğŸ˜Š' }
   ])
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
@@ -201,7 +201,7 @@ export default function LandingPage() {
       const data = await res.json()
       setChatMessages(prev => [...prev, { role: 'ai', text: data.reply }])
     } catch {
-      setChatMessages(prev => [...prev, { role: 'ai', text: 'Bir hata oluştu, lütfen tekrar deneyin.' }])
+      setChatMessages(prev => [...prev, { role: 'ai', text: 'Bir hata oluÅŸtu, lÃ¼tfen tekrar deneyin.' }])
     }
     setChatLoading(false)
   }
@@ -214,31 +214,31 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
 
-      {/* ─── NAVBAR ─── */}
+      {/* â”€â”€â”€ NAVBAR â”€â”€â”€ */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100/80">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center cursor-pointer" onClick={() => router.push('/')}>
             <img src="/logo.png" alt="DataPilot" className="h-9 w-auto" />
           </div>
           <div className="hidden md:flex items-center gap-8">
-            {[['#ozellikler', 'Özellikler'], ['#paketler', 'Fiyatlar'], ['#sss', 'SSS'], ['#iletisim', 'İletişim']].map(([href, label]) => (
+            {[['#ozellikler', 'Ozellikler'], ['#demo-form', 'Demo'], ['#sss', 'SSS'], ['#iletisim', 'Iletisim']].map(([href, label]) => (
               <a key={href} href={href} className="text-gray-500 hover:text-gray-900 text-sm font-medium transition-colors">{label}</a>
             ))}
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => router.push('/login')}
               className="text-gray-600 hover:text-gray-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-              Giriş Yap
+              GiriÅŸ Yap
             </button>
             <button onClick={() => router.push('/register')}
               className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all shadow-md shadow-blue-200 hover:shadow-blue-300">
-              Üye Ol →
+              Ãœye Ol â†’
             </button>
           </div>
         </div>
       </nav>
 
-      {/* ─── HERO ─── */}
+      {/* â”€â”€â”€ HERO â”€â”€â”€ */}
       <section className="relative pt-28 pb-0 overflow-hidden bg-gradient-to-b from-[#060c1f] via-[#0a1435] to-[#0d1a45]">
         <div className="absolute inset-0 opacity-[0.03]" style={{
           backgroundImage: 'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
@@ -251,23 +251,23 @@ export default function LandingPage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 backdrop-blur-sm rounded-full px-4 py-1.5 mb-7">
             <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-blue-300 text-xs font-medium tracking-wide">Meta, Instagram, WhatsApp ve Google Ads entegrasyonları</span>
+            <span className="text-blue-300 text-xs font-medium tracking-wide">Meta, Instagram, WhatsApp ve Google Ads entegrasyonlarÄ±</span>
           </div>
 
           {/* Headline */}
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-5 leading-[1.1] tracking-tight">
-            Satış sürecinizi{' '}
+            SatÄ±ÅŸ sÃ¼recinizi{' '}
             <span className="relative">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">tek panelden</span>
             </span>
-            {' '}yönetin
+            {' '}yÃ¶netin
           </h1>
 
           <p className="text-slate-400 text-lg md:text-xl mb-4 max-w-2xl mx-auto leading-relaxed">
-            Potansiyel müşterileri toplayın, ekibinize dağıtın ve performansı takip edin.
+            Potansiyel mÃ¼ÅŸterileri toplayÄ±n, ekibinize daÄŸÄ±tÄ±n ve performansÄ± takip edin.
           </p>
           <p className="text-slate-500 text-sm mb-8 max-w-xl mx-auto">
-            Tüm satış ekipleri ve işletmeler için tek, güçlü ve merkezi çözüm.
+            TÃ¼m satÄ±ÅŸ ekipleri ve iÅŸletmeler iÃ§in tek, gÃ¼Ã§lÃ¼ ve merkezi Ã§Ã¶zÃ¼m.
           </p>
 
           {/* CTA buttons */}
@@ -277,16 +277,16 @@ export default function LandingPage() {
               target="_blank"
               rel="noopener noreferrer"
               className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-xl shadow-blue-900/50 text-sm hover:-translate-y-0.5 inline-flex items-center">
-              Ücretsiz Demo Al →
+              Demo Al ?
             </a>
             <button onClick={() => router.push('/login')}
               className="border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white font-medium px-8 py-3.5 rounded-xl transition-all text-sm backdrop-blur-sm">
-              Giriş Yap
+              GiriÅŸ Yap
             </button>
           </div>
 
           <p className="text-slate-600 text-xs mt-4 text-center">
-            500+ işletme tarafından kullanılıyor
+            500+ iÅŸletme tarafÄ±ndan kullanÄ±lÄ±yor
           </p>
 
           <div className="mt-3 text-center">
@@ -301,10 +301,10 @@ export default function LandingPage() {
           {/* Stats row */}
           <div className="flex items-center justify-center gap-10 mt-12 flex-wrap">
             {[
-              { value: '10K+', label: 'Potansiyel Müşteri Yönetildi' },
-              { value: '%34', label: 'Dönüşüm Artışı' },
-              { value: '500+', label: 'Başarılı Firma' },
-              { value: '14 Gün', label: 'Ücretsiz Deneme' },
+              { value: '10K+', label: 'Potansiyel MÃ¼ÅŸteri YÃ¶netildi' },
+              { value: '%34', label: 'DÃ¶nÃ¼ÅŸÃ¼m ArtÄ±ÅŸÄ±' },
+              { value: '500+', label: 'BaÅŸarÄ±lÄ± Firma' },
+              { value: '14 GÃ¼n', label: 'Ãœcretsiz Deneme' },
             ].map(s => (
               <div key={s.label} className="text-center">
                 <p className="text-white font-bold text-2xl">{s.value}</p>
@@ -321,13 +321,13 @@ export default function LandingPage() {
         <div className="h-32 bg-gradient-to-b from-transparent to-gray-50 mt-16" />
       </section>
 
-      {/* ─── ÖZELLİKLER ─── */}
+      {/* â”€â”€â”€ Ã–ZELLÄ°KLER â”€â”€â”€ */}
       <section id="ozellikler" className="py-24 bg-gray-50">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
             <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest mb-3">Platform</p>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">Her şey tek platformda</h2>
-            <p className="text-gray-500 max-w-xl mx-auto text-lg">Potansiyel müşteri yönetiminden analitiğe kadar ihtiyacınız olan her şey</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">Her ÅŸey tek platformda</h2>
+            <p className="text-gray-500 max-w-xl mx-auto text-lg">Potansiyel mÃ¼ÅŸteri yÃ¶netiminden analitiÄŸe kadar ihtiyacÄ±nÄ±z olan her ÅŸey</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map((f) => (
@@ -341,19 +341,19 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── HOW IT WORKS ─── */}
+      {/* â”€â”€â”€ HOW IT WORKS â”€â”€â”€ */}
       <section className="py-24 bg-white">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-14">
-            <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest mb-3">Nasıl Çalışır?</p>
-            <h2 className="text-4xl font-bold text-gray-900 tracking-tight">3 adımda başlayın</h2>
+            <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest mb-3">NasÄ±l Ã‡alÄ±ÅŸÄ±r?</p>
+            <h2 className="text-4xl font-bold text-gray-900 tracking-tight">3 adÄ±mda baÅŸlayÄ±n</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
             <div className="hidden md:block absolute top-10 left-1/3 right-1/3 h-px bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100" />
             {[
-              { num: '01', title: 'Tüm talepleri tek yerde toplayın', desc: 'Formlar, reklamlar, WhatsApp ve diğer tüm kanallardan gelen müşteri talepleri tek panelde toplanır.' },
-              { num: '02', title: 'Ekibinize otomatik olarak dağıtın', desc: 'Gelen müşteriler doğru kişilere atanır, hiçbir talep cevapsız kalmaz.' },
-              { num: '03', title: 'Satış sürecini baştan sona yönetin', desc: 'Tüm görüşmeleri, durumları ve ilerlemeyi tek ekrandan takip edin.' },
+              { num: '01', title: 'TÃ¼m talepleri tek yerde toplayÄ±n', desc: 'Formlar, reklamlar, WhatsApp ve diÄŸer tÃ¼m kanallardan gelen mÃ¼ÅŸteri talepleri tek panelde toplanÄ±r.' },
+              { num: '02', title: 'Ekibinize otomatik olarak daÄŸÄ±tÄ±n', desc: 'Gelen mÃ¼ÅŸteriler doÄŸru kiÅŸilere atanÄ±r, hiÃ§bir talep cevapsÄ±z kalmaz.' },
+              { num: '03', title: 'SatÄ±ÅŸ sÃ¼recini baÅŸtan sona yÃ¶netin', desc: 'TÃ¼m gÃ¶rÃ¼ÅŸmeleri, durumlarÄ± ve ilerlemeyi tek ekrandan takip edin.' },
             ].map(step => (
               <div key={step.num} className="text-center">
                 <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-200 relative z-10">
@@ -367,53 +367,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── PAKETLER ─── */}
-      <section id="paketler" className="py-24 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-14">
-            <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest mb-3">Fiyatlandırma</p>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">Şeffaf fiyatlandırma</h2>
-            <p className="text-gray-500 text-lg">14 gün ücretsiz deneyin, kredi kartı gerekmez</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {plans.map(plan => (
-              <div key={plan.name} className={`rounded-2xl p-8 relative transition-all ${plan.highlight ? 'bg-blue-600 shadow-2xl shadow-blue-200 scale-[1.02]' : 'bg-white border border-gray-100 shadow-sm hover:shadow-md'}`}>
-                {plan.highlight && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg">En Popüler</span>
-                  </div>
-                )}
-                <h3 className={`font-bold text-xl mb-1 ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>{plan.name}</h3>
-                <p className={`text-sm mb-5 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>{plan.desc}</p>
-                <div className="flex items-end gap-1 mb-7">
-                  <span className={`text-4xl font-bold tracking-tight ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>{plan.price}</span>
-                  <span className={`text-sm mb-1 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>{plan.period}</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map(f => (
-                    <li key={f} className={`flex items-center gap-2.5 text-sm ${plan.highlight ? 'text-blue-100' : 'text-gray-600'}`}>
-                      <span className={`font-bold text-base flex-shrink-0 ${plan.highlight ? 'text-white' : 'text-blue-500'}`}>✓</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <button onClick={() => router.push('/register')}
-                  className={`w-full py-3.5 rounded-xl font-semibold text-sm transition-all ${plan.highlight ? 'bg-white text-blue-600 hover:bg-blue-50 shadow-lg' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100'}`}>
-                  {plan.name === 'Enterprise' ? 'Teklif Alın' : '14 Gün Ücretsiz Dene'}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ─── SSS ─── */}
+      {/* â”€â”€â”€ SSS â”€â”€â”€ */}
       <section id="sss" className="py-24 bg-white">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-14">
             <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest mb-3">Sorular</p>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">Sıkça Sorulan Sorular</h2>
-            <p className="text-gray-500 text-lg">Aklınızdaki soruların cevapları burada</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">SÄ±kÃ§a Sorulan Sorular</h2>
+            <p className="text-gray-500 text-lg">AklÄ±nÄ±zdaki sorularÄ±n cevaplarÄ± burada</p>
           </div>
           <div className="space-y-3">
             {faqs.map((faq, i) => (
@@ -421,7 +382,7 @@ export default function LandingPage() {
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50/50 transition-colors">
                   <span className="font-medium text-gray-900 text-sm pr-4">{faq.q}</span>
-                  <span className={`text-gray-400 flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}>▼</span>
+                  <span className={`text-gray-400 flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}>â–¼</span>
                 </button>
                 {openFaq === i && (
                   <div className="px-6 pb-5 border-t border-gray-50">
@@ -434,13 +395,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── DEMO FORM ─── */}
+      {/* â”€â”€â”€ DEMO FORM â”€â”€â”€ */}
       <section id="demo-form" className="py-20 bg-gray-50">
         <div className="max-w-lg mx-auto px-6">
           <div className="text-center mb-10">
             <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest mb-3">Demo</p>
             <h2 className="text-3xl font-bold text-gray-900 mb-3 tracking-tight">Demo Talebi</h2>
-            <p className="text-gray-500 text-base">Formu doldurun, sizi arayalım.</p>
+            <p className="text-gray-500 text-base">Formu doldurun, sizi arayalim veya isletmenize ozel teklif hazirlayalim.</p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 p-8 space-y-4">
             <div>
@@ -448,7 +409,7 @@ export default function LandingPage() {
               <input
                 value={demoName}
                 onChange={e => setDemoName(e.target.value)}
-                placeholder="Adınız Soyadınız"
+                placeholder="AdÄ±nÄ±z SoyadÄ±nÄ±z"
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
               />
             </div>
@@ -462,68 +423,55 @@ export default function LandingPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">İşletme Adı</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Ä°ÅŸletme AdÄ±</label>
               <input
                 value={demoBusiness}
                 onChange={e => setDemoBusiness(e.target.value)}
-                placeholder="Şirket / İşletme Adı"
+                placeholder="Åirket / Ä°ÅŸletme AdÄ±"
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
               />
             </div>
             <button
               onClick={() => {
                 console.log('Demo talebi:', { demoName, demoPhone, demoBusiness })
-                alert('Talebiniz alındı, en kısa sürede sizinle iletişime geçeceğiz.')
+                alert('Talebiniz alÄ±ndÄ±, en kÄ±sa sÃ¼rede sizinle iletiÅŸime geÃ§eceÄŸiz.')
                 setDemoName('')
                 setDemoPhone('')
                 setDemoBusiness('')
               }}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-100 hover:shadow-blue-200">
-              Gönder →
+              GÃ¶nder â†’
             </button>
             <p className="text-center text-xs text-gray-400 mt-2">
-              Ya da direkt WhatsApp&apos;tan ulaşın:{' '}
+              Ya da direkt WhatsApp&apos;tan ulaÅŸÄ±n:{' '}
               <a
                 href="https://wa.me/905XXXXXXXXX?text=Merhaba%2C%20DataPilot%20hakk%C4%B1nda%20demo%20almak%20istiyorum."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-500 hover:underline font-medium">
-                WhatsApp ile iletişime geç →
+                WhatsApp ile iletiÅŸime geÃ§ â†’
               </a>
             </p>
           </div>
         </div>
       </section>
 
-      {/* ─── CTA BANNER ─── */}
-      <section className="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-indigo-300 opacity-10 rounded-full blur-3xl" />
-        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
-          <h2 className="text-4xl font-bold text-white mb-4 tracking-tight">Hemen başlayın, 14 gün ücretsiz</h2>
-          <p className="text-blue-200 text-lg mb-8">Kredi kartı gerekmez. İstediğiniz zaman iptal edin.</p>
-          <button onClick={() => router.push('/register')}
-            className="bg-white hover:bg-blue-50 text-blue-700 font-bold px-10 py-4 rounded-xl transition-all shadow-xl text-base hover:-translate-y-0.5">
-            Ücretsiz Hesap Oluştur →
-          </button>
-        </div>
-      </section>
-
-      {/* ─── İLETİŞİM ─── */}
+      {/* â”€â”€â”€ CTA BANNER â”€â”€â”€ */}
+      {/* â”€â”€â”€ Ä°LETÄ°ÅÄ°M â”€â”€â”€ */}
       <section id="iletisim" className="py-24 bg-white">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-14">
-            <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest mb-3">İletişim</p>
-            <h2 className="text-4xl font-bold text-gray-900 tracking-tight">Bize Ulaşın</h2>
+            <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest mb-3">Ä°letiÅŸim</p>
+            <h2 className="text-4xl font-bold text-gray-900 tracking-tight">Bize UlaÅŸÄ±n</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
             <div>
-              <p className="text-gray-500 mb-8 text-lg leading-relaxed">Sorularınız için bize yazın, en kısa sürede dönüş yapalım.</p>
+              <p className="text-gray-500 mb-8 text-lg leading-relaxed">SorularÄ±nÄ±z iÃ§in bize yazÄ±n, en kÄ±sa sÃ¼rede dÃ¶nÃ¼ÅŸ yapalÄ±m.</p>
               <div className="space-y-5">
                 {[
-                  { icon: '📧', label: 'E-posta', value: 'destek@datapilot.com.tr' },
-                  { icon: '📞', label: 'Telefon', value: '+90 (212) 000 00 00' },
-                  { icon: '📍', label: 'Adres', value: 'İstanbul, Türkiye' },
+                  { icon: 'ğŸ“§', label: 'E-posta', value: 'destek@datapilot.com.tr' },
+                  { icon: 'ğŸ“', label: 'Telefon', value: '+90 (212) 000 00 00' },
+                  { icon: 'ğŸ“', label: 'Adres', value: 'Ä°stanbul, TÃ¼rkiye' },
                 ].map(c => (
                   <div key={c.label} className="flex items-center gap-4">
                     <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center text-lg flex-shrink-0">{c.icon}</div>
@@ -538,14 +486,14 @@ export default function LandingPage() {
             <div className="bg-gray-50 rounded-2xl p-7 border border-gray-100">
               {contactSent ? (
                 <div className="text-center py-10">
-                  <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">✅</div>
-                  <h3 className="font-bold text-gray-900 mb-2 text-lg">Mesajınız alındı!</h3>
-                  <p className="text-gray-500 text-sm">En kısa sürede size dönüş yapacağız.</p>
+                  <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">âœ…</div>
+                  <h3 className="font-bold text-gray-900 mb-2 text-lg">MesajÄ±nÄ±z alÄ±ndÄ±!</h3>
+                  <p className="text-gray-500 text-sm">En kÄ±sa sÃ¼rede size dÃ¶nÃ¼ÅŸ yapacaÄŸÄ±z.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Adınız</label>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">AdÄ±nÄ±z</label>
                     <input value={contactName} onChange={e => setContactName(e.target.value)}
                       className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all"
                       placeholder="Ad Soyad" />
@@ -557,14 +505,14 @@ export default function LandingPage() {
                       placeholder="ornek@email.com" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Mesajınız</label>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">MesajÄ±nÄ±z</label>
                     <textarea value={contactMessage} onChange={e => setContactMessage(e.target.value)} rows={4}
                       className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-all resize-none"
-                      placeholder="Nasıl yardımcı olabiliriz?" />
+                      placeholder="NasÄ±l yardÄ±mcÄ± olabiliriz?" />
                   </div>
                   <button onClick={() => setContactSent(true)}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-100 hover:shadow-blue-200">
-                    Gönder →
+                    GÃ¶nder â†’
                   </button>
                 </div>
               )}
@@ -573,7 +521,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── FOOTER ─── */}
+      {/* â”€â”€â”€ FOOTER â”€â”€â”€ */}
       <footer className="bg-[#070d20] text-slate-500 py-14">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
@@ -581,53 +529,53 @@ export default function LandingPage() {
               <div className="flex items-center gap-2 mb-4 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                 <img src="/logo2.png" alt="DataPilot" className="h-8 w-auto" />
               </div>
-              <p className="text-sm leading-relaxed">Akıllı potansiyel müşteri yönetim platformu.<br />İşinizi büyütün.</p>
+              <p className="text-sm leading-relaxed">AkÄ±llÄ± potansiyel mÃ¼ÅŸteri yÃ¶netim platformu.<br />Ä°ÅŸinizi bÃ¼yÃ¼tÃ¼n.</p>
             </div>
             <div>
-              <h4 className="text-slate-300 font-semibold text-sm mb-4">Ürün</h4>
+              <h4 className="text-slate-300 font-semibold text-sm mb-4">ÃœrÃ¼n</h4>
               <ul className="space-y-2.5 text-sm">
-                <li><a href="#ozellikler" className="hover:text-white transition-colors">Özellikler</a></li>
-                <li><a href="#paketler" className="hover:text-white transition-colors">Fiyatlar</a></li>
+                <li><a href="#ozellikler" className="hover:text-white transition-colors">Ã–zellikler</a></li>
+                <li><a href="#demo-form" className="hover:text-white transition-colors">Demo</a></li>
                 <li><a href="#sss" className="hover:text-white transition-colors">SSS</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-slate-300 font-semibold text-sm mb-4">Şirket</h4>
+              <h4 className="text-slate-300 font-semibold text-sm mb-4">Åirket</h4>
               <ul className="space-y-2.5 text-sm">
-                <li><a href="#iletisim" className="hover:text-white transition-colors">İletişim</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Gizlilik Politikası</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Kullanım Koşulları</a></li>
+                <li><a href="#iletisim" className="hover:text-white transition-colors">Ä°letiÅŸim</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Gizlilik PolitikasÄ±</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">KullanÄ±m KoÅŸullarÄ±</a></li>
               </ul>
             </div>
             <div>
               <h4 className="text-slate-300 font-semibold text-sm mb-4">Hesap</h4>
               <ul className="space-y-2.5 text-sm">
-                <li><a href="/login" className="hover:text-white transition-colors">Giriş Yap</a></li>
-                <li><a href="/register" className="hover:text-white transition-colors">Üye Ol</a></li>
+                <li><a href="/login" className="hover:text-white transition-colors">GiriÅŸ Yap</a></li>
+                <li><a href="#demo-form" className="hover:text-white transition-colors">Demo Al</a></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-slate-800 pt-6 flex items-center justify-between flex-wrap gap-4">
-            <p className="text-sm">DataPilot © 2026 — Tüm hakları saklıdır.</p>
-            <p className="text-sm">İstanbul, Türkiye</p>
+            <p className="text-sm">DataPilot Â© 2026 â€” TÃ¼m haklarÄ± saklÄ±dÄ±r.</p>
+            <p className="text-sm">Ä°stanbul, TÃ¼rkiye</p>
           </div>
         </div>
       </footer>
 
-      {/* ─── AI DESTEK CHAT (geçici olarak gizlendi) ─── */}
+      {/* â”€â”€â”€ AI DESTEK CHAT (geÃ§ici olarak gizlendi) â”€â”€â”€ */}
       {false && (
         <div className="fixed bottom-6 right-6 z-50">
           {chatOpen && (
             <div className="mb-4 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm">🤖</div>
+                  <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-sm">ğŸ¤–</div>
                   <div>
                     <p className="text-white font-semibold text-sm">DataPilot Destek</p>
                     <p className="text-blue-200 text-xs">AI Destekli</p>
                   </div>
                 </div>
-                <button onClick={() => setChatOpen(false)} className="text-white/70 hover:text-white transition-colors">✕</button>
+                <button onClick={() => setChatOpen(false)} className="text-white/70 hover:text-white transition-colors">âœ•</button>
               </div>
               <div className="h-64 overflow-y-auto p-4 space-y-3">
                 {chatMessages.map((msg, i) => (
@@ -639,7 +587,7 @@ export default function LandingPage() {
                 ))}
                 {chatLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-gray-100 px-4 py-2 rounded-xl text-sm text-gray-400">Yazıyor...</div>
+                    <div className="bg-gray-100 px-4 py-2 rounded-xl text-sm text-gray-400">YazÄ±yor...</div>
                   </div>
                 )}
               </div>
@@ -647,15 +595,15 @@ export default function LandingPage() {
                 <input value={chatInput} onChange={e => setChatInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && sendChat()}
                   className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Mesajınızı yazın..." />
+                  placeholder="MesajÄ±nÄ±zÄ± yazÄ±n..." />
                 <button onClick={sendChat}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl text-sm transition-colors">→</button>
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl text-sm transition-colors">â†’</button>
               </div>
             </div>
           )}
           <button onClick={() => setChatOpen(!chatOpen)}
             className="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-xl shadow-blue-200 flex items-center justify-center text-2xl transition-all hover:scale-110">
-            {chatOpen ? '✕' : '💬'}
+            {chatOpen ? 'âœ•' : 'ğŸ’¬'}
           </button>
         </div>
       )}
