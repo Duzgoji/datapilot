@@ -248,16 +248,10 @@ const customersWithSubs = (customersData || []).map(c => ({
   subscriptions: (subsData || []).filter(s => s.owner_id === c.id)
 }))
 setCustomers(customersWithSubs)
-    const { data: customerTenantData } = await supabase.from('customers').select('id, owner_id, name, advertiser_id, status')
-    setCustomerTenants(customerTenantData || [])
     const { data: branchesData } = await supabase.from('branches').select('*')
     setBranches(branchesData || [])
     const { data: leadsData } = await supabase.from('leads').select('id, status, procedure_amount, created_at, branch_id, assigned_to, owner_id')
     setLeads(leadsData || [])
-    const { data: metaConnectionData } = await supabase.from('meta_connections').select('owner_id, is_active, connected_at')
-    setMetaConnections(metaConnectionData || [])
-    const { data: whatsAppConnectionData } = await supabase.from('whatsapp_connections').select('owner_id, is_active, connected_at')
-    setWhatsAppConnections(whatsAppConnectionData || [])
     const { data: invoicesData, error: invoicesError } = await supabase.from('invoices').select('*').order('created_at', { ascending: false })
     console.log('invoices:', invoicesData?.length, invoicesError)
     setInvoices(invoicesData || [])
@@ -272,6 +266,13 @@ const advRes = await fetch('/api/get-advertisers', {
 })
     const advJson = await advRes.json()
     setAdvertisers(advJson.data || [])
+    const tenantOverviewRes = await fetch('/api/admin/tenant-overview', {
+      headers: { 'Authorization': `Bearer ${session?.access_token}` }
+    })
+    const tenantOverviewJson = await tenantOverviewRes.json()
+    setCustomerTenants(tenantOverviewJson.data?.customerTenants || [])
+    setMetaConnections(tenantOverviewJson.data?.metaConnections || [])
+    setWhatsAppConnections(tenantOverviewJson.data?.whatsAppConnections || [])
     const auditRes = await fetch('/api/audit/log', {
       headers: { 'Authorization': `Bearer ${session?.access_token}` }
     })
