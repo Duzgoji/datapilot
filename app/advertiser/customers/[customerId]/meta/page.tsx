@@ -33,7 +33,7 @@ export default function CustomerMetaPage() {
         </div>
       </div>
 
-      <MetaConnect ownerId={customer.owner_id} autoSelect={true} />
+      <MetaConnect ownerId={customer.id} autoSelect={true} />
     </div>
   )
 }

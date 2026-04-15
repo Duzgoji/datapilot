@@ -2,6 +2,7 @@
 
 import { getPlanLimits, isValidPlan, type PlanName } from '@/lib/planLimits'
 import { getUserUsage, getBranchUsage, getMonthlyLeadUsage, checkLimit, getCurrentPlan } from '@/lib/usageHelpers'
+import { fetchTenantContext, logTenantWriteUsage } from '@/lib/tenant/client'
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -94,6 +95,13 @@ const Badge = ({ status }: { status: string }) => (
     {STATUS_CONFIG[status]?.label || status}
   </span>
 )
+
+type TenantContextState = {
+  tenantId: string
+  profileId: string
+  readOwnerIds: string[]
+  writeOwnerId: string
+} | null
 
 const PlanUsageWidget = ({ ownerId, plan }: { ownerId: string, plan: PlanName }) => {
   const [usage, setUsage] = useState<{ users: number, branches: number, leads: number } | null>(null)
@@ -235,8 +243,9 @@ export default function CustomerPage() {
   const notifRef = useRef<HTMLDivElement>(null)
 
   // Core state
-  const [profile, setProfile] = useState<any>(null)
-  const [branches, setBranches] = useState<any[]>([])
+const [profile, setProfile] = useState<any>(null)
+const [tenantContext, setTenantContext] = useState<TenantContextState>(null)
+const [branches, setBranches] = useState<any[]>([])
   const [leads, setLeads] = useState<any[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -409,15 +418,17 @@ useEffect(() => {
     if (!user) { router.push('/login'); return }
     const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single()
 if (profileData?.role !== 'customer') { router.push('/login'); return }
+const tenant = await fetchTenantContext(user.id)
+setTenantContext(tenant)
 
 // Plan'ı ayrıca çek — profiles.select('*') subscriptions'ı join etmez
 const { data: subData } = await supabase
   .from('subscriptions')
   .select('plan')
-  .eq('owner_id', user.id)
+  .in('owner_id', tenant.readOwnerIds)
   .maybeSingle()
 
-const _resolvedPlan: PlanName = isValidPlan(subData?.plan) ? subData.plan : 'starter'
+const _resolvedPlan: PlanName = await getCurrentPlan(tenant.tenantId)
 if (!isValidPlan(subData?.plan)) {
   console.warn(`[CustomerPage] Plan çözümlenemedi. owner: ${user.id}, raw: "${subData?.plan}" → starter`)
 }
@@ -427,42 +438,41 @@ setProfile({ ...profileData, _resolvedPlan })
     setSettingsCompany(profileData?.company_name || '')
     setSettingsPhone(profileData?.phone || '')
     setSettingsSector(profileData?.sector || '')
-    const { data: branchesData } = await supabase.from('branches').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
+    const { data: branchesData } = await supabase.from('branches').select('*').in('owner_id', tenant.readOwnerIds).order('created_at', { ascending: false })
     setBranches(branchesData || [])
     const branchIds = (branchesData || []).map((b: any) => b.id)
-    const { data: leadsData } = await supabase.from('leads').select('*').eq('owner_id', user.id).order('updated_at', { ascending: false })
+    const { data: leadsData } = await supabase.from('leads').select('*').in('owner_id', tenant.readOwnerIds).order('updated_at', { ascending: false })
     setLeads(leadsData || [])
     if (branchIds.length > 0) {
    const { data: membersData } = await supabase.from('team_members').select('*, profiles(full_name, email), branches(branch_name)').in('branch_id', branchIds)
     setTeamMembers(membersData || [])
 }
 
-    const { data: metaConnData } = await supabase.from('meta_connections').select('*').eq('owner_id', user.id).single()
-    setMetaConn(metaConnData || null)
+    const { data: metaConnRows } = await supabase.from('meta_connections').select('*').in('owner_id', tenant.readOwnerIds)
+    const resolvedMetaConn =
+      metaConnRows?.find((row: any) => row.owner_id === tenant.tenantId) ||
+      metaConnRows?.find((row: any) => row.owner_id === tenant.profileId) ||
+      metaConnRows?.[0] ||
+      null
+    setMetaConn(resolvedMetaConn)
 
     // Ad spend yükle
     const { data: adSpendData } = await supabase
       .from('ad_spend')
       .select('*')
-      .eq('owner_id', user.id)
+      .in('owner_id', tenant.readOwnerIds)
       .order('date', { ascending: false })
       .limit(500)
     setAdSpend(adSpendData || [])
     const { data: paymentsData } = await supabase
   .from('commission_payments').select('*')
-  .eq('owner_id', user.id)
+  .in('owner_id', tenant.readOwnerIds)
   .order('paid_at', { ascending: false })
    setCommissionPayments(paymentsData || [])
-  const { data: customerData } = await supabase
-  .from('customers')
-  .select('id')
-  .eq('owner_id', user.id)
-  .maybeSingle()
-
 const { data: invoicesData } = await supabase
   .from('invoices')
   .select('*')
-  .eq('owner_id', user.id)
+  .or(`customer_id.eq.${tenant.tenantId},owner_id.in.(${tenant.readOwnerIds.join(',')})`)
   .order('created_at', { ascending: false })
 setCustomerInvoices(invoicesData || [])
     setLoading(false)
@@ -544,15 +554,17 @@ const loadNotifications = async () => {
     e.preventDefault(); setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-     const { allowed, message } = await checkLimit(user.id, 'branch')
+    const tenant = await fetchTenantContext(user.id)
+     const { allowed, message } = await checkLimit(tenant.tenantId, 'branch')
   if (!allowed) {
     alert(message)
     setSaving(false)
     return
   }
+    logTenantWriteUsage(tenant, 'customer_page', 'branch')
     const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase()
     const { data, error } = await supabase.from('branches').insert({
-      owner_id: user.id, branch_name: branchName, contact_name: branchContact,
+      owner_id: tenant.tenantId, branch_name: branchName, contact_name: branchContact,
       contact_email: branchEmail, commission_model: commissionModel,
       commission_value: parseFloat(commissionValue) || 0, invite_code: inviteCode, is_active: true,
     }).select().single()
@@ -569,8 +581,9 @@ const loadNotifications = async () => {
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
+  const tenant = await fetchTenantContext(user.id)
 
-  const { allowed, message } = await checkLimit(user.id, 'user')
+  const { allowed, message } = await checkLimit(tenant.tenantId, 'user')
   if (!allowed) {
     alert(message)
     setSaving(false)
@@ -592,26 +605,22 @@ const loadNotifications = async () => {
   e.preventDefault(); setSaving(true)
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
+  const tenant = await fetchTenantContext(user.id)
 
-  const { allowed, message } = await checkLimit(user.id, 'lead')
+  const { allowed, message } = await checkLimit(tenant.tenantId, 'lead')
   if (!allowed) {
     alert(message)
     setSaving(false)
     return
   }
+  logTenantWriteUsage(tenant, 'customer_page', 'lead')
 
   const leadCode = 'DP-' + Date.now().toString().slice(-6)
-  const { data: customerData } = await supabase
-    .from('customers')
-    .select('id')
-    .eq('owner_id', user.id)
-    .single()
-
   const { data: newLeadData, error } = await supabase.from('leads').insert({
-    lead_code: leadCode, branch_id: leadBranch !== '' ? leadBranch : null, owner_id: user.id,
+    lead_code: leadCode, branch_id: leadBranch !== '' ? leadBranch : null, owner_id: tenant.tenantId,
     assigned_to: leadAssignTo || null, full_name: leadName, phone: leadPhone,
     email: leadEmail || null, source: leadSource, note: leadNote || null, status: 'new',
-    customer_id: customerData?.id || null,
+    customer_id: tenant.tenantId,
   }).select().single()
   if (error) { alert(error.message); setSaving(false); return }
   if (!error) {
@@ -706,9 +715,11 @@ const handlePayCommission = async () => {
   setPaymentSaving(true)
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
+  const tenant = await fetchTenantContext(user.id)
+  logTenantWriteUsage(tenant, 'customer_page', 'commission_payment')
   await supabase.from('commission_payments').insert({
     team_member_id: paymentMember.id,
-    owner_id: user.id,
+    owner_id: tenant.tenantId,
     amount: parseFloat(paymentAmount),
     note: paymentNote || null,
     created_by: user.id,
@@ -724,16 +735,18 @@ const handlePayCommission = async () => {
     if (!profile?.id) return
     setAdSpendSyncing(true)
     try {
+      const tenant = await fetchTenantContext(profile.id)
+      logTenantWriteUsage(tenant, 'customer_page', 'ad_spend_sync')
       await fetch('/api/sync-ad-spend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner_id: profile.id }),
+        body: JSON.stringify({ owner_id: tenant.tenantId }),
       })
       // Veriyi yeniden yükle
       const { data } = await supabase
         .from('ad_spend')
         .select('*')
-        .eq('owner_id', profile.id)
+        .in('owner_id', tenant.readOwnerIds)
         .order('date', { ascending: false })
         .limit(500)
       setAdSpend(data || [])
@@ -808,10 +821,12 @@ const handlePayCommission = async () => {
     const validRows = bulkRows.filter(r => r.full_name.trim() || r.phone.trim())
     if (validRows.length === 0) { alert('En az 1 satır doldurmanız gerekiyor.'); return }
     setBulkLoading(true)
-    const { data: { user: bulkUser } } = await supabase.auth.getUser()
+const { data: { user: bulkUser } } = await supabase.auth.getUser()
 if (!bulkUser) { setBulkLoading(false); return }
-const { allowed: bulkAllowed, message: bulkMsg } = await checkLimit(bulkUser.id, 'lead', validRows.length)
+const tenant = await fetchTenantContext(bulkUser.id)
+const { allowed: bulkAllowed, message: bulkMsg } = await checkLimit(tenant.tenantId, 'lead', validRows.length)
 if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
+    logTenantWriteUsage(tenant, 'customer_page', 'lead_import')
     setBulkResult(null)
     let success = 0
     const errors: string[] = []
@@ -825,7 +840,7 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
         note: row.note.trim() || null,
         branch_id: row.branch_id || branches[0]?.id || null,
         assigned_to: null, status: 'new', lead_code: leadCode,
-        owner_id: profile.id, import_set: setName,
+        owner_id: tenant.tenantId, customer_id: tenant.tenantId, import_set: setName,
       })
       if (error) { errors.push(`Satır ${i + 1}: ${error.message}`); continue }
       success++
@@ -883,8 +898,10 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
   // ← Artık rows tanımlı, limit kontrolü burada yap
   const { data: { user: xlsxUser } } = await supabase.auth.getUser()
   if (!xlsxUser) { setXlsxLoading(false); return }
-  const { allowed: xlsxAllowed, message: xlsxMsg } = await checkLimit(xlsxUser.id, 'lead', rows.length)
+  const tenant = await fetchTenantContext(xlsxUser.id)
+  const { allowed: xlsxAllowed, message: xlsxMsg } = await checkLimit(tenant.tenantId, 'lead', rows.length)
   if (!xlsxAllowed) { alert(xlsxMsg); setXlsxLoading(false); return }
+    logTenantWriteUsage(tenant, 'customer_page', 'lead_import')
 
     const branchMap: Record<string, string> = {}
     branches.forEach(b => { branchMap[b.branch_name?.toLowerCase().trim()] = b.id })
@@ -916,7 +933,7 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
         source, note: note || null,
         branch_id: branchId, assigned_to: assignedTo,
         status: 'new', lead_code: leadCode,
-        owner_id: profile.id, import_set: setName,
+        owner_id: tenant.tenantId, customer_id: tenant.tenantId, import_set: setName,
       })
       if (error) { errors.push(`Satır ${i + 2}: ${error.message}`); continue }
       success++
@@ -2113,8 +2130,10 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
     // Supabase'e kaydet
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
+      const tenant = tenantContext || await fetchTenantContext(user.id)
+      logTenantWriteUsage(tenant, 'customer_page', 'whatsapp_connection')
       await supabase.from('whatsapp_connections').upsert({
-        owner_id: user.id,
+        owner_id: tenant.tenantId,
         provider: waProvider,
         api_key: waApiKey,
         is_active: true,
@@ -2505,7 +2524,7 @@ return (
 })()}
           {/* ── META ── */}
 
-          {activeTab === 'meta-baglanti' && profile?.id && <MetaConnect ownerId={profile.id} />}
+          {activeTab === 'meta-baglanti' && profile?.id && <MetaConnect ownerId={tenantContext?.tenantId || profile.id} />}
           {activeTab === 'meta-kampanyalar' && (() => {
             // Seçilen periyoda göre filtrele
             const days = parseInt(adSpendPeriod)
@@ -3887,8 +3906,8 @@ return (
                   <button
                     onClick={async () => {
                       await supabase.from('invoices').update({ status: 'awaiting_approval' }).eq('id', inv.id)
-                      const { data: customerData } = await supabase.from('customers').select('id').eq('owner_id', profile.id).maybeSingle()
-                      const { data: invoicesData } = await supabase.from('invoices').select('*').or(`customer_id.eq.${customerData?.id || '00000000-0000-0000-0000-000000000000'},owner_id.eq.${profile.id}`).order('created_at', { ascending: false })
+                      const tenant = await fetchTenantContext(profile.id)
+                      const { data: invoicesData } = await supabase.from('invoices').select('*').or(`customer_id.eq.${tenant.tenantId},owner_id.in.(${tenant.readOwnerIds.join(',')})`).order('created_at', { ascending: false })
                       setCustomerInvoices(invoicesData || [])
                     }}
                     className="text-xs text-blue-600 font-medium px-3 py-1.5 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200">
@@ -3999,7 +4018,7 @@ return (
   return <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${cfg[plan] || cfg.starter}`}>{plan}</span>
 })()}
   </div>
-  <PlanUsageWidget ownerId={profile?.id} plan={profile?._resolvedPlan ?? 'starter'} />
+  <PlanUsageWidget ownerId={tenantContext?.tenantId || profile?.id} plan={profile?._resolvedPlan ?? 'starter'} />
 </div>
 
             </div>

@@ -3,6 +3,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAdvertiser } from '../context'
+import {
+  findAdvertiserCustomerByInvoice,
+  getAdvertiserCustomerOwnerIds,
+  resolveAdvertiserCustomerTenantMap,
+} from '@/lib/tenant/advertiserCustomer'
 
 const STATUS_COLORS: any = {
   pending: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -22,6 +27,7 @@ export default function FaturalarPage() {
   const [invoices, setInvoices] = useState<any[]>([])
   const [paymentLogs, setPaymentLogs] = useState<any[]>([])
   const [myInvoices, setMyInvoices] = useState<any[]>([])
+  const [tenantMap, setTenantMap] = useState<Record<string, any>>({})
   const [activeTab, setActiveTab] = useState<'faturalar' | 'log'>('faturalar')
   const [mainTab, setMainTab] = useState<'musteri' | 'bana-gelen'>('musteri')
   const [filterCustomer, setFilterCustomer] = useState('all')
@@ -31,26 +37,45 @@ export default function FaturalarPage() {
   const [customEnd, setCustomEnd] = useState('')
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
-    loadAll()
-  }, [customers])
-
   const loadAll = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     const ids = customers.map(c => c.id)
+    const resolvedTenantMap = await resolveAdvertiserCustomerTenantMap(customers)
+    const ownerIds = getAdvertiserCustomerOwnerIds(resolvedTenantMap)
+    setTenantMap(resolvedTenantMap)
+
     const [invoicesRes, logsRes, myInvoicesRes] = await Promise.all([
       ids.length > 0
-        ? supabase.from('invoices').select('*').in('customer_id', ids).order('created_at', { ascending: false })
+        ? supabase
+            .from('invoices')
+            .select('*')
+            .or(`customer_id.in.(${ids.join(',')}),owner_id.in.(${ownerIds.join(',')})`)
+            .order('created_at', { ascending: false })
         : Promise.resolve({ data: [] }),
       ids.length > 0
         ? supabase.from('payment_logs').select('*').in('customer_id', ids).order('created_at', { ascending: false })
         : Promise.resolve({ data: [] }),
       supabase.from('invoices').select('*').eq('owner_id', user?.id).order('created_at', { ascending: false }),
     ])
-    setInvoices((invoicesRes as any).data || [])
+
+    console.info('[Advertiser Billing] Profile-rooted advertiser invoice read', {
+      source: 'advertiser_faturalar',
+      reason: 'advertiser_invoice_owner_id',
+      advertiser_id: user?.id || null,
+    })
+
+    const compatibleInvoices = ((invoicesRes as any).data || []).filter((invoice: any) =>
+      Boolean(findAdvertiserCustomerByInvoice(customers, resolvedTenantMap, invoice))
+    )
+
+    setInvoices(compatibleInvoices)
     setPaymentLogs((logsRes as any).data || [])
     setMyInvoices(myInvoicesRes.data || [])
   }
+
+  useEffect(() => {
+    void loadAll()
+  }, [customers])
 
   const getPeriodStart = () => {
     if (filterPeriod === 'custom' && customStart) return new Date(customStart)
@@ -68,21 +93,26 @@ export default function FaturalarPage() {
     return new Date()
   }
 
-  const getCustomerName = (customerId: string) =>
-    customers.find(c => c.id === customerId)?.name || '-'
+  const getCustomerForRecord = (record: { customer_id?: string | null; owner_id?: string | null }) =>
+    findAdvertiserCustomerByInvoice(customers, tenantMap, record)
+
+  const getCustomerName = (customerId?: string, ownerId?: string) =>
+    getCustomerForRecord({ customer_id: customerId, owner_id: ownerId })?.name || '-'
 
   const filteredInvoices = invoices.filter(inv => {
-    const matchCustomer = filterCustomer === 'all' || inv.customer_id === filterCustomer
+    const matchedCustomer = getCustomerForRecord(inv)
+    const matchCustomer = filterCustomer === 'all' || matchedCustomer?.id === filterCustomer
     const matchStatus = filterStatus === 'all' || inv.status === filterStatus
     const matchPeriod = new Date(inv.created_at) >= getPeriodStart() && new Date(inv.created_at) <= getPeriodEnd()
-    const matchSearch = !search || getCustomerName(inv.customer_id).toLowerCase().includes(search.toLowerCase())
+    const matchSearch = !search || getCustomerName(inv.customer_id, inv.owner_id).toLowerCase().includes(search.toLowerCase())
     return matchCustomer && matchStatus && matchPeriod && matchSearch
   })
 
   const filteredLogs = paymentLogs.filter(log => {
-    const matchCustomer = filterCustomer === 'all' || log.customer_id === filterCustomer
+    const matchedCustomer = getCustomerForRecord(log)
+    const matchCustomer = filterCustomer === 'all' || matchedCustomer?.id === filterCustomer
     const matchPeriod = new Date(log.created_at) >= getPeriodStart() && new Date(log.created_at) <= getPeriodEnd()
-    const matchSearch = !search || getCustomerName(log.customer_id).toLowerCase().includes(search.toLowerCase())
+    const matchSearch = !search || getCustomerName(log.customer_id, log.owner_id).toLowerCase().includes(search.toLowerCase())
     return matchCustomer && matchPeriod && matchSearch
   })
 
@@ -91,9 +121,10 @@ export default function FaturalarPage() {
   const totalOverdue = invoices.filter(i => i.status === 'overdue').reduce((s, i) => s + (i.total_amount || 0), 0)
 
   const markAsPaid = async (inv: any) => {
+    const matchedCustomer = getCustomerForRecord(inv)
     await supabase.from('invoices').update({ status: 'paid' }).eq('id', inv.id)
     await supabase.from('payment_logs').insert({
-      customer_id: inv.customer_id,
+      customer_id: matchedCustomer?.id || inv.customer_id || null,
       invoice_id: inv.id,
       amount: inv.total_amount,
       type: 'payment',
@@ -110,7 +141,7 @@ export default function FaturalarPage() {
   const exportCSV = (type: 'invoices' | 'logs') => {
     const rows = type === 'invoices'
       ? [['Müşteri', 'Tutar', 'Durum', 'Son Ödeme', 'Oluşturulma'],
-         ...filteredInvoices.map(inv => [getCustomerName(inv.customer_id), inv.total_amount, STATUS_LABELS[inv.status] || inv.status, inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-', new Date(inv.created_at).toLocaleDateString('tr-TR')])]
+         ...filteredInvoices.map(inv => [getCustomerName(inv.customer_id, inv.owner_id), inv.total_amount, STATUS_LABELS[inv.status] || inv.status, inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-', new Date(inv.created_at).toLocaleDateString('tr-TR')])]
       : [['Müşteri', 'Tutar', 'Tür', 'Not', 'Tarih'],
          ...filteredLogs.map(log => [getCustomerName(log.customer_id), log.amount, log.type === 'payment' ? 'Ödeme' : log.type === 'refund' ? 'İade' : 'Düzeltme', log.note || '-', new Date(log.created_at).toLocaleDateString('tr-TR')])]
     const content = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
@@ -261,10 +292,10 @@ export default function FaturalarPage() {
                   <div key={inv.id} className={`px-5 py-3.5 grid grid-cols-6 gap-2 items-center hover:bg-gray-50/50 transition-colors ${i < filteredInvoices.length - 1 ? 'border-b border-gray-50' : ''}`}>
                     <div className="col-span-2 flex items-center gap-2 min-w-0">
                       <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center font-bold text-amber-600 text-xs flex-shrink-0">
-                        {getCustomerName(inv.customer_id).charAt(0)}
+                        {getCustomerName(inv.customer_id, inv.owner_id).charAt(0)}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{getCustomerName(inv.customer_id)}</p>
+                        <p className="text-sm font-medium text-gray-900 truncate">{getCustomerName(inv.customer_id, inv.owner_id)}</p>
                         <p className="text-xs text-gray-400">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
                       </div>
                     </div>
@@ -314,7 +345,7 @@ export default function FaturalarPage() {
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 6l3 3 6-5" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{getCustomerName(log.customer_id)}</p>
+                        <p className="text-sm font-medium text-gray-900 truncate">{getCustomerName(log.customer_id, log.owner_id)}</p>
                         {log.note && <p className="text-xs text-gray-400 truncate">{log.note}</p>}
                       </div>
                     </div>

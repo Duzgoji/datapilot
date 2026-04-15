@@ -21,7 +21,7 @@ export default function CustomerWhatsAppPage() {
         <h2 className="text-base font-semibold text-gray-900">{customer.name} · WhatsApp Bağlantısı</h2>
         <p className="text-xs text-gray-400 mt-0.5">WhatsApp Business hesabını bağlayın</p>
       </div>
-      <WhatsAppConnect ownerId={customer.owner_id} />
+      <WhatsAppConnect ownerId={customer.id} />
     </div>
   )
 }

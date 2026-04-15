@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { fetchTenantContext, logTenantWriteUsage } from '@/lib/tenant/client'
 import { useRouter } from 'next/navigation'
 import MetaConnect from '@/components/MetaConnect'
 
@@ -46,8 +47,9 @@ const SOURCE_LABELS: any = {
 
 export default function CustomerPage() {
   const router = useRouter()
-  const [profile, setProfile] = useState<any>(null)
-  const [branches, setBranches] = useState<any[]>([])
+const [profile, setProfile] = useState<any>(null)
+const [tenantId, setTenantId] = useState('')
+const [branches, setBranches] = useState<any[]>([])
   const [leads, setLeads] = useState<any[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -96,10 +98,12 @@ export default function CustomerPage() {
     const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single()
     if (profileData?.role !== 'customer') { router.push('/login'); return }
     setProfile(profileData)
+    const tenant = await fetchTenantContext(user.id)
+    setTenantId(tenant.tenantId)
 
     const { data: branchesData } = await supabase
       .from('branches').select('*')
-      .eq('owner_id', user.id)
+      .in('owner_id', tenant.readOwnerIds)
       .order('created_at', { ascending: false })
     setBranches(branchesData || [])
 
@@ -126,10 +130,12 @@ export default function CustomerPage() {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
+    const tenant = await fetchTenantContext(user.id)
+    logTenantWriteUsage(tenant, 'customer_analytics', 'branch')
 
     const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase()
     const { data, error } = await supabase.from('branches').insert({
-      owner_id: user.id,
+      owner_id: tenant.tenantId,
       branch_name: branchName,
       contact_name: branchContact,
       contact_email: branchEmail,
@@ -183,13 +189,15 @@ export default function CustomerPage() {
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
+    const tenant = await fetchTenantContext(user.id)
+    logTenantWriteUsage(tenant, 'customer_analytics', 'lead')
 
     const leadCode = 'DP-' + Date.now().toString().slice(-6)
 
     await supabase.from('leads').insert({
       lead_code: leadCode,
       branch_id: leadBranch,
-      owner_id: user.id,
+      owner_id: tenant.tenantId,
       assigned_to: leadAssignTo || null,
       full_name: leadName,
       phone: leadPhone,
@@ -197,6 +205,7 @@ export default function CustomerPage() {
       source: leadSource,
       note: leadNote || null,
       status: 'new',
+      customer_id: tenant.tenantId,
     })
 
     setLeadName(''); setLeadPhone(''); setLeadEmail('')
@@ -785,7 +794,7 @@ export default function CustomerPage() {
 
           {/* AYARLAR */}
           {activeTab === 'ayarlar' && (
-            <MetaConnect ownerId={profile?.id} />
+            <MetaConnect ownerId={tenantId || profile?.id} />
           )}
 
           {/* ANALİTİK */}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
 import { useAdvertiser } from '../context'
+import { resolveAdvertiserCustomerTenantContext } from '@/lib/tenant/advertiserCustomer'
 
 const Modal = ({ open, onClose, title, children, size = 'lg' }: any) => {
   if (!open) return null
@@ -35,6 +36,7 @@ export default function CustomersPage() {
   const { customers, advertiserClients, reload } = useAdvertiser()
   const [leads, setLeads] = useState<any[]>([])
   const [metaConnections, setMetaConnections] = useState<any[]>([])
+  const [tenantContexts, setTenantContexts] = useState<Record<string, any>>({})
   const [showAdd, setShowAdd] = useState(false)
   const [search, setSearch] = useState('')
   const [view, setView] = useState<'card' | 'table'>('card')
@@ -61,12 +63,25 @@ export default function CustomersPage() {
 
   useEffect(() => {
     if (customers.length === 0) return
-    const ids = customers.map(c => c.id)
-    supabase.from('leads').select('id, customer_id, status, procedure_amount').in('customer_id', ids)
-      .then(({ data }) => setLeads(data || []))
-    supabase.from('meta_connections').select('*')
-      .in('owner_id', customers.map(c => c.owner_id).filter(Boolean))
-      .then(({ data }) => setMetaConnections(data || []))
+    void (async () => {
+      const ids = customers.map((customer) => customer.id)
+      const resolvedTenants = await Promise.all(
+        customers.map((customer) => resolveAdvertiserCustomerTenantContext(customer))
+      )
+
+      const tenantMap = Object.fromEntries(customers.map((customer, index) => [customer.id, resolvedTenants[index]]))
+      setTenantContexts(tenantMap)
+
+      const metaOwnerIds = Array.from(new Set(resolvedTenants.flatMap((tenant) => tenant.readOwnerIds)))
+
+      const [leadsRes, metaRes] = await Promise.all([
+        supabase.from('leads').select('id, customer_id, status, procedure_amount').in('customer_id', ids),
+        supabase.from('meta_connections').select('*').in('owner_id', metaOwnerIds),
+      ])
+
+      setLeads(leadsRes.data || [])
+      setMetaConnections(metaRes.data || [])
+    })()
   }, [customers])
 
   const getHakedis = (c: any) => {
@@ -118,6 +133,32 @@ const res = await fetch('/api/create-user', {
   String(c.customer_number).includes(search)
 
   )
+
+  const getMetaConnection = (customer: any) => {
+    const tenant = tenantContexts[customer.id]
+    if (!tenant) {
+      return null
+    }
+
+    const canonicalConnection = metaConnections.find((connection) => connection.owner_id === tenant.tenantId)
+    if (canonicalConnection) {
+      return canonicalConnection
+    }
+
+    const legacyConnection = metaConnections.find((connection) => connection.owner_id === tenant.profileId)
+    if (legacyConnection) {
+      console.info('[Advertiser Customer] Legacy meta connection fallback', {
+        source: 'advertiser_customer_list',
+        reason: 'legacy_meta_connection_match',
+        customer_id: customer.id,
+        tenant_id: tenant.tenantId,
+        owner_id: tenant.profileId,
+      })
+      return legacyConnection
+    }
+
+    return null
+  }
 
   return (
     <div className="space-y-4 max-w-6xl">
@@ -172,7 +213,7 @@ const res = await fetch('/api/create-user', {
             const cSales = cLeads.filter(l => l.status === 'procedure_done')
             const cRevenue = cSales.reduce((s, l) => s + (l.procedure_amount || 0), 0)
             const cConv = cLeads.length > 0 ? ((cSales.length / cLeads.length) * 100) : 0
-            const metaConn = metaConnections.find(m => m.owner_id === c.owner_id)
+            const metaConn = getMetaConnection(c)
             const client = advertiserClients.find(ac => ac.customer_id === c.id)
             const earned = getHakedis(c)
             console.log('Customer ID:', c.id, 'Number:', c.customer_number)

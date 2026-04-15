@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { resolveTenantContext } from '@/lib/tenant/resolveTenantId'
 
 type TeamMemberRow = {
   user_id: string
@@ -16,12 +17,15 @@ export async function findAssignableAgent(ownerId: string) {
     throw new Error('findAssignableAgent fonksiyonuna ownerId gelmedi')
   }
 
+  const tenant = await resolveTenantContext(ownerId)
+  const ownerIds = tenant.readOwnerIds
+
   // 1) Bu owner'a ait aktif ekip üyelerini al
   const { data: teamMembers, error: teamError } = await supabaseAdmin
     .from('team_members')
     .select('user_id, owner_id, is_active')
     .eq('is_active', true)
-    .eq('owner_id', ownerId)
+    .in('owner_id', ownerIds)
     .order('created_at', { ascending: true })
 
   if (teamError) {
@@ -38,7 +42,7 @@ export async function findAssignableAgent(ownerId: string) {
   const { data: lastAssignedLead, error: leadError } = await supabaseAdmin
     .from('leads')
     .select('assigned_to, created_at')
-    .eq('owner_id', ownerId)
+    .in('owner_id', ownerIds)
     .in('assigned_to', agents)
     .not('assigned_to', 'is', null)
     .order('created_at', { ascending: false })

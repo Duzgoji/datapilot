@@ -49,6 +49,12 @@ export function AdvertiserProvider({ children }: { children: React.ReactNode }) 
       .from('advertiser_subscriptions').select('*').eq('advertiser_id', user.id).single()
     setSubscription(subData || null)
 
+    console.info('[Advertiser Billing] Profile-rooted advertiser invoice read', {
+      source: 'advertiser_context',
+      reason: 'advertiser_invoice_owner_id',
+      advertiser_id: user.id,
+    })
+
     const { data: invoicesData } = await supabase
       .from('invoices').select('*').eq('owner_id', user.id).order('created_at', { ascending: false })
     setInvoices(invoicesData || [])

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
 import { useAdvertiser } from '../../context'
+import { resolveAdvertiserCustomerTenantContext } from '@/lib/tenant/advertiserCustomer'
 
 const STATUS_LABELS: any = {
   new: 'Yeni', called: 'Arandı', appointment_scheduled: 'Randevu',
@@ -28,14 +29,31 @@ export default function CustomerWorkspacePage() {
 
   useEffect(() => {
     if (!customer) return
-    Promise.all([
-      supabase.from('leads').select('*').eq('customer_id', customerId).order('created_at', { ascending: false }),
-      supabase.from('meta_connections').select('*').eq('owner_id', customer.owner_id).single(),
-    ]).then(([leadsRes, metaRes]) => {
+    void (async () => {
+      const tenant = await resolveAdvertiserCustomerTenantContext(customer)
+      const [leadsRes, metaRes] = await Promise.all([
+        supabase.from('leads').select('*').eq('customer_id', customerId).order('created_at', { ascending: false }),
+        supabase.from('meta_connections').select('*').in('owner_id', tenant.readOwnerIds),
+      ])
+
+      const metaRows = metaRes.data || []
+      const canonicalConnection = metaRows.find((connection) => connection.owner_id === tenant.tenantId)
+      const legacyConnection = metaRows.find((connection) => connection.owner_id === tenant.profileId)
+
+      if (!canonicalConnection && legacyConnection) {
+        console.info('[Advertiser Customer] Legacy meta connection fallback', {
+          source: 'advertiser_customer_detail',
+          reason: 'legacy_meta_connection_match',
+          customer_id: customer.id,
+          tenant_id: tenant.tenantId,
+          owner_id: tenant.profileId,
+        })
+      }
+
       setLeads(leadsRes.data || [])
-      setMetaConn(metaRes.data || null)
+      setMetaConn(canonicalConnection || legacyConnection || null)
       setLoading(false)
-    })
+    })()
   }, [customerId, customer])
 
   if (!customer) return (

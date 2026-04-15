@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { LeadLimitError } from '@/lib/enforceLeadLimit'
+import { resolveTenantContext } from '@/lib/tenant/resolveTenantId'
 import { insertLeads } from '@/modules/leads/lead.repository'
 
 const supabaseAdmin = createClient(
@@ -8,7 +9,6 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// GET: Webhook verification
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const mode = searchParams.get('hub.mode')
@@ -26,7 +26,6 @@ export async function GET(req: NextRequest) {
   return new NextResponse('Forbidden', { status: 403 })
 }
 
-// POST: Incoming messages
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -70,7 +69,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ status: 'ok' }, { status: 200 })
     }
 
-    const ownerId = connection.owner_id
+    const tenant = await resolveTenantContext(connection.owner_id)
+    const ownerId = tenant.writeOwnerId
 
     for (const message of messages) {
       if (message.type !== 'text') {
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
       const { data: existing } = await supabaseAdmin
         .from('leads')
         .select('id')
-        .eq('owner_id', ownerId)
+        .in('owner_id', tenant.readOwnerIds)
         .eq('phone', phone)
         .eq('source', 'whatsapp')
         .limit(1)
@@ -102,31 +102,29 @@ export async function POST(req: NextRequest) {
             {
               owner_id: ownerId,
               lead_code: leadCode,
-              full_name: 'WhatsApp Kullanıcısı',
+              full_name: 'WhatsApp Kullanicisi',
               phone,
               source: 'whatsapp',
               note: text,
               status: 'new',
             },
           ],
-          ownerId
+          tenant.tenantId
         )
 
         if (error) {
           console.error('[WhatsApp Webhook] Lead insert error:', error)
+        } else if (Array.isArray(newLeads) && newLeads.length > 0) {
+          console.log('[WhatsApp Webhook] Lead created:', newLeads[0].id)
         } else {
-          if (Array.isArray(newLeads) && newLeads.length > 0) {
-            console.log('[WhatsApp Webhook] Lead created:', newLeads[0].id)
-          } else {
-            console.warn('[WhatsApp Webhook] No lead returned after insert', {
-              source: 'whatsapp',
-            })
-          }
+          console.warn('[WhatsApp Webhook] No lead returned after insert', {
+            source: 'whatsapp',
+          })
         }
       } catch (err: unknown) {
         if (err instanceof LeadLimitError || (err instanceof Error && err.name === 'LeadLimitError')) {
           console.error('[WhatsApp Webhook] Lead rejected', {
-            owner_id: ownerId,
+            owner_id: tenant.tenantId,
             source: 'whatsapp',
             reason: 'lead_limit_exceeded',
           })
@@ -137,7 +135,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Always return 200 so the provider does not retry endlessly.
     return NextResponse.json({ status: 'ok' }, { status: 200 })
   } catch (err: unknown) {
     console.error('[WhatsApp Webhook] Unexpected error:', err)
