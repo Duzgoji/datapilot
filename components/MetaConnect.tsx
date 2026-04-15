@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { logClientAuditEvent } from '@/lib/audit/client'
 import { supabase } from '@/lib/supabase/client'
 import { fetchTenantContext, logTenantWriteUsage } from '@/lib/tenant/client'
 
@@ -124,7 +125,24 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
     if (!confirm('Meta baglantisini kesmek istediginize emin misiniz?')) return
     const tenant = await fetchTenantContext(ownerId)
     logTenantWriteUsage(tenant, 'meta_connect', 'meta_connection')
-    await supabase.from('meta_connections').update({ is_active: false }).eq('owner_id', tenant.tenantId)
+    const { error } = await supabase
+      .from('meta_connections')
+      .update({ is_active: false })
+      .eq('owner_id', tenant.tenantId)
+
+    if (!error) {
+      await logClientAuditEvent({
+        action: 'integration_disconnected',
+        entityType: 'integration',
+        entityId: tenant.tenantId,
+        tenantId: tenant.tenantId,
+        metadata: {
+          provider: 'meta',
+          source: 'meta_connect',
+        },
+      })
+    }
+
     await loadConnection()
   }
 

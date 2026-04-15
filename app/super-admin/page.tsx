@@ -107,6 +107,7 @@ export default function SuperAdminPage() {
   const [allUsers, setAllUsers] = useState<any[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [advertisers, setAdvertisers] = useState<any[]>([])
+  const [auditLogs, setAuditLogs] = useState<any[]>([])
 
   // Firma modals
   const [showAddCustomer, setShowAddCustomer] = useState(false)
@@ -262,6 +263,11 @@ const advRes = await fetch('/api/get-advertisers', {
 })
     const advJson = await advRes.json()
     setAdvertisers(advJson.data || [])
+    const auditRes = await fetch('/api/audit/log', {
+      headers: { 'Authorization': `Bearer ${session?.access_token}` }
+    })
+    const auditJson = await auditRes.json()
+    setAuditLogs(auditJson.data || [])
     console.log('advertiser ids:', (advJson.data || []).map((a: any) => a.id))
     setLoading(false)
     const { data: advSubsData } = await supabase.from('advertiser_subscriptions').select('*')
@@ -381,6 +387,17 @@ const advRes = await fetch('/api/get-advertisers', {
 
   const pendingInvoicesTotal = invoices.filter(i => i.status === 'pending').reduce((sum, i) => sum + (i.total_amount || 0), 0)
   const paidInvoicesTotal = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.total_amount || 0), 0)
+  const getAuditUserLabel = (userId?: string | null) => {
+    if (!userId) return 'Sistem'
+    const matchedUser = allUsers.find((item: any) => item.id === userId)
+    return matchedUser?.full_name || matchedUser?.email || userId
+  }
+  const getAuditTenantLabel = (tenantId?: string | null) => {
+    if (!tenantId) return '-'
+    const customerProfile = customers.find((item: any) => item.id === tenantId)
+    const advertiserProfile = advertisers.find((item: any) => item.id === tenantId)
+    return customerProfile?.company_name || advertiserProfile?.company_name || tenantId
+  }
 
   const getPageTitle = () => {
     for (const item of menuStructure) {
@@ -1225,6 +1242,57 @@ const advRes = await fetch('/api/get-advertisers', {
           {/* ── GÜVENLİK LOGLAR ── */}
           {activeTab === 'guvenlik-loglar' && (
             <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { label: 'Toplam Log', value: auditLogs.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                  { label: 'Lead Olayi', value: auditLogs.filter((log: any) => log.entity_type === 'lead').length, color: 'text-violet-600', bg: 'bg-violet-50' },
+                  { label: 'Entegrasyon', value: auditLogs.filter((log: any) => log.entity_type === 'integration').length, color: 'text-amber-600', bg: 'bg-amber-50' },
+                  { label: 'Odeme', value: auditLogs.filter((log: any) => log.entity_type === 'payment').length, color: 'text-blue-600', bg: 'bg-blue-50' },
+                ].map((card) => (
+                  <div key={card.label} className={`${card.bg} rounded-xl px-4 py-3`}>
+                    <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{card.label}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+                  <div className="grid grid-cols-4 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    <div>Eylem</div>
+                    <div>Kullanici</div>
+                    <div>Tenant</div>
+                    <div className="text-right">Zaman</div>
+                  </div>
+                </div>
+                {auditLogs.length === 0 ? (
+                  <div className="px-5 py-8 text-sm text-gray-400 text-center">
+                    Henuz audit log kaydi bulunmuyor veya tablo hazir degil.
+                  </div>
+                ) : auditLogs.map((log: any, i: number) => (
+                  <div key={log.id || `${log.action}-${i}`} className={`px-5 py-3 grid grid-cols-4 gap-2 items-center ${i < auditLogs.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{log.action}</p>
+                      <p className="text-xs text-gray-400 truncate">{log.entity_type}{log.entity_id ? ` - ${log.entity_id}` : ''}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{getAuditUserLabel(log.user_id)}</p>
+                      <p className="text-xs text-gray-400 truncate">{log.user_id || '-'}</p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{getAuditTenantLabel(log.tenant_id)}</p>
+                      <p className="text-xs text-gray-400 truncate">{log.tenant_id || '-'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900">
+                        {log.created_at ? new Date(log.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                      </p>
+                      <p className="text-xs text-gray-300 mt-0.5">
+                        {log.created_at ? new Date(log.created_at).toLocaleDateString('tr-TR') : '-'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
               <div>
                 <h2 className="text-base font-semibold text-gray-900">Denetim Logları</h2>
                 <p className="text-xs text-gray-400 mt-0.5">Platforma kayıtlı tüm kullanıcılar</p>

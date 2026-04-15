@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { logAuditEvent } from '@/lib/audit/logAuditEvent'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -64,6 +65,19 @@ export async function GET(request: NextRequest) {
       connected_at: new Date().toISOString(),
       is_active: true,
     }, { onConflict: 'owner_id' })
+
+    await logAuditEvent({
+      action: 'integration_connected',
+      entityType: 'integration',
+      entityId: ownerId,
+      userId: null,
+      tenantId: ownerId,
+      metadata: {
+        provider: 'meta',
+        source: 'meta_callback',
+        return_path: returnPath,
+      },
+    })
 
     return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}${returnPath}?meta=connected`)
   } catch (error) {

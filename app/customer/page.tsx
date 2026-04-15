@@ -2,6 +2,7 @@
 
 import { getPlanLimits, isValidPlan, type PlanName } from '@/lib/planLimits'
 import { getUserUsage, getBranchUsage, getMonthlyLeadUsage, checkLimit, getCurrentPlan } from '@/lib/usageHelpers'
+import { logClientAuditEvent } from '@/lib/audit/client'
 import { fetchTenantContext, getCanonicalCustomerId, logTenantWriteUsage, resolveOperationalOwnerId } from '@/lib/tenant/client'
 import type { TenantResolution } from '@/lib/tenant/resolveTenantId'
 import { useEffect, useState, useRef } from 'react'
@@ -627,6 +628,17 @@ const loadNotifications = async () => {
   }).select().single()
   if (error) { alert(error.message); setSaving(false); return }
   if (!error) {
+    await logClientAuditEvent({
+      action: 'lead_created',
+      entityType: 'lead',
+      entityId: newLeadData?.id || null,
+      tenantId: canonicalCustomerId || leadOwnerId,
+      metadata: {
+        source: leadSource,
+        owner_id: leadOwnerId,
+        customer_id: canonicalCustomerId,
+      },
+    })
     setLeadName(''); setLeadPhone(''); setLeadEmail(''); setLeadBranch(''); setLeadSource('manual'); setLeadAssignTo(''); setLeadNote('')
     await supabase.from('notifications').insert({
       user_id: profile.id,
@@ -720,13 +732,26 @@ const handlePayCommission = async () => {
   if (!user) return
   const tenant = await fetchTenantContext(user.id)
   logTenantWriteUsage(tenant, 'customer_page', 'commission_payment')
-  await supabase.from('commission_payments').insert({
+  const { error } = await supabase.from('commission_payments').insert({
     team_member_id: paymentMember.id,
     owner_id: tenant.tenantId,
     amount: parseFloat(paymentAmount),
     note: paymentNote || null,
     created_by: user.id,
   })
+  if (!error) {
+    await logClientAuditEvent({
+      action: 'payment_recorded',
+      entityType: 'payment',
+      entityId: null,
+      tenantId: tenant.tenantId,
+      metadata: {
+        source: 'commission_payment',
+        team_member_id: paymentMember.id,
+        amount: parseFloat(paymentAmount),
+      },
+    })
+  }
   setPaymentAmount(''); setPaymentNote('')
   setShowPaymentModal(false); setPaymentMember(null)
   setPaymentSaving(false)
@@ -2141,12 +2166,24 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
     if (user) {
       const tenant = tenantContext || await fetchTenantContext(user.id)
       logTenantWriteUsage(tenant, 'customer_page', 'whatsapp_connection')
-      await supabase.from('whatsapp_connections').upsert({
+      const { error } = await supabase.from('whatsapp_connections').upsert({
         owner_id: tenant.tenantId,
         provider: waProvider,
         api_key: waApiKey,
         is_active: true,
       }, { onConflict: 'owner_id' })
+      if (!error) {
+        await logClientAuditEvent({
+          action: 'integration_connected',
+          entityType: 'integration',
+          entityId: tenant.tenantId,
+          tenantId: tenant.tenantId,
+          metadata: {
+            provider: 'whatsapp',
+            source: 'customer_page',
+          },
+        })
+      }
     }
     setWaConnecting(false)
     setWaConnected(true)
@@ -2204,7 +2241,23 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
               </span>
             </div>
           </div>
-          <button onClick={() => { setWaConnected(false); setWaApiKey(''); setWaProvider('') }}
+          <button onClick={async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+              const tenant = tenantContext || await fetchTenantContext(user.id)
+              await logClientAuditEvent({
+                action: 'integration_disconnected',
+                entityType: 'integration',
+                entityId: tenant.tenantId,
+                tenantId: tenant.tenantId,
+                metadata: {
+                  provider: 'whatsapp',
+                  source: 'customer_page',
+                },
+              })
+            }
+            setWaConnected(false); setWaApiKey(''); setWaProvider('')
+          }}
             className="w-full py-2.5 rounded-xl text-sm font-medium border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
             Bağlantıyı Kes
           </button>

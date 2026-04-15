@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { logClientAuditEvent } from '@/lib/audit/client'
 import { supabase } from '@/lib/supabase/client'
 import { fetchTenantContext, logTenantWriteUsage } from '@/lib/tenant/client'
 
@@ -80,6 +81,16 @@ export default function WhatsAppConnect({ ownerId }: { ownerId: string }) {
     )
 
     if (!error) {
+      await logClientAuditEvent({
+        action: 'integration_connected',
+        entityType: 'integration',
+        entityId: tenant.tenantId,
+        tenantId: tenant.tenantId,
+        metadata: {
+          provider: 'whatsapp',
+          source: 'whatsapp_connect',
+        },
+      })
       setShowForm(false)
       await loadConnection()
     }
@@ -90,7 +101,24 @@ export default function WhatsAppConnect({ ownerId }: { ownerId: string }) {
     if (!confirm('WhatsApp baglantisini kesmek istediginize emin misiniz?')) return
     const tenant = await fetchTenantContext(ownerId)
     logTenantWriteUsage(tenant, 'whatsapp_connect', 'whatsapp_connection')
-    await supabase.from('whatsapp_connections').update({ is_active: false }).eq('owner_id', tenant.tenantId)
+    const { error } = await supabase
+      .from('whatsapp_connections')
+      .update({ is_active: false })
+      .eq('owner_id', tenant.tenantId)
+
+    if (!error) {
+      await logClientAuditEvent({
+        action: 'integration_disconnected',
+        entityType: 'integration',
+        entityId: tenant.tenantId,
+        tenantId: tenant.tenantId,
+        metadata: {
+          provider: 'whatsapp',
+          source: 'whatsapp_connect',
+        },
+      })
+    }
+
     await loadConnection()
   }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { logClientAuditEvent } from '@/lib/audit/client'
 import { supabase } from '@/lib/supabase/client'
 import { useAdvertiser } from '../context'
 import {
@@ -129,6 +130,17 @@ export default function FaturalarPage() {
       amount: inv.total_amount,
       type: 'payment',
       note: 'Fatura ödendi',
+    })
+    await logClientAuditEvent({
+      action: 'payment_recorded',
+      entityType: 'payment',
+      entityId: inv.id,
+      tenantId: matchedCustomer?.id || inv.customer_id || null,
+      metadata: {
+        source: 'advertiser_invoice_payment',
+        amount: inv.total_amount,
+        invoice_id: inv.id,
+      },
     })
     await loadAll()
   }

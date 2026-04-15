@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { logAuditEvent } from '@/lib/audit/logAuditEvent'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -84,6 +85,19 @@ if (!callerProfile || !['super_admin', 'advertiser'].includes(callerProfile.role
           notes: null,
         })
 
+        await logAuditEvent({
+          action: 'customer_created',
+          entityType: 'customer',
+          entityId: customerData.id,
+          userId: user.id,
+          tenantId: customerData.id,
+          metadata: {
+            created_profile_id: userId,
+            advertiser_id: body.advertiser_id,
+            source: 'create_user_api',
+          },
+        })
+
         return NextResponse.json({ 
           userId, 
           customerId: customerData.id,
@@ -98,6 +112,18 @@ if (!callerProfile || !['super_admin', 'advertiser'].includes(callerProfile.role
         monthly_fee: parseFloat(body.adv_monthly_fee) || 0,
         per_client_fee: parseFloat(body.adv_per_client_fee) || 0,
         status: 'active'
+      })
+      await logAuditEvent({
+        action: 'advertiser_created',
+        entityType: 'customer',
+        entityId: userId,
+        userId: user.id,
+        tenantId: null,
+        metadata: {
+          created_profile_id: userId,
+          role: 'advertiser',
+          source: 'create_user_api',
+        },
       })
       return NextResponse.json({ userId })
     }
@@ -121,6 +147,19 @@ if (!callerProfile || !['super_admin', 'advertiser'].includes(callerProfile.role
         is_active: true
       })
     }
+
+    await logAuditEvent({
+      action: 'customer_created',
+      entityType: 'customer',
+      entityId: userId,
+      userId: user.id,
+      tenantId: userId,
+      metadata: {
+        created_profile_id: userId,
+        plan: plan || 'trial',
+        source: 'create_user_api',
+      },
+    })
 
     return NextResponse.json({ userId })
   } catch (err: any) {

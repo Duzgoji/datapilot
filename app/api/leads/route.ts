@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { enforceLeadLimit } from '@/lib/enforceLeadLimit'
 import { resolveTenantContext } from '@/lib/tenant/resolveTenantId'
+import { logAuditEvent } from '@/lib/audit/logAuditEvent'
 
 type LeadInput = Record<string, unknown>
 
@@ -47,6 +48,22 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    for (const lead of data || []) {
+      await logAuditEvent({
+        action: 'lead_created',
+        entityType: 'lead',
+        entityId: typeof lead.id === 'string' ? lead.id : null,
+        userId: user.id,
+        tenantId: tenant.tenantId,
+        metadata: {
+          source: typeof lead.source === 'string' ? lead.source : 'api',
+          owner_id: tenant.writeOwnerId,
+          customer_id:
+            typeof lead.customer_id === 'string' ? lead.customer_id : tenant.tenantId,
+        },
+      })
     }
 
     return NextResponse.json({ data, success: true })

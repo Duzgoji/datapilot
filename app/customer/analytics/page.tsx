@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { logClientAuditEvent } from '@/lib/audit/client'
 import { supabase } from '@/lib/supabase/client'
 import { fetchTenantContext, getCanonicalCustomerId, logTenantWriteUsage, resolveOperationalOwnerId } from '@/lib/tenant/client'
 import { useRouter } from 'next/navigation'
@@ -201,7 +202,7 @@ const [branches, setBranches] = useState<any[]>([])
 
     const leadCode = 'DP-' + Date.now().toString().slice(-6)
 
-    await supabase.from('leads').insert({
+    const { data: newLeadData, error } = await supabase.from('leads').insert({
       lead_code: leadCode,
       branch_id: leadBranch,
       owner_id: leadOwnerId,
@@ -213,7 +214,21 @@ const [branches, setBranches] = useState<any[]>([])
       note: leadNote || null,
       status: 'new',
       customer_id: canonicalCustomerId,
-    })
+    }).select().single()
+
+    if (!error) {
+      await logClientAuditEvent({
+        action: 'lead_created',
+        entityType: 'lead',
+        entityId: newLeadData?.id || null,
+        tenantId: canonicalCustomerId || leadOwnerId,
+        metadata: {
+          source: leadSource,
+          owner_id: leadOwnerId,
+          customer_id: canonicalCustomerId,
+        },
+      })
+    }
 
     setLeadName(''); setLeadPhone(''); setLeadEmail('')
     setLeadBranch(''); setLeadSource('manual')
