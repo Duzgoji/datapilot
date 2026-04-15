@@ -411,20 +411,23 @@ const advRes = await fetch('/api/get-advertisers', {
   const getCustomerTenantContext = (customer: any) => {
     const matchedTenant = customerTenants.find((item: any) => item.owner_id === customer.id) || null
     const tenantOwnerIds = matchedTenant ? [customer.id, matchedTenant.id] : [customer.id]
+    const resolveConnection = (rows: any[]) => {
+      const compatibleRows = rows.filter((item: any) => tenantOwnerIds.includes(item.owner_id))
+      const canonicalRow = matchedTenant
+        ? compatibleRows.find((item: any) => item.owner_id === matchedTenant.id && item.is_active !== false)
+        : null
+      const legacyRow = compatibleRows.find((item: any) => item.owner_id === customer.id && item.is_active !== false)
+
+      return canonicalRow || legacyRow || compatibleRows.find((item: any) => item.owner_id === matchedTenant?.id) || compatibleRows.find((item: any) => item.owner_id === customer.id) || null
+    }
     const leadCount = leads.filter((lead: any) =>
       lead.branch_id
         ? branches.some((branch: any) => branch.id === lead.branch_id && tenantOwnerIds.includes(branch.owner_id))
         : tenantOwnerIds.includes(lead.owner_id)
     ).length
     const branchCount = branches.filter((branch: any) => tenantOwnerIds.includes(branch.owner_id)).length
-    const metaConnection =
-      metaConnections.find((item: any) => item.owner_id === matchedTenant?.id && item.is_active) ||
-      metaConnections.find((item: any) => item.owner_id === customer.id && item.is_active) ||
-      null
-    const whatsAppConnection =
-      whatsAppConnections.find((item: any) => item.owner_id === matchedTenant?.id && item.is_active) ||
-      whatsAppConnections.find((item: any) => item.owner_id === customer.id && item.is_active) ||
-      null
+    const metaConnection = resolveConnection(metaConnections)
+    const whatsAppConnection = resolveConnection(whatsAppConnections)
     const recentAuditLogs = auditLogs
       .filter((log: any) => tenantOwnerIds.includes(log.tenant_id))
       .slice(0, 5)
