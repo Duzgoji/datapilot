@@ -101,12 +101,15 @@ export default function SuperAdminPage() {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   const [customers, setCustomers] = useState<any[]>([])
+  const [customerTenants, setCustomerTenants] = useState<any[]>([])
   const [branches, setBranches] = useState<any[]>([])
   const [leads, setLeads] = useState<any[]>([])
   const [invoices, setInvoices] = useState<any[]>([])
   const [allUsers, setAllUsers] = useState<any[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [advertisers, setAdvertisers] = useState<any[]>([])
+  const [metaConnections, setMetaConnections] = useState<any[]>([])
+  const [whatsAppConnections, setWhatsAppConnections] = useState<any[]>([])
   const [auditLogs, setAuditLogs] = useState<any[]>([])
 
   // Firma modals
@@ -245,10 +248,16 @@ const customersWithSubs = (customersData || []).map(c => ({
   subscriptions: (subsData || []).filter(s => s.owner_id === c.id)
 }))
 setCustomers(customersWithSubs)
+    const { data: customerTenantData } = await supabase.from('customers').select('id, owner_id, name, advertiser_id, status')
+    setCustomerTenants(customerTenantData || [])
     const { data: branchesData } = await supabase.from('branches').select('*')
     setBranches(branchesData || [])
-    const { data: leadsData } = await supabase.from('leads').select('id, status, procedure_amount, created_at, branch_id, assigned_to')
+    const { data: leadsData } = await supabase.from('leads').select('id, status, procedure_amount, created_at, branch_id, assigned_to, owner_id')
     setLeads(leadsData || [])
+    const { data: metaConnectionData } = await supabase.from('meta_connections').select('owner_id, is_active, connected_at')
+    setMetaConnections(metaConnectionData || [])
+    const { data: whatsAppConnectionData } = await supabase.from('whatsapp_connections').select('owner_id, is_active, connected_at')
+    setWhatsAppConnections(whatsAppConnectionData || [])
     const { data: invoicesData, error: invoicesError } = await supabase.from('invoices').select('*').order('created_at', { ascending: false })
     console.log('invoices:', invoicesData?.length, invoicesError)
     setInvoices(invoicesData || [])
@@ -395,8 +404,40 @@ const advRes = await fetch('/api/get-advertisers', {
   const getAuditTenantLabel = (tenantId?: string | null) => {
     if (!tenantId) return '-'
     const customerProfile = customers.find((item: any) => item.id === tenantId)
+    const customerTenant = customerTenants.find((item: any) => item.id === tenantId)
     const advertiserProfile = advertisers.find((item: any) => item.id === tenantId)
-    return customerProfile?.company_name || advertiserProfile?.company_name || tenantId
+    return customerProfile?.company_name || customerTenant?.name || advertiserProfile?.company_name || tenantId
+  }
+  const getCustomerTenantContext = (customer: any) => {
+    const matchedTenant = customerTenants.find((item: any) => item.owner_id === customer.id) || null
+    const tenantOwnerIds = matchedTenant ? [customer.id, matchedTenant.id] : [customer.id]
+    const leadCount = leads.filter((lead: any) =>
+      lead.branch_id
+        ? branches.some((branch: any) => branch.id === lead.branch_id && tenantOwnerIds.includes(branch.owner_id))
+        : tenantOwnerIds.includes(lead.owner_id)
+    ).length
+    const branchCount = branches.filter((branch: any) => tenantOwnerIds.includes(branch.owner_id)).length
+    const metaConnection =
+      metaConnections.find((item: any) => item.owner_id === matchedTenant?.id && item.is_active) ||
+      metaConnections.find((item: any) => item.owner_id === customer.id && item.is_active) ||
+      null
+    const whatsAppConnection =
+      whatsAppConnections.find((item: any) => item.owner_id === matchedTenant?.id && item.is_active) ||
+      whatsAppConnections.find((item: any) => item.owner_id === customer.id && item.is_active) ||
+      null
+    const recentAuditLogs = auditLogs
+      .filter((log: any) => tenantOwnerIds.includes(log.tenant_id))
+      .slice(0, 5)
+
+    return {
+      matchedTenant,
+      tenantOwnerIds,
+      leadCount,
+      branchCount,
+      metaConnection,
+      whatsAppConnection,
+      recentAuditLogs,
+    }
   }
 
   const getPageTitle = () => {
@@ -1809,6 +1850,7 @@ else created++
   subtitle={selectedCustomer?.email} size="xl">
   {selectedCustomer && (() => {
     const sub = selectedCustomer.subscriptions?.[0]
+    const tenantContext = getCustomerTenantContext(selectedCustomer)
     const customerInvoices = invoices.filter(inv => inv.owner_id === selectedCustomer.id)
     const pendingTotal = customerInvoices.filter(i => i.status === 'pending').reduce((s, i) => s + (i.total_amount || 0), 0)
     const paidTotal = customerInvoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.total_amount || 0), 0)
@@ -1833,12 +1875,37 @@ else created++
         {/* GENEL */}
         {custDetailTab === 'genel' && (
           <div className="space-y-4">
+            <div className="bg-white border border-gray-100 rounded-xl p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-lg font-semibold text-gray-900">{selectedCustomer.company_name || selectedCustomer.full_name || '-'}</p>
+                  <p className="text-xs text-gray-400 mt-1">{selectedCustomer.email || '-'}</p>
+                </div>
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${selectedCustomer.is_active !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                  {selectedCustomer.is_active !== false ? 'Aktif' : 'Pasif'}
+                </span>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'Ad Soyad', value: selectedCustomer.full_name },
+                { label: 'Firma Adı', value: selectedCustomer.company_name || '-' },
+                { label: 'Ad Soyad', value: selectedCustomer.full_name || '-' },
                 { label: 'E-posta', value: selectedCustomer.email },
                 { label: 'Sektör', value: selectedCustomer.sector || '-' },
                 { label: 'Kayıt Tarihi', value: new Date(selectedCustomer.created_at).toLocaleDateString('tr-TR') },
+              ].map(item => (
+                <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
+                  <p className="text-xs text-gray-400 mb-1">{item.label}</p>
+                  <p className="text-sm font-medium text-gray-900">{item.value}</p>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Plan', value: sub?.plan ? String(sub.plan).toUpperCase() : 'Tanımsız' },
+                { label: 'Abonelik Durumu', value: sub?.status || 'Tanımsız' },
+                { label: 'Lead Sayısı', value: tenantContext.leadCount },
+                { label: 'Şube Sayısı', value: tenantContext.branchCount },
               ].map(item => (
                 <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
                   <p className="text-xs text-gray-400 mb-1">{item.label}</p>
@@ -1856,6 +1923,50 @@ else created++
                 </div>
               </div>
             )}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <p className="text-xs text-gray-400 mb-2">Meta Bağlantısı</p>
+                <p className={`text-sm font-semibold ${tenantContext.metaConnection ? 'text-emerald-700' : 'text-gray-500'}`}>
+                  {tenantContext.metaConnection ? 'Bağlı' : 'Bağlı değil'}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {tenantContext.metaConnection?.connected_at ? new Date(tenantContext.metaConnection.connected_at).toLocaleDateString('tr-TR') : 'Kayıt yok'}
+                </p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <p className="text-xs text-gray-400 mb-2">WhatsApp Bağlantısı</p>
+                <p className={`text-sm font-semibold ${tenantContext.whatsAppConnection ? 'text-emerald-700' : 'text-gray-500'}`}>
+                  {tenantContext.whatsAppConnection ? 'Bağlı' : 'Bağlı değil'}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {tenantContext.whatsAppConnection?.connected_at ? new Date(tenantContext.whatsAppConnection.connected_at).toLocaleDateString('tr-TR') : 'Kayıt yok'}
+                </p>
+              </div>
+            </div>
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                <p className="text-xs font-semibold text-gray-600">Son Audit Kayıtları</p>
+              </div>
+              {tenantContext.recentAuditLogs.length === 0 ? (
+                <div className="px-4 py-6 text-sm text-gray-400 text-center">
+                  Bu tenant için son audit kaydı bulunmuyor.
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {tenantContext.recentAuditLogs.map((log: any) => (
+                    <div key={log.id || `${log.action}-${log.created_at}`} className="px-4 py-3 flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900">{log.action}</p>
+                        <p className="text-xs text-gray-400 truncate">{getAuditUserLabel(log.user_id)}</p>
+                      </div>
+                      <p className="text-xs text-gray-400 whitespace-nowrap">
+                        {log.created_at ? new Date(log.created_at).toLocaleDateString('tr-TR') : '-'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="flex gap-3">
               <Btn variant="danger" className="flex-1" onClick={() => { handleToggleActive(selectedCustomer); setShowCustomerDetail(false) }}>
                 {selectedCustomer.is_active !== false ? 'Pasife Al' : 'Aktife Al'}
