@@ -171,7 +171,7 @@ export default function ManagerPage() {
                <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto" />
                 <span className="text-white font-bold">DataPilot</span>
               </div>
-              <button onClick={() => setSidebarCollapsed(true)} className="text-indigo-400 hover:text-white text-xs">◀</button>
+              <button onClick={() => setSidebarCollapsed(false)} className="..."></button>
             </>
           ) : (
             <button onClick={() => setSidebarCollapsed(false)} className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center mx-auto">
@@ -238,8 +238,7 @@ export default function ManagerPage() {
       </div>
 
       {/* MAIN */}
-      <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-64'} flex-1 transition-all duration-300`}>
-
+<div className={`${sidebarCollapsed ? 'ml-16' : 'ml-64'} flex-1 transition-all duration-300 min-w-0 overflow-x-hidden`}>
         {/* TOP BAR */}
         <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4 sticky top-0 z-10 shadow-sm">
           <h1 className="font-bold text-gray-900">{getPageTitle()}</h1>

@@ -1092,23 +1092,32 @@ return (
 
       {/* ── SIDEBAR ── */}
       <aside
-        onMouseEnter={() => setSidebarCollapsed(false)}
-        onMouseLeave={() => setSidebarCollapsed(true)}
-        className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 ${sidebarCollapsed ? 'md:w-16' : 'md:w-60'} w-60 bg-gray-950 border-r border-gray-800 flex flex-col fixed top-0 left-0 h-full z-40 transition-all duration-200 shadow-xl`}>
-
+  className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-gray-950 ...`}>
         {/* DataPilot Logo */}
-        <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-          <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
-          {!sidebarCollapsed && <span className="font-semibold text-white text-sm tracking-tight truncate">DataPilot</span>}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(false)}
-            className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-white/5 hover:text-gray-200 md:hidden"
-            aria-label="Menüyü kapat"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-          </button>
-        </div>
+       <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+  <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
+  {!sidebarCollapsed && (
+    <>
+      <span className="font-semibold text-white text-sm tracking-tight truncate flex-1">DataPilot</span>
+      <button
+        onClick={() => setSidebarCollapsed(true)}
+        className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors flex-shrink-0">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+    </>
+  )}
+  {sidebarCollapsed && (
+    <button
+      onClick={() => setSidebarCollapsed(false)}
+      className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </button>
+  )}
+</div>
 
         {/* Firma */}
         {!sidebarCollapsed && (
@@ -1194,7 +1203,7 @@ return (
       </aside>
 
       {/* ── MAIN ── */}
-      <div className="ml-0 flex-1 min-w-0 transition-all duration-200 md:ml-16">
+      <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-60'} flex-1 transition-all duration-200 min-w-0 overflow-x-hidden`}>
 
         {/* Top bar */}
 <header className="sticky top-0 z-10 flex min-h-14 flex-wrap items-center gap-2 border-b border-gray-100 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm sm:px-6">
