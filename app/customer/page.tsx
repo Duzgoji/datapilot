@@ -136,7 +136,7 @@ const PlanUsageWidget = ({ ownerId, plan }: { ownerId: string, plan: PlanName })
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-gray-500">{row.label}</span>
               <span className={`text-xs font-semibold ${isOver ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-gray-700'}`}>
-                {row.used} / {row.max ?? '∞'}
+                {row.used} / {row.max ? row.max : '?'}
               </span>
             </div>
             {row.max && (
@@ -2354,7 +2354,7 @@ return (
                     </div>
 
                     <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start gap-3">
-                      <span className="text-lg">�??�️</span>
+                      <span className="text-lg">�?�️</span>
                       <div>
                         <p className="text-xs font-semibold text-gray-800">{p.name} hesabınız yok mu?</p>
                         <p className="text-xs text-gray-500 mt-0.5">Önce {p.name}'e kaydolun, API key alın.</p>
@@ -3420,7 +3420,7 @@ return (
             const memberEarnings = teamMembers.map((tm: any) => {
               const branch = branches.find((b: any) => b.id === tm.branch_id)
               const commModel = branch?.commission_model || 'fixed_rate'
-              const commValue = tm.commission_value ?? branch?.commission_value ?? 0
+              const commValue = tm.commission_value || branch?.commission_value || 0
               const mSales = soldLeads.filter(l => l.assigned_to === tm.user_id)
               const mRevenue = mSales.reduce((s: number, l: any) => s + (l.procedure_amount || 0), 0)
               const mLeads = filteredLeads.filter(l => l.assigned_to === tm.user_id)
@@ -4152,7 +4152,7 @@ return (
   <div className="flex items-center justify-between mb-4">
     <h3 className="font-semibold text-gray-900">Abonelik & Kullanım</h3>
     {(() => {
-  const plan = profile?._resolvedPlan ?? 'starter'  // ← const ekle
+  const plan = profile?._resolvedPlan || 'starter'
   const cfg: any = {
     starter: 'bg-gray-100 text-gray-600',
     pro: 'bg-blue-50 text-blue-700',
@@ -4161,7 +4161,7 @@ return (
   return <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${cfg[plan] || cfg.starter}`}>{plan}</span>
 })()}
   </div>
-  <PlanUsageWidget ownerId={tenantContext?.tenantId || profile?.id} plan={profile?._resolvedPlan ?? 'starter'} />
+  <PlanUsageWidget ownerId={tenantContext?.tenantId || profile?.id} plan={profile?._resolvedPlan || 'starter'} />
 </div>
 
             </div>
