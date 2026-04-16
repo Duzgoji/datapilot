@@ -57,6 +57,7 @@ const [branches, setBranches] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState('dashboard')
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['meta'])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -290,9 +291,17 @@ const [branches, setBranches] = useState<any[]>([])
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          aria-label="Menüyü kapat"
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 z-30 bg-slate-950/50 md:hidden"
+        />
+      )}
 
       {/* SIDEBAR */}
-      <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} min-h-screen bg-slate-900 flex flex-col fixed left-0 top-0 shadow-xl transition-all duration-300 z-20`}>
+      <div className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 ${sidebarCollapsed ? 'md:w-16' : 'md:w-64'} w-64 min-h-screen bg-slate-900 flex flex-col fixed left-0 top-0 shadow-xl transition-all duration-300 z-40`}>
         <div className="p-4 border-b border-slate-700 flex items-center justify-between">
           {!sidebarCollapsed ? (
             <>
@@ -309,6 +318,14 @@ const [branches, setBranches] = useState<any[]>([])
               <span className="text-white font-bold text-sm">D</span>
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(false)}
+            className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-white/5 hover:text-white md:hidden"
+            aria-label="Menüyü kapat"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          </button>
         </div>
 
         {!sidebarCollapsed && (
@@ -325,7 +342,13 @@ const [branches, setBranches] = useState<any[]>([])
           {menuStructure.map(item => (
             <div key={item.key}>
               <button
-                onClick={() => item.children ? toggleMenu(item.key) : setActiveTab(item.key)}
+                onClick={() => {
+                  if (item.children) toggleMenu(item.key)
+                  else {
+                    setActiveTab(item.key)
+                    setMobileMenuOpen(false)
+                  }
+                }}
                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${activeTab === item.key ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
                 <span className="flex-shrink-0">{item.icon}</span>
                 {!sidebarCollapsed && (
@@ -340,7 +363,7 @@ const [branches, setBranches] = useState<any[]>([])
               {item.children && expandedMenus.includes(item.key) && !sidebarCollapsed && (
                 <div className="ml-3 mt-0.5 border-l border-slate-700 pl-3 space-y-0.5">
                   {item.children.map(child => (
-                    <button key={child.key} onClick={() => setActiveTab(child.key)}
+                    <button key={child.key} onClick={() => { setActiveTab(child.key); setMobileMenuOpen(false) }}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${activeTab === child.key ? 'bg-blue-600 text-white font-medium' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
                       {child.label}
                     </button>
@@ -371,10 +394,18 @@ const [branches, setBranches] = useState<any[]>([])
       </div>
 
       {/* MAIN */}
-      <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-64'} min-w-0 flex-1 overflow-x-hidden transition-all duration-300`}>
+      <div className="ml-0 min-w-0 flex-1 overflow-x-hidden transition-all duration-300 md:ml-16">
 
         {/* TOP BAR */}
         <div className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 shadow-sm sm:px-6">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
+            aria-label="Menüyü aç"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          </button>
           <div className="relative flex-1 max-w-sm">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">ğŸ”</span>
             <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}

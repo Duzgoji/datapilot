@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
@@ -159,7 +159,15 @@ function CustomerSwitcher({
 }
 
 // ── Sidebar ────────────────────────────────────────────────────────────────
-function Sidebar({ onAddNew }: { onAddNew: () => void }) {
+function Sidebar({
+  onAddNew,
+  mobileMenuOpen,
+  onCloseMobileMenu,
+}: {
+  onAddNew: () => void
+  mobileMenuOpen: boolean
+  onCloseMobileMenu: () => void
+}) {
   const { profile, customers } = useAdvertiser()
   const pathname = usePathname()
   const router = useRouter()
@@ -170,6 +178,7 @@ function Sidebar({ onAddNew }: { onAddNew: () => void }) {
   const customerIdMatch = pathname.match(/\/advertiser\/customers\/([^/]+)/)
   const activeCustomerId = customerIdMatch?.[1] ?? null
   const activeCustomer = customers.find(c => c.id === activeCustomerId)
+  const isCompact = !mobileMenuOpen && collapsed
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -178,6 +187,10 @@ function Sidebar({ onAddNew }: { onAddNew: () => void }) {
     document.addEventListener('mousedown', h)
     return () => document.removeEventListener('mousedown', h)
   }, [])
+
+  useEffect(() => {
+    onCloseMobileMenu()
+  }, [pathname, onCloseMobileMenu])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -210,16 +223,24 @@ function Sidebar({ onAddNew }: { onAddNew: () => void }) {
     <aside
       onMouseEnter={() => setCollapsed(false)}
       onMouseLeave={() => setCollapsed(true)}
-      className={`${collapsed ? 'w-[60px]' : 'w-64'} bg-gray-950 border-r border-gray-800/60 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-200 ease-in-out`}
+      className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 ${isCompact ? 'md:w-[60px]' : 'md:w-64'} w-64 bg-gray-950 border-r border-gray-800/60 flex flex-col fixed top-0 left-0 h-full z-40 transition-all duration-200 ease-in-out`}
     >
       {/* Logo */}
-      <div className={`flex items-center h-14 border-b border-gray-800/60 px-4 flex-shrink-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
+      <div className={`flex items-center h-14 border-b border-gray-800/60 px-4 flex-shrink-0 ${isCompact ? 'justify-center' : 'gap-3'}`}>
         <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
-        {!collapsed && <span className="font-semibold text-white text-sm tracking-tight truncate">DataPilot</span>}
+        {!isCompact && <span className="font-semibold text-white text-sm tracking-tight truncate">DataPilot</span>}
+        <button
+          type="button"
+          onClick={onCloseMobileMenu}
+          className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-white/5 hover:text-gray-200 md:hidden"
+          aria-label="Menüyü kapat"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+        </button>
       </div>
 
       {/* Reklamcı profil satırı */}
-      {!collapsed && (
+      {!isCompact && (
         <div className="px-4 py-3 border-b border-gray-800/60 flex items-center gap-2.5 flex-shrink-0">
           <div className="w-7 h-7 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
             <span className="text-amber-400 text-xs font-bold">{(profile?.company_name || profile?.full_name || 'R').charAt(0)}</span>
@@ -232,7 +253,7 @@ function Sidebar({ onAddNew }: { onAddNew: () => void }) {
       )}
 
       {/* Workspace switcher — sadece expanded */}
-      {!collapsed && (
+      {!isCompact && (
         <CustomerSwitcher
           customers={customers}
           activeCustomerId={activeCustomerId}
@@ -241,7 +262,7 @@ function Sidebar({ onAddNew }: { onAddNew: () => void }) {
       )}
 
       {/* Aktif müşteri workspace nav */}
-      {activeCustomer && !collapsed && (
+      {activeCustomer && !isCompact && (
         <div className="flex-shrink-0 border-b border-gray-800/60">
           {/* Workspace başlığı */}
           <div className="px-3 pt-3 pb-1 flex items-center justify-between">
@@ -271,6 +292,7 @@ function Sidebar({ onAddNew }: { onAddNew: () => void }) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onCloseMobileMenu}
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all ${
                   isActive(item.href, item.exact)
                     ? 'bg-amber-500/15 text-amber-300 font-medium'
@@ -287,27 +309,27 @@ function Sidebar({ onAddNew }: { onAddNew: () => void }) {
 
       {/* Ana navigasyon */}
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-        {collapsed && customers.slice(0, 5).map(c => (
-          <Link key={c.id} href={`/advertiser/customers/${c.id}`} title={c.name}
+        {isCompact && customers.slice(0, 5).map(c => (
+          <Link key={c.id} href={`/advertiser/customers/${c.id}`} onClick={onCloseMobileMenu} title={c.name}
             className={`flex items-center justify-center w-10 h-10 mx-auto rounded-xl transition-all mb-1 ${activeCustomerId === c.id ? 'bg-amber-500/20 text-amber-400' : 'text-gray-600 hover:bg-white/10 hover:text-gray-300'}`}>
             <span className="text-xs font-bold">{c.name.charAt(0)}</span>
           </Link>
         ))}
-        {collapsed && customers.length > 0 && <div className="h-px bg-gray-800 mx-2 my-2" />}
+        {isCompact && customers.length > 0 && <div className="h-px bg-gray-800 mx-2 my-2" />}
 
         {!activeCustomer && mainNav.map(item => {
           const active = isActive(item.href, item.exact)
           return (
-            <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all ${active ? 'bg-amber-500 text-white font-medium shadow-lg shadow-amber-900/20' : item.accent === 'emerald' ? 'text-emerald-400/80 hover:bg-emerald-500/10 hover:text-emerald-300' : 'text-gray-500 hover:bg-white/8 hover:text-gray-200'} ${collapsed ? 'justify-center' : ''}`}>
+            <Link key={item.href} href={item.href} onClick={onCloseMobileMenu} title={collapsed ? item.label : undefined}
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all ${active ? 'bg-amber-500 text-white font-medium shadow-lg shadow-amber-900/20' : item.accent === 'emerald' ? 'text-emerald-400/80 hover:bg-emerald-500/10 hover:text-emerald-300' : 'text-gray-500 hover:bg-white/8 hover:text-gray-200'} ${isCompact ? 'justify-center' : ''}`}>
               <span className="flex-shrink-0"><item.IconComp /></span>
-              {!collapsed && <span className="flex-1 text-left text-xs font-medium">{item.label}</span>}
+              {!isCompact && <span className="flex-1 text-left text-xs font-medium">{item.label}</span>}
             </Link>
           )
         })}
 
-        {activeCustomer && !collapsed && (
-          <Link href="/advertiser" className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-gray-600 hover:text-gray-300 hover:bg-white/5 transition-all">
+        {activeCustomer && !isCompact && (
+          <Link href="/advertiser" onClick={onCloseMobileMenu} className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-gray-600 hover:text-gray-300 hover:bg-white/5 transition-all">
             <Icon.back />
             <span>Ana Panele Dön</span>
           </Link>
@@ -315,7 +337,7 @@ function Sidebar({ onAddNew }: { onAddNew: () => void }) {
       </nav>
       {/* Alt profil alanı */}
       <div className="flex-shrink-0 border-t border-gray-800/60 p-2" ref={profileRef}>
-        {!collapsed ? (
+        {!isCompact ? (
           <>
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -364,7 +386,7 @@ function Sidebar({ onAddNew }: { onAddNew: () => void }) {
 }
 
 // ── TopBar ─────────────────────────────────────────────────────────────────
-function TopBar() {
+function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) {
   const { profile, customers } = useAdvertiser()
   const pathname = usePathname()
 
@@ -383,6 +405,14 @@ function TopBar() {
 
   return (
     <header className="sticky top-0 z-10 flex min-h-14 flex-wrap items-center gap-2 border-b border-gray-100 bg-white/90 px-4 py-2 backdrop-blur-md sm:px-6">
+      <button
+        type="button"
+        onClick={onOpenMobileMenu}
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
+        aria-label="Menüyü aç"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+      </button>
       <nav className="min-w-0 flex-1 overflow-hidden">
         <div className="flex min-w-0 items-center gap-1.5 overflow-hidden text-sm text-gray-400">
         <Link href="/advertiser" className="hover:text-gray-600 transition-colors flex-shrink-0 font-medium text-gray-500">
@@ -460,15 +490,29 @@ function LoadingScreen() {
 export function AdvertiserShell({ children }: { children: React.ReactNode }) {
   const { loading } = useAdvertiser()
   const [showAddCustomer, setShowAddCustomer] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), [])
 
   if (loading) return <LoadingScreen />
 
   return (
     <div className="min-h-screen overflow-x-hidden flex" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: '#fafafa' }}>
-      <Sidebar onAddNew={() => setShowAddCustomer(true)} />
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          aria-label="Menüyü kapat"
+          onClick={closeMobileMenu}
+          className="fixed inset-0 z-30 bg-gray-950/50 md:hidden"
+        />
+      )}
+      <Sidebar
+        onAddNew={() => setShowAddCustomer(true)}
+        mobileMenuOpen={mobileMenuOpen}
+        onCloseMobileMenu={closeMobileMenu}
+      />
 
-      <div className="ml-[60px] flex-1 min-w-0 overflow-x-hidden">
-        <TopBar />
+      <div className="ml-0 flex-1 min-w-0 overflow-x-hidden md:ml-[60px]">
+        <TopBar onOpenMobileMenu={() => setMobileMenuOpen(true)} />
         <div
           className="min-h-[calc(100vh-56px)] overflow-x-hidden"
           style={{ background: 'linear-gradient(160deg, #f9f9fb 0%, #f4f2fd 50%, #fdf8ed 100%)' }}

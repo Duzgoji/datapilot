@@ -98,6 +98,7 @@ export default function SuperAdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['firmalar', 'reklamcilar'])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   const [customers, setCustomers] = useState<any[]>([])
@@ -175,6 +176,7 @@ export default function SuperAdminPage() {
   const [obCommissionModel, setObCommissionModel] = useState('fixed_rate')
   const [obInviteLink, setObInviteLink] = useState('')
   const [obSaving, setObSaving] = useState(false)
+  const effectiveSidebarCollapsed = sidebarCollapsed && !mobileMenuOpen
 
   const resetOnboarding = () => {
     setOnboardingStep(1); setObName(''); setObEmail(''); setObPassword(''); setObCompany('')
@@ -467,21 +469,37 @@ const advRes = await fetch('/api/get-advertisers', {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-gray-50 flex" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          aria-label="Menüyü kapat"
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 z-30 bg-gray-950/50 md:hidden"
+        />
+      )}
 
       {/* â”€â”€ SIDEBAR â”€â”€ */}
       <aside
         onMouseEnter={() => setSidebarCollapsed(false)}
         onMouseLeave={() => setSidebarCollapsed(true)}
-        className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-gray-950 border-r border-gray-800 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-200 shadow-xl`}>
+        className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 ${effectiveSidebarCollapsed ? 'md:w-16' : 'md:w-60'} w-60 bg-gray-950 border-r border-gray-800 flex flex-col fixed top-0 left-0 h-full z-40 transition-all duration-200 shadow-xl`}>
 
         {/* Logo */}
-        <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+        <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${effectiveSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
           <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
-          {!sidebarCollapsed && <span className="font-semibold text-white text-sm tracking-tight truncate">DataPilot</span>}
+          {!effectiveSidebarCollapsed && <span className="font-semibold text-white text-sm tracking-tight truncate">DataPilot</span>}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(false)}
+            className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-white/5 hover:text-gray-200 md:hidden"
+            aria-label="Menüyü kapat"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          </button>
         </div>
 
         {/* Rol badge */}
-        {!sidebarCollapsed && (
+        {!effectiveSidebarCollapsed && (
           <div className="px-4 py-3 border-b border-gray-800">
             <span className="text-xs font-semibold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-full border border-rose-500/20">
               Super Admin
@@ -494,7 +512,13 @@ const advRes = await fetch('/api/get-advertisers', {
           {menuStructure.map(item => (
             <div key={item.key}>
               <button
-                onClick={() => { if (item.children) toggleMenu(item.key); else setActiveTab(item.key) }}
+                onClick={() => {
+                  if (item.children) toggleMenu(item.key)
+                  else {
+                    setActiveTab(item.key)
+                    setMobileMenuOpen(false)
+                  }
+                }}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all mb-0.5 ${
                   activeTab === item.key && !item.children
                     ? 'bg-indigo-600 text-white font-medium shadow-lg shadow-indigo-900/50'
@@ -503,7 +527,7 @@ const advRes = await fetch('/api/get-advertisers', {
                     : 'text-gray-400 hover:bg-white/10 hover:text-white'
                 }`}>
                 <span className="text-base flex-shrink-0">{item.icon}</span>
-                {!sidebarCollapsed && (
+                {!effectiveSidebarCollapsed && (
                   <>
                     <span className="flex-1 text-left">{item.label}</span>
                     {item.children && (
@@ -512,10 +536,10 @@ const advRes = await fetch('/api/get-advertisers', {
                   </>
                 )}
               </button>
-              {item.children && expandedMenus.includes(item.key) && !sidebarCollapsed && (
+              {item.children && expandedMenus.includes(item.key) && !effectiveSidebarCollapsed && (
                 <div className={`ml-3 pl-3 mb-1 border-l ${item.key === 'reklamcilar' ? 'border-amber-800' : 'border-gray-700'}`}>
                   {item.children.map(child => (
-                    <button key={child.key} onClick={() => setActiveTab(child.key)}
+                    <button key={child.key} onClick={() => { setActiveTab(child.key); setMobileMenuOpen(false) }}
                       className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all mb-0.5 ${
                         activeTab === child.key
                           ? item.key === 'reklamcilar' ? 'text-amber-400 font-medium bg-amber-500/10' : 'text-indigo-400 font-medium bg-indigo-500/10'
@@ -531,7 +555,7 @@ const advRes = await fetch('/api/get-advertisers', {
         </nav>
 
         {/* Bottom */}
-        {!sidebarCollapsed ? (
+        {!effectiveSidebarCollapsed ? (
           <div className="p-3 border-t border-gray-800">
             <div className="flex items-center gap-2.5 px-2 py-1.5">
               <div className="w-7 h-7 rounded-lg bg-rose-500/20 flex items-center justify-center flex-shrink-0">
@@ -553,10 +577,18 @@ const advRes = await fetch('/api/get-advertisers', {
       </aside>
 
       {/* â”€â”€ MAIN â”€â”€ */}
-      <div className="ml-16 min-w-0 flex-1 overflow-x-hidden transition-all duration-200">
+      <div className="ml-0 min-w-0 flex-1 overflow-x-hidden transition-all duration-200 md:ml-16">
 
         {/* Top bar */}
         <header className="sticky top-0 z-10 flex min-h-14 flex-wrap items-center gap-2 border-b border-gray-100 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm sm:px-6">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
+            aria-label="Menüyü aç"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          </button>
           <div className="min-w-0 flex-1 overflow-hidden">
           <div className="flex min-w-0 items-center gap-1.5 overflow-hidden text-sm text-gray-400">
             <span>DataPilot</span>

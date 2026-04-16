@@ -249,6 +249,7 @@ const [branches, setBranches] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState('dashboard')
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['leadler', 'ekip'])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [commissionPayments, setCommissionPayments] = useState<any[]>([])
@@ -1072,7 +1073,7 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
 
   // â”€â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  const sidebarWidth = sidebarCollapsed ? '4rem' : '15rem'
-  return (
+return (
    <div
   className="min-h-screen bg-gray-50"
   style={{
@@ -1080,17 +1081,33 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
     ['--sidebar-width' as any]: sidebarWidth,
   }}
 >
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          aria-label="Menüyü kapat"
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 z-30 bg-gray-950/50 md:hidden"
+        />
+      )}
 
       {/* â”€â”€ SIDEBAR â”€â”€ */}
       <aside
         onMouseEnter={() => setSidebarCollapsed(false)}
         onMouseLeave={() => setSidebarCollapsed(true)}
-        className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-gray-950 border-r border-gray-800 flex flex-col fixed top-0 left-0 h-full z-20 transition-all duration-200 shadow-xl`}>
+        className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 ${sidebarCollapsed ? 'md:w-16' : 'md:w-60'} w-60 bg-gray-950 border-r border-gray-800 flex flex-col fixed top-0 left-0 h-full z-40 transition-all duration-200 shadow-xl`}>
 
         {/* DataPilot Logo */}
         <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
           <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
           {!sidebarCollapsed && <span className="font-semibold text-white text-sm tracking-tight truncate">DataPilot</span>}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(false)}
+            className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-white/5 hover:text-gray-200 md:hidden"
+            aria-label="Menüyü kapat"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          </button>
         </div>
 
         {/* Firma */}
@@ -1115,7 +1132,13 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
           {menuStructure.map(item => (
             <div key={item.key}>
               <button
-                onClick={() => { if (item.children) toggleMenu(item.key); else setActiveTab(item.key) }}
+                onClick={() => {
+                  if (item.children) toggleMenu(item.key)
+                  else {
+                    setActiveTab(item.key)
+                    setMobileMenuOpen(false)
+                  }
+                }}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all mb-0.5 ${
                   activeTab === item.key && !item.children
                     ? 'bg-indigo-600 text-white font-medium shadow-lg shadow-indigo-900/50'
@@ -1135,7 +1158,7 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
               {item.children && expandedMenus.includes(item.key) && !sidebarCollapsed && (
                 <div className="ml-3 pl-3 border-l border-gray-700 mb-1">
                   {item.children.map(child => (
-                    <button key={child.key} onClick={() => setActiveTab(child.key)}
+                    <button key={child.key} onClick={() => { setActiveTab(child.key); setMobileMenuOpen(false) }}
                       className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-all mb-0.5 ${
                         activeTab === child.key ? 'text-indigo-400 font-medium bg-indigo-500/10' : 'text-gray-500 hover:text-gray-200 hover:bg-white/5'
                       }`}>
@@ -1171,10 +1194,18 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
       </aside>
 
       {/* â”€â”€ MAIN â”€â”€ */}
-      <div className="ml-16 flex-1 transition-all duration-200 min-w-0">
+      <div className="ml-0 flex-1 min-w-0 transition-all duration-200 md:ml-16">
 
         {/* Top bar */}
 <header className="sticky top-0 z-10 flex min-h-14 flex-wrap items-center gap-2 border-b border-gray-100 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm sm:px-6">
+  <button
+    type="button"
+    onClick={() => setMobileMenuOpen(true)}
+    className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition-colors hover:bg-gray-50 md:hidden"
+    aria-label="Menüyü aç"
+  >
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+  </button>
   <div className="min-w-0 flex-1 overflow-hidden">
   <div className="flex min-w-0 items-center gap-1.5 overflow-hidden text-sm text-gray-400">
     <span>DataPilot</span>
@@ -1273,7 +1304,7 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
 </header>
 
         {/* Content */}
-       <div className="ml-16 min-h-screen overflow-x-hidden" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
+       <div className="min-h-screen overflow-x-hidden" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
        <main className="w-full overflow-x-hidden px-4 py-4 sm:px-6 sm:py-6">
           {/* â”€â”€ DASHBOARD â”€â”€ */}
           {activeTab === 'dashboard' && (
