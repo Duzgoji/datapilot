@@ -4,70 +4,70 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 const problems = [
-  'Yeni gelen talepler farklı yerlerde kalır, takip kopuyor.',
-  'Kimin kimi arayacağı karışır, fırsatlar belirsizleşir.',
-  'Hızlı dönüş yapılamadığı için satış fırsatları kaçar.',
-  'Satış ekibi dağınık çalışır, koordinasyon zorlaşır.',
-  'Yönetici net tabloyu göremez, karar vermek güçleşir.',
-  'WhatsApp mesajları karışır, notlar ve takip adımları eksik kalır.',
+  'Talep geliyor ama kim ilgilenecek belli değil.',
+  'WhatsApp mesajları birikiyor, takip kopuyor.',
+  'Satışçı aramış mı, randevu aldı mı — kimse bilmiyor.',
+  'Yönetici net bir tablo göremeden karar vermek zorunda kalıyor.',
+  'Reklam para yakıyor ama sonuç görünmüyor.',
+  'Müşteri adayları arada kayboluyor, fırsatlar kaçıyor.',
 ]
 
 const solutions = [
-  'Tüm potansiyel müşteriler tek yerde toplanır.',
-  'Doğru kişilerle hızlı şekilde eşleşir.',
-  'Süreç adım adım görünür olur.',
-  'Ekip aynı düzen içinde çalışır.',
+  'Nereden gelirse gelsin, her talep sisteme düşer.',
+  'Doğru kişiye otomatik olarak atanır.',
+  'Süreç adım adım ilerler, takip kopar.',
+  'Siz de ekibiniz de her an aynı tabloya bakarsınız.',
 ]
 
 const features = [
   {
     icon: '🎯',
-    title: 'Hiçbir potansiyel müşteri gözden kaçmaz',
-    desc: 'Yeni gelen her talep otomatik olarak sisteme düşer. Hiçbiri arada kaybolmaz, hepsi kayıt altında kalır.',
+    title: 'Hiçbir müşteri adayı kaybolmaz',
+    desc: 'Gelen her talep sisteme kaydedilir. Kim baktı, ne zaman arandı, ne durumda — hepsi görünür.',
   },
   {
     icon: '⚡',
-    title: 'Satış ekibi daha hızlı çalışır',
-    desc: 'Kimin arayacağı ve sıradaki adım net olduğu için zaman kaybı azalır, ekip direkt müşteriyle ilgilenir.',
+    title: 'Ekip daha hızlı hareket eder',
+    desc: 'Kim neyi takip edecek, sırada ne var — net. Satışçı vakit kaybetmeden müşteriyle ilgilenir.',
   },
   {
     icon: '📍',
-    title: 'Süreç kontrol altında kalır',
-    desc: 'Her potansiyel müşterinin hangi aşamada olduğu kolayca görülür. Nerede takıldığını anında fark edersiniz.',
+    title: 'Süreç takip altında kalır',
+    desc: 'Yeni gelen, görüşülen, randevu alınan, kapanan — hepsini tek ekranda görürsünüz.',
   },
   {
     icon: '👥',
     title: 'Yönetici tabloyu net görür',
-    desc: 'Ekibin yükü, ilerlemesi ve bekleyen işler tek yerde görünür. Karar vermek kolaylaşır.',
+    desc: 'Kim çalışıyor, kim takılmış, hangi müşteri bekliyor — anında görürsünüz. Tahmin yok, netlik var.',
   },
   {
     icon: '💬',
-    title: 'WhatsApp ile uyumlu çalışır',
-    desc: 'Ekibiniz zaten WhatsApp kullanıyor. DataPilot bu alışkanlığı bozmadan, üstüne düzen getirir.',
+    title: 'WhatsApp akışınızı bozmaz',
+    desc: 'Ekibiniz WhatsApp\'ı kullanmaya devam eder. DataPilot bunun üstüne düzen getirir.',
   },
   {
     icon: '📈',
-    title: 'Reklam paranızın karşılığını görürsünüz',
-    desc: 'Meta reklamlarından gelen her talebi takip edin. Hangi kampanya satışa dönüşüyor, hangisi para yakıyor — net görürsünüz.',
+    title: 'Reklamınızın karşılığını görürsünüz',
+    desc: 'Hangi kampanyadan ne geldi, kaçı satışa döndü — net rakamlarla görürsünüz.',
   },
 ]
 
 const faqs = [
   {
-    q: 'Bu sistem bizim için uygun mu?',
-    a: 'Eğer potansiyel müşterileriniz farklı yerlerden geliyor, ekip içinde paylaşım karışıyor ve takipte dağınıklık yaşıyorsanız sizin için uygundur.',
+    q: 'Bu sistem bizim sektörümüze uyar mı?',
+    a: 'Müşteri adayı takibi yapan, ekibiyle koordineli çalışması gereken her işletmeye uygundur. Klinik, emlak, eğitim, estetik — fark etmez.',
   },
   {
-    q: 'Ekibim kullanmakta zorlanır mı?',
-    a: 'Hayır. Karmaşık sistemler gibi uzun eğitim gerektirmez. Ekip günlük iş akışına hızlı şekilde uyum sağlar. Çoğu ekip ilk günden itibaren kullanmaya başlar.',
+    q: 'Ekibimiz alışmakta zorlanır mı?',
+    a: 'Hayır. Uzun eğitim gerektirmez. Çoğu ekip ilk günden kullanmaya başlar.',
   },
   {
-    q: 'Satış ekibine gerçekten hız kazandırır mı?',
-    a: 'Evet. Kimin kimi arayacağı, hangi potansiyel müşterinin hangi aşamada olduğu ve sıradaki işlerin ne olduğu net görünür.',
+    q: 'Gerçekten hız kazandırır mı?',
+    a: 'Evet. Kimin kimi arayacağı, hangi müşterinin hangi aşamada olduğu ve sıradaki adım net görünür. Ekip daha az konuşur, daha çok iş yapar.',
   },
   {
-    q: 'Kurulum süreci nasıl ilerliyor?',
-    a: 'Önce mevcut satış akışınızı dinliyoruz. Ardından işletmenize uygun düzen belirleniyor ve ekip kullanmaya başlıyor. Genellikle aynı gün kullanıma hazır hale gelir.',
+    q: 'Kurulum ne kadar sürer?',
+    a: 'Çoğu müşterimiz aynı gün kurulumu tamamlar. Bir saat içinde ekip kullanmaya başlar.',
   },
   {
     q: 'Fiyatlandırma nasıl?',
@@ -111,7 +111,7 @@ function DashboardMockup() {
                 <h3 className="text-sm font-semibold text-white">Günaydın, Ahmet Bey 👋</h3>
               </div>
               <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-400">
-                + Yeni Potansiyel Müşteri
+                + Yeni Müşteri Adayı
               </div>
             </div>
             <div className="mb-5 grid grid-cols-4 gap-3">
@@ -144,7 +144,7 @@ function DashboardMockup() {
                 </div>
               </div>
               <div className="col-span-2 rounded-xl border border-white/[0.06] bg-white/[0.03] p-3">
-                <p className="mb-2 text-[11px] font-medium text-white/60">Son Potansiyel Müşteriler</p>
+                <p className="mb-2 text-[11px] font-medium text-white/60">Son Müşteri Adayları</p>
                 <div className="space-y-2">
                   {[
                     { name: 'Mehmet Y.', status: 'Yeni' },
@@ -168,7 +168,7 @@ function DashboardMockup() {
       </div>
       <div className="absolute -bottom-4 -right-4 flex items-center gap-1.5 rounded-full bg-green-500 px-3 py-1.5 text-xs font-bold text-white shadow-lg shadow-green-900/50">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
-        Canlı Veri
+        Canlı Takip
       </div>
     </div>
   )
@@ -218,7 +218,11 @@ export default function LandingPage() {
             >
               Giriş Yap
             </button>
-            <a href="#demo-form" onClick={scrollToDemo} className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-blue-200 transition-all hover:bg-blue-700 hover:shadow-blue-300">
+            <a
+              href="#demo-form"
+              onClick={scrollToDemo}
+              className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-blue-200 transition-all hover:bg-blue-700"
+            >
               Demo Al
             </a>
           </div>
@@ -234,27 +238,41 @@ export default function LandingPage() {
         <div className="relative mx-auto max-w-4xl px-6 text-center">
           <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-1.5 backdrop-blur-sm">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-400" />
-            <span className="text-xs font-medium tracking-wide text-blue-300">Hiçbir potansiyel müşteri kaybolmaz. Her şey tek yerde yönetilir.</span>
+            <span className="text-xs font-medium tracking-wide text-blue-300">
+              Hiçbir müşteri adayı kaybolmaz. Her şey tek yerde.
+            </span>
           </div>
 
           <h1 className="mb-5 text-5xl font-bold leading-[1.1] tracking-tight text-white md:text-6xl">
-            Reklamdan gelen potansiyel müşterileri<br />satışa çevirmenin en kolay yolu
+            Gelen müşteri adaylarını<br />satışa çevirmenin en kolay yolu
           </h1>
 
           <p className="mx-auto mb-8 max-w-2xl text-lg leading-relaxed text-slate-300 md:text-xl">
-            Talepler otomatik toplanır. Ekibinize dağıtılır. Süreç takip edilir. Kimse gözden kaçmaz.
+            Talepler otomatik toplanır. Ekibinize dağıtılır. Süreç takip edilir.<br />
+            Kimse gözden kaçmaz, hiçbir fırsat boşa gitmez.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <a href="#demo-form" onClick={scrollToDemo} className="inline-flex rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-xl shadow-blue-900/50 transition-all hover:-translate-y-0.5 hover:bg-blue-500">
+            <a
+              href="#demo-form"
+              onClick={scrollToDemo}
+              className="inline-flex rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-xl shadow-blue-900/50 transition-all hover:-translate-y-0.5 hover:bg-blue-500"
+            >
               Ücretsiz Demo Al
             </a>
-            <a href="https://wa.me/905453467778?text=Merhaba%2C%20DataPilot%20için%20teklif%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" className="rounded-xl border border-white/10 bg-white/5 px-8 py-3.5 text-sm font-medium text-white/80 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white">
+            <a
+              href="https://wa.me/905453467778?text=Merhaba%2C%20DataPilot%20için%20teklif%20almak%20istiyorum."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl border border-white/10 bg-white/5 px-8 py-3.5 text-sm font-medium text-white/80 backdrop-blur-sm transition-all hover:bg-white/10 hover:text-white"
+            >
               Teklif İste
             </a>
           </div>
 
-          <p className="mt-4 text-center text-xs text-slate-500">Kurulum yok. Uzun eğitim gerekmez. İlk günden çalışır.</p>
+          <p className="mt-4 text-center text-xs text-slate-500">
+            Aynı gün kurulur · Ekibiniz hemen alışır · Uzun eğitim gerekmez
+          </p>
 
           <DashboardMockup />
         </div>
@@ -267,14 +285,18 @@ export default function LandingPage() {
         <div className="mx-auto grid max-w-6xl gap-12 px-6 lg:grid-cols-[1fr_1.1fr] lg:items-start">
           <div>
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-blue-600">Sorun</p>
-            <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900">"Müşteri nerede kaldı?" diye sormaktan bıktınız mı?</h2>
-            <p className="text-lg leading-relaxed text-gray-500">Her gün onlarca talep geliyor. Ama çoğu takipsiz kalıyor. Ekip yoruluyor, sonuç azalıyor. Sorun araçların karmaşıklığında değil — düzenin olmayışında.</p>
+            <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900">
+              "O müşteri ne oldu?"<br />sorusunu sormaktan bıktıysanız...
+            </h2>
+            <p className="text-lg leading-relaxed text-gray-500">
+              Çoğu işletmede tablo aynı. Talep geliyor, ama süreç bir yerde kopuyor. Ekip uğraşıyor, sonuç çıkmıyor. Sorun ekibinizde değil — ortada net bir sistem yok.
+            </p>
           </div>
           <div className="rounded-3xl border border-gray-100 bg-gray-50 p-8">
             <ul className="space-y-4">
               {problems.map((problem) => (
                 <li key={problem} className="flex items-start gap-3 text-base text-gray-700">
-                  <span className="mt-1 text-red-400">✕</span>
+                  <span className="mt-0.5 flex-shrink-0 text-red-400">✕</span>
                   <span>{problem}</span>
                 </li>
               ))}
@@ -288,13 +310,19 @@ export default function LandingPage() {
         <div className="mx-auto grid max-w-6xl gap-12 px-6 lg:grid-cols-[1fr_1.1fr] lg:items-start">
           <div>
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-blue-600">Çözüm</p>
-            <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900">DataPilot bu dağınıklığı tek düzene çevirir</h2>
-            <p className="text-lg leading-relaxed text-gray-500">Her yeni talep görünür olur. Doğru kişiye yönlenir. Süreç adım adım ilerler. Yönetici de ekip de aynı tabloya bakar. Karmaşık bir CRM değil — gerçekten kullanılan bir satış aracı.</p>
+            <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900">
+              DataPilot bu dağınıklığı<br />tek yerde toplar.
+            </h2>
+            <p className="text-lg leading-relaxed text-gray-500">
+              Reklam, WhatsApp, form — nereden gelirse gelsin, her talep sisteme düşer. Doğru kişiye atanır. Süreç ilerler. Karmaşık bir yazılım değil, ekibinizin günlük işini kolaylaştıran bir araç.
+            </p>
           </div>
           <div className="space-y-4 rounded-3xl border border-blue-100 bg-white p-8 shadow-sm shadow-blue-50">
             {solutions.map((item, index) => (
               <div key={item} className="flex items-start gap-4 rounded-2xl border border-gray-100 p-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">0{index + 1}</div>
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+                  0{index + 1}
+                </div>
                 <p className="pt-1 text-base text-gray-700">{item}</p>
               </div>
             ))}
@@ -306,14 +334,23 @@ export default function LandingPage() {
       <section id="ozellikler" className="bg-white py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-14 text-center">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-blue-600">Neden Önemli?</p>
-            <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900">Sonuç üreten faydalar</h2>
-            <p className="mx-auto max-w-2xl text-lg text-gray-500">Gösterişli ekranlar için değil — daha hızlı dönüş, daha düzenli takip ve daha kontrollü bir satış operasyonu için.</p>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-blue-600">Fark</p>
+            <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900">
+              DataPilot kullanan ekiplerde ne değişir?
+            </h2>
+            <p className="mx-auto max-w-2xl text-lg text-gray-500">
+              Gösterişli özellikler değil — gerçekten işe yarayan farklar.
+            </p>
           </div>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => (
-              <div key={feature.title} className="group rounded-2xl border border-gray-100 bg-gray-50 p-7 transition-all duration-300 hover:-translate-y-1 hover:border-blue-100 hover:bg-white hover:shadow-xl hover:shadow-blue-50">
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-2xl transition-colors group-hover:bg-blue-100">{feature.icon}</div>
+              <div
+                key={feature.title}
+                className="group rounded-2xl border border-gray-100 bg-gray-50 p-7 transition-all duration-300 hover:-translate-y-1 hover:border-blue-100 hover:bg-white hover:shadow-xl hover:shadow-blue-50"
+              >
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-2xl transition-colors group-hover:bg-blue-100">
+                  {feature.icon}
+                </div>
                 <h3 className="mb-2 text-base font-bold text-gray-900">{feature.title}</h3>
                 <p className="text-sm leading-relaxed text-gray-500">{feature.desc}</p>
               </div>
@@ -323,17 +360,31 @@ export default function LandingPage() {
       </section>
 
       {/* ── NASIL ÇALIŞIR ── */}
-      <section className="bg-white py-24">
+      <section className="bg-gray-50 py-24">
         <div className="mx-auto max-w-5xl px-6">
           <div className="mb-14 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-blue-600">Nasıl Çalışır?</p>
-            <h2 className="text-4xl font-bold tracking-tight text-gray-900">3 adımda başlarsınız</h2>
+            <h2 className="text-4xl font-bold tracking-tight text-gray-900">
+              Üç adım. Hepsi bu.
+            </h2>
           </div>
           <div className="relative grid grid-cols-1 gap-8 md:grid-cols-3">
             {[
-              { num: '01', title: 'Bağlayın', desc: 'Reklam hesabınızı, WhatsApp hattınızı veya web formunuzu bağlayın. Gelen talepler otomatik sisteme düşer.' },
-              { num: '02', title: 'Dağıtın', desc: 'Her talep doğru satışçıya atanır. Şube bazında, ekip bazında — siz belirlersiniz.' },
-              { num: '03', title: 'Takip Edin', desc: 'Kim ne yaptı, hangi müşteri kapanmak üzere, nerede takıldı — tek ekranda görürsünüz.' },
+              {
+                num: '01',
+                title: 'Bağlayın',
+                desc: 'Reklam hesabınızı, WhatsApp hattınızı ya da web formunuzu bağlayın. Gelen talepler otomatik olarak sisteme düşer.',
+              },
+              {
+                num: '02',
+                title: 'Dağıtın',
+                desc: 'Her talep doğru satışçıya atanır. Şube bazında, kişi bazında — siz belirlersiniz.',
+              },
+              {
+                num: '03',
+                title: 'Takip Edin',
+                desc: 'Kim ne yaptı, hangi müşteri kapanmaya yakın, nerede takıldı — tek yerden görürsünüz.',
+              },
             ].map((step) => (
               <div key={step.num} className="text-center">
                 <div className="relative z-10 mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-200">
@@ -348,21 +399,37 @@ export default function LandingPage() {
       </section>
 
       {/* ── NEDEN DATAPILOT ── */}
-      <section className="bg-gray-50 py-24">
+      <section className="bg-white py-24">
         <div className="mx-auto max-w-5xl px-6 text-center">
           <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-blue-600">Neden DataPilot?</p>
-          <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900">Büyük CRM araçları gibi değildir</h2>
-          <p className="mx-auto max-w-3xl text-lg leading-relaxed text-gray-500">Uzun eğitimler gerektiren ağır sistemler yerine, ekibinizin gerçekten kullanacağı sade bir yapı sunar. Türkiye'deki satış ekiplerinin çalışma şekline göre tasarlandı.</p>
+          <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900">
+            Çoğu CRM güçlüdür.<br />Ama ekip kullanmaz.
+          </h2>
+          <p className="mx-auto max-w-3xl text-lg leading-relaxed text-gray-500">
+            Kurulumu haftalarca sürer. Ekip alışamaz. Çoğu özellik hiç açılmaz. DataPilot böyle değil.
+          </p>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
-              { icon: '🚀', title: 'Aynı gün kurulur', desc: 'Haftalarca süren kurulum yok. Aynı gün kullanıma hazır.' },
-              { icon: '👥', title: 'Ekip hemen alışır', desc: 'Karmaşık eğitim gerekmez. Çoğu ekip ilk günden adapte olur.' },
-              { icon: '🎯', title: 'Sadece işe yarayan özellikler', desc: 'Gereksiz karmaşıklık yok. Satışa odaklı, sade ve etkili.' },
+              {
+                icon: '🚀',
+                title: 'Aynı gün kurulur',
+                desc: 'Uzun bir kurulum süreci yok. Sistemi kurun, ekibiniz o gün kullanmaya başlasın.',
+              },
+              {
+                icon: '👥',
+                title: 'Ekip hemen alışır',
+                desc: 'Karmaşık eğitim gerektirmez. Arayüz sade, adımlar net. Çoğu ekip ilk günden uyum sağlar.',
+              },
+              {
+                icon: '🎯',
+                title: 'Sadece işe yarayan özellikler',
+                desc: 'Gereksiz özellik yok. Satışa odaklı, sade ve etkili. Tam ihtiyacınız olan kadar.',
+              },
             ].map((item) => (
-              <div key={item.title} className="rounded-2xl border border-gray-100 bg-white p-6 text-left shadow-sm shadow-blue-50">
+              <div key={item.title} className="rounded-2xl border border-gray-100 bg-gray-50 p-6 text-left">
                 <div className="mb-3 text-2xl">{item.icon}</div>
                 <h3 className="mb-2 text-sm font-bold text-gray-900">{item.title}</h3>
-                <p className="text-sm text-gray-500">{item.desc}</p>
+                <p className="text-sm leading-relaxed text-gray-500">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -370,23 +437,42 @@ export default function LandingPage() {
       </section>
 
       {/* ── GÜVEN ── */}
-      <section className="bg-white py-24">
+      <section className="bg-gray-50 py-24">
         <div className="mx-auto max-w-5xl px-6">
           <div className="mb-14 text-center">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-blue-600">Güven</p>
-            <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900">Kullanıcılarımız ne diyor?</h2>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-blue-600">Deneyimler</p>
+            <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900">
+              Kullananlar ne diyor?
+            </h2>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {[
-              { quote: 'İlk günden mantıklı geldi. Ekibimiz hemen alıştı, artık hiç karışıklık yok.', name: 'Satış Müdürü', company: 'Sağlık Sektörü' },
-              { quote: 'Artık "o müşteri ne oldu" diye sormuyorum — bakıyorum, her şey önümde.', name: 'İşletme Sahibi', company: 'Estetik Klinik' },
-              { quote: 'Reklam bütçemizin nereye gittiğini ilk kez bu kadar net gördük.', name: 'Pazarlama Direktörü', company: 'Emlak Şirketi' },
+              {
+                quote: 'İlk günden mantıklı geldi. Ekibimiz hemen alıştı, artık hiç karışıklık yok.',
+                name: 'Satış Müdürü',
+                company: 'Sağlık Sektörü',
+              },
+              {
+                quote: 'Artık "o müşteri ne oldu" diye sormuyorum — bakıyorum, her şey önümde.',
+                name: 'İşletme Sahibi',
+                company: 'Estetik Klinik',
+              },
+              {
+                quote: 'Reklam bütçemizin nereye gittiğini ilk kez bu kadar net gördük.',
+                name: 'Pazarlama Direktörü',
+                company: 'Emlak Şirketi',
+              },
             ].map((item, i) => (
-              <div key={i} className="rounded-2xl border border-gray-100 bg-gray-50 p-6">
-                <p className="mb-4 text-sm leading-relaxed text-gray-700 italic">"{item.quote}"</p>
-                <div>
-                  <p className="text-sm font-bold text-gray-900">{item.name}</p>
-                  <p className="text-xs text-gray-400">{item.company}</p>
+              <div key={i} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                <p className="mb-5 text-sm leading-relaxed text-gray-700 italic">"{item.quote}"</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">
+                    {item.name[0]}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">{item.name}</p>
+                    <p className="text-xs text-gray-400">{item.company}</p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -398,13 +484,31 @@ export default function LandingPage() {
       <section id="demo-form" className="bg-blue-600 py-20 text-white">
         <div className="mx-auto flex max-w-5xl flex-col gap-10 px-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-blue-100">Hemen Başlayın</p>
-            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">Satış ekibiniz daha hızlı çalışsın.<br />Hiçbir potansiyel müşteri kaybolmasın.</h2>
-            <p className="text-sm leading-relaxed text-blue-50 md:text-base">Daha düzenli, daha kontrollü ve daha güçlü bir satış operasyonu kurmak için kısa bir görüşme ile başlayın.</p>
+            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-blue-200">
+              Hemen Başlayın
+            </p>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl">
+              Her gün bazı müşteri adayları<br />fark etmeden kayboluyor.
+            </h2>
+            <p className="text-base leading-relaxed text-blue-100">
+              Bunu durdurmak için karmaşık bir sisteme ihtiyacınız yok. Kısa bir görüşme yeterli.
+            </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <a href="#demo-form-card" className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-50">Ücretsiz Demo Al</a>
-            <a href="https://wa.me/905453467778?text=Merhaba%2C%20DataPilot%20için%20teklif%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" className="rounded-xl border border-white/25 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10">Teklif İste</a>
+            <a
+              href="#demo-form-card"
+              className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-50"
+            >
+              Ücretsiz Demo Al
+            </a>
+            <a
+              href="https://wa.me/905453467778?text=Merhaba%2C%20DataPilot%20için%20teklif%20almak%20istiyorum."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl border border-white/25 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+            >
+              Teklif İste
+            </a>
           </div>
         </div>
       </section>
@@ -415,35 +519,57 @@ export default function LandingPage() {
           <div className="mb-10 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-blue-600">Demo</p>
             <h2 className="mb-3 text-3xl font-bold tracking-tight text-gray-900">Demo Talebi</h2>
-            <p className="text-base text-gray-500">Formu doldurun, sizi arayalım ve işletmenize uygun akışı birlikte netleştirelim.</p>
+            <p className="text-base text-gray-500">
+              Formu doldurun, sizi arayalım. İşletmenize en uygun yapıyı birlikte belirleyelim.
+            </p>
           </div>
-          <div id="demo-form-card" className="space-y-4 rounded-2xl border border-gray-100 bg-white p-8">
+          <div id="demo-form-card" className="space-y-4 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-gray-600">Ad Soyad</label>
-              <input value={demoName} onChange={(e) => setDemoName(e.target.value)} placeholder="Adınız Soyadınız" className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input
+                value={demoName}
+                onChange={(e) => setDemoName(e.target.value)}
+                placeholder="Adınız Soyadınız"
+                className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-gray-600">Telefon</label>
-              <input value={demoPhone} onChange={(e) => setDemoPhone(e.target.value)} placeholder="05XX XXX XX XX" className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input
+                value={demoPhone}
+                onChange={(e) => setDemoPhone(e.target.value)}
+                placeholder="05XX XXX XX XX"
+                className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-gray-600">İşletme Adı</label>
-              <input value={demoBusiness} onChange={(e) => setDemoBusiness(e.target.value)} placeholder="Şirket / İşletme Adı" className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input
+                value={demoBusiness}
+                onChange={(e) => setDemoBusiness(e.target.value)}
+                placeholder="Şirket / İşletme Adı"
+                className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
             <button
               onClick={() => {
-                alert('Talebiniz alındı, en kısa sürede sizinle iletişime geçeceğiz.')
+                alert('Talebiniz alındı. En kısa sürede sizinle iletişime geçeceğiz.')
                 setDemoName('')
                 setDemoPhone('')
                 setDemoBusiness('')
               }}
-              className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 hover:shadow-blue-200"
+              className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-100 transition-all hover:bg-blue-700"
             >
               Demo Talebi Gönder
             </button>
             <p className="text-center text-xs text-gray-400">
               Fiyat görüşmesi yapmak ister misiniz?{' '}
-              <a href="https://wa.me/905453467778?text=Merhaba%2C%20DataPilot%20için%20teklif%20almak%20istiyorum." target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              <a
+                href="https://wa.me/905453467778?text=Merhaba%2C%20DataPilot%20için%20teklif%20almak%20istiyorum."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
                 Teklif İste →
               </a>
             </p>
@@ -456,13 +582,19 @@ export default function LandingPage() {
         <div className="mx-auto max-w-3xl px-6">
           <div className="mb-14 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-blue-600">Sorular</p>
-            <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900">Sıkça Sorulan Sorular</h2>
-            <p className="text-lg text-gray-500">Aklınızdaki soruların cevapları burada</p>
+            <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900">Aklınızdakiler</h2>
+            <p className="text-lg text-gray-500">Sık sorulan soruların cevapları burada.</p>
           </div>
           <div className="space-y-3">
             {faqs.map((faq, i) => (
-              <div key={i} className={`overflow-hidden rounded-2xl border transition-all ${openFaq === i ? 'border-blue-100 shadow-md shadow-blue-50' : 'border-gray-100'}`}>
-                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-gray-50/50">
+              <div
+                key={i}
+                className={`overflow-hidden rounded-2xl border transition-all ${openFaq === i ? 'border-blue-100 shadow-md shadow-blue-50' : 'border-gray-100'}`}
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-gray-50/50"
+                >
                   <span className="pr-4 text-sm font-medium text-gray-900">{faq.q}</span>
                   <span className={`flex-shrink-0 text-gray-400 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}>▼</span>
                 </button>
@@ -478,7 +610,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── İLETİŞİM ── */}
-      <section id="iletisim" className="bg-white py-24">
+      <section id="iletisim" className="bg-gray-50 py-24">
         <div className="mx-auto max-w-5xl px-6">
           <div className="mb-14 text-center">
             <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-blue-600">İletişim</p>
@@ -486,7 +618,9 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2">
             <div>
-              <p className="mb-8 text-lg leading-relaxed text-gray-500">Sorularınız için bize yazın, en kısa sürede dönüş yapalım.</p>
+              <p className="mb-8 text-lg leading-relaxed text-gray-500">
+                Aklınızda soru varsa yazın. En kısa sürede dönelim.
+              </p>
               <div className="space-y-5">
                 {[
                   { icon: '📧', label: 'E-posta', value: 'destek@datapilot.com.tr' },
@@ -494,7 +628,9 @@ export default function LandingPage() {
                   { icon: '📍', label: 'Adres', value: 'İstanbul, Türkiye' },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-4">
-                    <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-blue-50 text-lg">{item.icon}</div>
+                    <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-blue-50 text-lg">
+                      {item.icon}
+                    </div>
                     <div>
                       <p className="text-xs font-medium text-gray-400">{item.label}</p>
                       <p className="text-sm font-semibold text-gray-900">{item.value}</p>
@@ -503,7 +639,7 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-            <div className="rounded-2xl border border-gray-100 bg-gray-50 p-7">
+            <div className="rounded-2xl border border-gray-100 bg-white p-7 shadow-sm">
               {contactSent ? (
                 <div className="py-10 text-center">
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-100 text-3xl">✅</div>
@@ -514,17 +650,37 @@ export default function LandingPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-gray-600">Adınız</label>
-                    <input value={contactName} onChange={(e) => setContactName(e.target.value)} className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ad Soyad" />
+                    <input
+                      value={contactName}
+                      onChange={(e) => setContactName(e.target.value)}
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Ad Soyad"
+                    />
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-gray-600">E-posta</label>
-                    <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="ornek@email.com" />
+                    <input
+                      type="email"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="ornek@email.com"
+                    />
                   </div>
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-gray-600">Mesajınız</label>
-                    <textarea value={contactMessage} onChange={(e) => setContactMessage(e.target.value)} rows={4} className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nasıl yardımcı olabiliriz?" />
+                    <textarea
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      rows={4}
+                      className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Nasıl yardımcı olabiliriz?"
+                    />
                   </div>
-                  <button onClick={() => setContactSent(true)} className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-100 transition-all hover:bg-blue-700 hover:shadow-blue-200">
+                  <button
+                    onClick={() => setContactSent(true)}
+                    className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-100 transition-all hover:bg-blue-700"
+                  >
                     Gönder
                   </button>
                 </div>
@@ -539,10 +695,16 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-10 grid grid-cols-2 gap-8 md:grid-cols-4">
             <div className="col-span-2 md:col-span-1">
-              <div className="mb-4 flex cursor-pointer items-center gap-2" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <div
+                className="mb-4 flex cursor-pointer items-center gap-2"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              >
                 <img src="/logo2.png" alt="DataPilot" className="h-8 w-auto" />
               </div>
-              <p className="text-sm leading-relaxed">Akıllı potansiyel müşteri yönetim platformu.<br />Satış operasyonunuzu sadeleştirin.</p>
+              <p className="text-sm leading-relaxed">
+                Müşteri adayı yönetim platformu.<br />
+                Satış sürecinizi sadeleştirin.
+              </p>
             </div>
             <div>
               <h4 className="mb-4 text-sm font-semibold text-slate-300">Ürün</h4>
