@@ -266,46 +266,50 @@ const res = await fetch('/api/create-user', {
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-            <div className="grid grid-cols-8 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              <div className="col-span-2">MÃ¼ÅŸteri</div>
-              <div className="text-center">Potansiyel MÃ¼ÅŸteri</div>
-              <div className="text-center">SatÄ±ÅŸ</div>
-              <div className="text-center">DÃ¶nÃ¼ÅŸÃ¼m</div>
-              <div className="text-center">Ciro</div>
-              <div className="text-center">HakediÅŸ</div>
-              <div className="text-center">Durum</div>
+          <div className="overflow-x-auto">
+            <div className="min-w-[720px]">
+              <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+                <div className="grid grid-cols-8 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <div className="col-span-2">MÃ¼ÅŸteri</div>
+                  <div className="text-center">Potansiyel MÃ¼ÅŸteri</div>
+                  <div className="text-center">SatÄ±ÅŸ</div>
+                  <div className="text-center">DÃ¶nÃ¼ÅŸÃ¼m</div>
+                  <div className="text-center">Ciro</div>
+                  <div className="text-center">HakediÅŸ</div>
+                  <div className="text-center">Durum</div>
+                </div>
+              </div>
+              {filtered.map((c, i) => {
+                const cLeads = leads.filter(l => l.customer_id === c.id)
+                const cSales = cLeads.filter(l => l.status === 'procedure_done')
+                const cRevenue = cSales.reduce((s, l) => s + (l.procedure_amount || 0), 0)
+                const cConv = cLeads.length > 0 ? ((cSales.length / cLeads.length) * 100).toFixed(1) : '0'
+                const earned = getHakedis(c)
+                return (
+                  <Link key={c.id} href={`/advertiser/customers/${c.id}`}
+                    className={`px-5 py-3.5 grid grid-cols-8 gap-2 items-center hover:bg-amber-50/20 transition-colors ${i < filtered.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                    <div className="col-span-2 flex items-center gap-2 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center font-bold text-amber-600 text-xs flex-shrink-0">{c.name.charAt(0)}</div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{c.name}</p>
+                        <p className="text-xs text-gray-400 truncate">{c.owner?.email}</p>
+                      </div>
+                    </div>
+                    <div className="text-center"><p className="text-sm font-semibold text-indigo-600">{cLeads.length}</p></div>
+                    <div className="text-center"><p className="text-sm font-semibold text-emerald-600">{cSales.length}</p></div>
+                    <div className="text-center"><p className="text-sm font-semibold text-violet-600">%{cConv}</p></div>
+                    <div className="text-center"><p className="text-sm font-semibold text-gray-700">â‚º{(cRevenue / 1000).toFixed(1)}K</p></div>
+                    <div className="text-center"><p className="text-sm font-bold text-emerald-600">â‚º{earned.toLocaleString()}</p></div>
+                    <div className="text-center">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                        {c.status === 'active' ? 'Aktif' : 'Pasif'}
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           </div>
-          {filtered.map((c, i) => {
-            const cLeads = leads.filter(l => l.customer_id === c.id)
-            const cSales = cLeads.filter(l => l.status === 'procedure_done')
-            const cRevenue = cSales.reduce((s, l) => s + (l.procedure_amount || 0), 0)
-            const cConv = cLeads.length > 0 ? ((cSales.length / cLeads.length) * 100).toFixed(1) : '0'
-            const earned = getHakedis(c)
-            return (
-              <Link key={c.id} href={`/advertiser/customers/${c.id}`}
-                className={`px-5 py-3.5 grid grid-cols-8 gap-2 items-center hover:bg-amber-50/20 transition-colors ${i < filtered.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                <div className="col-span-2 flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center font-bold text-amber-600 text-xs flex-shrink-0">{c.name.charAt(0)}</div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{c.name}</p>
-                    <p className="text-xs text-gray-400 truncate">{c.owner?.email}</p>
-                  </div>
-                </div>
-                <div className="text-center"><p className="text-sm font-semibold text-indigo-600">{cLeads.length}</p></div>
-                <div className="text-center"><p className="text-sm font-semibold text-emerald-600">{cSales.length}</p></div>
-                <div className="text-center"><p className="text-sm font-semibold text-violet-600">%{cConv}</p></div>
-                <div className="text-center"><p className="text-sm font-semibold text-gray-700">â‚º{(cRevenue / 1000).toFixed(1)}K</p></div>
-                <div className="text-center"><p className="text-sm font-bold text-emerald-600">â‚º{earned.toLocaleString()}</p></div>
-                <div className="text-center">
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
-                    {c.status === 'active' ? 'Aktif' : 'Pasif'}
-                  </span>
-                </div>
-              </Link>
-            )
-          })}
         </div>
       )}
 

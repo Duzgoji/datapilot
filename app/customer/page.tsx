@@ -3960,63 +3960,113 @@ return (
       </div>
     ) : (
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-          <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            <div className="col-span-2">Fatura</div>
-            <div className="text-right">Tutar</div>
-            <div className="text-center">Durum</div>
-            <div className="text-right">Ä°ÅŸlem</div>
+        <div className="hidden md:block">
+          <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+            <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <div className="col-span-2">Fatura</div>
+              <div className="text-right">Tutar</div>
+              <div className="text-center">Durum</div>
+              <div className="text-right">Ä°ÅŸlem</div>
+            </div>
           </div>
+          {customerInvoices.map((inv, i) => {
+            const statusMap: any = {
+              pending: { label: 'Bekliyor', color: 'bg-amber-50 text-amber-700 border border-amber-200' },
+              awaiting_approval: { label: 'Onay Bekliyor', color: 'bg-blue-50 text-blue-700 border border-blue-200' },
+              paid: { label: 'Ã–dendi', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+              overdue: { label: 'GecikmiÅŸ', color: 'bg-red-50 text-red-700 border border-red-200' },
+            }
+            const st = statusMap[inv.status] || statusMap.pending
+            const issuedBy = inv.issued_by_role === 'superadmin' ? 'DataPilot' : 'ReklamcÄ±'
+            return (
+              <div key={inv.id} className={`px-5 py-4 grid grid-cols-5 gap-2 items-center hover:bg-gray-50/50 transition-colors ${i < customerInvoices.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                <div className="col-span-2">
+                  <p className="text-sm font-semibold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-gray-400">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</span>
+                    <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${inv.issued_by_role === 'superadmin' ? 'bg-violet-50 text-violet-600' : 'bg-amber-50 text-amber-600'}`}>
+                      {issuedBy}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
+                </div>
+                <div className="text-center">
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${st.color}`}>{st.label}</span>
+                </div>
+                <div className="text-right">
+                  {inv.status === 'pending' && (
+                    <button
+                      onClick={async () => {
+                        await supabase.from('invoices').update({ status: 'awaiting_approval' }).eq('id', inv.id)
+                        const tenant = await fetchTenantContext(profile.id)
+                        const { data: invoicesData } = await supabase.from('invoices').select('*').or(`customer_id.eq.${tenant.tenantId},owner_id.in.(${tenant.readOwnerIds.join(',')})`).order('created_at', { ascending: false })
+                        setCustomerInvoices(invoicesData || [])
+                      }}
+                      className="text-xs text-blue-600 font-medium px-3 py-1.5 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200">
+                      Ã–deme YaptÄ±m
+                    </button>
+                  )}
+                  {inv.status === 'awaiting_approval' && (
+                    <span className="text-xs text-gray-400">Onay bekleniyor...</span>
+                  )}
+                  {inv.status === 'paid' && (
+                    <span className="text-xs text-emerald-600 font-medium">âœ“ OnaylandÄ±</span>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
-        {customerInvoices.map((inv, i) => {
-          const statusMap: any = {
-            pending: { label: 'Bekliyor', color: 'bg-amber-50 text-amber-700 border border-amber-200' },
-            awaiting_approval: { label: 'Onay Bekliyor', color: 'bg-blue-50 text-blue-700 border border-blue-200' },
-            paid: { label: 'Ã–dendi', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-            overdue: { label: 'GecikmiÅŸ', color: 'bg-red-50 text-red-700 border border-red-200' },
-          }
-          const st = statusMap[inv.status] || statusMap.pending
-          const issuedBy = inv.issued_by_role === 'superadmin' ? 'DataPilot' : 'ReklamcÄ±'
-          return (
-            <div key={inv.id} className={`px-5 py-4 grid grid-cols-5 gap-2 items-center hover:bg-gray-50/50 transition-colors ${i < customerInvoices.length - 1 ? 'border-b border-gray-50' : ''}`}>
-              <div className="col-span-2">
-                <p className="text-sm font-semibold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-gray-400">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</span>
+        <div className="divide-y divide-gray-100 md:hidden">
+          {customerInvoices.map((inv) => {
+            const statusMap: any = {
+              pending: { label: 'Bekliyor', color: 'bg-amber-50 text-amber-700 border border-amber-200' },
+              awaiting_approval: { label: 'Onay Bekliyor', color: 'bg-blue-50 text-blue-700 border border-blue-200' },
+              paid: { label: 'Ã–dendi', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+              overdue: { label: 'GecikmiÅŸ', color: 'bg-red-50 text-red-700 border border-red-200' },
+            }
+            const st = statusMap[inv.status] || statusMap.pending
+            const issuedBy = inv.issued_by_role === 'superadmin' ? 'DataPilot' : 'ReklamcÄ±'
+            return (
+              <div key={inv.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400 mt-1">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
+                  </div>
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${st.color}`}>{st.label}</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
                   <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${inv.issued_by_role === 'superadmin' ? 'bg-violet-50 text-violet-600' : 'bg-amber-50 text-amber-600'}`}>
                     {issuedBy}
                   </span>
                 </div>
+                <div className="flex justify-end">
+                  {inv.status === 'pending' && (
+                    <button
+                      onClick={async () => {
+                        await supabase.from('invoices').update({ status: 'awaiting_approval' }).eq('id', inv.id)
+                        const tenant = await fetchTenantContext(profile.id)
+                        const { data: invoicesData } = await supabase.from('invoices').select('*').or(`customer_id.eq.${tenant.tenantId},owner_id.in.(${tenant.readOwnerIds.join(',')})`).order('created_at', { ascending: false })
+                        setCustomerInvoices(invoicesData || [])
+                      }}
+                      className="text-xs text-blue-600 font-medium px-3 py-1.5 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200">
+                      Ã–deme YaptÄ±m
+                    </button>
+                  )}
+                  {inv.status === 'awaiting_approval' && (
+                    <span className="text-xs text-gray-400">Onay bekleniyor...</span>
+                  )}
+                  {inv.status === 'paid' && (
+                    <span className="text-xs text-emerald-600 font-medium">âœ“ OnaylandÄ±</span>
+                  )}
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
-              </div>
-              <div className="text-center">
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${st.color}`}>{st.label}</span>
-              </div>
-              <div className="text-right">
-                {inv.status === 'pending' && (
-                  <button
-                    onClick={async () => {
-                      await supabase.from('invoices').update({ status: 'awaiting_approval' }).eq('id', inv.id)
-                      const tenant = await fetchTenantContext(profile.id)
-                      const { data: invoicesData } = await supabase.from('invoices').select('*').or(`customer_id.eq.${tenant.tenantId},owner_id.in.(${tenant.readOwnerIds.join(',')})`).order('created_at', { ascending: false })
-                      setCustomerInvoices(invoicesData || [])
-                    }}
-                    className="text-xs text-blue-600 font-medium px-3 py-1.5 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200">
-                    Ã–deme YaptÄ±m
-                  </button>
-                )}
-                {inv.status === 'awaiting_approval' && (
-                  <span className="text-xs text-gray-400">Onay bekleniyor...</span>
-                )}
-                {inv.status === 'paid' && (
-                  <span className="text-xs text-emerald-600 font-medium">âœ“ OnaylandÄ±</span>
-                )}
-              </div>
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
     )}
   </div>

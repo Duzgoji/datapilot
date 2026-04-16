@@ -695,17 +695,19 @@ const advRes = await fetch('/api/get-advertisers', {
       <div>
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Firmalar Mali Durumu</h2>
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-            <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              <div className="col-span-2">Firma</div>
-              <div>Plan</div>
-              <div className="text-right">AylÄ±k Ãœcret</div>
-              <div className="text-right">Son Fatura</div>
-            </div>
-          </div>
-          {directCustomers.length === 0 ? (
-            <div className="p-8 text-center text-sm text-gray-400">Direkt firma yok.</div>
-          ) : directCustomers.map((c, i) => {
+          <div className="overflow-x-auto">
+            <div className="min-w-[760px]">
+              <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+                <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <div className="col-span-2">Firma</div>
+                  <div>Plan</div>
+                  <div className="text-right">AylÄ±k Ãœcret</div>
+                  <div className="text-right">Son Fatura</div>
+                </div>
+              </div>
+              {directCustomers.length === 0 ? (
+                <div className="p-8 text-center text-sm text-gray-400">Direkt firma yok.</div>
+              ) : directCustomers.map((c, i) => {
             const sub = c.subscriptions?.[0]
             const lastInvoice = invoices
               .filter(inv => inv.owner_id === c.id)
@@ -746,7 +748,9 @@ const advRes = await fetch('/api/get-advertisers', {
                 </div>
               </div>
             )
-          })}
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -754,18 +758,20 @@ const advRes = await fetch('/api/get-advertisers', {
       <div>
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">ReklamcÄ±lar Mali Durumu</h2>
         <div className="bg-white rounded-2xl border border-amber-100 overflow-hidden">
-          <div className="px-5 py-3 bg-amber-50/50 border-b border-amber-100">
-            <div className="grid grid-cols-6 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              <div className="col-span-2">ReklamcÄ±</div>
-              <div className="text-right">Sabit Ãœcret</div>
-              <div className="text-right">MÃ¼ÅŸteri</div>
-              <div className="text-right">MÃ¼ÅŸteri BaÅŸÄ±</div>
-              <div className="text-right">Toplam AylÄ±k</div>
-            </div>
-          </div>
-          {advertisers.length === 0 ? (
-            <div className="p-8 text-center text-sm text-gray-400">ReklamcÄ± yok.</div>
-          ) : advertisers.map((a, i) => {
+          <div className="overflow-x-auto">
+            <div className="min-w-[840px]">
+              <div className="px-5 py-3 bg-amber-50/50 border-b border-amber-100">
+                <div className="grid grid-cols-6 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <div className="col-span-2">ReklamcÄ±</div>
+                  <div className="text-right">Sabit Ãœcret</div>
+                  <div className="text-right">MÃ¼ÅŸteri</div>
+                  <div className="text-right">MÃ¼ÅŸteri BaÅŸÄ±</div>
+                  <div className="text-right">Toplam AylÄ±k</div>
+                </div>
+              </div>
+              {advertisers.length === 0 ? (
+                <div className="p-8 text-center text-sm text-gray-400">ReklamcÄ± yok.</div>
+              ) : advertisers.map((a, i) => {
             const sub = advSubs.find(s => s.advertiser_id === a.id)
             const clientCount = a.advertiser_clients?.length || 0
             const monthlyTotal = (sub?.monthly_fee || 0) + clientCount * (sub?.per_client_fee || 0)
@@ -802,10 +808,12 @@ const advRes = await fetch('/api/get-advertisers', {
                 </div>
               </div>
             )
-          })}
-          <div className="px-5 py-3 bg-amber-50 border-t border-amber-100 grid grid-cols-6 gap-2">
-            <div className="col-span-5 text-right text-xs font-semibold text-gray-500">Toplam AylÄ±k ReklamcÄ± Geliri</div>
-            <div className="text-right text-sm font-bold text-amber-700">â‚º{advertiserRevenue.toLocaleString()}</div>
+              })}
+              <div className="px-5 py-3 bg-amber-50 border-t border-amber-100 grid grid-cols-6 gap-2">
+                <div className="col-span-5 text-right text-xs font-semibold text-gray-500">Toplam AylÄ±k ReklamcÄ± Geliri</div>
+                <div className="text-right text-sm font-bold text-amber-700">â‚º{advertiserRevenue.toLocaleString()}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1335,42 +1343,46 @@ const advRes = await fetch('/api/get-advertisers', {
                 ))}
               </div>
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-                  <div className="grid grid-cols-4 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    <div>Eylem</div>
-                    <div>Kullanici</div>
-                    <div>Tenant</div>
-                    <div className="text-right">Zaman</div>
+                <div className="overflow-x-auto">
+                  <div className="min-w-[760px]">
+                    <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+                      <div className="grid grid-cols-4 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        <div>Eylem</div>
+                        <div>Kullanici</div>
+                        <div>Tenant</div>
+                        <div className="text-right">Zaman</div>
+                      </div>
+                    </div>
+                    {auditLogs.length === 0 ? (
+                      <div className="px-5 py-8 text-sm text-gray-400 text-center">
+                        Henuz audit log kaydi bulunmuyor veya tablo hazir degil.
+                      </div>
+                    ) : auditLogs.map((log: any, i: number) => (
+                      <div key={log.id || `${log.action}-${i}`} className={`px-5 py-3 grid grid-cols-4 gap-2 items-center ${i < auditLogs.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{log.action}</p>
+                          <p className="text-xs text-gray-400 truncate">{log.entity_type}{log.entity_id ? ` - ${log.entity_id}` : ''}</p>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{getAuditUserLabel(log.user_id)}</p>
+                          <p className="text-xs text-gray-400 truncate">{log.user_id || '-'}</p>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{getAuditTenantLabel(log.tenant_id)}</p>
+                          <p className="text-xs text-gray-400 truncate">{log.tenant_id || '-'}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-gray-900">
+                            {log.created_at ? new Date(log.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                          </p>
+                          <p className="text-xs text-gray-300 mt-0.5">
+                            {log.created_at ? new Date(log.created_at).toLocaleDateString('tr-TR') : '-'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                {auditLogs.length === 0 ? (
-                  <div className="px-5 py-8 text-sm text-gray-400 text-center">
-                    Henuz audit log kaydi bulunmuyor veya tablo hazir degil.
-                  </div>
-                ) : auditLogs.map((log: any, i: number) => (
-                  <div key={log.id || `${log.action}-${i}`} className={`px-5 py-3 grid grid-cols-4 gap-2 items-center ${i < auditLogs.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{log.action}</p>
-                      <p className="text-xs text-gray-400 truncate">{log.entity_type}{log.entity_id ? ` - ${log.entity_id}` : ''}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{getAuditUserLabel(log.user_id)}</p>
-                      <p className="text-xs text-gray-400 truncate">{log.user_id || '-'}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{getAuditTenantLabel(log.tenant_id)}</p>
-                      <p className="text-xs text-gray-400 truncate">{log.tenant_id || '-'}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">
-                        {log.created_at ? new Date(log.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '-'}
-                      </p>
-                      <p className="text-xs text-gray-300 mt-0.5">
-                        {log.created_at ? new Date(log.created_at).toLocaleDateString('tr-TR') : '-'}
-                      </p>
-                    </div>
-                  </div>
-                ))}
               </div>
               <div>
                 <h2 className="text-base font-semibold text-gray-900">Denetim LoglarÄ±</h2>
@@ -1390,37 +1402,41 @@ const advRes = await fetch('/api/get-advertisers', {
                 ))}
               </div>
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-                  <div className="grid grid-cols-4 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    <div className="col-span-2">KullanÄ±cÄ±</div>
-                    <div>Rol</div>
-                    <div className="text-right">Durum</div>
+                <div className="overflow-x-auto">
+                  <div className="min-w-[720px]">
+                    <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+                      <div className="grid grid-cols-4 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        <div className="col-span-2">KullanÄ±cÄ±</div>
+                        <div>Rol</div>
+                        <div className="text-right">Durum</div>
+                      </div>
+                    </div>
+                    {allUsers.map((u, i) => (
+                      <div key={u.id} className={`px-5 py-3 grid grid-cols-4 gap-2 items-center ${i < allUsers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                        <div className="col-span-2 flex items-center gap-2 min-w-0">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold ${u.role === 'super_admin' ? 'bg-rose-100 text-rose-600' : u.role === 'customer' ? 'bg-indigo-100 text-indigo-600' : u.role === 'advertiser' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
+                            {(u.full_name || u.email || 'U').charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">{u.full_name || '-'}</p>
+                            <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                          </div>
+                        </div>
+                        <div>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.role === 'super_admin' ? 'bg-rose-50 text-rose-600' : u.role === 'customer' ? 'bg-indigo-50 text-indigo-600' : u.role === 'advertiser' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>
+                            {u.role === 'super_admin' ? 'Admin' : u.role === 'customer' ? 'Firma' : u.role === 'advertiser' ? 'ReklamcÄ±' : 'SatÄ±ÅŸÃ§Ä±'}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+                            {u.is_active !== false ? 'Aktif' : 'Pasif'}
+                          </span>
+                          <p className="text-xs text-gray-300 mt-0.5">{new Date(u.created_at).toLocaleDateString('tr-TR')}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                {allUsers.map((u, i) => (
-                  <div key={u.id} className={`px-5 py-3 grid grid-cols-4 gap-2 items-center ${i < allUsers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
-                    <div className="col-span-2 flex items-center gap-2 min-w-0">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold ${u.role === 'super_admin' ? 'bg-rose-100 text-rose-600' : u.role === 'customer' ? 'bg-indigo-100 text-indigo-600' : u.role === 'advertiser' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
-                        {(u.full_name || u.email || 'U').charAt(0)}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{u.full_name || '-'}</p>
-                        <p className="text-xs text-gray-400 truncate">{u.email}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.role === 'super_admin' ? 'bg-rose-50 text-rose-600' : u.role === 'customer' ? 'bg-indigo-50 text-indigo-600' : u.role === 'advertiser' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>
-                        {u.role === 'super_admin' ? 'Admin' : u.role === 'customer' ? 'Firma' : u.role === 'advertiser' ? 'ReklamcÄ±' : 'SatÄ±ÅŸÃ§Ä±'}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
-                        {u.is_active !== false ? 'Aktif' : 'Pasif'}
-                      </span>
-                      <p className="text-xs text-gray-300 mt-0.5">{new Date(u.created_at).toLocaleDateString('tr-TR')}</p>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           )}
@@ -1475,17 +1491,19 @@ const advRes = await fetch('/api/get-advertisers', {
 
     {/* Fatura listesi */}
     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-      <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-        <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          <div className="col-span-2">Firma</div>
-          <div className="text-right">Tutar</div>
-          <div className="text-center">Durum</div>
-          <div className="text-right">Ä°ÅŸlem</div>
-        </div>
-      </div>
-      {invoices.filter(i => directCustomers.some(c => c.id === i.owner_id)).length === 0 ? (
-        <div className="p-12 text-center"><p className="text-gray-400 text-sm">HenÃ¼z fatura yok.</p></div>
-      ) : invoices.filter(i => directCustomers.some(c => c.id === i.owner_id)).map((inv, i, arr) => {
+      <div className="overflow-x-auto">
+        <div className="min-w-[760px]">
+          <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+            <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <div className="col-span-2">Firma</div>
+              <div className="text-right">Tutar</div>
+              <div className="text-center">Durum</div>
+              <div className="text-right">Ä°ÅŸlem</div>
+            </div>
+          </div>
+          {invoices.filter(i => directCustomers.some(c => c.id === i.owner_id)).length === 0 ? (
+            <div className="p-12 text-center"><p className="text-gray-400 text-sm">HenÃ¼z fatura yok.</p></div>
+          ) : invoices.filter(i => directCustomers.some(c => c.id === i.owner_id)).map((inv, i, arr) => {
         const owner = directCustomers.find(c => c.id === inv.owner_id)
         const statusCfg: any = {
           pending: { label: 'Bekliyor', color: 'bg-amber-50 text-amber-700' },
@@ -1528,7 +1546,9 @@ const advRes = await fetch('/api/get-advertisers', {
             </div>
           </div>
         )
-      })}
+          })}
+        </div>
+      </div>
     </div>
   </div>
 )}
@@ -1598,17 +1618,19 @@ else created++
 
     {/* Fatura listesi */}
     <div className="bg-white rounded-2xl border border-amber-100 overflow-hidden">
-      <div className="px-5 py-3 bg-amber-50/50 border-b border-amber-100">
-        <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          <div className="col-span-2">ReklamcÄ±</div>
-          <div className="text-right">Tutar</div>
-          <div className="text-center">Durum</div>
-          <div className="text-right">Ä°ÅŸlem</div>
-        </div>
-      </div>
-      {invoices.filter(i => advertisers.some(a => a.id === i.owner_id)).length === 0 ? (
-        <div className="p-12 text-center"><p className="text-gray-400 text-sm">HenÃ¼z fatura yok.</p></div>
-      ) : invoices.filter(i => advertisers.some(a => a.id === i.owner_id)).map((inv, i, arr) => {
+      <div className="overflow-x-auto">
+        <div className="min-w-[760px]">
+          <div className="px-5 py-3 bg-amber-50/50 border-b border-amber-100">
+            <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <div className="col-span-2">ReklamcÄ±</div>
+              <div className="text-right">Tutar</div>
+              <div className="text-center">Durum</div>
+              <div className="text-right">Ä°ÅŸlem</div>
+            </div>
+          </div>
+          {invoices.filter(i => advertisers.some(a => a.id === i.owner_id)).length === 0 ? (
+            <div className="p-12 text-center"><p className="text-gray-400 text-sm">HenÃ¼z fatura yok.</p></div>
+          ) : invoices.filter(i => advertisers.some(a => a.id === i.owner_id)).map((inv, i, arr) => {
         const owner = advertisers.find(a => a.id === inv.owner_id)
         const statusCfg: any = {
           pending: { label: 'Bekliyor', color: 'bg-amber-50 text-amber-700' },
@@ -1651,7 +1673,9 @@ else created++
             </div>
           </div>
         )
-      })}
+          })}
+        </div>
+      </div>
     </div>
   </div>
 )}

@@ -286,87 +286,150 @@ export default function FaturalarPage() {
 
           {activeTab === 'faturalar' && (
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-                <div className="grid grid-cols-6 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  <div className="col-span-2">MÃ¼ÅŸteri</div>
-                  <div className="text-right">Tutar</div>
-                  <div className="text-center">Durum</div>
-                  <div className="text-center">Son Ã–deme</div>
-                  <div className="text-right">Ä°ÅŸlem</div>
-                </div>
-              </div>
-              {filteredInvoices.length === 0 ? (
-                <div className="p-12 text-center"><p className="text-gray-400 text-sm">Fatura bulunamadÄ±.</p></div>
-              ) : filteredInvoices.map((inv, i) => {
-                const isOverdue = inv.due_date && new Date(inv.due_date) < new Date() && inv.status === 'pending'
-                const st = STATUS_COLORS[inv.status] || STATUS_COLORS.pending
-                return (
-                  <div key={inv.id} className={`px-5 py-3.5 grid grid-cols-6 gap-2 items-center hover:bg-gray-50/50 transition-colors ${i < filteredInvoices.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                    <div className="col-span-2 flex items-center gap-2 min-w-0">
-                      <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center font-bold text-amber-600 text-xs flex-shrink-0">
-                        {getCustomerName(inv.customer_id, inv.owner_id).charAt(0)}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{getCustomerName(inv.customer_id, inv.owner_id)}</p>
-                        <p className="text-xs text-gray-400">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
-                      </div>
-                    </div>
-                    <div className="text-right"><p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p></div>
-                    <div className="text-center"><span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${st}`}>{STATUS_LABELS[inv.status]}</span></div>
-                    <div className="text-center">
-                      <p className={`text-xs ${isOverdue ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
-                        {inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-'}{isOverdue && ' âš '}
-                      </p>
-                    </div>
-                    <div className="text-right flex items-center justify-end gap-1.5">
-                      {(inv.status === 'pending' || inv.status === 'awaiting_approval') && (
-                        <button onClick={() => markAsPaid(inv)} className="text-xs text-emerald-600 font-medium px-2.5 py-1 hover:bg-emerald-50 rounded-lg transition-colors border border-emerald-200">Ã–dendi</button>
-                      )}
-                      {inv.status === 'pending' && isOverdue && (
-                        <button onClick={() => markAsOverdue(inv)} className="text-xs text-red-500 font-medium px-2.5 py-1 hover:bg-red-50 rounded-lg transition-colors border border-red-200">GecikmiÅŸ</button>
-                      )}
-                    </div>
+              <div className="hidden md:block">
+                <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+                  <div className="grid grid-cols-6 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    <div className="col-span-2">MÃ¼ÅŸteri</div>
+                    <div className="text-right">Tutar</div>
+                    <div className="text-center">Durum</div>
+                    <div className="text-center">Son Ã–deme</div>
+                    <div className="text-right">Ä°ÅŸlem</div>
                   </div>
-                )
-              })}
+                </div>
+                {filteredInvoices.length === 0 ? (
+                  <div className="p-12 text-center"><p className="text-gray-400 text-sm">Fatura bulunamadÄ±.</p></div>
+                ) : filteredInvoices.map((inv, i) => {
+                  const isOverdue = inv.due_date && new Date(inv.due_date) < new Date() && inv.status === 'pending'
+                  const st = STATUS_COLORS[inv.status] || STATUS_COLORS.pending
+                  return (
+                    <div key={inv.id} className={`px-5 py-3.5 grid grid-cols-6 gap-2 items-center hover:bg-gray-50/50 transition-colors ${i < filteredInvoices.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                      <div className="col-span-2 flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center font-bold text-amber-600 text-xs flex-shrink-0">
+                          {getCustomerName(inv.customer_id, inv.owner_id).charAt(0)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{getCustomerName(inv.customer_id, inv.owner_id)}</p>
+                          <p className="text-xs text-gray-400">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
+                        </div>
+                      </div>
+                      <div className="text-right"><p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p></div>
+                      <div className="text-center"><span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${st}`}>{STATUS_LABELS[inv.status]}</span></div>
+                      <div className="text-center">
+                        <p className={`text-xs ${isOverdue ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
+                          {inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-'}{isOverdue && ' âš '}
+                        </p>
+                      </div>
+                      <div className="text-right flex items-center justify-end gap-1.5">
+                        {(inv.status === 'pending' || inv.status === 'awaiting_approval') && (
+                          <button onClick={() => markAsPaid(inv)} className="text-xs text-emerald-600 font-medium px-2.5 py-1 hover:bg-emerald-50 rounded-lg transition-colors border border-emerald-200">Ã–dendi</button>
+                        )}
+                        {inv.status === 'pending' && isOverdue && (
+                          <button onClick={() => markAsOverdue(inv)} className="text-xs text-red-500 font-medium px-2.5 py-1 hover:bg-red-50 rounded-lg transition-colors border border-red-200">GecikmiÅŸ</button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="divide-y divide-gray-100 md:hidden">
+                {filteredInvoices.length === 0 ? (
+                  <div className="p-12 text-center"><p className="text-gray-400 text-sm">Fatura bulunamadÄ±.</p></div>
+                ) : filteredInvoices.map((inv) => {
+                  const isOverdue = inv.due_date && new Date(inv.due_date) < new Date() && inv.status === 'pending'
+                  const st = STATUS_COLORS[inv.status] || STATUS_COLORS.pending
+                  return (
+                    <div key={inv.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{getCustomerName(inv.customer_id, inv.owner_id)}</p>
+                          <p className="text-xs text-gray-400 mt-1">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
+                        </div>
+                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${st}`}>{STATUS_LABELS[inv.status]}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
+                        <p className={`text-xs ${isOverdue ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
+                          {inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-'}{isOverdue && ' âš '}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        {(inv.status === 'pending' || inv.status === 'awaiting_approval') && (
+                          <button onClick={() => markAsPaid(inv)} className="text-xs text-emerald-600 font-medium px-2.5 py-1 hover:bg-emerald-50 rounded-lg transition-colors border border-emerald-200">Ã–dendi</button>
+                        )}
+                        {inv.status === 'pending' && isOverdue && (
+                          <button onClick={() => markAsOverdue(inv)} className="text-xs text-red-500 font-medium px-2.5 py-1 hover:bg-red-50 rounded-lg transition-colors border border-red-200">GecikmiÅŸ</button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
 
           {activeTab === 'log' && (
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-                <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  <div className="col-span-2">MÃ¼ÅŸteri</div>
-                  <div className="text-right">Tutar</div>
-                  <div className="text-center">TÃ¼r</div>
-                  <div className="text-right">Tarih</div>
+              <div className="hidden md:block">
+                <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+                  <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    <div className="col-span-2">MÃ¼ÅŸteri</div>
+                    <div className="text-right">Tutar</div>
+                    <div className="text-center">TÃ¼r</div>
+                    <div className="text-right">Tarih</div>
+                  </div>
                 </div>
-              </div>
-              {filteredLogs.length === 0 ? (
-                <div className="p-12 text-center">
-                  <p className="text-gray-400 text-sm">Ã–deme kaydÄ± yok.</p>
-                  <p className="text-xs text-gray-300 mt-1">Faturalar "Ã–dendi" iÅŸaretlenince burada gÃ¶rÃ¼nÃ¼r.</p>
-                </div>
-              ) : filteredLogs.map((log, i) => {
-                const typeLabel = log.type === 'payment' ? 'Ã–deme' : log.type === 'refund' ? 'Ä°ade' : 'DÃ¼zeltme'
-                const typeColor = log.type === 'payment' ? 'bg-emerald-50 text-emerald-700' : log.type === 'refund' ? 'bg-rose-50 text-rose-700' : 'bg-blue-50 text-blue-700'
-                return (
-                  <div key={log.id} className={`px-5 py-3.5 grid grid-cols-5 gap-2 items-center hover:bg-gray-50/50 transition-colors ${i < filteredLogs.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                    <div className="col-span-2 flex items-center gap-2 min-w-0">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 6l3 3 6-5" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                {filteredLogs.length === 0 ? (
+                  <div className="p-12 text-center">
+                    <p className="text-gray-400 text-sm">Ã–deme kaydÄ± yok.</p>
+                    <p className="text-xs text-gray-300 mt-1">Faturalar "Ã–dendi" iÅŸaretlenince burada gÃ¶rÃ¼nÃ¼r.</p>
+                  </div>
+                ) : filteredLogs.map((log, i) => {
+                  const typeLabel = log.type === 'payment' ? 'Ã–deme' : log.type === 'refund' ? 'Ä°ade' : 'DÃ¼zeltme'
+                  const typeColor = log.type === 'payment' ? 'bg-emerald-50 text-emerald-700' : log.type === 'refund' ? 'bg-rose-50 text-rose-700' : 'bg-blue-50 text-blue-700'
+                  return (
+                    <div key={log.id} className={`px-5 py-3.5 grid grid-cols-5 gap-2 items-center hover:bg-gray-50/50 transition-colors ${i < filteredLogs.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                      <div className="col-span-2 flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 6l3 3 6-5" stroke="#059669" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{getCustomerName(log.customer_id, log.owner_id)}</p>
+                          {log.note && <p className="text-xs text-gray-400 truncate">{log.note}</p>}
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{getCustomerName(log.customer_id, log.owner_id)}</p>
-                        {log.note && <p className="text-xs text-gray-400 truncate">{log.note}</p>}
+                      <div className="text-right"><p className="text-sm font-bold text-emerald-600">â‚º{log.amount?.toLocaleString()}</p></div>
+                      <div className="text-center"><span className={`text-xs font-medium px-2.5 py-1 rounded-full ${typeColor}`}>{typeLabel}</span></div>
+                      <div className="text-right"><p className="text-xs text-gray-400">{new Date(log.created_at).toLocaleDateString('tr-TR')}</p></div>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="divide-y divide-gray-100 md:hidden">
+                {filteredLogs.length === 0 ? (
+                  <div className="p-12 text-center">
+                    <p className="text-gray-400 text-sm">Ã–deme kaydÄ± yok.</p>
+                    <p className="text-xs text-gray-300 mt-1">Faturalar "Ã–dendi" iÅŸaretlenince burada gÃ¶rÃ¼nÃ¼r.</p>
+                  </div>
+                ) : filteredLogs.map((log) => {
+                  const typeLabel = log.type === 'payment' ? 'Ã–deme' : log.type === 'refund' ? 'Ä°ade' : 'DÃ¼zeltme'
+                  const typeColor = log.type === 'payment' ? 'bg-emerald-50 text-emerald-700' : log.type === 'refund' ? 'bg-rose-50 text-rose-700' : 'bg-blue-50 text-blue-700'
+                  return (
+                    <div key={log.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{getCustomerName(log.customer_id, log.owner_id)}</p>
+                          {log.note && <p className="text-xs text-gray-400 mt-1 truncate">{log.note}</p>}
+                        </div>
+                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${typeColor}`}>{typeLabel}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-bold text-emerald-600">â‚º{log.amount?.toLocaleString()}</p>
+                        <p className="text-xs text-gray-400">{new Date(log.created_at).toLocaleDateString('tr-TR')}</p>
                       </div>
                     </div>
-                    <div className="text-right"><p className="text-sm font-bold text-emerald-600">â‚º{log.amount?.toLocaleString()}</p></div>
-                    <div className="text-center"><span className={`text-xs font-medium px-2.5 py-1 rounded-full ${typeColor}`}>{typeLabel}</span></div>
-                    <div className="text-right"><p className="text-xs text-gray-400">{new Date(log.created_at).toLocaleDateString('tr-TR')}</p></div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>
@@ -379,7 +442,7 @@ export default function FaturalarPage() {
             <h2 className="text-base font-semibold text-gray-900">Bana Gelen Faturalar</h2>
             <p className="text-xs text-gray-400 mt-0.5">DataPilot tarafÄ±ndan kesilen faturalar</p>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {[
               { label: 'Bekleyen', value: `â‚º${myInvoices.filter(i => i.status === 'pending').reduce((s, i) => s + (i.total_amount || 0), 0).toLocaleString()}`, count: myInvoices.filter(i => i.status === 'pending').length, color: 'text-amber-600', bg: 'bg-amber-50' },
               { label: 'Onay Bekliyor', value: `â‚º${myInvoices.filter(i => i.status === 'awaiting_approval').reduce((s, i) => s + (i.total_amount || 0), 0).toLocaleString()}`, count: myInvoices.filter(i => i.status === 'awaiting_approval').length, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -392,48 +455,88 @@ export default function FaturalarPage() {
             ))}
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-              <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                <div className="col-span-2">AÃ§Ä±klama</div>
-                <div className="text-right">Tutar</div>
-                <div className="text-center">Durum</div>
-                <div className="text-right">Ä°ÅŸlem</div>
+            <div className="hidden md:block">
+              <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+                <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <div className="col-span-2">AÃ§Ä±klama</div>
+                  <div className="text-right">Tutar</div>
+                  <div className="text-center">Durum</div>
+                  <div className="text-right">Ä°ÅŸlem</div>
+                </div>
               </div>
+              {myInvoices.length === 0 ? (
+                <div className="p-12 text-center"><p className="text-gray-400 text-sm">Fatura yok.</p></div>
+              ) : myInvoices.map((inv, i) => (
+                <div key={inv.id} className={`px-5 py-3.5 grid grid-cols-5 gap-2 items-center ${i < myInvoices.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
+                  <div className="col-span-2 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{inv.note || 'AylÄ±k hizmet bedeli'}</p>
+                    <p className="text-xs text-gray-400">
+                      {inv.due_date ? `Vade: ${new Date(inv.due_date).toLocaleDateString('tr-TR')}` : new Date(inv.created_at).toLocaleDateString('tr-TR')}
+                    </p>
+                  </div>
+                  <div className="text-right"><p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p></div>
+                  <div className="text-center">
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${STATUS_COLORS[inv.status] || STATUS_COLORS.pending}`}>
+                      {STATUS_LABELS[inv.status] || inv.status}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    {inv.status === 'pending' && (
+                      <button onClick={async () => {
+                        await supabase.from('invoices').update({ status: 'awaiting_approval' }).eq('id', inv.id)
+                        await loadAll()
+                      }} className="text-xs text-blue-600 font-medium px-3 py-1.5 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200">
+                        Ã–deme YaptÄ±m
+                      </button>
+                    )}
+                    {inv.status === 'awaiting_approval' && (
+                      <span className="text-xs text-blue-500 font-medium">Onay bekleniyor</span>
+                    )}
+                    {inv.status === 'paid' && (
+                      <span className="text-xs text-emerald-600 font-medium">âœ“ Ã–dendi</span>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-            {myInvoices.length === 0 ? (
-              <div className="p-12 text-center"><p className="text-gray-400 text-sm">Fatura yok.</p></div>
-            ) : myInvoices.map((inv, i) => (
-              <div key={inv.id} className={`px-5 py-3.5 grid grid-cols-5 gap-2 items-center ${i < myInvoices.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
-                <div className="col-span-2 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">{inv.note || 'AylÄ±k hizmet bedeli'}</p>
-                  <p className="text-xs text-gray-400">
-                    {inv.due_date ? `Vade: ${new Date(inv.due_date).toLocaleDateString('tr-TR')}` : new Date(inv.created_at).toLocaleDateString('tr-TR')}
-                  </p>
+            <div className="divide-y divide-gray-100 md:hidden">
+              {myInvoices.length === 0 ? (
+                <div className="p-12 text-center"><p className="text-gray-400 text-sm">Fatura yok.</p></div>
+              ) : myInvoices.map((inv) => (
+                <div key={inv.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{inv.note || 'AylÄ±k hizmet bedeli'}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {inv.due_date ? `Vade: ${new Date(inv.due_date).toLocaleDateString('tr-TR')}` : new Date(inv.created_at).toLocaleDateString('tr-TR')}
+                      </p>
+                    </div>
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${STATUS_COLORS[inv.status] || STATUS_COLORS.pending}`}>
+                      {STATUS_LABELS[inv.status] || inv.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
+                    <div className="text-right">
+                      {inv.status === 'pending' && (
+                        <button onClick={async () => {
+                          await supabase.from('invoices').update({ status: 'awaiting_approval' }).eq('id', inv.id)
+                          await loadAll()
+                        }} className="text-xs text-blue-600 font-medium px-3 py-1.5 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200">
+                          Ã–deme YaptÄ±m
+                        </button>
+                      )}
+                      {inv.status === 'awaiting_approval' && (
+                        <span className="text-xs text-blue-500 font-medium">Onay bekleniyor</span>
+                      )}
+                      {inv.status === 'paid' && (
+                        <span className="text-xs text-emerald-600 font-medium">âœ“ Ã–dendi</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right"><p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p></div>
-                <div className="text-center">
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${STATUS_COLORS[inv.status] || STATUS_COLORS.pending}`}>
-                    {STATUS_LABELS[inv.status] || inv.status}
-                  </span>
-                </div>
-                <div className="text-right">
-                  {inv.status === 'pending' && (
-                    <button onClick={async () => {
-                      await supabase.from('invoices').update({ status: 'awaiting_approval' }).eq('id', inv.id)
-                      await loadAll()
-                    }} className="text-xs text-blue-600 font-medium px-3 py-1.5 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200">
-                      Ã–deme YaptÄ±m
-                    </button>
-                  )}
-                  {inv.status === 'awaiting_approval' && (
-                    <span className="text-xs text-blue-500 font-medium">Onay bekleniyor</span>
-                  )}
-                  {inv.status === 'paid' && (
-                    <span className="text-xs text-emerald-600 font-medium">âœ“ Ã–dendi</span>
-                  )}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}
