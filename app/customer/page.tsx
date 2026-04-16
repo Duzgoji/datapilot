@@ -1092,7 +1092,13 @@ return (
 
       {/* ── SIDEBAR ── */}
       <aside
-className={`${sidebarCollapsed ? 'w-16' : 'w-60'} fixed inset-y-0 left-0 z-40 flex flex-col bg-gray-950 transition-all duration-200 overflow-hidden`}>        {/* DataPilot Logo */}
+ className={`
+    fixed inset-y-0 left-0 z-40 flex flex-col bg-gray-950 transition-all duration-200 overflow-hidden
+    ${mobileMenuOpen ? 'w-60' : '-translate-x-full'}
+    md:translate-x-0
+    ${sidebarCollapsed ? 'md:w-16' : 'md:w-60'}
+  `}>
+            {/* DataPilot Logo */}
        <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
   <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
   {!sidebarCollapsed && (
@@ -1202,8 +1208,7 @@ className={`${sidebarCollapsed ? 'w-16' : 'w-60'} fixed inset-y-0 left-0 z-40 fl
       </aside>
 
       {/* ── MAIN ── */}
-      <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-60'} flex-1 transition-all duration-200 min-w-0 overflow-x-hidden`}>
-
+<div className={`flex-1 transition-all duration-200 min-w-0 overflow-x-hidden md:${sidebarCollapsed ? 'ml-16' : 'ml-60'}`}>
         {/* Top bar */}
 <header className="sticky top-0 z-10 flex min-h-14 flex-wrap items-center gap-2 border-b border-gray-100 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm sm:px-6">
   <button
