@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -68,36 +68,36 @@ export default function AdvertiserDashboard() {
   })).sort((a, b) => b.saleCount - a.saleCount)[0]
 
   return (
-    <div className="space-y-5 max-w-6xl">
+    <div className="max-w-6xl space-y-5">
 
       {/* Hero */}
       <div className="bg-gray-950 rounded-2xl p-6 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #f59e0b 0%, transparent 50%), radial-gradient(circle at 80% 20%, #6366f1 0%, transparent 50%)' }} />
         <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
-        <div className="relative flex items-start justify-between">
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1 rounded-full">Genel Bakış</span>
+              <span className="text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1 rounded-full">Genel BakÄ±ÅŸ</span>
             </div>
             <h1 className="text-2xl font-bold">Merhaba, {profile?.full_name?.split(' ')[0]}</h1>
-            <p className="text-gray-400 text-sm mt-1">{customers.length} müşteri · {leads.length} toplam lead</p>
+            <p className="text-gray-400 text-sm mt-1">{customers.length} mÃ¼ÅŸteri Â· {leads.length} toplam lead</p>
           </div>
           <div className="relative">
             <select value={period} onChange={e => setPeriod(e.target.value as any)}
               className="appearance-none bg-white/10 border border-white/20 text-white text-xs font-medium pl-3 pr-8 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
-              <option value="7d" className="text-gray-900">Son 7 Gün</option>
-              <option value="30d" className="text-gray-900">Son 30 Gün</option>
-              <option value="90d" className="text-gray-900">Son 90 Gün</option>
+              <option value="7d" className="text-gray-900">Son 7 GÃ¼n</option>
+              <option value="30d" className="text-gray-900">Son 30 GÃ¼n</option>
+              <option value="90d" className="text-gray-900">Son 90 GÃ¼n</option>
             </select>
             <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
         </div>
-        <div className="grid grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/10">
+        <div className="mt-6 grid grid-cols-2 gap-4 border-t border-white/10 pt-6 xl:grid-cols-4">
           {[
-            { label: 'Potansiyel Müşteri', value: totalLeads, color: 'text-white', spark: true },
-            { label: 'Satış', value: totalSales, color: 'text-emerald-400', spark: false },
-            { label: 'Dönüşüm', value: `%${convRate}`, color: 'text-violet-400', spark: false },
-            { label: 'Hakediş', value: `₺${totalHakedis.toLocaleString()}`, color: 'text-amber-400', spark: false },
+            { label: 'Potansiyel MÃ¼ÅŸteri', value: totalLeads, color: 'text-white', spark: true },
+            { label: 'SatÄ±ÅŸ', value: totalSales, color: 'text-emerald-400', spark: false },
+            { label: 'DÃ¶nÃ¼ÅŸÃ¼m', value: `%${convRate}`, color: 'text-violet-400', spark: false },
+            { label: 'HakediÅŸ', value: `â‚º${totalHakedis.toLocaleString()}`, color: 'text-amber-400', spark: false },
           ].map((kpi, i) => (
             <div key={kpi.label} className="flex items-start justify-between">
               <div>
@@ -111,22 +111,22 @@ export default function AdvertiserDashboard() {
       </div>
 
       {/* Alt kartlar */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {bestCustomer && (
           <div className="bg-white rounded-2xl border border-amber-100 p-5 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-20 h-20 bg-amber-50 rounded-bl-full" />
             <div className="relative">
-              <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">⭐ En İyi Müşteri</span>
+              <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">â­ En Ä°yi MÃ¼ÅŸteri</span>
               <Link href={`/advertiser/customers/${bestCustomer.id}`} className="flex items-center gap-3 mt-3 hover:opacity-80 transition-opacity">
                 <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center font-bold text-amber-700">{bestCustomer.name.charAt(0)}</div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">{bestCustomer.name}</p>
-                  <p className="text-xs text-gray-400">{bestCustomer.saleCount} satış · {bestCustomer.leadCount} lead</p>
+                  <p className="text-xs text-gray-400">{bestCustomer.saleCount} satÄ±ÅŸ Â· {bestCustomer.leadCount} lead</p>
                 </div>
               </Link>
               <div className="mt-3">
                 <div className="flex justify-between mb-1">
-                  <span className="text-xs text-gray-400">Dönüşüm</span>
+                  <span className="text-xs text-gray-400">DÃ¶nÃ¼ÅŸÃ¼m</span>
                   <span className="text-xs font-semibold text-amber-600">%{bestCustomer.leadCount > 0 ? ((bestCustomer.saleCount / bestCustomer.leadCount) * 100).toFixed(0) : 0}</span>
                 </div>
                 <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -139,34 +139,34 @@ export default function AdvertiserDashboard() {
 
         <div className="bg-white rounded-2xl border border-gray-100 p-5">
           <p className="text-xs font-medium text-gray-400 mb-2">Platform Gelirim</p>
-          <p className="text-3xl font-bold text-gray-900">₺{monthlyIncome.toLocaleString()}</p>
-          <p className="text-xs text-gray-400 mt-1">₺{subscription?.monthly_fee || 0} + {customers.length} × ₺{subscription?.per_client_fee || 0}</p>
+          <p className="text-3xl font-bold text-gray-900">â‚º{monthlyIncome.toLocaleString()}</p>
+          <p className="text-xs text-gray-400 mt-1">â‚º{subscription?.monthly_fee || 0} + {customers.length} Ã— â‚º{subscription?.per_client_fee || 0}</p>
           {pendingTotal > 0 && (
             <div className="mt-3 flex items-center gap-2 bg-rose-50 rounded-lg px-2.5 py-2">
               <span className="w-1.5 h-1.5 bg-rose-400 rounded-full" />
-              <span className="text-xs text-rose-600">₺{pendingTotal.toLocaleString()} bekleyen fatura</span>
+              <span className="text-xs text-rose-600">â‚º{pendingTotal.toLocaleString()} bekleyen fatura</span>
             </div>
           )}
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 p-5">
-          <p className="text-xs font-medium text-gray-400 mb-2">Toplam Hakediş</p>
-          <p className="text-3xl font-bold text-emerald-600">₺{totalHakedis.toLocaleString()}</p>
-          <p className="text-xs text-gray-400 mt-1">{customers.length} müşteriden</p>
-          <Link href="/advertiser/hakedis" className="mt-3 block text-xs text-emerald-600 font-medium hover:underline">Detaylı görüntüle →</Link>
+          <p className="text-xs font-medium text-gray-400 mb-2">Toplam HakediÅŸ</p>
+          <p className="text-3xl font-bold text-emerald-600">â‚º{totalHakedis.toLocaleString()}</p>
+          <p className="text-xs text-gray-400 mt-1">{customers.length} mÃ¼ÅŸteriden</p>
+          <Link href="/advertiser/hakedis" className="mt-3 block text-xs text-emerald-600 font-medium hover:underline">DetaylÄ± gÃ¶rÃ¼ntÃ¼le â†’</Link>
         </div>
       </div>
 
-      {/* Müşteri portföyü */}
+      {/* MÃ¼ÅŸteri portfÃ¶yÃ¼ */}
       <div className="bg-white rounded-2xl border border-gray-100">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900 text-sm">Müşteri Portföyü</h3>
-          <Link href="/advertiser/customers" className="text-xs text-amber-600 font-medium hover:text-amber-700">Tümünü Yönet →</Link>
+        <div className="flex flex-col gap-2 border-b border-gray-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="font-semibold text-gray-900 text-sm">MÃ¼ÅŸteri PortfÃ¶yÃ¼</h3>
+          <Link href="/advertiser/customers" className="text-xs text-amber-600 font-medium hover:text-amber-700">TÃ¼mÃ¼nÃ¼ YÃ¶net â†’</Link>
         </div>
         {customers.length === 0 ? (
           <div className="p-12 text-center">
-            <p className="text-gray-400 text-sm">Henüz müşteri yok.</p>
-            <Link href="/advertiser/customers" className="mt-2 inline-block text-xs text-amber-600 font-medium hover:underline">Müşteri Ekle →</Link>
+            <p className="text-gray-400 text-sm">HenÃ¼z mÃ¼ÅŸteri yok.</p>
+            <Link href="/advertiser/customers" className="mt-2 inline-block text-xs text-amber-600 font-medium hover:underline">MÃ¼ÅŸteri Ekle â†’</Link>
           </div>
         ) : customers.map((c, i) => {
           const cLeads = leads.filter(l => l.customer_id === c.id)
@@ -180,15 +180,15 @@ export default function AdvertiserDashboard() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">{c.name}</p>
                 <div className="flex items-center gap-3 mt-0.5">
-                  <span className="text-xs text-gray-400">{cLeads.length} potansiyel müşteri</span>
-                  <span className="text-xs text-emerald-600 font-medium">{cSales} satış</span>
+                  <span className="text-xs text-gray-400">{cLeads.length} potansiyel mÃ¼ÅŸteri</span>
+                  <span className="text-xs text-emerald-600 font-medium">{cSales} satÄ±ÅŸ</span>
                   <span className="text-xs text-gray-400">%{cConv}</span>
                 </div>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
                 <div className="text-right">
-                  <p className="text-xs font-bold text-emerald-600">₺{earned.toLocaleString()}</p>
-                  <p className="text-xs text-gray-400">hakediş</p>
+                  <p className="text-xs font-bold text-emerald-600">â‚º{earned.toLocaleString()}</p>
+                  <p className="text-xs text-gray-400">hakediÅŸ</p>
                 </div>
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
                   {c.status === 'active' ? 'Aktif' : 'Pasif'}
@@ -202,3 +202,4 @@ export default function AdvertiserDashboard() {
     </div>
   )
 }
+

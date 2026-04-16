@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -161,50 +161,50 @@ const res = await fetch('/api/create-user', {
   }
 
   return (
-    <div className="space-y-4 max-w-6xl">
+    <div className="max-w-6xl space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Müşteri Portföyüm</h2>
-          <p className="text-xs text-gray-400 mt-0.5">{customers.length} müşteri · {leads.length} toplam lead</p>
+          <h2 className="text-base font-semibold text-gray-900">MÃ¼ÅŸteri PortfÃ¶yÃ¼m</h2>
+          <p className="text-xs text-gray-400 mt-0.5">{customers.length} mÃ¼ÅŸteri Â· {leads.length} toplam lead</p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex bg-gray-100 rounded-xl p-1">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+          <div className="flex w-full bg-gray-100 rounded-xl p-1 sm:w-auto">
             {(['card', 'table'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${view === v ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>
-                {v === 'card' ? '⊞ Kart' : '≡ Liste'}
+                {v === 'card' ? 'âŠ Kart' : 'â‰¡ Liste'}
               </button>
             ))}
           </div>
           <button onClick={() => setShowAdd(true)}
-            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm shadow-amber-200">
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-amber-200 transition-colors hover:bg-amber-600 sm:w-auto">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" /></svg>
-            Müşteri Ekle
+            MÃ¼ÅŸteri Ekle
           </button>
         </div>
       </div>
 
       {addSuccess && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7l3.5 3.5 7.5-7" stroke="#059669" strokeWidth="1.75" strokeLinecap="round" /></svg>
           <p className="text-xs font-medium text-emerald-800">{addSuccess} eklendi!</p>
-          <button onClick={() => setAddSuccess('')} className="ml-auto text-emerald-400">×</button>
+          <button onClick={() => setAddSuccess('')} className="ml-auto text-emerald-400">Ã—</button>
         </div>
       )}
 
       {/* Search */}
       <div className="relative">
         <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5" /><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Müşteri ara..."
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="MÃ¼ÅŸteri ara..."
           className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
       </div>
 
       {filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
-          <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">◈</div>
-          <p className="text-gray-500 text-sm font-medium">Henüz müşteri yok</p>
-          <button onClick={() => setShowAdd(true)} className="mt-3 text-xs text-amber-600 font-medium hover:underline">İlk müşteriyi ekle →</button>
+          <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">â—ˆ</div>
+          <p className="text-gray-500 text-sm font-medium">HenÃ¼z mÃ¼ÅŸteri yok</p>
+          <button onClick={() => setShowAdd(true)} className="mt-3 text-xs text-amber-600 font-medium hover:underline">Ä°lk mÃ¼ÅŸteriyi ekle â†’</button>
         </div>
       ) : view === 'card' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -237,10 +237,10 @@ const res = await fetch('/api/create-user', {
                 </div>
                 <div className="px-5 py-3 grid grid-cols-4 gap-2 border-b border-gray-50">
                   {[
-                    { label: 'Potansiyel Müşteri', value: cLeads.length, color: 'text-indigo-600' },
-                    { label: 'Satış', value: cSales.length, color: 'text-emerald-600' },
-                    { label: 'Dönüşüm', value: `%${cConv.toFixed(0)}`, color: 'text-violet-600' },
-                    { label: 'Ciro', value: `₺${(cRevenue / 1000).toFixed(1)}K`, color: 'text-amber-600' },
+                    { label: 'Potansiyel MÃ¼ÅŸteri', value: cLeads.length, color: 'text-indigo-600' },
+                    { label: 'SatÄ±ÅŸ', value: cSales.length, color: 'text-emerald-600' },
+                    { label: 'DÃ¶nÃ¼ÅŸÃ¼m', value: `%${cConv.toFixed(0)}`, color: 'text-violet-600' },
+                    { label: 'Ciro', value: `â‚º${(cRevenue / 1000).toFixed(1)}K`, color: 'text-amber-600' },
                   ].map(s => (
                     <div key={s.label} className="text-center">
                       <p className={`text-sm font-bold ${s.color}`}>{s.value}</p>
@@ -250,14 +250,14 @@ const res = await fetch('/api/create-user', {
                 </div>
                 <div className="px-5 py-3 flex items-center justify-between">
                   <div className="text-xs text-gray-400">
-                    {!client?.commission_model ? 'Komisyon tanımsız' :
-                      client.commission_model === 'fixed' ? `₺${client.monthly_fee}/ay sabit` :
-                        client.commission_model === 'percent' ? `%${client.commission_rate} satış` :
-                          `₺${client.monthly_fee} + %${client.commission_rate}`}
+                    {!client?.commission_model ? 'Komisyon tanÄ±msÄ±z' :
+                      client.commission_model === 'fixed' ? `â‚º${client.monthly_fee}/ay sabit` :
+                        client.commission_model === 'percent' ? `%${client.commission_rate} satÄ±ÅŸ` :
+                          `â‚º${client.monthly_fee} + %${client.commission_rate}`}
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-bold text-emerald-600">₺{earned.toLocaleString()}</span>
-                    <span className="text-xs text-gray-400 ml-1">hakediş</span>
+                    <span className="text-xs font-bold text-emerald-600">â‚º{earned.toLocaleString()}</span>
+                    <span className="text-xs text-gray-400 ml-1">hakediÅŸ</span>
                   </div>
                 </div>
               </Link>
@@ -268,12 +268,12 @@ const res = await fetch('/api/create-user', {
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
           <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
             <div className="grid grid-cols-8 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              <div className="col-span-2">Müşteri</div>
-              <div className="text-center">Potansiyel Müşteri</div>
-              <div className="text-center">Satış</div>
-              <div className="text-center">Dönüşüm</div>
+              <div className="col-span-2">MÃ¼ÅŸteri</div>
+              <div className="text-center">Potansiyel MÃ¼ÅŸteri</div>
+              <div className="text-center">SatÄ±ÅŸ</div>
+              <div className="text-center">DÃ¶nÃ¼ÅŸÃ¼m</div>
               <div className="text-center">Ciro</div>
-              <div className="text-center">Hakediş</div>
+              <div className="text-center">HakediÅŸ</div>
               <div className="text-center">Durum</div>
             </div>
           </div>
@@ -296,8 +296,8 @@ const res = await fetch('/api/create-user', {
                 <div className="text-center"><p className="text-sm font-semibold text-indigo-600">{cLeads.length}</p></div>
                 <div className="text-center"><p className="text-sm font-semibold text-emerald-600">{cSales.length}</p></div>
                 <div className="text-center"><p className="text-sm font-semibold text-violet-600">%{cConv}</p></div>
-                <div className="text-center"><p className="text-sm font-semibold text-gray-700">₺{(cRevenue / 1000).toFixed(1)}K</p></div>
-                <div className="text-center"><p className="text-sm font-bold text-emerald-600">₺{earned.toLocaleString()}</p></div>
+                <div className="text-center"><p className="text-sm font-semibold text-gray-700">â‚º{(cRevenue / 1000).toFixed(1)}K</p></div>
+                <div className="text-center"><p className="text-sm font-bold text-emerald-600">â‚º{earned.toLocaleString()}</p></div>
                 <div className="text-center">
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
                     {c.status === 'active' ? 'Aktif' : 'Pasif'}
@@ -309,23 +309,23 @@ const res = await fetch('/api/create-user', {
         </div>
       )}
 
-      {/* Müşteri Ekle Modal */}
-      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Yeni Müşteri Ekle" size="xl">
+      {/* MÃ¼ÅŸteri Ekle Modal */}
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Yeni MÃ¼ÅŸteri Ekle" size="xl">
         <form onSubmit={handleAdd} className="p-6 space-y-5">
           <div>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Hesap Bilgileri</p>
             <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2"><Input label="Müşteri / Firma Adı *" value={name} onChange={(e: any) => setName(e.target.value)} required placeholder="Firma Adı" /></div>
+              <div className="col-span-2"><Input label="MÃ¼ÅŸteri / Firma AdÄ± *" value={name} onChange={(e: any) => setName(e.target.value)} required placeholder="Firma AdÄ±" /></div>
               <Input label="E-posta *" type="email" value={email} onChange={(e: any) => setEmail(e.target.value)} required placeholder="musteri@email.com" />
-              <Input label="Şifre *" type="password" value={password} onChange={(e: any) => setPassword(e.target.value)} required placeholder="min. 6 karakter" />
+              <Input label="Åifre *" type="password" value={password} onChange={(e: any) => setPassword(e.target.value)} required placeholder="min. 6 karakter" />
               <Input label="Telefon" value={phone} onChange={(e: any) => setPhone(e.target.value)} placeholder="05XX XXX XXXX" />
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">Sektör</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">SektÃ¶r</label>
                 <div className="relative">
                   <select value={sector} onChange={e => setSector(e.target.value)}
                     className="w-full appearance-none px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 pr-9">
-                    <option value="">Seçiniz</option>
-                    {['Estetik Klinik', 'Diş Kliniği', 'Saç Ekim', 'Güzellik Merkezi', 'Medikal Estetik', 'Emlak', 'Eğitim', 'Diğer'].map(s => (
+                    <option value="">SeÃ§iniz</option>
+                    {['Estetik Klinik', 'DiÅŸ KliniÄŸi', 'SaÃ§ Ekim', 'GÃ¼zellik Merkezi', 'Medikal Estetik', 'Emlak', 'EÄŸitim', 'DiÄŸer'].map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
@@ -339,9 +339,9 @@ const res = await fetch('/api/create-user', {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Komisyon Modeli</p>
             <div className="grid grid-cols-3 gap-3 mb-4">
               {[
-                { key: 'fixed', label: 'Sabit Aylık', desc: 'Sabit tutar', icon: '₺' },
-                { key: 'percent', label: 'Satış Yüzdesi', desc: 'Satışın %X\'i', icon: '%' },
-                { key: 'both', label: 'Sabit + Yüzde', desc: 'İkisi birden', icon: '⊕' },
+                { key: 'fixed', label: 'Sabit AylÄ±k', desc: 'Sabit tutar', icon: 'â‚º' },
+                { key: 'percent', label: 'SatÄ±ÅŸ YÃ¼zdesi', desc: 'SatÄ±ÅŸÄ±n %X\'i', icon: '%' },
+                { key: 'both', label: 'Sabit + YÃ¼zde', desc: 'Ä°kisi birden', icon: 'âŠ•' },
               ].map(m => (
                 <button key={m.key} type="button" onClick={() => setCommModel(m.key as any)}
                   className={`p-4 rounded-xl border-2 text-left transition-all ${commModel === m.key ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-white hover:border-amber-300'}`}>
@@ -353,17 +353,17 @@ const res = await fetch('/api/create-user', {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {(commModel === 'fixed' || commModel === 'both') && (
-                <Input label="Aylık Sabit (₺)" type="number" value={monthlyFee} onChange={(e: any) => setMonthlyFee(e.target.value)} placeholder="0" />
+                <Input label="AylÄ±k Sabit (â‚º)" type="number" value={monthlyFee} onChange={(e: any) => setMonthlyFee(e.target.value)} placeholder="0" />
               )}
               {(commModel === 'percent' || commModel === 'both') && (
-                <Input label="Komisyon Oranı (%)" type="number" value={commRate} onChange={(e: any) => setCommRate(e.target.value)} placeholder="0" />
+                <Input label="Komisyon OranÄ± (%)" type="number" value={commRate} onChange={(e: any) => setCommRate(e.target.value)} placeholder="0" />
               )}
             </div>
             {(monthlyFee || commRate) && (
               <div className="mt-3 bg-emerald-50 border border-emerald-100 rounded-xl p-3 flex items-center justify-between">
-                <span className="text-xs text-emerald-700">Örnek (10 satış × ₺5.000):</span>
+                <span className="text-xs text-emerald-700">Ã–rnek (10 satÄ±ÅŸ Ã— â‚º5.000):</span>
                 <span className="text-sm font-bold text-emerald-700">
-                  ₺{(
+                  â‚º{(
                     (commModel === 'fixed' ? parseFloat(monthlyFee) || 0 : 0) +
                     (commModel === 'percent' ? (50000 * (parseFloat(commRate) || 0)) / 100 : 0) +
                     (commModel === 'both' ? (parseFloat(monthlyFee) || 0) + (50000 * (parseFloat(commRate) || 0)) / 100 : 0)
@@ -376,11 +376,11 @@ const res = await fetch('/api/create-user', {
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={() => setShowAdd(false)}
               className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 py-2.5 rounded-xl text-sm font-medium transition-colors">
-              İptal
+              Ä°ptal
             </button>
             <button type="submit" disabled={adding}
               className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
-              {adding ? 'Oluşturuluyor...' : 'Müşteri Oluştur'}
+              {adding ? 'OluÅŸturuluyor...' : 'MÃ¼ÅŸteri OluÅŸtur'}
             </button>
           </div>
         </form>
@@ -388,3 +388,5 @@ const res = await fetch('/api/create-user', {
     </div>
   )
 }
+
+

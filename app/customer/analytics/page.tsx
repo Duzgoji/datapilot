@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { logClientAuditEvent } from '@/lib/audit/client'
@@ -8,33 +8,33 @@ import { useRouter } from 'next/navigation'
 import MetaConnect from '@/components/MetaConnect'
 
 const menuStructure = [
-  { key: 'dashboard', label: 'Dashboard', icon: '📊' },
+  { key: 'dashboard', label: 'Dashboard', icon: 'ğŸ“Š' },
   {
-    key: 'meta', label: 'Meta Reklam', icon: '📣', children: [
+    key: 'meta', label: 'Meta Reklam', icon: 'ğŸ“£', children: [
       { key: 'meta-kampanyalar', label: 'Kampanyalar' },
-      { key: 'meta-leadformlar', label: 'Potansiyel Müşteri Formları' },
-      { key: 'meta-leadler', label: 'Potansiyel Müşteri Yönetimi' },
+      { key: 'meta-leadformlar', label: 'Potansiyel MÃ¼ÅŸteri FormlarÄ±' },
+      { key: 'meta-leadler', label: 'Potansiyel MÃ¼ÅŸteri YÃ¶netimi' },
       { key: 'meta-analitik', label: 'Analitik & Raporlar' },
-      { key: 'meta-ekip', label: 'Ekip & Satışçılar' },
+      { key: 'meta-ekip', label: 'Ekip & SatÄ±ÅŸÃ§Ä±lar' },
     ]
   },
   {
-    key: 'veri', label: 'Veri Merkezi', icon: '📂', children: [
-      { key: 'veri-yukle', label: 'Veri Yükle' },
+    key: 'veri', label: 'Veri Merkezi', icon: 'ğŸ“‚', children: [
+      { key: 'veri-yukle', label: 'Veri YÃ¼kle' },
       { key: 'veri-setlerim', label: 'Veri Setlerim' },
       { key: 'veri-analiz', label: 'Analiz' },
       { key: 'veri-raporlar', label: 'Raporlar' },
     ]
   },
-  { key: 'ayarlar', label: 'Ayarlar', icon: '⚙️' },
+  { key: 'ayarlar', label: 'Ayarlar', icon: 'âš™ï¸' },
 ]
 
 const STATUS_LABELS: any = {
   new: { label: 'Yeni', color: 'bg-blue-100 text-blue-700' },
-  called: { label: 'Arındı', color: 'bg-yellow-100 text-yellow-700' },
+  called: { label: 'ArÄ±ndÄ±', color: 'bg-yellow-100 text-yellow-700' },
   appointment_scheduled: { label: 'Randevu', color: 'bg-purple-100 text-purple-700' },
-  procedure_done: { label: 'Satış', color: 'bg-green-100 text-green-700' },
-  cancelled: { label: 'İptal', color: 'bg-red-100 text-red-700' },
+  procedure_done: { label: 'SatÄ±ÅŸ', color: 'bg-green-100 text-green-700' },
+  cancelled: { label: 'Ä°ptal', color: 'bg-red-100 text-red-700' },
 }
 
 const SOURCE_LABELS: any = {
@@ -269,7 +269,7 @@ const [branches, setBranches] = useState<any[]>([])
       if (item.key === activeTab) return item.label
       if (item.children) {
         const child = item.children.find(c => c.key === activeTab)
-        if (child) return `${item.label} › ${child.label}`
+        if (child) return `${item.label} â€º ${child.label}`
       }
     }
     return 'Dashboard'
@@ -283,7 +283,7 @@ const [branches, setBranches] = useState<any[]>([])
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="text-center">
         <img src="/logo.png" alt="DataPilot" className="h-7 w-auto" />
-        <p className="text-gray-500 text-sm">Yükleniyor...</p>
+        <p className="text-gray-500 text-sm">YÃ¼kleniyor...</p>
       </div>
     </div>
   )
@@ -302,7 +302,7 @@ const [branches, setBranches] = useState<any[]>([])
                 </div>
                 <span className="text-white font-bold">DataPilot</span>
               </div>
-              <button onClick={() => setSidebarCollapsed(true)} className="text-slate-500 hover:text-white text-xs">◀</button>
+              <button onClick={() => setSidebarCollapsed(true)} className="text-slate-500 hover:text-white text-xs">â—€</button>
             </>
           ) : (
             <button onClick={() => setSidebarCollapsed(false)} className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mx-auto">
@@ -316,7 +316,7 @@ const [branches, setBranches] = useState<any[]>([])
             <p className="text-slate-400 text-xs uppercase tracking-wide mb-1">Firma</p>
             <p className="text-white font-semibold text-sm truncate">{profile?.company_name || profile?.full_name}</p>
             <span className="text-xs bg-blue-900 text-blue-300 px-2 py-0.5 rounded-full mt-1 inline-block">
-              {profile?.sector || 'Müşteri'}
+              {profile?.sector || 'MÃ¼ÅŸteri'}
             </span>
           </div>
         )}
@@ -332,7 +332,7 @@ const [branches, setBranches] = useState<any[]>([])
                   <>
                     <span className="flex-1 text-sm">{item.label}</span>
                     {item.children && (
-                      <span className="text-xs opacity-60">{expandedMenus.includes(item.key) ? '▼' : '▶'}</span>
+                      <span className="text-xs opacity-60">{expandedMenus.includes(item.key) ? 'â–¼' : 'â–¶'}</span>
                     )}
                   </>
                 )}
@@ -364,51 +364,51 @@ const [branches, setBranches] = useState<any[]>([])
             </div>
             <button onClick={handleLogout}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:bg-slate-800 hover:text-white">
-              🚪 Çıkış Yap
+              ğŸšª Ã‡Ä±kÄ±ÅŸ Yap
             </button>
           </div>
         )}
       </div>
 
       {/* MAIN */}
-      <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-64'} flex-1 transition-all duration-300`}>
+      <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-64'} min-w-0 flex-1 overflow-x-hidden transition-all duration-300`}>
 
         {/* TOP BAR */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-4 sticky top-0 z-10 shadow-sm">
+        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 shadow-sm sm:px-6">
           <div className="relative flex-1 max-w-sm">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">ğŸ”</span>
             <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Potansiyel müşteri, satışçı ara..."
+              placeholder="Potansiyel mÃ¼ÅŸteri, satÄ±ÅŸÃ§Ä± ara..."
               className="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div className="flex items-center gap-2 ml-auto">
             <button onClick={() => { setActiveTab('meta-leadler'); setShowAddLead(true) }}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-medium">
-              + Potansiyel Müşteri Ekle
+              + Potansiyel MÃ¼ÅŸteri Ekle
             </button>
             <button onClick={() => { setActiveTab('meta-ekip'); setShowAddMember(true) }}
               className="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-2 rounded-lg font-medium">
-              + Satışçı Ekle
+              + SatÄ±ÅŸÃ§Ä± Ekle
             </button>
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">🔔</button>
+            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">ğŸ””</button>
             <span className="bg-blue-100 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-full">
-              {profile?.company_name || 'Müşteri'}
+              {profile?.company_name || 'MÃ¼ÅŸteri'}
             </span>
           </div>
         </div>
 
         <div className="p-6">
-          <p className="text-xs text-gray-400 mb-5">DataPilot › <span className="text-gray-700 font-medium">{getPageTitle()}</span></p>
+          <p className="text-xs text-gray-400 mb-5">DataPilot â€º <span className="text-gray-700 font-medium">{getPageTitle()}</span></p>
 
           {/* DASHBOARD */}
           {activeTab === 'dashboard' && (
             <>
               <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
                 {[
-                  { label: 'Toplam Potansiyel Müşteri', value: leads.length, icon: '📋', color: 'text-blue-600', bg: 'bg-blue-50' },
-                  { label: 'Toplam Satış', value: totalSales, icon: '✅', color: 'text-green-600', bg: 'bg-green-50' },
-                  { label: 'Dönüşüm Oranı', value: `%${conversionRate}`, icon: '📈', color: 'text-purple-600', bg: 'bg-purple-50' },
-                  { label: 'Toplam Ciro', value: `₺${totalRevenue.toLocaleString()}`, icon: '💰', color: 'text-amber-600', bg: 'bg-amber-50' },
+                  { label: 'Toplam Potansiyel MÃ¼ÅŸteri', value: leads.length, icon: 'ğŸ“‹', color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'Toplam SatÄ±ÅŸ', value: totalSales, icon: 'âœ…', color: 'text-green-600', bg: 'bg-green-50' },
+                  { label: 'DÃ¶nÃ¼ÅŸÃ¼m OranÄ±', value: `%${conversionRate}`, icon: 'ğŸ“ˆ', color: 'text-purple-600', bg: 'bg-purple-50' },
+                  { label: 'Toplam Ciro', value: `â‚º${totalRevenue.toLocaleString()}`, icon: 'ğŸ’°', color: 'text-amber-600', bg: 'bg-amber-50' },
                 ].map(card => (
                   <div key={card.label} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
                     <div className={`w-10 h-10 ${card.bg} rounded-xl flex items-center justify-center text-xl mb-3`}>{card.icon}</div>
@@ -418,23 +418,23 @@ const [branches, setBranches] = useState<any[]>([])
                 ))}
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <div className="col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
                   <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                    <h3 className="font-bold text-gray-900 text-sm">Son Potansiyel Müşteriler</h3>
-                    <button onClick={() => setActiveTab('meta-leadler')} className="text-xs text-blue-600 hover:underline">Tümü →</button>
+                    <h3 className="font-bold text-gray-900 text-sm">Son Potansiyel MÃ¼ÅŸteriler</h3>
+                    <button onClick={() => setActiveTab('meta-leadler')} className="text-xs text-blue-600 hover:underline">TÃ¼mÃ¼ â†’</button>
                   </div>
-                  {leads.length === 0 && <p className="p-6 text-xs text-gray-400 text-center">Henüz potansiyel müşteri yok.</p>}
+                  {leads.length === 0 && <p className="p-6 text-xs text-gray-400 text-center">HenÃ¼z potansiyel mÃ¼ÅŸteri yok.</p>}
                   {leads.slice(0, 6).map(lead => (
                     <div key={lead.id} className="px-4 py-3 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
+                          <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'Ä°simsiz'}</p>
                           <span className={`text-xs px-1.5 py-0.5 rounded-full ${SOURCE_LABELS[lead.source]?.color || 'bg-gray-100 text-gray-500'}`}>
                             {SOURCE_LABELS[lead.source]?.label || lead.source}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500">{lead.phone} • {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+                        <p className="text-xs text-gray-500">{lead.phone} â€¢ {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_LABELS[lead.status]?.color}`}>
                         {STATUS_LABELS[lead.status]?.label}
@@ -445,8 +445,8 @@ const [branches, setBranches] = useState<any[]>([])
 
                 <div className="space-y-4">
                   <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <h3 className="font-bold text-gray-900 text-sm mb-3">Şubeler</h3>
-                    {branches.length === 0 && <p className="text-xs text-gray-400">Henüz şube yok.</p>}
+                    <h3 className="font-bold text-gray-900 text-sm mb-3">Åubeler</h3>
+                    {branches.length === 0 && <p className="text-xs text-gray-400">HenÃ¼z ÅŸube yok.</p>}
                     {branches.slice(0, 4).map(b => (
                       <div key={b.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                         <span className="text-xs font-medium text-gray-900">{b.branch_name}</span>
@@ -459,7 +459,7 @@ const [branches, setBranches] = useState<any[]>([])
 
                   <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                     <h3 className="font-bold text-gray-900 text-sm mb-3">Ekip</h3>
-                    {teamMembers.length === 0 && <p className="text-xs text-gray-400">Henüz satışçı yok.</p>}
+                    {teamMembers.length === 0 && <p className="text-xs text-gray-400">HenÃ¼z satÄ±ÅŸÃ§Ä± yok.</p>}
                     {teamMembers.slice(0, 4).map(m => (
                       <div key={m.id} className="flex items-center gap-2 py-2 border-b border-gray-50 last:border-0">
                         <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -474,15 +474,15 @@ const [branches, setBranches] = useState<any[]>([])
             </>
           )}
 
-          {/* LEAD YÖNETİMİ */}
+          {/* LEAD YÃ–NETÄ°MÄ° */}
           {activeTab === 'meta-leadler' && (
             <>
-              <div className="grid grid-cols-4 gap-4 mb-5">
+              <div className="mb-5 grid grid-cols-2 gap-4 xl:grid-cols-4">
                 {[
                   { label: 'Toplam', value: leads.length, color: 'text-blue-600', bg: 'bg-blue-50' },
                   { label: 'Randevu', value: leads.filter(l => l.status === 'appointment_scheduled').length, color: 'text-purple-600', bg: 'bg-purple-50' },
-                  { label: 'Satış', value: totalSales, color: 'text-green-600', bg: 'bg-green-50' },
-                  { label: 'İptal', value: leads.filter(l => l.status === 'cancelled').length, color: 'text-red-600', bg: 'bg-red-50' },
+                  { label: 'SatÄ±ÅŸ', value: totalSales, color: 'text-green-600', bg: 'bg-green-50' },
+                  { label: 'Ä°ptal', value: leads.filter(l => l.status === 'cancelled').length, color: 'text-red-600', bg: 'bg-red-50' },
                 ].map(s => (
                   <div key={s.label} className={`${s.bg} rounded-xl p-4 text-center border border-gray-100`}>
                     <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
@@ -492,18 +492,18 @@ const [branches, setBranches] = useState<any[]>([])
               </div>
 
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm text-gray-500">{leads.length} potansiyel müşteri</p>
+                <p className="text-sm text-gray-500">{leads.length} potansiyel mÃ¼ÅŸteri</p>
                 <button onClick={() => setShowAddLead(!showAddLead)}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                  + Manuel Potansiyel Müşteri Ekle
+                  + Manuel Potansiyel MÃ¼ÅŸteri Ekle
                 </button>
               </div>
 
               {showAddLead && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-gray-900">Yeni Potansiyel Müşteri Ekle</h3>
-                    <button onClick={() => setShowAddLead(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                    <h3 className="font-bold text-gray-900">Yeni Potansiyel MÃ¼ÅŸteri Ekle</h3>
+                    <button onClick={() => setShowAddLead(false)} className="text-gray-400 hover:text-gray-600">âœ•</button>
                   </div>
                   <form onSubmit={handleAddLead} className="grid grid-cols-2 gap-4">
                     <div>
@@ -525,10 +525,10 @@ const [branches, setBranches] = useState<any[]>([])
                         placeholder="ornek@email.com" />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Şube *</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Åube *</label>
                       <select value={leadBranch} onChange={e => setLeadBranch(e.target.value)} required
                         className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Şube seçin...</option>
+                        <option value="">Åube seÃ§in...</option>
                         {branches.map(b => (
                           <option key={b.id} value={b.id}>{b.branch_name}</option>
                         ))}
@@ -538,7 +538,7 @@ const [branches, setBranches] = useState<any[]>([])
                       <label className="block text-xs font-medium text-gray-600 mb-1">Kaynak</label>
                       <select value={leadSource} onChange={e => setLeadSource(e.target.value)}
                         className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="manual">Manuel Giriş</option>
+                        <option value="manual">Manuel GiriÅŸ</option>
                         <option value="meta_form">Meta Form</option>
                         <option value="instagram_dm">Instagram DM</option>
                         <option value="whatsapp">WhatsApp</option>
@@ -547,7 +547,7 @@ const [branches, setBranches] = useState<any[]>([])
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Satışçıya Ata</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">SatÄ±ÅŸÃ§Ä±ya Ata</label>
                       <select value={leadAssignTo} onChange={e => setLeadAssignTo(e.target.value)}
                         className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Atama yapma</option>
@@ -565,10 +565,10 @@ const [branches, setBranches] = useState<any[]>([])
                     <div className="col-span-2 flex gap-3">
                       <button type="submit" disabled={saving}
                         className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium">
-                        {saving ? 'Ekleniyor...' : 'Potansiyel Müşteri Ekle'}
+                        {saving ? 'Ekleniyor...' : 'Potansiyel MÃ¼ÅŸteri Ekle'}
                       </button>
                       <button type="button" onClick={() => setShowAddLead(false)}
-                        className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">İptal</button>
+                        className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">Ä°ptal</button>
                     </div>
                   </form>
                 </div>
@@ -577,20 +577,20 @@ const [branches, setBranches] = useState<any[]>([])
               <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                 {leads.length === 0 ? (
                   <div className="p-12 text-center">
-                    <span className="text-4xl mb-3 block">📭</span>
-                    <p className="text-gray-500 text-sm">Henüz potansiyel müşteri yok.</p>
+                    <span className="text-4xl mb-3 block">ğŸ“­</span>
+                    <p className="text-gray-500 text-sm">HenÃ¼z potansiyel mÃ¼ÅŸteri yok.</p>
                   </div>
                 ) : leads.map(lead => (
                   <div key={lead.id} className="px-5 py-3.5 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'İsimsiz'}</p>
+                        <p className="font-medium text-gray-900 text-sm">{lead.full_name || 'Ä°simsiz'}</p>
                         <span className={`text-xs px-1.5 py-0.5 rounded-full ${SOURCE_LABELS[lead.source]?.color || 'bg-gray-100 text-gray-500'}`}>
                           {SOURCE_LABELS[lead.source]?.label || lead.source}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500">{lead.phone} {lead.email && `• ${lead.email}`}</p>
-                      <p className="text-xs text-gray-400">{lead.lead_code} • {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
+                      <p className="text-xs text-gray-500">{lead.phone} {lead.email && `â€¢ ${lead.email}`}</p>
+                      <p className="text-xs text-gray-400">{lead.lead_code} â€¢ {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {!lead.assigned_to && (
@@ -606,7 +606,7 @@ const [branches, setBranches] = useState<any[]>([])
                         {STATUS_LABELS[lead.status]?.label}
                       </span>
                       {lead.procedure_amount > 0 && (
-                        <span className="text-xs font-bold text-green-600">₺{lead.procedure_amount.toLocaleString()}</span>
+                        <span className="text-xs font-bold text-green-600">â‚º{lead.procedure_amount.toLocaleString()}</span>
                       )}
                     </div>
                   </div>
@@ -615,15 +615,15 @@ const [branches, setBranches] = useState<any[]>([])
             </>
           )}
 
-          {/* EKİP & SATIŞÇILAR */}
+          {/* EKÄ°P & SATIÅÃ‡ILAR */}
           {activeTab === 'meta-ekip' && (
             <>
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-gray-900">Şubeler</h3>
+                  <h3 className="font-bold text-gray-900">Åubeler</h3>
                   <button onClick={() => { setShowAddBranch(!showAddBranch); setInviteLink('') }}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                    + Şube Ekle
+                    + Åube Ekle
                   </button>
                 </div>
 
@@ -631,23 +631,23 @@ const [branches, setBranches] = useState<any[]>([])
                   <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
                     {inviteLink ? (
                       <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                        <p className="text-green-700 font-medium text-sm mb-2">✅ Şube eklendi!</p>
+                        <p className="text-green-700 font-medium text-sm mb-2">âœ… Åube eklendi!</p>
                         <div className="flex gap-2">
                           <input readOnly value={inviteLink} className="flex-1 bg-white border border-green-300 rounded-lg px-3 py-2 text-xs" />
-                          <button onClick={() => { navigator.clipboard.writeText(inviteLink); alert('Kopyalandı!') }}
+                          <button onClick={() => { navigator.clipboard.writeText(inviteLink); alert('KopyalandÄ±!') }}
                             className="bg-green-600 text-white px-3 py-2 rounded-lg text-xs">Kopyala</button>
                         </div>
                       </div>
                     ) : (
                       <form onSubmit={handleAddBranch} className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Şube Adı *</label>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Åube AdÄ± *</label>
                           <input value={branchName} onChange={e => setBranchName(e.target.value)} required
                             className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Şube adı" />
+                            placeholder="Åube adÄ±" />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">İletişim Kişisi</label>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Ä°letiÅŸim KiÅŸisi</label>
                           <input value={branchContact} onChange={e => setBranchContact(e.target.value)}
                             className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="Ad Soyad" />
@@ -663,13 +663,13 @@ const [branches, setBranches] = useState<any[]>([])
                           <select value={commissionModel} onChange={e => setCommissionModel(e.target.value)}
                             className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="fixed_rate">Sabit Oran (%)</option>
-                            <option value="fixed_amount">Sabit Tutar (₺)</option>
+                            <option value="fixed_amount">Sabit Tutar (â‚º)</option>
                             <option value="tiered">Kademeli</option>
                           </select>
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">
-                            {commissionModel === 'fixed_amount' ? 'Tutar (₺)' : 'Oran (%)'}
+                            {commissionModel === 'fixed_amount' ? 'Tutar (â‚º)' : 'Oran (%)'}
                           </label>
                           <input type="number" value={commissionValue} onChange={e => setCommissionValue(e.target.value)}
                             className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -678,10 +678,10 @@ const [branches, setBranches] = useState<any[]>([])
                         <div className="col-span-2 flex gap-3">
                           <button type="submit" disabled={saving}
                             className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium">
-                            {saving ? 'Ekleniyor...' : 'Şube Ekle'}
+                            {saving ? 'Ekleniyor...' : 'Åube Ekle'}
                           </button>
                           <button type="button" onClick={() => setShowAddBranch(false)}
-                            className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">İptal</button>
+                            className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">Ä°ptal</button>
                         </div>
                       </form>
                     )}
@@ -691,17 +691,17 @@ const [branches, setBranches] = useState<any[]>([])
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                   {branches.length === 0 ? (
                     <div className="p-10 text-center">
-                      <span className="text-3xl mb-2 block">🏢</span>
-                      <p className="text-gray-500 text-sm">Henüz şube yok.</p>
+                      <span className="text-3xl mb-2 block">ğŸ¢</span>
+                      <p className="text-gray-500 text-sm">HenÃ¼z ÅŸube yok.</p>
                     </div>
                   ) : branches.map(b => (
                     <div key={b.id} className="px-5 py-4 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
                       <div>
                         <p className="font-semibold text-gray-900 text-sm">{b.branch_name}</p>
-                        <p className="text-xs text-gray-500">{b.contact_name} {b.contact_email && `• ${b.contact_email}`}</p>
+                        <p className="text-xs text-gray-500">{b.contact_name} {b.contact_email && `â€¢ ${b.contact_email}`}</p>
                         <div className="flex gap-2 mt-1">
                           <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
-                            {b.commission_model === 'fixed_rate' ? `%${b.commission_value} komisyon` : `₺${b.commission_value} komisyon`}
+                            {b.commission_model === 'fixed_rate' ? `%${b.commission_value} komisyon` : `â‚º${b.commission_value} komisyon`}
                           </span>
                           <span className="text-xs bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">
                             {leads.filter(l => l.branch_id === b.id).length} lead
@@ -719,10 +719,10 @@ const [branches, setBranches] = useState<any[]>([])
 
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-gray-900">Satışçılar</h3>
+                  <h3 className="font-bold text-gray-900">SatÄ±ÅŸÃ§Ä±lar</h3>
                   <button onClick={() => setShowAddMember(!showAddMember)}
                     className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                    + Satışçı Ekle
+                    + SatÄ±ÅŸÃ§Ä± Ekle
                   </button>
                 </div>
 
@@ -736,10 +736,10 @@ const [branches, setBranches] = useState<any[]>([])
                           placeholder="Ad Soyad" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Şube *</label>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Åube *</label>
                         <select value={memberBranch} onChange={e => setMemberBranch(e.target.value)} required
                           className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                          <option value="">Şube seçin...</option>
+                          <option value="">Åube seÃ§in...</option>
                           {branches.map(b => (
                             <option key={b.id} value={b.id}>{b.branch_name}</option>
                           ))}
@@ -752,13 +752,13 @@ const [branches, setBranches] = useState<any[]>([])
                           placeholder="satis@email.com" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Şifre *</label>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Åifre *</label>
                         <input type="password" value={memberPassword} onChange={e => setMemberPassword(e.target.value)} required
                           className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="En az 6 karakter" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Prim Oranı (%)</label>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Prim OranÄ± (%)</label>
                         <input type="number" value={memberCommission} onChange={e => setMemberCommission(e.target.value)}
                           className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="5" />
@@ -766,10 +766,10 @@ const [branches, setBranches] = useState<any[]>([])
                       <div className="col-span-2 flex gap-3">
                         <button type="submit" disabled={saving}
                           className="bg-purple-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium">
-                          {saving ? 'Ekleniyor...' : 'Satışçı Ekle'}
+                          {saving ? 'Ekleniyor...' : 'SatÄ±ÅŸÃ§Ä± Ekle'}
                         </button>
                         <button type="button" onClick={() => setShowAddMember(false)}
-                          className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">İptal</button>
+                          className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">Ä°ptal</button>
                       </div>
                     </form>
                   </div>
@@ -778,8 +778,8 @@ const [branches, setBranches] = useState<any[]>([])
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                   {teamMembers.length === 0 ? (
                     <div className="p-10 text-center">
-                      <span className="text-3xl mb-2 block">👥</span>
-                      <p className="text-gray-500 text-sm">Henüz satışçı yok.</p>
+                      <span className="text-3xl mb-2 block">ğŸ‘¥</span>
+                      <p className="text-gray-500 text-sm">HenÃ¼z satÄ±ÅŸÃ§Ä± yok.</p>
                     </div>
                   ) : teamMembers.map(m => {
                     const memberLeads = leads.filter(l => l.assigned_to === m.user_id)
@@ -794,11 +794,11 @@ const [branches, setBranches] = useState<any[]>([])
                           </div>
                           <div>
                             <p className="font-semibold text-gray-900 text-sm">{m.profiles?.full_name}</p>
-                            <p className="text-xs text-gray-500">{m.branches?.branch_name} • %{m.commission_rate} prim</p>
+                            <p className="text-xs text-gray-500">{m.branches?.branch_name} â€¢ %{m.commission_rate} prim</p>
                             <div className="flex gap-2 mt-1">
-                              <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{memberLeads.length} potansiyel müşteri</span>
-                              <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">{memberSales.length} satış</span>
-                              <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">₺{commission.toLocaleString()} prim</span>
+                              <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{memberLeads.length} potansiyel mÃ¼ÅŸteri</span>
+                              <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">{memberSales.length} satÄ±ÅŸ</span>
+                              <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">â‚º{commission.toLocaleString()} prim</span>
                             </div>
                           </div>
                         </div>
@@ -819,28 +819,28 @@ const [branches, setBranches] = useState<any[]>([])
             <MetaConnect ownerId={tenantId || profile?.id} />
           )}
 
-          {/* ANALİTİK */}
+          {/* ANALÄ°TÄ°K */}
           {activeTab === 'meta-analitik' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-              <span className="text-5xl mb-4 block">📊</span>
+              <span className="text-5xl mb-4 block">ğŸ“Š</span>
               <h3 className="font-bold text-gray-900 mb-2">Analitik & Raporlar</h3>
-              <p className="text-gray-500 text-sm mb-6">Tüm verilerinizi analiz edin, AI raporu oluşturun</p>
+              <p className="text-gray-500 text-sm mb-6">TÃ¼m verilerinizi analiz edin, AI raporu oluÅŸturun</p>
               <button onClick={() => router.push('/customer/analytics')}
                 className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-medium">
-                📊 Analitik Sayfasına Git
+                ğŸ“Š Analitik SayfasÄ±na Git
               </button>
             </div>
           )}
 
-          {/* VERİ YÜKLE */}
+          {/* VERÄ° YÃœKLE */}
           {activeTab === 'veri-yukle' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-              <span className="text-5xl mb-4 block">📂</span>
+              <span className="text-5xl mb-4 block">ğŸ“‚</span>
               <h3 className="font-bold text-gray-900 mb-2">Veri Merkezi</h3>
-              <p className="text-gray-500 text-sm mb-6">Excel dosyanızı yükleyerek leadlerinizi sisteme aktarın</p>
+              <p className="text-gray-500 text-sm mb-6">Excel dosyanÄ±zÄ± yÃ¼kleyerek leadlerinizi sisteme aktarÄ±n</p>
               <button onClick={() => router.push('/customer/upload')}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium">
-                📥 Veri Yükleme Sayfasına Git
+                ğŸ“¥ Veri YÃ¼kleme SayfasÄ±na Git
               </button>
             </div>
           )}
@@ -848,9 +848,9 @@ const [branches, setBranches] = useState<any[]>([])
           {/* PLACEHOLDER */}
           {!['dashboard', 'meta-leadler', 'meta-ekip', 'ayarlar', 'meta-analitik', 'veri-yukle'].includes(activeTab) && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-              <span className="text-5xl mb-4 block">🚧</span>
+              <span className="text-5xl mb-4 block">ğŸš§</span>
               <h3 className="font-bold text-gray-900 mb-2">{getPageTitle()}</h3>
-              <p className="text-gray-500 text-sm">Bu modül yakında eklenecek.</p>
+              <p className="text-gray-500 text-sm">Bu modÃ¼l yakÄ±nda eklenecek.</p>
             </div>
           )}
 
@@ -859,3 +859,5 @@ const [branches, setBranches] = useState<any[]>([])
     </div>
   )
 }
+
+

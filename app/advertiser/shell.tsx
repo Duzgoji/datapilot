@@ -382,8 +382,9 @@ function TopBar() {
   const section = parts[4] ? sectionMap[parts[4]] : null
 
   return (
-    <header className="h-14 bg-white/90 backdrop-blur-md border-b border-gray-100 flex items-center px-6 sticky top-0 z-10">
-      <nav className="flex items-center gap-1.5 text-sm text-gray-400 min-w-0">
+    <header className="sticky top-0 z-10 flex min-h-14 flex-wrap items-center gap-2 border-b border-gray-100 bg-white/90 px-4 py-2 backdrop-blur-md sm:px-6">
+      <nav className="min-w-0 flex-1 overflow-hidden">
+        <div className="flex min-w-0 items-center gap-1.5 overflow-hidden text-sm text-gray-400">
         <Link href="/advertiser" className="hover:text-gray-600 transition-colors flex-shrink-0 font-medium text-gray-500">
           DataPilot
         </Link>
@@ -410,9 +411,10 @@ function TopBar() {
             </span>
           </>
         )}
+        </div>
       </nav>
 
-      <div className="ml-auto flex items-center gap-3 flex-shrink-0">
+      <div className="ml-auto flex w-full items-center justify-end gap-2 sm:w-auto sm:gap-3">
         {activeCustomer && (
           <div className="hidden md:flex items-center gap-2 bg-amber-50 border border-amber-200/60 rounded-xl px-3 py-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
@@ -462,19 +464,19 @@ export function AdvertiserShell({ children }: { children: React.ReactNode }) {
   if (loading) return <LoadingScreen />
 
   return (
-    <div className="min-h-screen flex" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: '#fafafa' }}>
+    <div className="min-h-screen overflow-x-hidden flex" style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: '#fafafa' }}>
       <Sidebar onAddNew={() => setShowAddCustomer(true)} />
 
-      <div className="ml-[60px] flex-1 min-w-0">
+      <div className="ml-[60px] flex-1 min-w-0 overflow-x-hidden">
         <TopBar />
-       <div
-  className="min-h-[calc(100vh-56px)]"
-  style={{ background: 'linear-gradient(160deg, #f9f9fb 0%, #f4f2fd 50%, #fdf8ed 100%)' }}
->
- <main className="p-6 max-w-6xl mx-auto">
-    {children}
-  </main>
-</div> 
+        <div
+          className="min-h-[calc(100vh-56px)] overflow-x-hidden"
+          style={{ background: 'linear-gradient(160deg, #f9f9fb 0%, #f4f2fd 50%, #fdf8ed 100%)' }}
+        >
+          <main className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6 sm:py-6">
+            {children}
+          </main>
+        </div>
     
   
       </div>

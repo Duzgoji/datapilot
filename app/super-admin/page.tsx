@@ -1,34 +1,34 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 const menuStructure = [
-  { key: 'dashboard', label: 'Dashboard', icon: '⬡' },
+  { key: 'dashboard', label: 'Dashboard', icon: 'â¬¡' },
   {
-    key: 'firmalar', label: 'Firmalar', icon: '◈', children: [
+    key: 'firmalar', label: 'Firmalar', icon: 'â—ˆ', children: [
       { key: 'firma-listesi', label: 'Firma Listesi' },
       { key: 'firma-onboarding', label: 'Onboarding' },
-      { key: 'firma-mali', label: 'Mali Yönetim' },
+      { key: 'firma-mali', label: 'Mali YÃ¶netim' },
     ]
   },
   {
-    key: 'reklamcilar', label: 'Reklamcılar', icon: '◇', children: [
-      { key: 'reklamci-listesi', label: 'Reklamcı Listesi' },
-      { key: 'reklamci-ekle', label: 'Reklamcı Ekle' },
-      { key: 'reklamci-mali', label: 'Mali Yönetim' },
+    key: 'reklamcilar', label: 'ReklamcÄ±lar', icon: 'â—‡', children: [
+      { key: 'reklamci-listesi', label: 'ReklamcÄ± Listesi' },
+      { key: 'reklamci-ekle', label: 'ReklamcÄ± Ekle' },
+      { key: 'reklamci-mali', label: 'Mali YÃ¶netim' },
     ]
   },
   {
-    key: 'faturalama', label: 'Faturalama', icon: '◎', children: [
+    key: 'faturalama', label: 'Faturalama', icon: 'â—', children: [
       { key: 'fatura-planlar', label: 'Planlar' },
       { key: 'fatura-abonelikler', label: 'Abonelikler' },
     ]
   },
-  { key: 'guvenlik-loglar', label: 'Denetim Logları', icon: '◐' },
+  { key: 'guvenlik-loglar', label: 'Denetim LoglarÄ±', icon: 'â—' },
 ]
-// ─── SHARED ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ SHARED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const Modal = ({ open, onClose, title, subtitle, children, size = 'md' }: any) => {
   if (!open) return null
@@ -87,7 +87,7 @@ const Btn = ({ variant = 'primary', size = 'md', children, className = '', ...pr
   )
 }
 
-// ─── MAIN ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ MAIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function SuperAdminPage() {
   const router = useRouter()
@@ -118,7 +118,7 @@ export default function SuperAdminPage() {
   const [showCustomerDetail, setShowCustomerDetail] = useState(false)
   const [selectedFirmaUser, setSelectedFirmaUser] = useState<any>(null)
   const [firmaUserFilter, setFirmaUserFilter] = useState('all')
-  /** Firma listesinde platform müşterileri vs reklamcı üzerinden eklenenler */
+  /** Firma listesinde platform mÃ¼ÅŸterileri vs reklamcÄ± Ã¼zerinden eklenenler */
   const [firmaSourceFilter, setFirmaSourceFilter] = useState<'all' | 'platform' | 'advertiser'>('all')
   const [newName, setNewName] = useState('')
   const [newEmail, setNewEmail] = useState('')
@@ -133,7 +133,7 @@ export default function SuperAdminPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [generatingInvoices, setGeneratingInvoices] = useState(false)
 
-  // Reklamcı state
+  // ReklamcÄ± state
   const [advName, setAdvName] = useState('')
   const [advEmail, setAdvEmail] = useState('')
   const [advPassword, setAdvPassword] = useState('')
@@ -184,7 +184,7 @@ export default function SuperAdminPage() {
   }
 
   const handleOnboardingStep1 = () => {
-    if (!obName || !obEmail || !obPassword || !obCompany) { alert('Lütfen zorunlu alanları doldurun.'); return }
+    if (!obName || !obEmail || !obPassword || !obCompany) { alert('LÃ¼tfen zorunlu alanlarÄ± doldurun.'); return }
     setOnboardingStep(2)
   }
   const handleOnboardingStep2 = () => setOnboardingStep(3)
@@ -320,7 +320,7 @@ const advRes = await fetch('/api/get-advertisers', {
       const totalAmount = branchCount * perBranchFee
       if (totalAmount > 0) await supabase.from('invoices').insert({ owner_id: customer.id, branch_count: branchCount, per_branch_fee: perBranchFee, total_amount: totalAmount, status: 'pending', due_date: dueDate.toISOString().split('T')[0] })
     }
-    setGeneratingInvoices(false); loadData(); alert('Faturalar oluşturuldu!')
+    setGeneratingInvoices(false); loadData(); alert('Faturalar oluÅŸturuldu!')
   }
 
   const handleMarkPaid = async (invoiceId: string) => {
@@ -447,7 +447,7 @@ const advRes = await fetch('/api/get-advertisers', {
   const getPageTitle = () => {
     for (const item of menuStructure) {
       if (item.key === activeTab) return item.label
-      if (item.children) { const child = item.children.find(c => c.key === activeTab); if (child) return `${item.label} › ${child.label}` }
+      if (item.children) { const child = item.children.find(c => c.key === activeTab); if (child) return `${item.label} â€º ${child.label}` }
     }
     return 'Dashboard'
   }
@@ -466,9 +466,9 @@ const advRes = await fetch('/api/get-advertisers', {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 flex" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+    <div className="min-h-screen overflow-x-hidden bg-gray-50 flex" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
-      {/* ── SIDEBAR ── */}
+      {/* â”€â”€ SIDEBAR â”€â”€ */}
       <aside
         onMouseEnter={() => setSidebarCollapsed(false)}
         onMouseLeave={() => setSidebarCollapsed(true)}
@@ -552,21 +552,23 @@ const advRes = await fetch('/api/get-advertisers', {
         )}
       </aside>
 
-      {/* ── MAIN ── */}
-      <div className="ml-16 flex-1 transition-all duration-200 min-w-0">
+      {/* â”€â”€ MAIN â”€â”€ */}
+      <div className="ml-16 min-w-0 flex-1 overflow-x-hidden transition-all duration-200">
 
         {/* Top bar */}
-        <header className="h-14 bg-white/80 backdrop-blur-sm border-b border-gray-100 flex items-center px-6 sticky top-0 z-10 shadow-sm">
-          <div className="flex items-center gap-1.5 text-sm text-gray-400">
+        <header className="sticky top-0 z-10 flex min-h-14 flex-wrap items-center gap-2 border-b border-gray-100 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm sm:px-6">
+          <div className="min-w-0 flex-1 overflow-hidden">
+          <div className="flex min-w-0 items-center gap-1.5 overflow-hidden text-sm text-gray-400">
             <span>DataPilot</span>
-            {getPageTitle().split(' › ').map((part, i, arr) => (
+            {getPageTitle().split(' â€º ').map((part, i, arr) => (
               <span key={i} className="flex items-center gap-1.5">
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 2l4 3-4 3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 <span className={i === arr.length - 1 ? 'text-gray-800 font-medium' : ''}>{part}</span>
               </span>
             ))}
           </div>
-          <div className="ml-auto" ref={profileMenuRef}>
+          </div>
+          <div className="ml-auto flex w-full justify-end sm:w-auto" ref={profileMenuRef}>
             <div className="relative">
               <button onClick={() => setShowProfileMenu(!showProfileMenu)}
                 className="flex items-center gap-2 hover:bg-gray-50 rounded-xl px-3 py-1.5 border border-transparent hover:border-gray-200 transition-all">
@@ -585,7 +587,7 @@ const advRes = await fetch('/api/get-advertisers', {
                   </div>
                   <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2">
                     <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M5 11H2.5A1.5 1.5 0 011 9.5v-6A1.5 1.5 0 012.5 2H5M9 9.5l3-3-3-3M12 6.5H5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    Çıkış Yap
+                    Ã‡Ä±kÄ±ÅŸ Yap
                   </button>
                 </div>
               )}
@@ -593,8 +595,8 @@ const advRes = await fetch('/api/get-advertisers', {
           </div>
         </header>
 
-        <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
-      <main className="p-6 max-w-6xl mx-auto">
+        <div className="min-h-screen overflow-x-hidden" style={{ background: 'linear-gradient(135deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%)' }}>
+      <main className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6 sm:py-6">
               {activeTab === 'dashboard' && (() => {
   const directCustomerRevenue = directCustomers.reduce((sum, c) => {
     return sum + (c.subscriptions?.[0]?.monthly_fee || 0)
@@ -616,37 +618,37 @@ const advRes = await fetch('/api/get-advertisers', {
   return (
     <div className="space-y-6">
 
-      {/* Karşılama */}
+      {/* KarÅŸÄ±lama */}
       <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-indigo-950 rounded-2xl p-6 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
         <div className="absolute -right-8 -top-8 w-40 h-40 bg-indigo-500/10 rounded-full" />
-        <div className="flex items-start justify-between relative">
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-gray-400 text-sm">Hoş geldin,</p>
+            <p className="text-gray-400 text-sm">HoÅŸ geldin,</p>
             <h1 className="text-2xl font-bold mt-0.5">{profile?.full_name}</h1>
-            <p className="text-gray-500 text-sm mt-1">Platform genel durumu · {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}</p>
+            <p className="text-gray-500 text-sm mt-1">Platform genel durumu Â· {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}</p>
           </div>
           <span className="bg-rose-500/20 text-rose-400 text-xs font-semibold px-3 py-1.5 rounded-full border border-rose-500/20">Super Admin</span>
         </div>
         <div className="flex gap-8 mt-5 pt-5 border-t border-white/10 relative">
           <div><p className="text-3xl font-bold">{customers.length}</p><p className="text-gray-500 text-xs mt-0.5">Firma</p></div>
-          <div><p className="text-3xl font-bold">{advertisers.length}</p><p className="text-amber-400 text-xs mt-0.5">Reklamcı</p></div>
-          <div><p className="text-3xl font-bold">{branches.length}</p><p className="text-gray-500 text-xs mt-0.5">Şube</p></div>
-          <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-gray-500 text-xs mt-0.5">Potansiyel Müşteri</p></div>
-          <div><p className="text-3xl font-bold">{allUsers.length}</p><p className="text-gray-500 text-xs mt-0.5">Kullanıcı</p></div>
+          <div><p className="text-3xl font-bold">{advertisers.length}</p><p className="text-amber-400 text-xs mt-0.5">ReklamcÄ±</p></div>
+          <div><p className="text-3xl font-bold">{branches.length}</p><p className="text-gray-500 text-xs mt-0.5">Åube</p></div>
+          <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-gray-500 text-xs mt-0.5">Potansiyel MÃ¼ÅŸteri</p></div>
+          <div><p className="text-3xl font-bold">{allUsers.length}</p><p className="text-gray-500 text-xs mt-0.5">KullanÄ±cÄ±</p></div>
         </div>
       </div>
 
-      {/* Finansal Özet */}
+      {/* Finansal Ã–zet */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Finansal Özet</h2>
-        <div className="grid grid-cols-5 gap-3">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Finansal Ã–zet</h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {[
-            { label: 'Toplam Aylık Tekrarlayan Gelir', value: `₺${totalMRR.toLocaleString()}`, sub: 'Tüm kaynaklar', color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
-            { label: 'Firma Geliri', value: `₺${directCustomerRevenue.toLocaleString()}`, sub: `${directCustomers.length} direkt firma`, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
-            { label: 'Reklamcı Geliri', value: `₺${advertiserRevenue.toLocaleString()}`, sub: `${advertisers.length} reklamcı`, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
-            { label: 'Bekleyen Tahsilat', value: `₺${pendingTotal.toLocaleString()}`, sub: `${invoices.filter(i => i.status === 'pending').length} fatura`, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
-            { label: 'Tahsil Edilen', value: `₺${paidTotal.toLocaleString()}`, sub: 'Tüm zamanlar', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+            { label: 'Toplam AylÄ±k Tekrarlayan Gelir', value: `â‚º${totalMRR.toLocaleString()}`, sub: 'TÃ¼m kaynaklar', color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
+            { label: 'Firma Geliri', value: `â‚º${directCustomerRevenue.toLocaleString()}`, sub: `${directCustomers.length} direkt firma`, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
+            { label: 'ReklamcÄ± Geliri', value: `â‚º${advertiserRevenue.toLocaleString()}`, sub: `${advertisers.length} reklamcÄ±`, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
+            { label: 'Bekleyen Tahsilat', value: `â‚º${pendingTotal.toLocaleString()}`, sub: `${invoices.filter(i => i.status === 'pending').length} fatura`, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
+            { label: 'Tahsil Edilen', value: `â‚º${paidTotal.toLocaleString()}`, sub: 'TÃ¼m zamanlar', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
           ].map(card => (
             <div key={card.label} className={`${card.bg} border ${card.border} rounded-2xl p-4`}>
               <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
@@ -665,7 +667,7 @@ const advRes = await fetch('/api/get-advertisers', {
             <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
               <div className="col-span-2">Firma</div>
               <div>Plan</div>
-              <div className="text-right">Aylık Ücret</div>
+              <div className="text-right">AylÄ±k Ãœcret</div>
               <div className="text-right">Son Fatura</div>
             </div>
           </div>
@@ -699,13 +701,13 @@ const advRes = await fetch('/api/get-advertisers', {
                   </span>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-900">₺{(sub?.monthly_fee || 0).toLocaleString()}</p>
+                  <p className="text-sm font-semibold text-gray-900">â‚º{(sub?.monthly_fee || 0).toLocaleString()}</p>
                 </div>
                 <div className="text-right">
                   {!lastInvoice ? (
                     <span className="text-xs text-gray-300">Fatura yok</span>
                   ) : lastInvoice.status === 'paid' ? (
-                    <span className="text-xs bg-emerald-50 text-emerald-600 font-medium px-2 py-0.5 rounded-full">✓ Ödendi</span>
+                    <span className="text-xs bg-emerald-50 text-emerald-600 font-medium px-2 py-0.5 rounded-full">âœ“ Ã–dendi</span>
                   ) : (
                     <span className="text-xs bg-amber-50 text-amber-600 font-medium px-2 py-0.5 rounded-full">Bekliyor</span>
                   )}
@@ -716,21 +718,21 @@ const advRes = await fetch('/api/get-advertisers', {
         </div>
       </div>
 
-      {/* Reklamcılar Mali Tablosu */}
+      {/* ReklamcÄ±lar Mali Tablosu */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Reklamcılar Mali Durumu</h2>
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">ReklamcÄ±lar Mali Durumu</h2>
         <div className="bg-white rounded-2xl border border-amber-100 overflow-hidden">
           <div className="px-5 py-3 bg-amber-50/50 border-b border-amber-100">
             <div className="grid grid-cols-6 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              <div className="col-span-2">Reklamcı</div>
-              <div className="text-right">Sabit Ücret</div>
-              <div className="text-right">Müşteri</div>
-              <div className="text-right">Müşteri Başı</div>
-              <div className="text-right">Toplam Aylık</div>
+              <div className="col-span-2">ReklamcÄ±</div>
+              <div className="text-right">Sabit Ãœcret</div>
+              <div className="text-right">MÃ¼ÅŸteri</div>
+              <div className="text-right">MÃ¼ÅŸteri BaÅŸÄ±</div>
+              <div className="text-right">Toplam AylÄ±k</div>
             </div>
           </div>
           {advertisers.length === 0 ? (
-            <div className="p-8 text-center text-sm text-gray-400">Reklamcı yok.</div>
+            <div className="p-8 text-center text-sm text-gray-400">ReklamcÄ± yok.</div>
           ) : advertisers.map((a, i) => {
             const sub = advSubs.find(s => s.advertiser_id === a.id)
             const clientCount = a.advertiser_clients?.length || 0
@@ -750,19 +752,19 @@ const advRes = await fetch('/api/get-advertisers', {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-700">₺{(sub?.monthly_fee || 0).toLocaleString()}</p>
+                  <p className="text-sm font-semibold text-gray-700">â‚º{(sub?.monthly_fee || 0).toLocaleString()}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-semibold text-gray-700">{clientCount}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-700">₺{(sub?.per_client_fee || 0).toLocaleString()}</p>
+                  <p className="text-sm font-semibold text-gray-700">â‚º{(sub?.per_client_fee || 0).toLocaleString()}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-amber-600">₺{monthlyTotal.toLocaleString()}</p>
+                  <p className="text-sm font-bold text-amber-600">â‚º{monthlyTotal.toLocaleString()}</p>
                   {lastInvoice && (
                     <span className={`text-xs font-medium ${lastInvoice.status === 'paid' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                      {lastInvoice.status === 'paid' ? '✓ Ödendi' : 'Bekliyor'}
+                      {lastInvoice.status === 'paid' ? 'âœ“ Ã–dendi' : 'Bekliyor'}
                     </span>
                   )}
                 </div>
@@ -770,8 +772,8 @@ const advRes = await fetch('/api/get-advertisers', {
             )
           })}
           <div className="px-5 py-3 bg-amber-50 border-t border-amber-100 grid grid-cols-6 gap-2">
-            <div className="col-span-5 text-right text-xs font-semibold text-gray-500">Toplam Aylık Reklamcı Geliri</div>
-            <div className="text-right text-sm font-bold text-amber-700">₺{advertiserRevenue.toLocaleString()}</div>
+            <div className="col-span-5 text-right text-xs font-semibold text-gray-500">Toplam AylÄ±k ReklamcÄ± Geliri</div>
+            <div className="text-right text-sm font-bold text-amber-700">â‚º{advertiserRevenue.toLocaleString()}</div>
           </div>
         </div>
       </div>
@@ -782,13 +784,13 @@ const advRes = await fetch('/api/get-advertisers', {
   return (
     <div>
       <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-        Ödeme Onayı Bekleyenler
+        Ã–deme OnayÄ± Bekleyenler
         <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">{awaitingApproval.length}</span>
       </h2>
       <div className="bg-white rounded-2xl border border-indigo-200 overflow-hidden">
         <div className="px-5 py-3 bg-indigo-50 border-b border-indigo-100 flex items-center gap-2">
           <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
-          <p className="text-xs font-semibold text-indigo-700">Müşteri ödeme yaptığını bildirdi — onay bekleniyor</p>
+          <p className="text-xs font-semibold text-indigo-700">MÃ¼ÅŸteri Ã¶deme yaptÄ±ÄŸÄ±nÄ± bildirdi â€” onay bekleniyor</p>
         </div>
         {awaitingApproval.map((inv, i) => {
           const owner = allUsers.find(u => u.id === inv.owner_id)
@@ -804,7 +806,7 @@ const advRes = await fetch('/api/get-advertisers', {
                 {inv.due_date && <p className="text-xs text-gray-400">Vade: {new Date(inv.due_date).toLocaleDateString('tr-TR')}</p>}
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-base font-bold text-gray-900 mb-2">₺{inv.total_amount?.toLocaleString()}</p>
+                <p className="text-base font-bold text-gray-900 mb-2">â‚º{inv.total_amount?.toLocaleString()}</p>
                 <div className="flex gap-2">
                   <button
                     onClick={async () => {
@@ -820,7 +822,7 @@ const advRes = await fetch('/api/get-advertisers', {
                       await loadData()
                     }}
                     className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors">
-                    ✓ Onayla
+                    âœ“ Onayla
                   </button>
                 </div>
               </div>
@@ -831,15 +833,15 @@ const advRes = await fetch('/api/get-advertisers', {
     </div>
   )
 })()}
-      {/* Bekleyen & Gecikmiş */}
+      {/* Bekleyen & GecikmiÅŸ */}
       {(overdueInvoices.length > 0 || pendingInvoices.length > 0) && (
         <div>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Bekleyen & Gecikmiş Faturalar</h2>
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Bekleyen & GecikmiÅŸ Faturalar</h2>
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
             {overdueInvoices.length > 0 && (
               <div className="px-5 py-3 bg-red-50 border-b border-red-100 flex items-center gap-2">
                 <span className="w-2 h-2 bg-red-400 rounded-full" />
-                <p className="text-xs font-semibold text-red-600">{overdueInvoices.length} gecikmiş fatura</p>
+                <p className="text-xs font-semibold text-red-600">{overdueInvoices.length} gecikmiÅŸ fatura</p>
               </div>
             )}
             {[...overdueInvoices, ...pendingInvoices].map((inv, i) => {
@@ -856,12 +858,12 @@ const advRes = await fetch('/api/get-advertisers', {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900">{owner?.company_name || owner?.full_name || owner?.email || 'Bilinmiyor'}</p>
                     {inv.due_date && <p className="text-xs text-gray-400">Vade: {new Date(inv.due_date).toLocaleDateString('tr-TR')}</p>}
-                    {isOverdue && <p className="text-xs text-red-500 font-medium">{daysLate} gün gecikmiş</p>}
+                    {isOverdue && <p className="text-xs text-red-500 font-medium">{daysLate} gÃ¼n gecikmiÅŸ</p>}
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-bold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
+                    <p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isOverdue ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
-                      {isOverdue ? 'Gecikmiş' : 'Bekliyor'}
+                      {isOverdue ? 'GecikmiÅŸ' : 'Bekliyor'}
                     </span>
                   </div>
                 </div>
@@ -874,17 +876,17 @@ const advRes = await fetch('/api/get-advertisers', {
     </div>
   )
 })()}
-          {/* ── FİRMA LİSTESİ ── */}
+          {/* â”€â”€ FÄ°RMA LÄ°STESÄ° â”€â”€ */}
           {activeTab === 'firma-listesi' && (
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-sm text-gray-500">
                     Toplam <span className="font-semibold text-gray-800">{filteredCustomers.length}</span> firma
-                    <span className="text-gray-400 mx-1.5">·</span>
+                    <span className="text-gray-400 mx-1.5">Â·</span>
                     <span className="text-indigo-600 font-medium">{directCustomers.length}</span> platform
-                    <span className="text-gray-400 mx-1.5">·</span>
-                    <span className="text-amber-600 font-medium">{viaAdvertiserCustomers.length}</span> reklamcı
+                    <span className="text-gray-400 mx-1.5">Â·</span>
+                    <span className="text-amber-600 font-medium">{viaAdvertiserCustomers.length}</span> reklamcÄ±
                   </p>
                 </div>
                 <Btn size="sm" onClick={() => { resetOnboarding(); setShowOnboardingModal(true) }}>
@@ -894,14 +896,14 @@ const advRes = await fetch('/api/get-advertisers', {
               </div>
               <div className="relative">
                 <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Firma adı veya e-posta ara..."
+                <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Firma adÄ± veya e-posta ara..."
                   className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div className="flex flex-wrap gap-2">
                 {([
-                  { key: 'all', label: 'Tümü' },
-                  { key: 'platform', label: 'Platform (doğrudan)' },
-                  { key: 'advertiser', label: 'Reklamcı müşterisi' },
+                  { key: 'all', label: 'TÃ¼mÃ¼' },
+                  { key: 'platform', label: 'Platform (doÄŸrudan)' },
+                  { key: 'advertiser', label: 'ReklamcÄ± mÃ¼ÅŸterisi' },
                 ] as const).map(({ key, label }) => (
                   <button key={key} type="button" onClick={() => setFirmaSourceFilter(key)}
                     className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${firmaSourceFilter === key ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}>
@@ -911,7 +913,7 @@ const advRes = await fetch('/api/get-advertisers', {
               </div>
               {filteredCustomers.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
-                  <p className="text-gray-400 text-sm">Firma bulunamadı.</p>
+                  <p className="text-gray-400 text-sm">Firma bulunamadÄ±.</p>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -919,7 +921,7 @@ const advRes = await fetch('/api/get-advertisers', {
                     <div>
                       <div className="flex items-center gap-2 mb-2 px-0.5">
                         <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">Platform</span>
-                        <span className="text-xs text-gray-400">DataPilot üzerinden doğrudan kayıtlı müşteriler</span>
+                        <span className="text-xs text-gray-400">DataPilot Ã¼zerinden doÄŸrudan kayÄ±tlÄ± mÃ¼ÅŸteriler</span>
                         <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-medium">{directCustomers.length}</span>
                       </div>
                       <div className="bg-white rounded-2xl border border-indigo-100 overflow-hidden">
@@ -943,8 +945,8 @@ const advRes = await fetch('/api/get-advertisers', {
                                 </div>
                                 <p className="text-xs text-gray-400">{c.email}</p>
                                 <div className="flex gap-3 mt-1 flex-wrap">
-                                  <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
-                                  {sub && <span className="text-xs text-gray-400">₺{sub.monthly_fee}/ay</span>}
+                                  <span className="text-xs text-indigo-600 font-medium">{cBranches.length} ÅŸube</span>
+                                  {sub && <span className="text-xs text-gray-400">â‚º{sub.monthly_fee}/ay</span>}
                                   <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('tr-TR')}</span>
                                 </div>
                               </div>
@@ -964,8 +966,8 @@ const advRes = await fetch('/api/get-advertisers', {
                   {(firmaSourceFilter === 'all' || firmaSourceFilter === 'advertiser') && (
                     <div>
                       <div className="flex items-center gap-2 mb-2 px-0.5 flex-wrap">
-                        <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Reklamcı</span>
-                        <span className="text-xs text-gray-400">Bir reklamcı hesabı üzerinden eklenen müşteri hesapları</span>
+                        <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">ReklamcÄ±</span>
+                        <span className="text-xs text-gray-400">Bir reklamcÄ± hesabÄ± Ã¼zerinden eklenen mÃ¼ÅŸteri hesaplarÄ±</span>
                         <span className="text-xs bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full font-medium">{viaAdvertiserCustomers.length}</span>
                       </div>
                       <div className="bg-white rounded-2xl border border-amber-100 overflow-hidden">
@@ -984,14 +986,14 @@ const advRes = await fetch('/api/get-advertisers', {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                                   <p className="text-sm font-semibold text-gray-900 truncate">{c.company_name || c.full_name}</p>
-                                  <span className="text-[10px] font-semibold uppercase tracking-wide bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">Reklamcı</span>
+                                  <span className="text-[10px] font-semibold uppercase tracking-wide bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">ReklamcÄ±</span>
                                   {sub?.plan && <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${planCfg[sub.plan] || 'bg-gray-100 text-gray-500'}`}>{sub.plan}</span>}
                                 </div>
-                                {advName && <p className="text-xs text-amber-700 font-medium mt-0.5">Reklamcı: {advName}</p>}
+                                {advName && <p className="text-xs text-amber-700 font-medium mt-0.5">ReklamcÄ±: {advName}</p>}
                                 <p className="text-xs text-gray-400">{c.email}</p>
                                 <div className="flex gap-3 mt-1 flex-wrap">
-                                  <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
-                                  {sub && <span className="text-xs text-gray-400">₺{sub.monthly_fee}/ay</span>}
+                                  <span className="text-xs text-indigo-600 font-medium">{cBranches.length} ÅŸube</span>
+                                  {sub && <span className="text-xs text-gray-400">â‚º{sub.monthly_fee}/ay</span>}
                                   <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('tr-TR')}</span>
                                 </div>
                               </div>
@@ -1013,7 +1015,7 @@ const advRes = await fetch('/api/get-advertisers', {
             </div>
           )}
 
-          {/* ── ONBOARDING ── */}
+          {/* â”€â”€ ONBOARDING â”€â”€ */}
           {activeTab === 'firma-onboarding' && (
             <OnboardingWizard
               step={onboardingStep} setStep={setOnboardingStep}
@@ -1031,39 +1033,39 @@ const advRes = await fetch('/api/get-advertisers', {
             />
           )}
 
-          {/* ── REKLAMCI LİSTESİ ── */}
+          {/* â”€â”€ REKLAMCI LÄ°STESÄ° â”€â”€ */}
           {activeTab === 'reklamci-listesi' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">{filteredAdvertisers.length} reklamcı</p>
+                <p className="text-sm text-gray-500">{filteredAdvertisers.length} reklamcÄ±</p>
                 <div className="flex gap-2">
                   <Btn size="sm" variant="secondary" onClick={async () => {
-                    if (!confirm('Auth\'daki tüm reklamcılar profiles tablosuna senkronize edilecek. Devam?')) return
+                    if (!confirm('Auth\'daki tÃ¼m reklamcÄ±lar profiles tablosuna senkronize edilecek. Devam?')) return
                     const session = await supabase.auth.getSession()
                     const token = session.data.session?.access_token
                     const res = await fetch('/api/sync-advertisers', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } })
                     const result = await res.json()
                     if (result.error) { alert('Hata: ' + result.error); return }
-                    alert(`${result.synced} reklamcı senkronize edildi.`)
+                    alert(`${result.synced} reklamcÄ± senkronize edildi.`)
                     loadData()
                   }}>Senkronize Et</Btn>
                   <Btn size="sm" onClick={() => setActiveTab('reklamci-ekle')} className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-                    Reklamcı Ekle
+                    ReklamcÄ± Ekle
                   </Btn>
                 </div>
               </div>
               <div className="relative">
                 <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-                <input value={advSearchQuery} onChange={e => setAdvSearchQuery(e.target.value)} placeholder="Reklamcı ara..."
+                <input value={advSearchQuery} onChange={e => setAdvSearchQuery(e.target.value)} placeholder="ReklamcÄ± ara..."
                   className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
               </div>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  { label: 'Toplam Reklamcı', value: advertisers.length, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
+                  { label: 'Toplam ReklamcÄ±', value: advertisers.length, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
                   { label: 'Aktif', value: advertisers.filter(a => a.is_active !== false).length, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-                  { label: 'Toplam Müşteri', value: advertisers.reduce((s, a) => s + (a.advertiser_clients?.length || 0), 0), color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
-                  { label: 'Aylık Gelir', value: `₺${advertisers.reduce((s, a) => { const sub = advSubs.find(s => s.advertiser_id === a.id); return s + (sub?.monthly_fee || 0) + ((a.advertiser_clients?.length || 0) * (sub?.per_client_fee || 0)) }, 0).toLocaleString()}`, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
+                  { label: 'Toplam MÃ¼ÅŸteri', value: advertisers.reduce((s, a) => s + (a.advertiser_clients?.length || 0), 0), color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
+                  { label: 'AylÄ±k Gelir', value: `â‚º${advertisers.reduce((s, a) => { const sub = advSubs.find(s => s.advertiser_id === a.id); return s + (sub?.monthly_fee || 0) + ((a.advertiser_clients?.length || 0) * (sub?.per_client_fee || 0)) }, 0).toLocaleString()}`, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
                 ].map(card => (
                   <div key={card.label} className={`${card.bg} border ${card.border} rounded-2xl p-4`}>
                     <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
@@ -1073,8 +1075,8 @@ const advRes = await fetch('/api/get-advertisers', {
               </div>
               {filteredAdvertisers.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-amber-100 p-16 text-center">
-                  <p className="text-gray-500 text-sm font-medium">Henüz reklamcı yok</p>
-                  <button onClick={() => setActiveTab('reklamci-ekle')} className="mt-4 text-xs text-amber-600 font-medium hover:underline">Reklamcı Ekle →</button>
+                  <p className="text-gray-500 text-sm font-medium">HenÃ¼z reklamcÄ± yok</p>
+                  <button onClick={() => setActiveTab('reklamci-ekle')} className="mt-4 text-xs text-amber-600 font-medium hover:underline">ReklamcÄ± Ekle â†’</button>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -1094,9 +1096,9 @@ const advRes = await fetch('/api/get-advertisers', {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
                               <p className="text-sm font-semibold text-gray-900 truncate">{a.company_name || a.full_name}</p>
-                              <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full font-medium border border-amber-200">Reklamcı</span>
+                              <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full font-medium border border-amber-200">ReklamcÄ±</span>
                             </div>
-                            <p className="text-xs text-gray-400">{a.email} · {a.phone || '-'}</p>
+                            <p className="text-xs text-gray-400">{a.email} Â· {a.phone || '-'}</p>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
                             <button onClick={() => setSelectedAdvertiser(a)} className="text-xs text-amber-600 font-medium hover:text-amber-700 px-3 py-1.5 hover:bg-amber-50 rounded-lg transition-colors border border-amber-200">Detay & Fatura</button>
@@ -1110,15 +1112,15 @@ const advRes = await fetch('/api/get-advertisers', {
                         {expandedAdvertiser === a.id && (
                           <div className="border-t border-gray-50">
                             <div className="px-5 py-3 grid grid-cols-4 gap-3">
-                              <div className="text-center"><p className="text-base font-bold text-amber-600">{clientCount}</p><p className="text-xs text-gray-400">Müşteri</p></div>
-                              <div className="text-center"><p className="text-base font-bold text-indigo-600">₺{monthlyIncome.toLocaleString()}</p><p className="text-xs text-gray-400">Aylık Gelir</p></div>
-                              <div className="text-center"><p className="text-base font-bold text-rose-500">₺{pendingAdv.toLocaleString()}</p><p className="text-xs text-gray-400">Bekleyen</p></div>
-                              <div className="text-center"><p className="text-base font-bold text-emerald-600">₺{paidAdv.toLocaleString()}</p><p className="text-xs text-gray-400">Tahsil</p></div>
+                              <div className="text-center"><p className="text-base font-bold text-amber-600">{clientCount}</p><p className="text-xs text-gray-400">MÃ¼ÅŸteri</p></div>
+                              <div className="text-center"><p className="text-base font-bold text-indigo-600">â‚º{monthlyIncome.toLocaleString()}</p><p className="text-xs text-gray-400">AylÄ±k Gelir</p></div>
+                              <div className="text-center"><p className="text-base font-bold text-rose-500">â‚º{pendingAdv.toLocaleString()}</p><p className="text-xs text-gray-400">Bekleyen</p></div>
+                              <div className="text-center"><p className="text-base font-bold text-emerald-600">â‚º{paidAdv.toLocaleString()}</p><p className="text-xs text-gray-400">Tahsil</p></div>
                             </div>
                             {sub && (
                               <div className="px-5 pb-3 flex items-center gap-3">
-                                <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">₺{sub.monthly_fee}/ay sabit</span>
-                                <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">₺{sub.per_client_fee}/müşteri</span>
+                                <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">â‚º{sub.monthly_fee}/ay sabit</span>
+                                <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">â‚º{sub.per_client_fee}/mÃ¼ÅŸteri</span>
                               </div>
                             )}
                           </div>
@@ -1131,60 +1133,60 @@ const advRes = await fetch('/api/get-advertisers', {
             </div>
           )}
 
-          {/* ── REKLAMCI EKLE ── */}
+          {/* â”€â”€ REKLAMCI EKLE â”€â”€ */}
           {activeTab === 'reklamci-ekle' && (
             <div className="max-w-lg mx-auto space-y-5">
               <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl p-5 text-white relative overflow-hidden">
                 <div className="absolute -right-4 -top-4 w-28 h-28 bg-white/10 rounded-full" />
                 <div className="relative">
-                  <p className="text-amber-100 text-xs mb-1">Reklamcı Paneli</p>
-                  <h2 className="text-lg font-bold">Yeni Reklamcı Ekle</h2>
+                  <p className="text-amber-100 text-xs mb-1">ReklamcÄ± Paneli</p>
+                  <h2 className="text-lg font-bold">Yeni ReklamcÄ± Ekle</h2>
                 </div>
               </div>
               {advSuccess && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
-                  <div className="flex-1"><p className="text-sm font-semibold text-emerald-800">Reklamcı oluşturuldu!</p><p className="text-xs text-emerald-600">{advSuccess}</p></div>
+                  <div className="flex-1"><p className="text-sm font-semibold text-emerald-800">ReklamcÄ± oluÅŸturuldu!</p><p className="text-xs text-emerald-600">{advSuccess}</p></div>
                   <button onClick={() => setAdvSuccess('')} className="text-emerald-400"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg></button>
                 </div>
               )}
               <form onSubmit={handleAddAdvertiser} className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2"><Input label="Ad Soyad *" value={advName} onChange={(e: any) => setAdvName(e.target.value)} required placeholder="Ahmet Yılmaz" /></div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="col-span-2"><Input label="Ad Soyad *" value={advName} onChange={(e: any) => setAdvName(e.target.value)} required placeholder="Ahmet YÄ±lmaz" /></div>
                   <Input label="E-posta *" type="email" value={advEmail} onChange={(e: any) => setAdvEmail(e.target.value)} required placeholder="reklamci@email.com" />
-                  <Input label="Şifre *" type="password" value={advPassword} onChange={(e: any) => setAdvPassword(e.target.value)} required placeholder="min. 6 karakter" />
-                  <Input label="Firma/Ajans Adı" value={advCompany} onChange={(e: any) => setAdvCompany(e.target.value)} placeholder="Ajans Adı" />
+                  <Input label="Åifre *" type="password" value={advPassword} onChange={(e: any) => setAdvPassword(e.target.value)} required placeholder="min. 6 karakter" />
+                  <Input label="Firma/Ajans AdÄ±" value={advCompany} onChange={(e: any) => setAdvCompany(e.target.value)} placeholder="Ajans AdÄ±" />
                   <Input label="Telefon" value={advPhone} onChange={(e: any) => setAdvPhone(e.target.value)} placeholder="05XX XXX XXXX" />
                 </div>
                 <div className="border-t border-gray-100 pt-4">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Fiyatlandırma</p>
-                  <div className="grid grid-cols-2 gap-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">FiyatlandÄ±rma</p>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Aylık Sabit Ücret (₺)</label>
+                      <label className="block text-xs font-medium text-gray-500 mb-1.5">AylÄ±k Sabit Ãœcret (â‚º)</label>
                       <input type="number" value={advMonthlyFee} onChange={e => setAdvMonthlyFee(e.target.value)} className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Müşteri Başı Ücret (₺)</label>
+                      <label className="block text-xs font-medium text-gray-500 mb-1.5">MÃ¼ÅŸteri BaÅŸÄ± Ãœcret (â‚º)</label>
                       <input type="number" value={advPerClientFee} onChange={e => setAdvPerClientFee(e.target.value)} className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
                     </div>
                   </div>
                 </div>
                 <button type="submit" disabled={advSaving} className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
-                  {advSaving ? 'Oluşturuluyor...' : '✓ Reklamcı Hesabı Oluştur'}
+                  {advSaving ? 'OluÅŸturuluyor...' : 'âœ“ ReklamcÄ± HesabÄ± OluÅŸtur'}
                 </button>
               </form>
             </div>
           )}
 
-          {/* ── FATURA PLANLAR ── */}
+          {/* â”€â”€ FATURA PLANLAR â”€â”€ */}
           {activeTab === 'fatura-planlar' && (
             <div className="space-y-4 max-w-3xl">
-              <h2 className="text-base font-semibold text-gray-900">Abonelik Planları</h2>
-              <div className="grid grid-cols-2 gap-4">
+              <h2 className="text-base font-semibold text-gray-900">Abonelik PlanlarÄ±</h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {[
-                  { key: 'trial', label: 'Deneme', price: '₺0', period: '14 gün', color: 'border-gray-200', badge: 'bg-gray-100 text-gray-600', features: ['Tüm özellikler açık', '1 şube', '3 kullanıcı', '500 lead/ay'] },
-                  { key: 'starter', label: 'Starter', price: '₺2.000', period: '/ay', color: 'border-indigo-200', badge: 'bg-indigo-50 text-indigo-700', features: ['1 şube', '2 kullanıcı', '400 lead/ay', 'Email destek'] },
-                  { key: 'pro', label: 'Pro', price: '₺5.500', period: '/ay', color: 'border-violet-200', badge: 'bg-violet-50 text-violet-700', features: ['3 şube', '10 kullanıcı', '2000 lead/ay', 'Öncelikli destek'] },
-                  { key: 'enterprise', label: 'Enterprise', price: '₺15.000+', period: '/ay', color: 'border-amber-200', badge: 'bg-amber-50 text-amber-700', features: ['Sınırsız şube', 'Sınırsız kullanıcı', 'Sınırsız lead', '7/24 destek'] },
+                  { key: 'trial', label: 'Deneme', price: 'â‚º0', period: '14 gÃ¼n', color: 'border-gray-200', badge: 'bg-gray-100 text-gray-600', features: ['TÃ¼m Ã¶zellikler aÃ§Ä±k', '1 ÅŸube', '3 kullanÄ±cÄ±', '500 lead/ay'] },
+                  { key: 'starter', label: 'Starter', price: 'â‚º2.000', period: '/ay', color: 'border-indigo-200', badge: 'bg-indigo-50 text-indigo-700', features: ['1 ÅŸube', '2 kullanÄ±cÄ±', '400 lead/ay', 'Email destek'] },
+                  { key: 'pro', label: 'Pro', price: 'â‚º5.500', period: '/ay', color: 'border-violet-200', badge: 'bg-violet-50 text-violet-700', features: ['3 ÅŸube', '10 kullanÄ±cÄ±', '2000 lead/ay', 'Ã–ncelikli destek'] },
+                  { key: 'enterprise', label: 'Enterprise', price: 'â‚º15.000+', period: '/ay', color: 'border-amber-200', badge: 'bg-amber-50 text-amber-700', features: ['SÄ±nÄ±rsÄ±z ÅŸube', 'SÄ±nÄ±rsÄ±z kullanÄ±cÄ±', 'SÄ±nÄ±rsÄ±z lead', '7/24 destek'] },
                 ].map(plan => (
                   <div key={plan.key} className={`bg-white rounded-2xl border-2 ${plan.color} p-5`}>
                     <div className="flex items-center justify-between mb-3">
@@ -1211,10 +1213,10 @@ const advRes = await fetch('/api/get-advertisers', {
             </div>
           )}
 
-          {/* ── FATURA ABONELİKLER ── */}
+          {/* â”€â”€ FATURA ABONELÄ°KLER â”€â”€ */}
           {activeTab === 'fatura-abonelikler' && (
             <div className="space-y-4">
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {[
                   { label: 'Toplam Abonelik', value: customers.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
                   { label: 'Trial', value: customers.filter(c => c.subscriptions?.[0]?.plan === 'trial').length, color: 'text-gray-600', bg: 'bg-gray-100' },
@@ -1232,8 +1234,8 @@ const advRes = await fetch('/api/get-advertisers', {
                   <div className="grid grid-cols-6 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                     <div className="col-span-2">Firma</div>
                     <div>Plan</div>
-                    <div className="text-right">Aylık (₺)</div>
-                    <div className="text-right">Şube</div>
+                    <div className="text-right">AylÄ±k (â‚º)</div>
+                    <div className="text-right">Åube</div>
                     <div className="text-right">Durum</div>
                   </div>
                 </div>
@@ -1284,10 +1286,10 @@ const advRes = await fetch('/api/get-advertisers', {
             </div>
           )}
 
-          {/* ── GÜVENLİK LOGLAR ── */}
+          {/* â”€â”€ GÃœVENLÄ°K LOGLAR â”€â”€ */}
           {activeTab === 'guvenlik-loglar' && (
             <div className="space-y-4">
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {[
                   { label: 'Toplam Log', value: auditLogs.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
                   { label: 'Lead Olayi', value: auditLogs.filter((log: any) => log.entity_type === 'lead').length, color: 'text-violet-600', bg: 'bg-violet-50' },
@@ -1339,15 +1341,15 @@ const advRes = await fetch('/api/get-advertisers', {
                 ))}
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">Denetim Logları</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Platforma kayıtlı tüm kullanıcılar</p>
+                <h2 className="text-base font-semibold text-gray-900">Denetim LoglarÄ±</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Platforma kayÄ±tlÄ± tÃ¼m kullanÄ±cÄ±lar</p>
               </div>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {[
-                  { label: 'Toplam Kullanıcı', value: allUsers.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                  { label: 'Toplam KullanÄ±cÄ±', value: allUsers.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
                   { label: 'Firma', value: customers.length, color: 'text-violet-600', bg: 'bg-violet-50' },
-                  { label: 'Reklamcı', value: advertisers.length, color: 'text-amber-600', bg: 'bg-amber-50' },
-                  { label: 'Satışçı', value: allUsers.filter(u => ['team','agent'].includes(u.role)).length, color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'ReklamcÄ±', value: advertisers.length, color: 'text-amber-600', bg: 'bg-amber-50' },
+                  { label: 'SatÄ±ÅŸÃ§Ä±', value: allUsers.filter(u => ['team','agent'].includes(u.role)).length, color: 'text-blue-600', bg: 'bg-blue-50' },
                 ].map(c => (
                   <div key={c.label} className={`${c.bg} rounded-xl px-4 py-3`}>
                     <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
@@ -1358,7 +1360,7 @@ const advRes = await fetch('/api/get-advertisers', {
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
                   <div className="grid grid-cols-4 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    <div className="col-span-2">Kullanıcı</div>
+                    <div className="col-span-2">KullanÄ±cÄ±</div>
                     <div>Rol</div>
                     <div className="text-right">Durum</div>
                   </div>
@@ -1376,7 +1378,7 @@ const advRes = await fetch('/api/get-advertisers', {
                     </div>
                     <div>
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${u.role === 'super_admin' ? 'bg-rose-50 text-rose-600' : u.role === 'customer' ? 'bg-indigo-50 text-indigo-600' : u.role === 'advertiser' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>
-                        {u.role === 'super_admin' ? 'Admin' : u.role === 'customer' ? 'Firma' : u.role === 'advertiser' ? 'Reklamcı' : 'Satışçı'}
+                        {u.role === 'super_admin' ? 'Admin' : u.role === 'customer' ? 'Firma' : u.role === 'advertiser' ? 'ReklamcÄ±' : 'SatÄ±ÅŸÃ§Ä±'}
                       </span>
                     </div>
                     <div className="text-right">
@@ -1390,13 +1392,13 @@ const advRes = await fetch('/api/get-advertisers', {
               </div>
             </div>
           )}
-          {/* ── FİRMA MALİ YÖNETİM ── */}
+          {/* â”€â”€ FÄ°RMA MALÄ° YÃ–NETÄ°M â”€â”€ */}
 {activeTab === 'firma-mali' && (
   <div className="space-y-5">
     <div className="flex items-center justify-between">
       <div>
-        <h2 className="text-base font-semibold text-gray-900">Firma Mali Yönetim</h2>
-        <p className="text-xs text-gray-400 mt-0.5">Tüm firmaların fatura ve ödeme geçmişi</p>
+        <h2 className="text-base font-semibold text-gray-900">Firma Mali YÃ¶netim</h2>
+        <p className="text-xs text-gray-400 mt-0.5">TÃ¼m firmalarÄ±n fatura ve Ã¶deme geÃ§miÅŸi</p>
       </div>
       <button
         onClick={async () => {
@@ -1415,22 +1417,22 @@ const advRes = await fetch('/api/get-advertisers', {
             if (existing && existing.length > 0) continue
           
           }
-          alert(`${created} firma için fatura oluşturuldu.`)
+          alert(`${created} firma iÃ§in fatura oluÅŸturuldu.`)
           loadData()
         }}
         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-        Bu Ay Faturaları Oluştur
+        Bu Ay FaturalarÄ± OluÅŸtur
       </button>
     </div>
 
-    {/* Özet */}
-    <div className="grid grid-cols-4 gap-3">
+    {/* Ã–zet */}
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {[
         { label: 'Toplam Fatura', value: invoices.filter(i => directCustomers.some(c => c.id === i.owner_id)).length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
         { label: 'Bekleyen', value: invoices.filter(i => i.status === 'pending' && directCustomers.some(c => c.id === i.owner_id)).length, color: 'text-amber-600', bg: 'bg-amber-50' },
         { label: 'Onay Bekliyor', value: invoices.filter(i => i.status === 'awaiting_approval' && directCustomers.some(c => c.id === i.owner_id)).length, color: 'text-blue-600', bg: 'bg-blue-50' },
-        { label: 'Ödendi', value: invoices.filter(i => i.status === 'paid' && directCustomers.some(c => c.id === i.owner_id)).length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+        { label: 'Ã–dendi', value: invoices.filter(i => i.status === 'paid' && directCustomers.some(c => c.id === i.owner_id)).length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
       ].map(c => (
         <div key={c.label} className={`${c.bg} rounded-xl px-4 py-3`}>
           <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
@@ -1446,17 +1448,17 @@ const advRes = await fetch('/api/get-advertisers', {
           <div className="col-span-2">Firma</div>
           <div className="text-right">Tutar</div>
           <div className="text-center">Durum</div>
-          <div className="text-right">İşlem</div>
+          <div className="text-right">Ä°ÅŸlem</div>
         </div>
       </div>
       {invoices.filter(i => directCustomers.some(c => c.id === i.owner_id)).length === 0 ? (
-        <div className="p-12 text-center"><p className="text-gray-400 text-sm">Henüz fatura yok.</p></div>
+        <div className="p-12 text-center"><p className="text-gray-400 text-sm">HenÃ¼z fatura yok.</p></div>
       ) : invoices.filter(i => directCustomers.some(c => c.id === i.owner_id)).map((inv, i, arr) => {
         const owner = directCustomers.find(c => c.id === inv.owner_id)
         const statusCfg: any = {
           pending: { label: 'Bekliyor', color: 'bg-amber-50 text-amber-700' },
           awaiting_approval: { label: 'Onay Bekliyor', color: 'bg-blue-50 text-blue-700' },
-          paid: { label: 'Ödendi', color: 'bg-emerald-50 text-emerald-700' },
+          paid: { label: 'Ã–dendi', color: 'bg-emerald-50 text-emerald-700' },
         }
         const st = statusCfg[inv.status] || statusCfg.pending
         return (
@@ -1471,7 +1473,7 @@ const advRes = await fetch('/api/get-advertisers', {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm font-bold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
+              <p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
             </div>
             <div className="text-center">
               <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${st.color}`}>{st.label}</span>
@@ -1486,10 +1488,10 @@ const advRes = await fetch('/api/get-advertisers', {
                 </div>
               )}
               {inv.status === 'pending' && (
-                <span className="text-xs text-gray-400">Ödeme bekleniyor</span>
+                <span className="text-xs text-gray-400">Ã–deme bekleniyor</span>
               )}
               {inv.status === 'paid' && (
-                <span className="text-xs text-emerald-600 font-medium">✓ Tamamlandı</span>
+                <span className="text-xs text-emerald-600 font-medium">âœ“ TamamlandÄ±</span>
               )}
             </div>
           </div>
@@ -1499,13 +1501,13 @@ const advRes = await fetch('/api/get-advertisers', {
   </div>
 )}
 
-{/* ── REKLAMCI MALİ YÖNETİM ── */}
+{/* â”€â”€ REKLAMCI MALÄ° YÃ–NETÄ°M â”€â”€ */}
 {activeTab === 'reklamci-mali' && (
   <div className="space-y-5">
     <div className="flex items-center justify-between">
       <div>
-        <h2 className="text-base font-semibold text-gray-900">Reklamcı Mali Yönetim</h2>
-        <p className="text-xs text-gray-400 mt-0.5">Tüm reklamcıların fatura ve ödeme geçmişi</p>
+        <h2 className="text-base font-semibold text-gray-900">ReklamcÄ± Mali YÃ¶netim</h2>
+        <p className="text-xs text-gray-400 mt-0.5">TÃ¼m reklamcÄ±larÄ±n fatura ve Ã¶deme geÃ§miÅŸi</p>
       </div>
       <button
         onClick={async () => {
@@ -1533,27 +1535,27 @@ if (monthlyTotal <= 0) continue
   due_date: new Date(now.getFullYear(), now.getMonth(), 15).toISOString().split('T')[0],
   branch_count: clientCount,
   per_branch_fee: sub?.per_client_fee || 0,
-  note: `${now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} aylık hizmet bedeli`,
+  note: `${now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} aylÄ±k hizmet bedeli`,
 })
 if (invErr) console.error('Invoice insert error:', JSON.stringify(invErr))
 else created++
           }
-          alert(`${created} reklamcı için fatura oluşturuldu.`)
+          alert(`${created} reklamcÄ± iÃ§in fatura oluÅŸturuldu.`)
           loadData()
         }}
         className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-xl transition-colors">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-        Bu Ay Faturaları Oluştur
+        Bu Ay FaturalarÄ± OluÅŸtur
       </button>
     </div>
 
-    {/* Özet */}
-    <div className="grid grid-cols-4 gap-3">
+    {/* Ã–zet */}
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {[
         { label: 'Toplam Fatura', value: invoices.filter(i => advertisers.some(a => a.id === i.owner_id)).length, color: 'text-amber-600', bg: 'bg-amber-50' },
         { label: 'Bekleyen', value: invoices.filter(i => i.status === 'pending' && advertisers.some(a => a.id === i.owner_id)).length, color: 'text-rose-600', bg: 'bg-rose-50' },
         { label: 'Onay Bekliyor', value: invoices.filter(i => i.status === 'awaiting_approval' && advertisers.some(a => a.id === i.owner_id)).length, color: 'text-blue-600', bg: 'bg-blue-50' },
-        { label: 'Ödendi', value: invoices.filter(i => i.status === 'paid' && advertisers.some(a => a.id === i.owner_id)).length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+        { label: 'Ã–dendi', value: invoices.filter(i => i.status === 'paid' && advertisers.some(a => a.id === i.owner_id)).length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
       ].map(c => (
         <div key={c.label} className={`${c.bg} rounded-xl px-4 py-3`}>
           <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
@@ -1566,20 +1568,20 @@ else created++
     <div className="bg-white rounded-2xl border border-amber-100 overflow-hidden">
       <div className="px-5 py-3 bg-amber-50/50 border-b border-amber-100">
         <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          <div className="col-span-2">Reklamcı</div>
+          <div className="col-span-2">ReklamcÄ±</div>
           <div className="text-right">Tutar</div>
           <div className="text-center">Durum</div>
-          <div className="text-right">İşlem</div>
+          <div className="text-right">Ä°ÅŸlem</div>
         </div>
       </div>
       {invoices.filter(i => advertisers.some(a => a.id === i.owner_id)).length === 0 ? (
-        <div className="p-12 text-center"><p className="text-gray-400 text-sm">Henüz fatura yok.</p></div>
+        <div className="p-12 text-center"><p className="text-gray-400 text-sm">HenÃ¼z fatura yok.</p></div>
       ) : invoices.filter(i => advertisers.some(a => a.id === i.owner_id)).map((inv, i, arr) => {
         const owner = advertisers.find(a => a.id === inv.owner_id)
         const statusCfg: any = {
           pending: { label: 'Bekliyor', color: 'bg-amber-50 text-amber-700' },
           awaiting_approval: { label: 'Onay Bekliyor', color: 'bg-blue-50 text-blue-700' },
-          paid: { label: 'Ödendi', color: 'bg-emerald-50 text-emerald-700' },
+          paid: { label: 'Ã–dendi', color: 'bg-emerald-50 text-emerald-700' },
         }
         const st = statusCfg[inv.status] || statusCfg.pending
         return (
@@ -1594,7 +1596,7 @@ else created++
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm font-bold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
+              <p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
             </div>
             <div className="text-center">
               <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${st.color}`}>{st.label}</span>
@@ -1609,10 +1611,10 @@ else created++
                 </div>
               )}
               {inv.status === 'pending' && (
-                <span className="text-xs text-gray-400">Ödeme bekleniyor</span>
+                <span className="text-xs text-gray-400">Ã–deme bekleniyor</span>
               )}
               {inv.status === 'paid' && (
-                <span className="text-xs text-emerald-600 font-medium">✓ Tamamlandı</span>
+                <span className="text-xs text-emerald-600 font-medium">âœ“ TamamlandÄ±</span>
               )}
             </div>
           </div>
@@ -1621,12 +1623,12 @@ else created++
     </div>
   </div>
 )}
-          {/* ── BOŞLAR ── */}
+          {/* â”€â”€ BOÅLAR â”€â”€ */}
         {!['dashboard','firma-listesi','firma-onboarding','firma-mali','reklamci-listesi','reklamci-ekle','reklamci-mali','fatura-planlar','fatura-abonelikler','guvenlik-loglar'].includes(activeTab) && (
             <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
-              <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">◌</div>
+              <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">â—Œ</div>
               <p className="text-gray-500 text-sm font-medium">{getPageTitle()}</p>
-              <p className="text-gray-400 text-xs mt-1">Bu sayfa yakında gelecek.</p>
+              <p className="text-gray-400 text-xs mt-1">Bu sayfa yakÄ±nda gelecek.</p>
             </div>
           )}
 
@@ -1634,9 +1636,9 @@ else created++
         </div>
       </div>
 
-    {/* ── REKLAMCI DETAY MODAL ── */}
+    {/* â”€â”€ REKLAMCI DETAY MODAL â”€â”€ */}
       <Modal open={!!selectedAdvertiser} onClose={() => { setSelectedAdvertiser(null); setAdvDetailTab('genel') }}
-        title={selectedAdvertiser?.company_name || selectedAdvertiser?.full_name || 'Reklamcı'}
+        title={selectedAdvertiser?.company_name || selectedAdvertiser?.full_name || 'ReklamcÄ±'}
         subtitle={selectedAdvertiser?.email} size="xl">
         {selectedAdvertiser && (() => {
 
@@ -1655,7 +1657,7 @@ else created++
                   { key: 'genel', label: 'Genel Bilgi' },
                   { key: 'mali', label: 'Mali Durum' },
                   { key: 'fatura', label: 'Fatura Kes' },
-                  { key: 'gecmis', label: 'Geçmiş' },
+                  { key: 'gecmis', label: 'GeÃ§miÅŸ' },
                 ].map(tab => (
                   <button key={tab.key} onClick={() => setAdvDetailTab(tab.key)}
                     className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${advDetailTab === tab.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
@@ -1664,16 +1666,16 @@ else created++
                 ))}
               </div>
 
-              {/* GENEL BİLGİ */}
+              {/* GENEL BÄ°LGÄ° */}
               {advDetailTab === 'genel' && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {[
                       { label: 'Ad Soyad', value: selectedAdvertiser.full_name },
                       { label: 'E-posta', value: selectedAdvertiser.email },
                       { label: 'Telefon', value: selectedAdvertiser.phone || '-' },
                       { label: 'Firma', value: selectedAdvertiser.company_name || '-' },
-                      { label: 'Kayıt Tarihi', value: new Date(selectedAdvertiser.created_at).toLocaleDateString('tr-TR') },
+                      { label: 'KayÄ±t Tarihi', value: new Date(selectedAdvertiser.created_at).toLocaleDateString('tr-TR') },
                       { label: 'Durum', value: selectedAdvertiser.is_active !== false ? 'Aktif' : 'Pasif' },
                     ].map(item => (
                       <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
@@ -1684,11 +1686,11 @@ else created++
                   </div>
                   {sub && (
                     <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
-                      <p className="text-xs font-semibold text-amber-700 mb-3">Abonelik Planı</p>
-                      <div className="grid grid-cols-3 gap-3">
-                        <div><p className="text-xs text-amber-500">Aylık Sabit</p><p className="text-sm font-bold text-amber-800">₺{sub.monthly_fee}</p></div>
-                        <div><p className="text-xs text-amber-500">Müşteri Başı</p><p className="text-sm font-bold text-amber-800">₺{sub.per_client_fee}</p></div>
-                        <div><p className="text-xs text-amber-500">Aktif Müşteri</p><p className="text-sm font-bold text-amber-800">{clientCount}</p></div>
+                      <p className="text-xs font-semibold text-amber-700 mb-3">Abonelik PlanÄ±</p>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <div><p className="text-xs text-amber-500">AylÄ±k Sabit</p><p className="text-sm font-bold text-amber-800">â‚º{sub.monthly_fee}</p></div>
+                        <div><p className="text-xs text-amber-500">MÃ¼ÅŸteri BaÅŸÄ±</p><p className="text-sm font-bold text-amber-800">â‚º{sub.per_client_fee}</p></div>
+                        <div><p className="text-xs text-amber-500">Aktif MÃ¼ÅŸteri</p><p className="text-sm font-bold text-amber-800">{clientCount}</p></div>
                       </div>
                     </div>
                   )}
@@ -1701,34 +1703,34 @@ else created++
                 </div>
               )}
 
-              {/* MALİ DURUM */}
+              {/* MALÄ° DURUM */}
               {advDetailTab === 'mali' && (
                 <div className="space-y-4">
-                  {/* Özet kartlar */}
-                  <div className="grid grid-cols-2 gap-3">
+                  {/* Ã–zet kartlar */}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-                      <p className="text-xs text-gray-400 mb-1">Aylık Gelir (Tahmin)</p>
-                      <p className="text-2xl font-bold text-indigo-600">₺{monthlyIncome.toLocaleString()}</p>
-                      <p className="text-xs text-gray-400 mt-1">₺{sub?.monthly_fee || 0} sabit + {clientCount} müşteri × ₺{sub?.per_client_fee || 0}</p>
+                      <p className="text-xs text-gray-400 mb-1">AylÄ±k Gelir (Tahmin)</p>
+                      <p className="text-2xl font-bold text-indigo-600">â‚º{monthlyIncome.toLocaleString()}</p>
+                      <p className="text-xs text-gray-400 mt-1">â‚º{sub?.monthly_fee || 0} sabit + {clientCount} mÃ¼ÅŸteri Ã— â‚º{sub?.per_client_fee || 0}</p>
                     </div>
                     <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
-                      <p className="text-xs text-gray-400 mb-1">Yıllık Gelir (Tahmin)</p>
-                      <p className="text-2xl font-bold text-emerald-600">₺{(monthlyIncome * 12).toLocaleString()}</p>
-                      <p className="text-xs text-gray-400 mt-1">Mevcut plan üzerinden</p>
+                      <p className="text-xs text-gray-400 mb-1">YÄ±llÄ±k Gelir (Tahmin)</p>
+                      <p className="text-2xl font-bold text-emerald-600">â‚º{(monthlyIncome * 12).toLocaleString()}</p>
+                      <p className="text-xs text-gray-400 mt-1">Mevcut plan Ã¼zerinden</p>
                     </div>
                     <div className="bg-rose-50 border border-rose-100 rounded-xl p-4">
                       <p className="text-xs text-gray-400 mb-1">Bekleyen Fatura</p>
-                      <p className="text-2xl font-bold text-rose-500">₺{pendingTotal.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-rose-500">â‚º{pendingTotal.toLocaleString()}</p>
                       <p className="text-xs text-gray-400 mt-1">{advInvoices.filter(i => i.status === 'pending').length} fatura</p>
                     </div>
                     <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
                       <p className="text-xs text-gray-400 mb-1">Toplam Tahsil</p>
-                      <p className="text-2xl font-bold text-gray-700">₺{paidTotal.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-gray-700">â‚º{paidTotal.toLocaleString()}</p>
                       <p className="text-xs text-gray-400 mt-1">{advInvoices.filter(i => i.status === 'paid').length} fatura</p>
                     </div>
                   </div>
 
-                  {/* Gelir dağılımı çubuğu */}
+                  {/* Gelir daÄŸÄ±lÄ±mÄ± Ã§ubuÄŸu */}
                   {(pendingTotal + paidTotal) > 0 && (
                     <div className="bg-white border border-gray-100 rounded-xl p-4">
                       <p className="text-xs font-semibold text-gray-500 mb-3">Tahsilat Durumu</p>
@@ -1754,16 +1756,16 @@ else created++
                 <div className="space-y-4">
                   <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
                     <p className="text-xs font-semibold text-amber-700 mb-1">Fatura Bilgisi</p>
-                    <p className="text-xs text-amber-600">Aylık plan: <strong>₺{sub?.monthly_fee || 0}</strong> sabit + <strong>{clientCount}</strong> müşteri × <strong>₺{sub?.per_client_fee || 0}</strong> = <strong>₺{monthlyIncome.toLocaleString()}</strong></p>
+                    <p className="text-xs text-amber-600">AylÄ±k plan: <strong>â‚º{sub?.monthly_fee || 0}</strong> sabit + <strong>{clientCount}</strong> mÃ¼ÅŸteri Ã— <strong>â‚º{sub?.per_client_fee || 0}</strong> = <strong>â‚º{monthlyIncome.toLocaleString()}</strong></p>
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Fatura Tutarı (₺) *</label>
+                      <label className="block text-xs font-medium text-gray-500 mb-1.5">Fatura TutarÄ± (â‚º) *</label>
                       <input type="number" value={advInvoiceAmount} onChange={e => setAdvInvoiceAmount(e.target.value)}
                         placeholder={monthlyIncome.toString()}
                         className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
                       <button onClick={() => setAdvInvoiceAmount(monthlyIncome.toString())}
-                        className="mt-1 text-xs text-amber-600 hover:underline">Aylık tutarı otomatik doldur (₺{monthlyIncome.toLocaleString()})</button>
+                        className="mt-1 text-xs text-amber-600 hover:underline">AylÄ±k tutarÄ± otomatik doldur (â‚º{monthlyIncome.toLocaleString()})</button>
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1.5">Vade Tarihi</label>
@@ -1773,12 +1775,12 @@ else created++
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1.5">Not (opsiyonel)</label>
                       <textarea value={advInvoiceNote} onChange={e => setAdvInvoiceNote(e.target.value)} rows={2}
-                        placeholder="Örn: Mart 2025 aylık hizmet bedeli"
+                        placeholder="Ã–rn: Mart 2025 aylÄ±k hizmet bedeli"
                         className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none" />
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <Btn variant="secondary" className="flex-1" onClick={() => setAdvDetailTab('mali')}>İptal</Btn>
+                    <Btn variant="secondary" className="flex-1" onClick={() => setAdvDetailTab('mali')}>Ä°ptal</Btn>
                     <button onClick={async () => {
                       if (!advInvoiceAmount) return
                       setAdvInvoiceSaving(true)
@@ -1797,19 +1799,19 @@ else created++
                       setAdvDetailTab('gecmis')
                     }} disabled={advInvoiceSaving || !advInvoiceAmount}
                       className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
-                      {advInvoiceSaving ? 'Kaydediliyor...' : '✓ Fatura Kes'}
+                      {advInvoiceSaving ? 'Kaydediliyor...' : 'âœ“ Fatura Kes'}
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* GEÇMİŞ */}
+              {/* GEÃ‡MÄ°Å */}
               {advDetailTab === 'gecmis' && (
                 <div className="space-y-3">
                   {advInvoices.length === 0 ? (
                     <div className="text-center py-10">
-                      <p className="text-gray-400 text-sm">Henüz fatura yok.</p>
-                      <button onClick={() => setAdvDetailTab('fatura')} className="mt-2 text-xs text-amber-600 hover:underline font-medium">Fatura Kes →</button>
+                      <p className="text-gray-400 text-sm">HenÃ¼z fatura yok.</p>
+                      <button onClick={() => setAdvDetailTab('fatura')} className="mt-2 text-xs text-amber-600 hover:underline font-medium">Fatura Kes â†’</button>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -1822,7 +1824,7 @@ else created++
                             }
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
+                            <p className="text-sm font-semibold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
                             {inv.note && <p className="text-xs text-gray-500 truncate">{inv.note}</p>}
                             <p className="text-xs text-gray-400">
                               {inv.due_date ? `Vade: ${new Date(inv.due_date).toLocaleDateString('tr-TR')}` : new Date(inv.created_at).toLocaleDateString('tr-TR')}
@@ -1831,10 +1833,10 @@ else created++
                           {inv.status === 'pending' ? (
                             <button onClick={async () => { await handleMarkPaid(inv.id); await loadData() }}
                               className="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium px-3 py-1.5 rounded-lg transition-colors border border-emerald-200">
-                              Ödendi
+                              Ã–dendi
                             </button>
                           ) : (
-                            <span className="text-xs bg-emerald-50 text-emerald-600 font-medium px-2.5 py-1 rounded-full">✓ Ödendi</span>
+                            <span className="text-xs bg-emerald-50 text-emerald-600 font-medium px-2.5 py-1 rounded-full">âœ“ Ã–dendi</span>
                           )}
                         </div>
                       ))}
@@ -1847,10 +1849,10 @@ else created++
         })()}
       </Modal>
 
-    {/* ── FİRMA DETAY MODAL ── */}
+    {/* â”€â”€ FÄ°RMA DETAY MODAL â”€â”€ */}
 <Modal open={showCustomerDetail}
   onClose={() => { setShowCustomerDetail(false); setCustDetailTab('genel'); setCustInvoiceAmount(''); setCustInvoiceNote(''); setCustInvoiceDue('') }}
-  title={selectedCustomer?.company_name || selectedCustomer?.full_name || 'Firma Detayı'}
+  title={selectedCustomer?.company_name || selectedCustomer?.full_name || 'Firma DetayÄ±'}
   subtitle={selectedCustomer?.email} size="xl">
   {selectedCustomer && (() => {
     const sub = selectedCustomer.subscriptions?.[0]
@@ -1867,7 +1869,7 @@ else created++
             { key: 'genel', label: 'Genel Bilgi' },
             { key: 'mali', label: 'Mali Durum' },
             { key: 'fatura', label: 'Fatura Kes' },
-            { key: 'gecmis', label: 'Geçmiş' },
+            { key: 'gecmis', label: 'GeÃ§miÅŸ' },
           ].map(tab => (
             <button key={tab.key} onClick={() => setCustDetailTab(tab.key)}
               className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${custDetailTab === tab.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
@@ -1890,13 +1892,13 @@ else created++
                 </span>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[
-                { label: 'Firma Adı', value: selectedCustomer.company_name || '-' },
+                { label: 'Firma AdÄ±', value: selectedCustomer.company_name || '-' },
                 { label: 'Ad Soyad', value: selectedCustomer.full_name || '-' },
                 { label: 'E-posta', value: selectedCustomer.email },
-                { label: 'Sektör', value: selectedCustomer.sector || '-' },
-                { label: 'Kayıt Tarihi', value: new Date(selectedCustomer.created_at).toLocaleDateString('tr-TR') },
+                { label: 'SektÃ¶r', value: selectedCustomer.sector || '-' },
+                { label: 'KayÄ±t Tarihi', value: new Date(selectedCustomer.created_at).toLocaleDateString('tr-TR') },
               ].map(item => (
                 <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
                   <p className="text-xs text-gray-400 mb-1">{item.label}</p>
@@ -1904,12 +1906,12 @@ else created++
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[
-                { label: 'Plan', value: sub?.plan ? String(sub.plan).toUpperCase() : 'Tanımsız' },
-                { label: 'Abonelik Durumu', value: sub?.status || 'Tanımsız' },
-                { label: 'Lead Sayısı', value: tenantContext.leadCount },
-                { label: 'Şube Sayısı', value: tenantContext.branchCount },
+                { label: 'Plan', value: sub?.plan ? String(sub.plan).toUpperCase() : 'TanÄ±msÄ±z' },
+                { label: 'Abonelik Durumu', value: sub?.status || 'TanÄ±msÄ±z' },
+                { label: 'Lead SayÄ±sÄ±', value: tenantContext.leadCount },
+                { label: 'Åube SayÄ±sÄ±', value: tenantContext.branchCount },
               ].map(item => (
                 <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
                   <p className="text-xs text-gray-400 mb-1">{item.label}</p>
@@ -1919,41 +1921,41 @@ else created++
             </div>
             {sub && (
               <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
-                <p className="text-xs font-semibold text-indigo-700 mb-3">Abonelik Planı</p>
-                <div className="grid grid-cols-3 gap-3">
+                <p className="text-xs font-semibold text-indigo-700 mb-3">Abonelik PlanÄ±</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div><p className="text-xs text-indigo-400">Plan</p><p className="text-sm font-bold text-indigo-800 capitalize">{sub.plan}</p></div>
-                  <div><p className="text-xs text-indigo-400">Aylık Ücret</p><p className="text-sm font-bold text-indigo-800">₺{sub.monthly_fee}</p></div>
-                  <div><p className="text-xs text-indigo-400">Şube Başı</p><p className="text-sm font-bold text-indigo-800">₺{sub.per_branch_fee}</p></div>
+                  <div><p className="text-xs text-indigo-400">AylÄ±k Ãœcret</p><p className="text-sm font-bold text-indigo-800">â‚º{sub.monthly_fee}</p></div>
+                  <div><p className="text-xs text-indigo-400">Åube BaÅŸÄ±</p><p className="text-sm font-bold text-indigo-800">â‚º{sub.per_branch_fee}</p></div>
                 </div>
               </div>
             )}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                <p className="text-xs text-gray-400 mb-2">Meta Bağlantısı</p>
+                <p className="text-xs text-gray-400 mb-2">Meta BaÄŸlantÄ±sÄ±</p>
                 <p className={`text-sm font-semibold ${tenantContext.metaConnection ? 'text-emerald-700' : 'text-gray-500'}`}>
-                  {tenantContext.metaConnection ? 'Bağlı' : 'Bağlı değil'}
+                  {tenantContext.metaConnection ? 'BaÄŸlÄ±' : 'BaÄŸlÄ± deÄŸil'}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  {tenantContext.metaConnection?.connected_at ? new Date(tenantContext.metaConnection.connected_at).toLocaleDateString('tr-TR') : 'Kayıt yok'}
+                  {tenantContext.metaConnection?.connected_at ? new Date(tenantContext.metaConnection.connected_at).toLocaleDateString('tr-TR') : 'KayÄ±t yok'}
                 </p>
               </div>
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                <p className="text-xs text-gray-400 mb-2">WhatsApp Bağlantısı</p>
+                <p className="text-xs text-gray-400 mb-2">WhatsApp BaÄŸlantÄ±sÄ±</p>
                 <p className={`text-sm font-semibold ${tenantContext.whatsAppConnection ? 'text-emerald-700' : 'text-gray-500'}`}>
-                  {tenantContext.whatsAppConnection ? 'Bağlı' : 'Bağlı değil'}
+                  {tenantContext.whatsAppConnection ? 'BaÄŸlÄ±' : 'BaÄŸlÄ± deÄŸil'}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  {tenantContext.whatsAppConnection?.connected_at ? new Date(tenantContext.whatsAppConnection.connected_at).toLocaleDateString('tr-TR') : 'Kayıt yok'}
+                  {tenantContext.whatsAppConnection?.connected_at ? new Date(tenantContext.whatsAppConnection.connected_at).toLocaleDateString('tr-TR') : 'KayÄ±t yok'}
                 </p>
               </div>
             </div>
             <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                <p className="text-xs font-semibold text-gray-600">Son Audit Kayıtları</p>
+                <p className="text-xs font-semibold text-gray-600">Son Audit KayÄ±tlarÄ±</p>
               </div>
               {tenantContext.recentAuditLogs.length === 0 ? (
                 <div className="px-4 py-6 text-sm text-gray-400 text-center">
-                  Bu tenant için son audit kaydı bulunmuyor.
+                  Bu tenant iÃ§in son audit kaydÄ± bulunmuyor.
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
@@ -1980,26 +1982,26 @@ else created++
           </div>
         )}
 
-        {/* MALİ DURUM */}
+        {/* MALÄ° DURUM */}
         {custDetailTab === 'mali' && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-                <p className="text-xs text-gray-400 mb-1">Aylık Gelir</p>
-                <p className="text-2xl font-bold text-indigo-600">₺{(sub?.monthly_fee || 0).toLocaleString()}</p>
+                <p className="text-xs text-gray-400 mb-1">AylÄ±k Gelir</p>
+                <p className="text-2xl font-bold text-indigo-600">â‚º{(sub?.monthly_fee || 0).toLocaleString()}</p>
               </div>
               <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
-                <p className="text-xs text-gray-400 mb-1">Yıllık Gelir (Tahmin)</p>
-                <p className="text-2xl font-bold text-emerald-600">₺{((sub?.monthly_fee || 0) * 12).toLocaleString()}</p>
+                <p className="text-xs text-gray-400 mb-1">YÄ±llÄ±k Gelir (Tahmin)</p>
+                <p className="text-2xl font-bold text-emerald-600">â‚º{((sub?.monthly_fee || 0) * 12).toLocaleString()}</p>
               </div>
               <div className="bg-rose-50 border border-rose-100 rounded-xl p-4">
                 <p className="text-xs text-gray-400 mb-1">Bekleyen Fatura</p>
-                <p className="text-2xl font-bold text-rose-500">₺{pendingTotal.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-rose-500">â‚º{pendingTotal.toLocaleString()}</p>
                 <p className="text-xs text-gray-400 mt-1">{customerInvoices.filter(i => i.status === 'pending').length} fatura</p>
               </div>
               <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
                 <p className="text-xs text-gray-400 mb-1">Toplam Tahsil</p>
-                <p className="text-2xl font-bold text-gray-700">₺{paidTotal.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-700">â‚º{paidTotal.toLocaleString()}</p>
                 <p className="text-xs text-gray-400 mt-1">{customerInvoices.filter(i => i.status === 'paid').length} fatura</p>
               </div>
             </div>
@@ -2011,13 +2013,13 @@ else created++
         {custDetailTab === 'fatura' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Fatura Tutarı (₺) *</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Fatura TutarÄ± (â‚º) *</label>
               <input type="number" value={custInvoiceAmount} onChange={e => setCustInvoiceAmount(e.target.value)}
                 placeholder={sub?.monthly_fee?.toString() || '0'}
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               {sub?.monthly_fee > 0 && (
                 <button onClick={() => setCustInvoiceAmount(sub.monthly_fee.toString())} className="mt-1 text-xs text-indigo-600 hover:underline">
-                  Aylık tutarı doldur (₺{sub.monthly_fee.toLocaleString()})
+                  AylÄ±k tutarÄ± doldur (â‚º{sub.monthly_fee.toLocaleString()})
                 </button>
               )}
             </div>
@@ -2032,7 +2034,7 @@ else created++
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
             </div>
             <div className="flex gap-3">
-              <Btn variant="secondary" className="flex-1" onClick={() => setCustDetailTab('mali')}>İptal</Btn>
+              <Btn variant="secondary" className="flex-1" onClick={() => setCustDetailTab('mali')}>Ä°ptal</Btn>
               <button onClick={async () => {
                 if (!custInvoiceAmount) return
                 setCustInvoiceSaving(true)
@@ -2049,19 +2051,19 @@ else created++
                 setCustDetailTab('gecmis')
               }} disabled={custInvoiceSaving || !custInvoiceAmount}
                 className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
-                {custInvoiceSaving ? 'Kaydediliyor...' : '✓ Fatura Kes'}
+                {custInvoiceSaving ? 'Kaydediliyor...' : 'âœ“ Fatura Kes'}
               </button>
             </div>
           </div>
         )}
 
-        {/* GEÇMİŞ */}
+        {/* GEÃ‡MÄ°Å */}
         {custDetailTab === 'gecmis' && (
           <div className="space-y-2">
             {customerInvoices.length === 0 ? (
               <div className="text-center py-10">
-                <p className="text-gray-400 text-sm">Henüz fatura yok.</p>
-                <button onClick={() => setCustDetailTab('fatura')} className="mt-2 text-xs text-indigo-600 hover:underline font-medium">Fatura Kes →</button>
+                <p className="text-gray-400 text-sm">HenÃ¼z fatura yok.</p>
+                <button onClick={() => setCustDetailTab('fatura')} className="mt-2 text-xs text-indigo-600 hover:underline font-medium">Fatura Kes â†’</button>
               </div>
             ) : customerInvoices.map((inv: any) => (
               <div key={inv.id} className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
@@ -2072,17 +2074,17 @@ else created++
                   }
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900">₺{inv.total_amount?.toLocaleString()}</p>
+                  <p className="text-sm font-semibold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
                   {inv.note && <p className="text-xs text-gray-500 truncate">{inv.note}</p>}
                   <p className="text-xs text-gray-400">{inv.due_date ? `Vade: ${new Date(inv.due_date).toLocaleDateString('tr-TR')}` : new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
                 </div>
                 {inv.status === 'pending' ? (
                   <button onClick={async () => { await handleMarkPaid(inv.id); await loadData() }}
                     className="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium px-3 py-1.5 rounded-lg border border-emerald-200 transition-colors">
-                    Ödendi
+                    Ã–dendi
                   </button>
                 ) : (
-                  <span className="text-xs bg-emerald-50 text-emerald-600 font-medium px-2.5 py-1 rounded-full">✓ Ödendi</span>
+                  <span className="text-xs bg-emerald-50 text-emerald-600 font-medium px-2.5 py-1 rounded-full">âœ“ Ã–dendi</span>
                 )}
               </div>
             ))}
@@ -2092,7 +2094,7 @@ else created++
     )
   })()}
 </Modal>
-      {/* ── ONBOARDING MODAL ── */}
+      {/* â”€â”€ ONBOARDING MODAL â”€â”€ */}
       {showOnboardingModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { if (onboardingStep === 4) { setShowOnboardingModal(false); resetOnboarding() } }} />
@@ -2100,7 +2102,7 @@ else created++
             <div className="flex items-start justify-between p-6 border-b border-gray-100 flex-shrink-0">
               <div>
                 <h2 className="text-base font-semibold text-gray-900">Yeni Firma Onboarding</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Adım {Math.min(onboardingStep, 4)} / 4</p>
+                <p className="text-xs text-gray-400 mt-0.5">AdÄ±m {Math.min(onboardingStep, 4)} / 4</p>
               </div>
               <button onClick={() => { setShowOnboardingModal(false); resetOnboarding() }}
                 className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400">
@@ -2132,19 +2134,19 @@ else created++
   )
 }
 
-// ─── ONBOARDING WIZARD ────────────────────────────────────────────────────────
+// â”€â”€â”€ ONBOARDING WIZARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmail, obPassword, setObPassword, obCompany, setObCompany, obSector, setObSector, obPhone, setObPhone, obPlan, setObPlan, obMonthlyFee, setObMonthlyFee, obPerBranchFee, setObPerBranchFee, obBranchName, setObBranchName, obBranchCity, setObBranchCity, obCommissionModel, setObCommissionModel, obInviteLink, obSaving, onStep1, onStep2, onStep3, onReset, isModal }: any) {
 
   const PLANS = [
-    { key: 'starter', label: 'Starter', price: '₺2000', desc: '3 kullanıcı · 1 şube · 500 lead/ay', color: 'border-indigo-500 bg-indigo-50' },
-    { key: 'pro', label: 'Pro', price: '₺5.500', desc: '15 kullanıcı · 5 şube · sınırsız lead', color: 'border-violet-500 bg-violet-50' },
-    { key: 'enterprise', label: 'Enterprise', price: '₺15.000+', desc: 'Sınırsız her şey · AI rapor dahil', color: 'border-amber-500 bg-amber-50' },
-    { key: 'trial', label: 'Deneme', price: 'Ücretsiz', desc: '14 gün · tüm özellikler', color: 'border-gray-300 bg-gray-50' },
+    { key: 'starter', label: 'Starter', price: 'â‚º2000', desc: '3 kullanÄ±cÄ± Â· 1 ÅŸube Â· 500 lead/ay', color: 'border-indigo-500 bg-indigo-50' },
+    { key: 'pro', label: 'Pro', price: 'â‚º5.500', desc: '15 kullanÄ±cÄ± Â· 5 ÅŸube Â· sÄ±nÄ±rsÄ±z lead', color: 'border-violet-500 bg-violet-50' },
+    { key: 'enterprise', label: 'Enterprise', price: 'â‚º15.000+', desc: 'SÄ±nÄ±rsÄ±z her ÅŸey Â· AI rapor dahil', color: 'border-amber-500 bg-amber-50' },
+    { key: 'trial', label: 'Deneme', price: 'Ãœcretsiz', desc: '14 gÃ¼n Â· tÃ¼m Ã¶zellikler', color: 'border-gray-300 bg-gray-50' },
   ]
 
-  const SECTORS = ['Estetik Klinik', 'Diş Kliniği', 'Saç Ekim', 'Güzellik Merkezi', 'Medikal Estetik', 'Dermatoloji', 'Ortopedi', 'Göz Hastalıkları', 'Diğer']
-  const stepLabels = ['Firma Bilgileri', 'Plan & Fiyat', 'İlk Şube', 'Tamamlandı']
+  const SECTORS = ['Estetik Klinik', 'DiÅŸ KliniÄŸi', 'SaÃ§ Ekim', 'GÃ¼zellik Merkezi', 'Medikal Estetik', 'Dermatoloji', 'Ortopedi', 'GÃ¶z HastalÄ±klarÄ±', 'DiÄŸer']
+  const stepLabels = ['Firma Bilgileri', 'Plan & Fiyat', 'Ä°lk Åube', 'TamamlandÄ±']
   const wrapClass = isModal ? 'p-6 space-y-5' : 'space-y-5'
 
   return (
@@ -2157,7 +2159,7 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
               <div key={idx} className="flex items-center flex-1 last:flex-none">
                 <div className="flex flex-col items-center">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${done ? 'bg-emerald-500 text-white' : active ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                    {done ? '✓' : idx}
+                    {done ? 'âœ“' : idx}
                   </div>
                   <p className={`text-xs mt-1 whitespace-nowrap ${active ? 'text-indigo-600 font-medium' : done ? 'text-emerald-600' : 'text-gray-400'}`}>{label}</p>
                 </div>
@@ -2171,13 +2173,13 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
       {step === 1 && (
         <div className={wrapClass}>
           <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
-            <p className="text-xs font-semibold text-indigo-700 mb-0.5">👤 Hesap Sahibi Bilgileri</p>
-            <p className="text-xs text-indigo-400">Firmanın giriş yapacağı kullanıcı hesabı</p>
+            <p className="text-xs font-semibold text-indigo-700 mb-0.5">ğŸ‘¤ Hesap Sahibi Bilgileri</p>
+            <p className="text-xs text-indigo-400">FirmanÄ±n giriÅŸ yapacaÄŸÄ± kullanÄ±cÄ± hesabÄ±</p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="col-span-2">
               <label className="block text-xs font-medium text-gray-500 mb-1.5">Ad Soyad *</label>
-              <input value={obName} onChange={e => setObName(e.target.value)} placeholder="Ahmet Yılmaz"
+              <input value={obName} onChange={e => setObName(e.target.value)} placeholder="Ahmet YÄ±lmaz"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
@@ -2191,21 +2193,21 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şifre *</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Åifre *</label>
               <input type="password" value={obPassword} onChange={e => setObPassword(e.target.value)} placeholder="min. 6 karakter"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şirket Adı *</label>
-              <input value={obCompany} onChange={e => setObCompany(e.target.value)} placeholder="Firma Adı"
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Åirket AdÄ± *</label>
+              <input value={obCompany} onChange={e => setObCompany(e.target.value)} placeholder="Firma AdÄ±"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div className="col-span-2">
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Sektör</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">SektÃ¶r</label>
               <div className="relative">
                 <select value={obSector} onChange={e => setObSector(e.target.value)}
                   className="w-full appearance-none px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-9">
-                  <option value="">Seçiniz</option>
+                  <option value="">SeÃ§iniz</option>
                   {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
                 <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -2221,10 +2223,10 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
       {step === 2 && (
         <div className={wrapClass}>
           <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
-            <p className="text-xs font-semibold text-violet-700 mb-0.5">💳 Plan & Fiyatlandırma</p>
-            <p className="text-xs text-violet-400">{obCompany} için abonelik planı seçin</p>
+            <p className="text-xs font-semibold text-violet-700 mb-0.5">ğŸ’³ Plan & FiyatlandÄ±rma</p>
+            <p className="text-xs text-violet-400">{obCompany} iÃ§in abonelik planÄ± seÃ§in</p>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {PLANS.map(plan => (
               <button key={plan.key} onClick={() => {
                 setObPlan(plan.key)
@@ -2240,21 +2242,21 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Aylık Ücret (₺)</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">AylÄ±k Ãœcret (â‚º)</label>
               <input type="number" value={obMonthlyFee} onChange={e => setObMonthlyFee(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şube Başı Ücret (₺)</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Åube BaÅŸÄ± Ãœcret (â‚º)</label>
               <input type="number" value={obPerBranchFee} onChange={e => setObPerBranchFee(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => setStep(1)} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">← Geri</button>
-            <button onClick={onStep2} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-semibold transition-colors">Devam Et →</button>
+            <button onClick={() => setStep(1)} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">â† Geri</button>
+            <button onClick={onStep2} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-semibold transition-colors">Devam Et â†’</button>
           </div>
         </div>
       )}
@@ -2262,18 +2264,18 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
       {step === 3 && (
         <div className={wrapClass}>
           <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-            <p className="text-xs font-semibold text-emerald-700 mb-0.5">🏢 İlk Şube Kurulumu</p>
-            <p className="text-xs text-emerald-400">İsteğe bağlı — sonradan da eklenebilir</p>
+            <p className="text-xs font-semibold text-emerald-700 mb-0.5">ğŸ¢ Ä°lk Åube Kurulumu</p>
+            <p className="text-xs text-emerald-400">Ä°steÄŸe baÄŸlÄ± â€” sonradan da eklenebilir</p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="col-span-2">
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şube Adı</label>
-              <input value={obBranchName} onChange={e => setObBranchName(e.target.value)} placeholder="örn. Merkez Şube"
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Åube AdÄ±</label>
+              <input value={obBranchName} onChange={e => setObBranchName(e.target.value)} placeholder="Ã¶rn. Merkez Åube"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şehir</label>
-              <input value={obBranchCity} onChange={e => setObBranchCity(e.target.value)} placeholder="İstanbul"
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Åehir</label>
+              <input value={obBranchCity} onChange={e => setObBranchCity(e.target.value)} placeholder="Ä°stanbul"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
@@ -2282,17 +2284,17 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
                 <select value={obCommissionModel} onChange={e => setObCommissionModel(e.target.value)}
                   className="w-full appearance-none px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-9">
                   <option value="fixed_rate">Sabit Oran (%)</option>
-                  <option value="per_lead">Lead Başı (₺)</option>
+                  <option value="per_lead">Lead BaÅŸÄ± (â‚º)</option>
                 </select>
                 <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
             </div>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => setStep(2)} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">← Geri</button>
+            <button onClick={() => setStep(2)} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">â† Geri</button>
             <button onClick={onStep3} disabled={obSaving}
               className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
-              {obSaving ? 'Oluşturuluyor...' : '✓ Firmayı Oluştur'}
+              {obSaving ? 'OluÅŸturuluyor...' : 'âœ“ FirmayÄ± OluÅŸtur'}
             </button>
           </div>
         </div>
@@ -2304,15 +2306,15 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
             <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 16l7 7L26 9" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
-            <h3 className="text-lg font-bold text-gray-900">Firma Oluşturuldu! 🎉</h3>
-            <p className="text-sm text-gray-400 mt-1">{obCompany} başarıyla platforma eklendi.</p>
+            <h3 className="text-lg font-bold text-gray-900">Firma OluÅŸturuldu! ğŸ‰</h3>
+            <p className="text-sm text-gray-400 mt-1">{obCompany} baÅŸarÄ±yla platforma eklendi.</p>
           </div>
           <div className="bg-gray-50 rounded-xl p-4 space-y-2">
             {[
               { label: 'Firma', value: obCompany },
               { label: 'E-posta', value: obEmail },
               { label: 'Plan', value: obPlan },
-              obBranchName ? { label: 'İlk Şube', value: obBranchName } : null,
+              obBranchName ? { label: 'Ä°lk Åube', value: obBranchName } : null,
             ].filter(Boolean).map((item: any) => (
               <div key={item.label} className="flex items-center justify-between">
                 <span className="text-xs text-gray-400">{item.label}</span>
@@ -2322,7 +2324,7 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
           </div>
           {obInviteLink && (
             <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
-              <p className="text-xs font-semibold text-indigo-700 mb-2">🔗 Davet Linki</p>
+              <p className="text-xs font-semibold text-indigo-700 mb-2">ğŸ”— Davet Linki</p>
               <div className="flex items-center gap-2">
                 <input readOnly value={obInviteLink}
                   className="flex-1 text-xs bg-white border border-indigo-200 rounded-lg px-3 py-2 text-gray-600 truncate focus:outline-none" />
@@ -2341,3 +2343,6 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
     </div>
   )
 }
+
+
+
