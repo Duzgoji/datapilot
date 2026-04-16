@@ -1208,7 +1208,9 @@ return (
       </aside>
 
       {/* ── MAIN ── */}
-<div className={`flex-1 transition-all duration-200 min-w-0 overflow-x-hidden md:${sidebarCollapsed ? 'ml-16' : 'ml-60'}`}>
+<div
+  className="flex-1 min-w-0 overflow-x-hidden transition-all duration-200"
+  style={{ marginLeft: `${sidebarCollapsed ? '4rem' : '15rem'}` }}>
         {/* Top bar */}
 <header className="sticky top-0 z-10 flex min-h-14 flex-wrap items-center gap-2 border-b border-gray-100 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm sm:px-6">
   <button
