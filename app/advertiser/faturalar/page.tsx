@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { logClientAuditEvent } from '@/lib/audit/client'
@@ -19,8 +19,8 @@ const STATUS_COLORS: any = {
 const STATUS_LABELS: any = {
   pending: 'Bekliyor',
   awaiting_approval: 'Onay Bekliyor',
-  paid: 'Ã–dendi',
-  overdue: 'GecikmiÅŸ',
+  paid: '�dendi',
+  overdue: 'Gecikmis',
 }
 
 export default function FaturalarPage() {
@@ -129,7 +129,7 @@ export default function FaturalarPage() {
       invoice_id: inv.id,
       amount: inv.total_amount,
       type: 'payment',
-      note: 'Fatura Ã¶dendi',
+      note: 'Fatura �dendi',
     })
     await logClientAuditEvent({
       action: 'payment_recorded',
@@ -152,10 +152,10 @@ export default function FaturalarPage() {
 
   const exportCSV = (type: 'invoices' | 'logs') => {
     const rows = type === 'invoices'
-      ? [['MÃ¼ÅŸteri', 'Tutar', 'Durum', 'Son Ã–deme', 'OluÅŸturulma'],
+      ? [['M�steri', 'Tutar', 'Durum', 'Son �deme', 'Olusturulma'],
          ...filteredInvoices.map(inv => [getCustomerName(inv.customer_id, inv.owner_id), inv.total_amount, STATUS_LABELS[inv.status] || inv.status, inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-', new Date(inv.created_at).toLocaleDateString('tr-TR')])]
-      : [['MÃ¼ÅŸteri', 'Tutar', 'TÃ¼r', 'Not', 'Tarih'],
-         ...filteredLogs.map(log => [getCustomerName(log.customer_id), log.amount, log.type === 'payment' ? 'Ã–deme' : log.type === 'refund' ? 'Ä°ade' : 'DÃ¼zeltme', log.note || '-', new Date(log.created_at).toLocaleDateString('tr-TR')])]
+      : [['M�steri', 'Tutar', 'T�r', 'Not', 'Tarih'],
+         ...filteredLogs.map(log => [getCustomerName(log.customer_id), log.amount, log.type === 'payment' ? '�deme' : log.type === 'refund' ? 'Iade' : 'D�zeltme', log.note || '-', new Date(log.created_at).toLocaleDateString('tr-TR')])]
     const content = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
     const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -166,20 +166,20 @@ export default function FaturalarPage() {
   return (
     <div className="max-w-5xl space-y-5">
 
-      {/* UyarÄ± banner */}
+      {/* Uyari banner */}
       {myInvoices.filter(i => i.status === 'pending').length > 0 && (
         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse flex-shrink-0" />
           <p className="text-xs font-semibold text-amber-700">
-            {myInvoices.filter(i => i.status === 'pending').length} bekleyen faturanÄ±z var
+            {myInvoices.filter(i => i.status === 'pending').length} bekleyen faturaniz var
           </p>
-          <button onClick={() => setMainTab('bana-gelen')} className="ml-auto text-xs text-amber-700 font-medium hover:underline">GÃ¶rÃ¼ntÃ¼le â†’</button>
+          <button onClick={() => setMainTab('bana-gelen')} className="ml-auto text-xs text-amber-700 font-medium hover:underline">G�r�nt�le ?</button>
         </div>
       )}
 
       {/* Ana Tab */}
       <div className="flex w-full flex-wrap gap-1 rounded-xl bg-gray-100 p-1 sm:w-fit">
-        {([['musteri', 'MÃ¼ÅŸteri FaturalarÄ±'], ['bana-gelen', 'Bana Gelen Faturalar']] as const).map(([key, label]) => (
+        {([['musteri', 'M�steri Faturalari'], ['bana-gelen', 'Bana Gelen Faturalar']] as const).map(([key, label]) => (
           <button key={key} onClick={() => setMainTab(key)}
             className={`min-h-[40px] flex-1 rounded-lg px-4 py-2 text-xs font-medium transition-all sm:flex-none ${mainTab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
             {label}
@@ -192,27 +192,27 @@ export default function FaturalarPage() {
         ))}
       </div>
 
-      {/* â”€â”€ MÃœÅTERÄ° FATURALARI â”€â”€ */}
+      {/* -- M�??TERI FATURALARI -- */}
       {mainTab === 'musteri' && (
         <div className="space-y-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-base font-semibold text-gray-900">Faturalar & Ã–deme GeÃ§miÅŸi</h2>
-              <p className="text-xs text-gray-400 mt-0.5">TÃ¼m mÃ¼ÅŸterilerin fatura ve Ã¶deme loglarÄ±</p>
+              <h2 className="text-base font-semibold text-gray-900">Faturalar & �deme Ge�misi</h2>
+              <p className="text-xs text-gray-400 mt-0.5">T�m m�sterilerin fatura ve �deme loglari</p>
             </div>
             <button onClick={() => exportCSV(activeTab === 'faturalar' ? 'invoices' : 'logs')}
               className="flex min-h-[40px] items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 sm:self-auto">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3.5 6l3 3 3-3M1.5 10.5h10" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              CSV Ä°ndir
+              CSV Indir
             </button>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[
               { label: 'Toplam Fatura', value: invoices.length, sub: 'adet', color: 'text-gray-900' },
-              { label: 'Bekleyen', value: `â‚º${totalPending.toLocaleString()}`, sub: `${invoices.filter(i => i.status === 'pending').length} fatura`, color: 'text-amber-600' },
-              { label: 'Tahsil Edilen', value: `â‚º${totalPaid.toLocaleString()}`, sub: `${invoices.filter(i => i.status === 'paid').length} fatura`, color: 'text-emerald-600' },
-              { label: 'GecikmiÅŸ', value: `â‚º${totalOverdue.toLocaleString()}`, sub: `${invoices.filter(i => i.status === 'overdue').length} fatura`, color: 'text-red-500' },
+              { label: 'Bekleyen', value: `?${totalPending.toLocaleString()}`, sub: `${invoices.filter(i => i.status === 'pending').length} fatura`, color: 'text-amber-600' },
+              { label: 'Tahsil Edilen', value: `?${totalPaid.toLocaleString()}`, sub: `${invoices.filter(i => i.status === 'paid').length} fatura`, color: 'text-emerald-600' },
+              { label: 'Gecikmis', value: `?${totalOverdue.toLocaleString()}`, sub: `${invoices.filter(i => i.status === 'overdue').length} fatura`, color: 'text-red-500' },
             ].map(k => (
               <div key={k.label} className="bg-white rounded-2xl border border-gray-100 p-5">
                 <p className="text-xs text-gray-400 mb-1">{k.label}</p>
@@ -225,13 +225,13 @@ export default function FaturalarPage() {
           <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-4 sm:px-5">
             <div className="relative flex-1 min-w-[160px]">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.25"/><path d="M9 9l2.5 2.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round"/></svg>
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="MÃ¼ÅŸteri ara..."
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="M�steri ara..."
                 className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500" />
             </div>
             <div className="relative w-full sm:w-auto">
               <select value={filterCustomer} onChange={e => setFilterCustomer(e.target.value)}
                 className="min-h-[40px] w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 pl-3 pr-8 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
-                <option value="all">TÃ¼m MÃ¼ÅŸteriler</option>
+                <option value="all">T�m M�steriler</option>
                 {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
               <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -240,11 +240,11 @@ export default function FaturalarPage() {
               <div className="relative w-full sm:w-auto">
                 <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
                   className="min-h-[40px] w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 pl-3 pr-8 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
-                  <option value="all">TÃ¼m Durumlar</option>
+                  <option value="all">T�m Durumlar</option>
                   <option value="pending">Bekleyen</option>
                   <option value="awaiting_approval">Onay Bekliyor</option>
-                  <option value="paid">Ã–dendi</option>
-                  <option value="overdue">GecikmiÅŸ</option>
+                  <option value="paid">�dendi</option>
+                  <option value="overdue">Gecikmis</option>
                 </select>
                 <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
@@ -252,10 +252,10 @@ export default function FaturalarPage() {
             <div className="relative w-full sm:w-auto">
               <select value={filterPeriod} onChange={e => setFilterPeriod(e.target.value as any)}
                 className="min-h-[40px] w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 pl-3 pr-8 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
-                <option value="all">TÃ¼m Zamanlar</option>
-                <option value="30d">Son 30 GÃ¼n</option>
-                <option value="90d">Son 90 GÃ¼n</option>
-                <option value="custom">Ã–zel Tarih</option>
+                <option value="all">T�m Zamanlar</option>
+                <option value="30d">Son 30 G�n</option>
+                <option value="90d">Son 90 G�n</option>
+                <option value="custom">�zel Tarih</option>
               </select>
               <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
@@ -263,7 +263,7 @@ export default function FaturalarPage() {
               <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                 <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)}
                   className="min-h-[40px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500" />
-                <span className="text-xs text-gray-400">â€”</span>
+                <span className="text-xs text-gray-400">�</span>
                 <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
                   className="min-h-[40px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500" />
               </div>
@@ -271,7 +271,7 @@ export default function FaturalarPage() {
           </div>
 
           <div className="flex w-full flex-wrap gap-1 rounded-xl bg-gray-100 p-1 sm:w-fit">
-            {([['faturalar', 'Faturalar'], ['log', 'Ã–deme GeÃ§miÅŸi']] as const).map(([key, label]) => (
+            {([['faturalar', 'Faturalar'], ['log', '�deme Ge�misi']] as const).map(([key, label]) => (
               <button key={key} onClick={() => setActiveTab(key)}
                 className={`min-h-[40px] flex-1 rounded-lg px-4 py-2 text-xs font-medium transition-all sm:flex-none ${activeTab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
                 {label}
@@ -289,15 +289,15 @@ export default function FaturalarPage() {
               <div className="hidden md:block">
                 <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
                   <div className="grid grid-cols-6 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    <div className="col-span-2">MÃ¼ÅŸteri</div>
+                    <div className="col-span-2">M�steri</div>
                     <div className="text-right">Tutar</div>
                     <div className="text-center">Durum</div>
-                    <div className="text-center">Son Ã–deme</div>
-                    <div className="text-right">Ä°ÅŸlem</div>
+                    <div className="text-center">Son �deme</div>
+                    <div className="text-right">Islem</div>
                   </div>
                 </div>
                 {filteredInvoices.length === 0 ? (
-                  <div className="p-12 text-center"><p className="text-gray-400 text-sm">Fatura bulunamadÄ±.</p></div>
+                  <div className="p-12 text-center"><p className="text-gray-400 text-sm">Fatura bulunamadi.</p></div>
                 ) : filteredInvoices.map((inv, i) => {
                   const isOverdue = inv.due_date && new Date(inv.due_date) < new Date() && inv.status === 'pending'
                   const st = STATUS_COLORS[inv.status] || STATUS_COLORS.pending
@@ -312,19 +312,19 @@ export default function FaturalarPage() {
                           <p className="text-xs text-gray-400">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
                         </div>
                       </div>
-                      <div className="text-right"><p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p></div>
+                      <div className="text-right"><p className="text-sm font-bold text-gray-900">?{inv.total_amount?.toLocaleString()}</p></div>
                       <div className="text-center"><span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${st}`}>{STATUS_LABELS[inv.status]}</span></div>
                       <div className="text-center">
                         <p className={`text-xs ${isOverdue ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
-                          {inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-'}{isOverdue && ' âš '}
+                          {inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-'}{isOverdue && ' ?'}
                         </p>
                       </div>
                       <div className="text-right flex items-center justify-end gap-1.5">
                         {(inv.status === 'pending' || inv.status === 'awaiting_approval') && (
-                          <button onClick={() => markAsPaid(inv)} className="text-xs text-emerald-600 font-medium px-2.5 py-1 hover:bg-emerald-50 rounded-lg transition-colors border border-emerald-200">Ã–dendi</button>
+                          <button onClick={() => markAsPaid(inv)} className="text-xs text-emerald-600 font-medium px-2.5 py-1 hover:bg-emerald-50 rounded-lg transition-colors border border-emerald-200">�dendi</button>
                         )}
                         {inv.status === 'pending' && isOverdue && (
-                          <button onClick={() => markAsOverdue(inv)} className="text-xs text-red-500 font-medium px-2.5 py-1 hover:bg-red-50 rounded-lg transition-colors border border-red-200">GecikmiÅŸ</button>
+                          <button onClick={() => markAsOverdue(inv)} className="text-xs text-red-500 font-medium px-2.5 py-1 hover:bg-red-50 rounded-lg transition-colors border border-red-200">Gecikmis</button>
                         )}
                       </div>
                     </div>
@@ -333,7 +333,7 @@ export default function FaturalarPage() {
               </div>
               <div className="divide-y divide-gray-100 md:hidden">
                 {filteredInvoices.length === 0 ? (
-                  <div className="p-12 text-center"><p className="text-gray-400 text-sm">Fatura bulunamadÄ±.</p></div>
+                  <div className="p-12 text-center"><p className="text-gray-400 text-sm">Fatura bulunamadi.</p></div>
                 ) : filteredInvoices.map((inv) => {
                   const isOverdue = inv.due_date && new Date(inv.due_date) < new Date() && inv.status === 'pending'
                   const st = STATUS_COLORS[inv.status] || STATUS_COLORS.pending
@@ -347,17 +347,17 @@ export default function FaturalarPage() {
                         <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${st}`}>{STATUS_LABELS[inv.status]}</span>
                       </div>
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
+                        <p className="text-sm font-bold text-gray-900">?{inv.total_amount?.toLocaleString()}</p>
                         <p className={`text-xs ${isOverdue ? 'text-red-500 font-medium' : 'text-gray-400'}`}>
-                          {inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-'}{isOverdue && ' âš '}
+                          {inv.due_date ? new Date(inv.due_date).toLocaleDateString('tr-TR') : '-'}{isOverdue && ' ?'}
                         </p>
                       </div>
                       <div className="flex flex-wrap justify-end gap-2">
                         {(inv.status === 'pending' || inv.status === 'awaiting_approval') && (
-                          <button onClick={() => markAsPaid(inv)} className="text-xs text-emerald-600 font-medium px-2.5 py-1 hover:bg-emerald-50 rounded-lg transition-colors border border-emerald-200">Ã–dendi</button>
+                          <button onClick={() => markAsPaid(inv)} className="text-xs text-emerald-600 font-medium px-2.5 py-1 hover:bg-emerald-50 rounded-lg transition-colors border border-emerald-200">�dendi</button>
                         )}
                         {inv.status === 'pending' && isOverdue && (
-                          <button onClick={() => markAsOverdue(inv)} className="text-xs text-red-500 font-medium px-2.5 py-1 hover:bg-red-50 rounded-lg transition-colors border border-red-200">GecikmiÅŸ</button>
+                          <button onClick={() => markAsOverdue(inv)} className="text-xs text-red-500 font-medium px-2.5 py-1 hover:bg-red-50 rounded-lg transition-colors border border-red-200">Gecikmis</button>
                         )}
                       </div>
                     </div>
@@ -372,19 +372,19 @@ export default function FaturalarPage() {
               <div className="hidden md:block">
                 <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
                   <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    <div className="col-span-2">MÃ¼ÅŸteri</div>
+                    <div className="col-span-2">M�steri</div>
                     <div className="text-right">Tutar</div>
-                    <div className="text-center">TÃ¼r</div>
+                    <div className="text-center">T�r</div>
                     <div className="text-right">Tarih</div>
                   </div>
                 </div>
                 {filteredLogs.length === 0 ? (
                   <div className="p-12 text-center">
-                    <p className="text-gray-400 text-sm">Ã–deme kaydÄ± yok.</p>
-                    <p className="text-xs text-gray-300 mt-1">Faturalar "Ã–dendi" iÅŸaretlenince burada gÃ¶rÃ¼nÃ¼r.</p>
+                    <p className="text-gray-400 text-sm">�deme kaydi yok.</p>
+                    <p className="text-xs text-gray-300 mt-1">Faturalar "�dendi" isaretlenince burada g�r�n�r.</p>
                   </div>
                 ) : filteredLogs.map((log, i) => {
-                  const typeLabel = log.type === 'payment' ? 'Ã–deme' : log.type === 'refund' ? 'Ä°ade' : 'DÃ¼zeltme'
+                  const typeLabel = log.type === 'payment' ? '�deme' : log.type === 'refund' ? 'Iade' : 'D�zeltme'
                   const typeColor = log.type === 'payment' ? 'bg-emerald-50 text-emerald-700' : log.type === 'refund' ? 'bg-rose-50 text-rose-700' : 'bg-blue-50 text-blue-700'
                   return (
                     <div key={log.id} className={`px-5 py-3.5 grid grid-cols-5 gap-2 items-center hover:bg-gray-50/50 transition-colors ${i < filteredLogs.length - 1 ? 'border-b border-gray-50' : ''}`}>
@@ -397,7 +397,7 @@ export default function FaturalarPage() {
                           {log.note && <p className="text-xs text-gray-400 truncate">{log.note}</p>}
                         </div>
                       </div>
-                      <div className="text-right"><p className="text-sm font-bold text-emerald-600">â‚º{log.amount?.toLocaleString()}</p></div>
+                      <div className="text-right"><p className="text-sm font-bold text-emerald-600">?{log.amount?.toLocaleString()}</p></div>
                       <div className="text-center"><span className={`text-xs font-medium px-2.5 py-1 rounded-full ${typeColor}`}>{typeLabel}</span></div>
                       <div className="text-right"><p className="text-xs text-gray-400">{new Date(log.created_at).toLocaleDateString('tr-TR')}</p></div>
                     </div>
@@ -407,11 +407,11 @@ export default function FaturalarPage() {
               <div className="divide-y divide-gray-100 md:hidden">
                 {filteredLogs.length === 0 ? (
                   <div className="p-12 text-center">
-                    <p className="text-gray-400 text-sm">Ã–deme kaydÄ± yok.</p>
-                    <p className="text-xs text-gray-300 mt-1">Faturalar "Ã–dendi" iÅŸaretlenince burada gÃ¶rÃ¼nÃ¼r.</p>
+                    <p className="text-gray-400 text-sm">�deme kaydi yok.</p>
+                    <p className="text-xs text-gray-300 mt-1">Faturalar "�dendi" isaretlenince burada g�r�n�r.</p>
                   </div>
                 ) : filteredLogs.map((log) => {
-                  const typeLabel = log.type === 'payment' ? 'Ã–deme' : log.type === 'refund' ? 'Ä°ade' : 'DÃ¼zeltme'
+                  const typeLabel = log.type === 'payment' ? '�deme' : log.type === 'refund' ? 'Iade' : 'D�zeltme'
                   const typeColor = log.type === 'payment' ? 'bg-emerald-50 text-emerald-700' : log.type === 'refund' ? 'bg-rose-50 text-rose-700' : 'bg-blue-50 text-blue-700'
                   return (
                     <div key={log.id} className="p-4 space-y-3">
@@ -423,7 +423,7 @@ export default function FaturalarPage() {
                         <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${typeColor}`}>{typeLabel}</span>
                       </div>
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-bold text-emerald-600">â‚º{log.amount?.toLocaleString()}</p>
+                        <p className="text-sm font-bold text-emerald-600">?{log.amount?.toLocaleString()}</p>
                         <p className="text-xs text-gray-400">{new Date(log.created_at).toLocaleDateString('tr-TR')}</p>
                       </div>
                     </div>
@@ -435,22 +435,22 @@ export default function FaturalarPage() {
         </div>
       )}
 
-      {/* â”€â”€ BANA GELEN FATURALAR â”€â”€ */}
+      {/* -- BANA GELEN FATURALAR -- */}
       {mainTab === 'bana-gelen' && (
         <div className="space-y-4">
           <div>
             <h2 className="text-base font-semibold text-gray-900">Bana Gelen Faturalar</h2>
-            <p className="text-xs text-gray-400 mt-0.5">DataPilot tarafÄ±ndan kesilen faturalar</p>
+            <p className="text-xs text-gray-400 mt-0.5">DataPilot tarafindan kesilen faturalar</p>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {[
-              { label: 'Bekleyen', value: `â‚º${myInvoices.filter(i => i.status === 'pending').reduce((s, i) => s + (i.total_amount || 0), 0).toLocaleString()}`, count: myInvoices.filter(i => i.status === 'pending').length, color: 'text-amber-600', bg: 'bg-amber-50' },
-              { label: 'Onay Bekliyor', value: `â‚º${myInvoices.filter(i => i.status === 'awaiting_approval').reduce((s, i) => s + (i.total_amount || 0), 0).toLocaleString()}`, count: myInvoices.filter(i => i.status === 'awaiting_approval').length, color: 'text-blue-600', bg: 'bg-blue-50' },
-              { label: 'Ã–dendi', value: `â‚º${myInvoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.total_amount || 0), 0).toLocaleString()}`, count: myInvoices.filter(i => i.status === 'paid').length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+              { label: 'Bekleyen', value: `?${myInvoices.filter(i => i.status === 'pending').reduce((s, i) => s + (i.total_amount || 0), 0).toLocaleString()}`, count: myInvoices.filter(i => i.status === 'pending').length, color: 'text-amber-600', bg: 'bg-amber-50' },
+              { label: 'Onay Bekliyor', value: `?${myInvoices.filter(i => i.status === 'awaiting_approval').reduce((s, i) => s + (i.total_amount || 0), 0).toLocaleString()}`, count: myInvoices.filter(i => i.status === 'awaiting_approval').length, color: 'text-blue-600', bg: 'bg-blue-50' },
+              { label: '�dendi', value: `?${myInvoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.total_amount || 0), 0).toLocaleString()}`, count: myInvoices.filter(i => i.status === 'paid').length, color: 'text-emerald-600', bg: 'bg-emerald-50' },
             ].map(k => (
               <div key={k.label} className={`${k.bg} rounded-xl px-4 py-3`}>
                 <p className={`text-xl font-bold ${k.color}`}>{k.value}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{k.label} Â· {k.count} fatura</p>
+                <p className="text-xs text-gray-500 mt-0.5">{k.label} � {k.count} fatura</p>
               </div>
             ))}
           </div>
@@ -458,10 +458,10 @@ export default function FaturalarPage() {
             <div className="hidden md:block">
               <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
                 <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  <div className="col-span-2">AÃ§Ä±klama</div>
+                  <div className="col-span-2">A�iklama</div>
                   <div className="text-right">Tutar</div>
                   <div className="text-center">Durum</div>
-                  <div className="text-right">Ä°ÅŸlem</div>
+                  <div className="text-right">Islem</div>
                 </div>
               </div>
               {myInvoices.length === 0 ? (
@@ -469,12 +469,12 @@ export default function FaturalarPage() {
               ) : myInvoices.map((inv, i) => (
                 <div key={inv.id} className={`px-5 py-3.5 grid grid-cols-5 gap-2 items-center ${i < myInvoices.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50/50 transition-colors`}>
                   <div className="col-span-2 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">{inv.note || 'AylÄ±k hizmet bedeli'}</p>
+                    <p className="text-sm font-medium text-gray-900">{inv.note || 'Aylik hizmet bedeli'}</p>
                     <p className="text-xs text-gray-400">
                       {inv.due_date ? `Vade: ${new Date(inv.due_date).toLocaleDateString('tr-TR')}` : new Date(inv.created_at).toLocaleDateString('tr-TR')}
                     </p>
                   </div>
-                  <div className="text-right"><p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p></div>
+                  <div className="text-right"><p className="text-sm font-bold text-gray-900">?{inv.total_amount?.toLocaleString()}</p></div>
                   <div className="text-center">
                     <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${STATUS_COLORS[inv.status] || STATUS_COLORS.pending}`}>
                       {STATUS_LABELS[inv.status] || inv.status}
@@ -486,14 +486,14 @@ export default function FaturalarPage() {
                         await supabase.from('invoices').update({ status: 'awaiting_approval' }).eq('id', inv.id)
                         await loadAll()
                       }} className="text-xs text-blue-600 font-medium px-3 py-1.5 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200">
-                        Ã–deme YaptÄ±m
+                        �deme Yaptim
                       </button>
                     )}
                     {inv.status === 'awaiting_approval' && (
                       <span className="text-xs text-blue-500 font-medium">Onay bekleniyor</span>
                     )}
                     {inv.status === 'paid' && (
-                      <span className="text-xs text-emerald-600 font-medium">âœ“ Ã–dendi</span>
+                      <span className="text-xs text-emerald-600 font-medium">? �dendi</span>
                     )}
                   </div>
                 </div>
@@ -506,7 +506,7 @@ export default function FaturalarPage() {
                 <div key={inv.id} className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900">{inv.note || 'AylÄ±k hizmet bedeli'}</p>
+                      <p className="text-sm font-medium text-gray-900">{inv.note || 'Aylik hizmet bedeli'}</p>
                       <p className="text-xs text-gray-400 mt-1">
                         {inv.due_date ? `Vade: ${new Date(inv.due_date).toLocaleDateString('tr-TR')}` : new Date(inv.created_at).toLocaleDateString('tr-TR')}
                       </p>
@@ -516,21 +516,21 @@ export default function FaturalarPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-bold text-gray-900">â‚º{inv.total_amount?.toLocaleString()}</p>
+                    <p className="text-sm font-bold text-gray-900">?{inv.total_amount?.toLocaleString()}</p>
                     <div className="text-right">
                       {inv.status === 'pending' && (
                         <button onClick={async () => {
                           await supabase.from('invoices').update({ status: 'awaiting_approval' }).eq('id', inv.id)
                           await loadAll()
                         }} className="text-xs text-blue-600 font-medium px-3 py-1.5 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200">
-                          Ã–deme YaptÄ±m
+                          �deme Yaptim
                         </button>
                       )}
                       {inv.status === 'awaiting_approval' && (
                         <span className="text-xs text-blue-500 font-medium">Onay bekleniyor</span>
                       )}
                       {inv.status === 'paid' && (
-                        <span className="text-xs text-emerald-600 font-medium">âœ“ Ã–dendi</span>
+                        <span className="text-xs text-emerald-600 font-medium">? �dendi</span>
                       )}
                     </div>
                   </div>
