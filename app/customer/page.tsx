@@ -248,7 +248,7 @@ const [branches, setBranches] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['leadler', 'ekip'])
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -1092,8 +1092,7 @@ return (
 
       {/* ── SIDEBAR ── */}
       <aside
-  className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-gray-950 ...`}>
-        {/* DataPilot Logo */}
+className={`${sidebarCollapsed ? 'w-16' : 'w-60'} fixed inset-y-0 left-0 z-40 flex flex-col bg-gray-950 transition-all duration-200 overflow-hidden`}>        {/* DataPilot Logo */}
        <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
   <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
   {!sidebarCollapsed && (
