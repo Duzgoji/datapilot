@@ -181,7 +181,7 @@ export default function FaturalarPage() {
       <div className="flex w-full flex-wrap gap-1 rounded-xl bg-gray-100 p-1 sm:w-fit">
         {([['musteri', 'MÃ¼ÅŸteri FaturalarÄ±'], ['bana-gelen', 'Bana Gelen Faturalar']] as const).map(([key, label]) => (
           <button key={key} onClick={() => setMainTab(key)}
-            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${mainTab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            className={`min-h-[40px] flex-1 rounded-lg px-4 py-2 text-xs font-medium transition-all sm:flex-none ${mainTab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
             {label}
             {key === 'bana-gelen' && myInvoices.filter(i => i.status === 'pending').length > 0 && (
               <span className="ml-1.5 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full">
@@ -201,7 +201,7 @@ export default function FaturalarPage() {
               <p className="text-xs text-gray-400 mt-0.5">TÃ¼m mÃ¼ÅŸterilerin fatura ve Ã¶deme loglarÄ±</p>
             </div>
             <button onClick={() => exportCSV(activeTab === 'faturalar' ? 'invoices' : 'logs')}
-              className="flex items-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-xl text-xs font-medium transition-colors">
+              className="flex min-h-[40px] items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 sm:self-auto">
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3.5 6l3 3 3-3M1.5 10.5h10" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
               CSV Ä°ndir
             </button>
@@ -228,18 +228,18 @@ export default function FaturalarPage() {
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="MÃ¼ÅŸteri ara..."
                 className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500" />
             </div>
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <select value={filterCustomer} onChange={e => setFilterCustomer(e.target.value)}
-                className="appearance-none pl-3 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
+                className="min-h-[40px] w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 pl-3 pr-8 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
                 <option value="all">TÃ¼m MÃ¼ÅŸteriler</option>
                 {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
               <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             {activeTab === 'faturalar' && (
-              <div className="relative">
+              <div className="relative w-full sm:w-auto">
                 <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-                  className="appearance-none pl-3 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
+                  className="min-h-[40px] w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 pl-3 pr-8 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
                   <option value="all">TÃ¼m Durumlar</option>
                   <option value="pending">Bekleyen</option>
                   <option value="awaiting_approval">Onay Bekliyor</option>
@@ -249,9 +249,9 @@ export default function FaturalarPage() {
                 <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
             )}
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <select value={filterPeriod} onChange={e => setFilterPeriod(e.target.value as any)}
-                className="appearance-none pl-3 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
+                className="min-h-[40px] w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 pl-3 pr-8 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
                 <option value="all">TÃ¼m Zamanlar</option>
                 <option value="30d">Son 30 GÃ¼n</option>
                 <option value="90d">Son 90 GÃ¼n</option>
@@ -260,12 +260,12 @@ export default function FaturalarPage() {
               <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             {filterPeriod === 'custom' && (
-              <div className="flex items-center gap-2">
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                 <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)}
-                  className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                  className="min-h-[40px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500" />
                 <span className="text-xs text-gray-400">â€”</span>
                 <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
-                  className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                  className="min-h-[40px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500" />
               </div>
             )}
           </div>
@@ -273,7 +273,7 @@ export default function FaturalarPage() {
           <div className="flex w-full flex-wrap gap-1 rounded-xl bg-gray-100 p-1 sm:w-fit">
             {([['faturalar', 'Faturalar'], ['log', 'Ã–deme GeÃ§miÅŸi']] as const).map(([key, label]) => (
               <button key={key} onClick={() => setActiveTab(key)}
-                className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${activeTab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                className={`min-h-[40px] flex-1 rounded-lg px-4 py-2 text-xs font-medium transition-all sm:flex-none ${activeTab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
                 {label}
                 {key === 'faturalar' && invoices.filter(i => i.status === 'pending' || i.status === 'awaiting_approval').length > 0 && (
                   <span className="ml-1.5 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full">

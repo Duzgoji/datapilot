@@ -522,21 +522,21 @@ const [branches, setBranches] = useState<any[]>([])
                 ))}
               </div>
 
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-gray-500">{leads.length} potansiyel mÃ¼ÅŸteri</p>
                 <button onClick={() => setShowAddLead(!showAddLead)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                  className="flex min-h-[40px] w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 sm:w-auto">
                   + Manuel Potansiyel MÃ¼ÅŸteri Ekle
                 </button>
               </div>
 
               {showAddLead && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="mb-4 flex items-center justify-between gap-3">
                     <h3 className="font-bold text-gray-900">Yeni Potansiyel MÃ¼ÅŸteri Ekle</h3>
-                    <button onClick={() => setShowAddLead(false)} className="text-gray-400 hover:text-gray-600">âœ•</button>
+                    <button onClick={() => setShowAddLead(false)} className="flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600">âœ•</button>
                   </div>
-                  <form onSubmit={handleAddLead} className="grid grid-cols-2 gap-4">
+                  <form onSubmit={handleAddLead} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">Ad Soyad *</label>
                       <input value={leadName} onChange={e => setLeadName(e.target.value)} required
@@ -587,19 +587,19 @@ const [branches, setBranches] = useState<any[]>([])
                         ))}
                       </select>
                     </div>
-                    <div className="col-span-2">
+                    <div className="sm:col-span-2">
                       <label className="block text-xs font-medium text-gray-600 mb-1">Not</label>
                       <textarea value={leadNote} onChange={e => setLeadNote(e.target.value)} rows={2}
                         className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Ek not..." />
                     </div>
-                    <div className="col-span-2 flex gap-3">
+                    <div className="flex flex-col gap-3 sm:col-span-2 sm:flex-row">
                       <button type="submit" disabled={saving}
-                        className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium">
+                        className="min-h-[40px] rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white">
                         {saving ? 'Ekleniyor...' : 'Potansiyel MÃ¼ÅŸteri Ekle'}
                       </button>
                       <button type="button" onClick={() => setShowAddLead(false)}
-                        className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">Ä°ptal</button>
+                        className="min-h-[40px] rounded-lg border border-gray-200 px-5 py-2.5 text-sm text-gray-600">Ä°ptal</button>
                     </div>
                   </form>
                 </div>
@@ -650,10 +650,10 @@ const [branches, setBranches] = useState<any[]>([])
           {activeTab === 'meta-ekip' && (
             <>
               <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <h3 className="font-bold text-gray-900">Åubeler</h3>
                   <button onClick={() => { setShowAddBranch(!showAddBranch); setInviteLink('') }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                    className="flex min-h-[40px] w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 sm:w-auto">
                     + Åube Ekle
                   </button>
                 </div>
@@ -663,10 +663,10 @@ const [branches, setBranches] = useState<any[]>([])
                     {inviteLink ? (
                       <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                         <p className="text-green-700 font-medium text-sm mb-2">âœ… Åube eklendi!</p>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row">
                           <input readOnly value={inviteLink} className="flex-1 bg-white border border-green-300 rounded-lg px-3 py-2 text-xs" />
                           <button onClick={() => { navigator.clipboard.writeText(inviteLink); alert('KopyalandÄ±!') }}
-                            className="bg-green-600 text-white px-3 py-2 rounded-lg text-xs">Kopyala</button>
+                            className="min-h-[40px] rounded-lg bg-green-600 px-3 py-2 text-xs text-white">Kopyala</button>
                         </div>
                       </div>
                     ) : (
@@ -749,10 +749,10 @@ const [branches, setBranches] = useState<any[]>([])
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <h3 className="font-bold text-gray-900">SatÄ±ÅŸÃ§Ä±lar</h3>
                   <button onClick={() => setShowAddMember(!showAddMember)}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                    className="flex min-h-[40px] w-full items-center justify-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 sm:w-auto">
                     + SatÄ±ÅŸÃ§Ä± Ekle
                   </button>
                 </div>

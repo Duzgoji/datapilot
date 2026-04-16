@@ -177,21 +177,21 @@ const SourceBadge = ({ source }: { source: string }) => (
 
 const Modal = ({ open, onClose, title, subtitle, children, size = 'md' }: any) => {
   if (!open) return null
-  const sizes: any = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-2xl' }
+  const sizes: any = { sm: 'sm:max-w-sm', md: 'sm:max-w-md', lg: 'sm:max-w-lg', xl: 'sm:max-w-2xl', '2xl': 'sm:max-w-4xl' }
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative bg-white rounded-2xl shadow-2xl w-full ${sizes[size]} z-10 max-h-[90vh] flex flex-col`}>
-        <div className="flex items-start justify-between p-6 border-b border-gray-100 flex-shrink-0">
+      <div className={`relative z-10 flex h-[100dvh] max-h-[100dvh] w-full flex-col bg-white shadow-2xl ${sizes[size]} rounded-none sm:h-auto sm:max-h-[90vh] sm:rounded-2xl`}>
+        <div className="sticky top-0 z-10 flex items-start justify-between border-b border-gray-100 bg-white px-4 py-4 sm:p-6 flex-shrink-0">
           <div>
             <h2 className="text-base font-semibold text-gray-900">{title}</h2>
             {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
           </div>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors ml-4 flex-shrink-0">
+          <button onClick={onClose} className="ml-4 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
           </button>
         </div>
-        <div className="overflow-y-auto flex-1">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
       </div>
     </div>
   )

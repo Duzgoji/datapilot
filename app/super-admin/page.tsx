@@ -32,21 +32,21 @@ const menuStructure = [
 
 const Modal = ({ open, onClose, title, subtitle, children, size = 'md' }: any) => {
   if (!open) return null
-  const sizes: any = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-2xl' }
+  const sizes: any = { sm: 'sm:max-w-sm', md: 'sm:max-w-md', lg: 'sm:max-w-lg', xl: 'sm:max-w-2xl' }
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative bg-white rounded-2xl shadow-2xl w-full ${sizes[size]} z-10 max-h-[90vh] flex flex-col`}>
-        <div className="flex items-start justify-between p-6 border-b border-gray-100 flex-shrink-0">
+      <div className={`relative z-10 flex h-[100dvh] max-h-[100dvh] w-full flex-col bg-white shadow-2xl ${sizes[size]} rounded-none sm:h-auto sm:max-h-[90vh] sm:rounded-2xl`}>
+        <div className="sticky top-0 z-10 flex items-start justify-between border-b border-gray-100 bg-white px-4 py-4 sm:p-6 flex-shrink-0">
           <div>
             <h2 className="text-base font-semibold text-gray-900">{title}</h2>
             {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
           </div>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 ml-4">
+          <button onClick={onClose} className="ml-4 flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100">
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
           </button>
         </div>
-        <div className="overflow-y-auto flex-1">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
       </div>
     </div>
   )
@@ -1076,10 +1076,10 @@ const advRes = await fetch('/api/get-advertisers', {
           {/* â”€â”€ REKLAMCI LÄ°STESÄ° â”€â”€ */}
           {activeTab === 'reklamci-listesi' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-gray-500">{filteredAdvertisers.length} reklamcÄ±</p>
-                <div className="flex gap-2">
-                  <Btn size="sm" variant="secondary" onClick={async () => {
+                <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
+                  <Btn size="sm" variant="secondary" className="min-h-[40px] flex-1 justify-center sm:flex-none" onClick={async () => {
                     if (!confirm('Auth\'daki tÃ¼m reklamcÄ±lar profiles tablosuna senkronize edilecek. Devam?')) return
                     const session = await supabase.auth.getSession()
                     const token = session.data.session?.access_token
@@ -1089,7 +1089,7 @@ const advRes = await fetch('/api/get-advertisers', {
                     alert(`${result.synced} reklamcÄ± senkronize edildi.`)
                     loadData()
                   }}>Senkronize Et</Btn>
-                  <Btn size="sm" onClick={() => setActiveTab('reklamci-ekle')} className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm">
+                  <Btn size="sm" onClick={() => setActiveTab('reklamci-ekle')} className="min-h-[40px] flex-1 justify-center bg-amber-500 hover:bg-amber-600 text-white shadow-sm sm:flex-none">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
                     ReklamcÄ± Ekle
                   </Btn>
@@ -2152,20 +2152,20 @@ else created++
 </Modal>
       {/* â”€â”€ ONBOARDING MODAL â”€â”€ */}
       {showOnboardingModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { if (onboardingStep === 4) { setShowOnboardingModal(false); resetOnboarding() } }} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg z-10 max-h-[90vh] flex flex-col">
-            <div className="flex items-start justify-between p-6 border-b border-gray-100 flex-shrink-0">
+          <div className="relative z-10 flex h-[100dvh] max-h-[100dvh] w-full max-w-none flex-col bg-white shadow-2xl rounded-none sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-2xl">
+            <div className="sticky top-0 z-10 flex items-start justify-between border-b border-gray-100 bg-white px-4 py-4 sm:p-6 flex-shrink-0">
               <div>
                 <h2 className="text-base font-semibold text-gray-900">Yeni Firma Onboarding</h2>
                 <p className="text-xs text-gray-400 mt-0.5">AdÄ±m {Math.min(onboardingStep, 4)} / 4</p>
               </div>
               <button onClick={() => { setShowOnboardingModal(false); resetOnboarding() }}
-                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400">
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100">
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
               </button>
             </div>
-            <div className="overflow-y-auto flex-1">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <OnboardingWizard
                 step={onboardingStep} setStep={setOnboardingStep}
                 obName={obName} setObName={setObName} obEmail={obEmail} setObEmail={setObEmail}
