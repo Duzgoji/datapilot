@@ -134,8 +134,8 @@ export default function WhatsAppConnect({ ownerId }: { ownerId: string }) {
             </svg>
           </div>
           <div>
-            <h3 className="font-bold text-gray-900">WhatsApp Business Ba?lant?s?</h3>
-            <p className="text-xs text-gray-500">WhatsApp mesajlar?n? otomatik lead olarak kaydedin</p>
+            <h3 className="font-bold text-gray-900">WhatsApp Business Bağlantısı</h3>
+            <p className="text-xs text-gray-500">WhatsApp mesajlarını otomatik lead olarak kaydedin</p>
           </div>
           {connection?.is_active && (
             <span className="ml-auto bg-green-100 text-green-700 text-xs font-medium px-3 py-1.5 rounded-full">
@@ -149,13 +149,13 @@ export default function WhatsAppConnect({ ownerId }: { ownerId: string }) {
             {!showForm ? (
               <div className="text-center py-4">
                 <p className="text-gray-500 text-sm mb-4">
-                  WhatsApp Business hesab?n?z? ba?layarak gelen mesajlar? otomatik lead olarak kaydedebilirsiniz.
+                  WhatsApp Business hesabınızı bağlayarak gelen mesajları otomatik lead olarak kaydedebilirsiniz.
                 </p>
                 <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-4 text-left">
                   <p className="text-amber-700 text-xs font-semibold mb-2">Gereksinimler</p>
                   <ul className="text-amber-600 text-xs space-y-1">
-                    <li>• Meta Business hesab?</li>
-                    <li>• WhatsApp Business API eri?imi</li>
+                    <li>- Meta Business hesabı</li>
+                    <li>- WhatsApp Business API erişimi</li>
                     <li>• Phone Number ID ve Access Token</li>
                   </ul>
                 </div>
@@ -163,7 +163,7 @@ export default function WhatsAppConnect({ ownerId }: { ownerId: string }) {
                   onClick={() => setShowForm(true)}
                   className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 mx-auto transition-colors"
                 >
-                  WhatsApp Ba?la
+                  WhatsApp Bağla
                 </button>
               </div>
             ) : (
@@ -173,7 +173,7 @@ export default function WhatsAppConnect({ ownerId }: { ownerId: string }) {
                   <input
                     value={phoneNumberId}
                     onChange={(e) => setPhoneNumberId(e.target.value)}
-                    placeholder="Meta'dan al?nan Phone Number ID"
+                    placeholder="Meta'dan alınan Phone Number ID"
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
@@ -192,14 +192,14 @@ export default function WhatsAppConnect({ ownerId }: { ownerId: string }) {
                   <p className="text-blue-600 text-xs font-mono bg-blue-100 px-2 py-1 rounded mt-1 break-all">
                     {typeof window !== 'undefined' ? window.location.origin : ''}/api/whatsapp/webhook
                   </p>
-                  <p className="text-blue-500 text-xs mt-1">Bu URL?yi WhatsApp Business API ayarlar?na ekleyin.</p>
+                  <p className="text-blue-500 text-xs mt-1">Bu URL'yi WhatsApp Business API ayarlarına ekleyin.</p>
                 </div>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowForm(false)}
                     className="flex-1 bg-white border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
                   >
-                    ?ptal
+                    İptal
                   </button>
                   <button
                     onClick={() => void handleSave()}
@@ -215,9 +215,9 @@ export default function WhatsAppConnect({ ownerId }: { ownerId: string }) {
         ) : (
           <div className="space-y-4">
             <div className="bg-green-50 rounded-xl p-4 border border-green-100">
-              <p className="text-green-700 text-sm font-medium">WhatsApp Business ba?l?</p>
+              <p className="text-green-700 text-sm font-medium">WhatsApp Business bağlı</p>
               <p className="text-green-600 text-xs mt-1">
-                Ba?lant? tarihi: {new Date(connection.connected_at || '').toLocaleDateString('tr-TR')}
+                Bağlantı tarihi: {new Date(connection.connected_at || "").toLocaleDateString("tr-TR")}
               </p>
               <p className="text-green-600 text-xs mt-1 font-mono">Phone ID: {connection.phone_number_id}</p>
             </div>
@@ -230,7 +230,7 @@ export default function WhatsAppConnect({ ownerId }: { ownerId: string }) {
             </div>
             <div className="pt-2 border-t border-gray-100">
               <button onClick={() => void handleDisconnect()} className="text-red-500 hover:text-red-700 text-xs font-medium">
-                Ba?lant?y? Kes
+                Bağlantıyı Kes
               </button>
             </div>
           </div>

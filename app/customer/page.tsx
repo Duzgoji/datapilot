@@ -1463,13 +1463,13 @@ return (
                   <div className="flex gap-1.5 flex-wrap">
                     {[
                       { key: 'all', label: 'Tümü', color: filterSource === 'all' ? 'bg-gray-800 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300' },
-                      { key: 'manuel', label: '✏️ Manuel', color: filterSource === 'manuel' ? 'bg-gray-700 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300' },
-                      { key: 'meta_form', label: 'g�?� Meta Form', color: filterSource === 'meta_form' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-200' },
-                      { key: 'whatsapp', label: 'g��� WhatsApp', color: filterSource === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-green-200' },
-                      { key: 'instagram_dm', label: 'g��� Instagram', color: filterSource === 'instagram_dm' ? 'bg-pink-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-pink-200' },
-                      { key: 'referral', label: 'g��� Referans', color: filterSource === 'referral' ? 'bg-amber-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-amber-200' },
-                      { key: 'website', label: 'g��� Web', color: filterSource === 'website' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-indigo-200' },
-                      { key: 'google_ads', label: 'g��� Google Ads', color: filterSource === 'google_ads' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-yellow-200' },
+                      { key: 'manuel', label: 'Manuel', color: filterSource === 'manuel' ? 'bg-gray-700 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300' },
+                      { key: 'meta_form', label: 'Meta Form', color: filterSource === 'meta_form' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-200' },
+                      { key: 'whatsapp', label: 'WhatsApp', color: filterSource === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-green-200' },
+                      { key: 'instagram_dm', label: 'Instagram', color: filterSource === 'instagram_dm' ? 'bg-pink-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-pink-200' },
+                      { key: 'referral', label: 'Referans', color: filterSource === 'referral' ? 'bg-amber-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-amber-200' },
+                      { key: 'website', label: 'Web', color: filterSource === 'website' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-indigo-200' },
+                      { key: 'google_ads', label: 'Google Ads', color: filterSource === 'google_ads' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-yellow-200' },
                     ].map(f => (
                       <button key={f.key} onClick={() => setFilterSource(f.key)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${f.color}`}>
@@ -1484,7 +1484,7 @@ return (
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 {filteredLeads.length === 0 ? (
                   <div className="p-16 text-center">
-                    <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">�?</div>
+                    <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-sm font-semibold text-gray-400">Yok</div>
                     <p className="text-gray-500 text-sm font-medium">Sonuç bulunamadı</p>
                     {(searchQuery || filterStatus !== 'all' || filterDate !== 'all' || filterSource !== 'all') && <button onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterDate('all'); setFilterSource('all') }} className="mt-2 text-xs text-indigo-600 hover:underline">Filtreleri temizle</button>}
                   </div>
@@ -1517,10 +1517,10 @@ return (
                       {/* Avatar + kaynak ikonu */}
                       <div className="relative flex-shrink-0 mt-0.5">
                         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center">
-                          <span className="text-indigo-600 text-sm font-semibold">{(lead.full_name || 'İ').charAt(0)}</span>
+                          <span className="text-indigo-600 text-sm font-semibold">{(lead.full_name || "I").charAt(0)}</span>
                         </div>
                         <span className="absolute -bottom-1 -right-1 text-xs leading-none">
-                          {lead.source === 'meta_form' ? 'g�?�' : lead.source === 'whatsapp' ? 'g���' : lead.source === 'instagram_dm' ? 'g���' : lead.source === 'referral' ? 'g���' : lead.source === 'website' ? 'g���' : lead.source === 'google_ads' ? 'g���' : '✏️'}                        </span>
+                          {lead.source === 'meta_form' ? 'MF' : lead.source === 'whatsapp' ? 'WA' : lead.source === 'instagram_dm' ? 'IG' : lead.source === 'referral' ? 'RF' : lead.source === 'website' ? 'WB' : lead.source === 'google_ads' ? 'GA' : 'MN'}                        </span>
                       </div>
 
                       {/* Ana bilgi */}
@@ -2158,8 +2158,8 @@ return (
     {
       key: 'wati',
       name: 'WATI',
-      logo: 'g���',
-      desc: 'En kolay kurulum, Türkiye\'de yaygın',
+      logo: 'WA',
+      desc: "En kolay kurulum, T\u00fcrkiye'de yayg\u0131n",
       price: '$49/ay',
       url: 'https://wati.io',
       apiLabel: 'WATI API Key',
@@ -2169,9 +2169,9 @@ return (
     {
       key: '360dialog',
       name: '360dialog',
-      logo: 'g���',
-      desc: 'Uygun fiyatlı, geliştiriciler için ideal',
-      price: '€5/numara/ay',
+      logo: '36',
+      desc: 'Uygun fiyatl\u0131, geli\u015ftiriciler i\u00e7in ideal',
+      price: 'EUR 5/numara/ay',
       url: 'https://360dialog.com',
       apiLabel: '360dialog API Key',
       apiPlaceholder: 'sk_...',
@@ -2180,9 +2180,9 @@ return (
     {
       key: 'twilio',
       name: 'Twilio',
-      logo: 'g���',
-      desc: 'En esnek, kullandığın kadar öde',
-      price: 'Kullandığın kadar',
+      logo: 'TW',
+      desc: 'En esnek, kulland\u0131\u011f\u0131n kadar \u00f6de',
+      price: 'Kulland\u0131\u011f\u0131n kadar',
       url: 'https://twilio.com',
       apiLabel: 'Twilio Auth Token',
       apiPlaceholder: 'AC...',
@@ -2191,9 +2191,9 @@ return (
     {
       key: 'messagebird',
       name: 'MessageBird',
-      logo: 'g���',
+      logo: 'MB',
       desc: 'Orta seviye, iyi dashboard',
-      price: 'Kullandığın kadar',
+      price: 'Kulland\u0131\u011f\u0131n kadar',
       url: 'https://messagebird.com',
       apiLabel: 'MessageBird API Key',
       apiPlaceholder: 'live_...',
@@ -2243,13 +2243,13 @@ return (
         <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
         <div className="relative">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-2xl">g���</div>
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-sm font-bold text-green-600">WA</div>
             <div>
-              <p className="font-bold text-lg">WhatsApp Bağlantısı</p>
-              <p className="text-green-100 text-sm">Kendi servis sağlayıcınızla bağlanın</p>
+              <p className="font-bold text-lg">WhatsApp Ba\u011flant\u0131s\u0131</p>
+              <p className="text-green-100 text-sm">Kendi servis sa\u011flay\u0131c\u0131n\u0131zla ba\u011flan\u0131n</p>
             </div>
           </div>
-          <p className="text-green-100 text-sm">WhatsApp'a gelen mesajlar otomatik olarak lead'e dönüşür. Servis ücretini doğrudan sağlayıcıya ödersiniz.</p>
+          <p className="text-green-100 text-sm">WhatsApp'a gelen mesajlar otomatik olarak lead'e d\u00f6n\u00fc\u015f\u00fcr. Servis \u00fccretini do\u011frudan sa\u011flay\u0131c\u0131ya \u00f6dersiniz.</p>
         </div>
       </div>
 
@@ -2260,13 +2260,13 @@ return (
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9l5 5 10-10" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-900">{selected?.name} Bağlandı</p>
+              <p className="text-sm font-semibold text-gray-900">{selected?.name} Ba\u011fland\u0131</p>
               <p className="text-xs text-emerald-600">WhatsApp entegrasyonu aktif</p>
             </div>
           </div>
           <div className="bg-gray-50 rounded-xl p-4 space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-400">Servis Sağlayıcı</p>
+              <p className="text-xs text-gray-400">Servis Sa\u011flay\u0131c\u0131</p>
               <p className="text-xs font-semibold text-gray-700">{selected?.name}</p>
             </div>
             <div className="flex items-center justify-between">
@@ -2305,20 +2305,20 @@ return (
             setWaConnected(false); setWaApiKey(''); setWaProvider('')
           }}
             className="w-full py-2.5 rounded-xl text-sm font-medium border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
-            Bağlantıyı Kes
+            Ba\u011flant\u0131y\u0131 Kes
           </button>
         </div>
       ) : (
         <div className="space-y-4">
 
-     {/* ADIM 1: Sağlayıcı seç */}
+     {/* ADIM 1: Sa\u011flay\u0131c\u0131 se\u00e7 */}
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 {[
-                  { num: 1, label: 'Sağlayıcı Seç' },
+                  { num: 1, label: 'Sa\u011flay\u0131c\u0131 Se\u00e7' },
                   { num: 2, label: 'API Key Gir' },
-                  { num: 3, label: 'Bağlan' },
+                  { num: 3, label: 'Ba\u011flan' },
                 ].map((step, i) => {
                   const currentStep = !waProvider ? 1 : !waApiKey.trim() ? 2 : 3
                   const done = step.num < currentStep
@@ -2326,7 +2326,7 @@ return (
                   return (
                     <div key={step.num} className="flex items-center gap-2">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${done ? 'bg-green-500 text-white' : active ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                        {done ? '✓' : step.num}
+                        {done ? 'OK' : step.num}
                       </div>
                       <span className={`text-xs font-medium ${active ? 'text-gray-900' : 'text-gray-400'}`}>{step.label}</span>
                       {i < 2 && <div className={`h-px w-8 ${done ? 'bg-green-400' : 'bg-gray-200'}`} />}
@@ -2339,7 +2339,7 @@ return (
             <div className="p-6">
               {!waProvider ? (
                 <div className="space-y-3">
-                  <p className="text-sm font-semibold text-gray-900 mb-4">Hangi servisi kullanıyorsunuz?</p>
+                  <p className="text-sm font-semibold text-gray-900 mb-4">Hangi servisi kullan\u0131yorsunuz?</p>
                   {providers.map(p => (
                     <button key={p.key} onClick={() => setWaProvider(p.key)}
                       className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-gray-100 hover:border-green-400 hover:bg-green-50/30 text-left transition-all group">
@@ -2673,8 +2673,8 @@ return (
                 {/* Header */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-base font-semibold text-gray-900">Kampanya Performansı</h2>
-                    {lastSync && <p className="text-xs text-gray-400 mt-0.5">Son güncelleme: {lastSync}</p>}
+                    <h2 className="text-base font-semibold text-gray-900">Kampanya Performans\u0131</h2>
+                    {lastSync && <p className="text-xs text-gray-400 mt-0.5">Son g\u00fcncelleme: {lastSync}</p>}
                   </div>
                   <div className="flex items-center gap-2">
                     {/* Periyot seçici */}
@@ -2692,20 +2692,20 @@ return (
                       <svg className={adSpendSyncing ? 'animate-spin' : ''} width="13" height="13" viewBox="0 0 13 13" fill="none">
                         <path d="M11 6.5A4.5 4.5 0 012.5 4M2 2v2.5H4.5M2 6.5a4.5 4.5 0 008.5 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      {adSpendSyncing ? 'Senkronize ediliyor...' : 'Şimdi Güncelle'}
+                      {adSpendSyncing ? 'Senkronize ediliyor...' : '\u015eimdi G\u00fcncelle'}
                     </button>
                   </div>
                 </div>
 
-                {/* Meta bağlı değilse uyarı */}
+                {/* Meta ba?l? de?ilse uyar? */}
                 {!metaConn?.access_token && (
                   <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 flex items-center gap-4">
-                    <span className="text-3xl">⚠️</span>
+                    <span className="text-3xl">??</span>
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">Meta hesabı bağlı değil</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Kampanya verilerini görmek için Meta hesabını bağla.</p>
+                      <p className="text-sm font-semibold text-gray-900">Meta hesab\u0131 ba\u011fl\u0131 de\u011fil</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Kampanya verilerini g\u00f6rmek i\u00e7in Meta hesab\u0131n\u0131 ba\u011fla.</p>
                       <button onClick={() => setActiveTab('meta-baglanti')}
-                        className="mt-2 text-xs text-blue-600 font-medium hover:underline">Meta Bağlantısına Git →</button>
+                        className="mt-2 text-xs text-blue-600 font-medium hover:underline">Meta Ba\u011flant\u0131s\u0131na Git -&gt;</button>
                     </div>
                   </div>
                 )}
@@ -2716,24 +2716,24 @@ return (
                     <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0" stroke="#3b82f6" strokeWidth="1.5"/><path d="M12 8v4l3 3" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/></svg>
                     </div>
-                    <p className="text-gray-600 text-sm font-medium">Henüz veri yok</p>
-                    <p className="text-gray-400 text-xs mt-1 mb-4">Meta hesabı bağlı. İlk veriyi çekmek için güncelle.</p>
+                    <p className="text-gray-600 text-sm font-medium">Hen\u00fcz veri yok</p>
+                    <p className="text-gray-400 text-xs mt-1 mb-4">Meta hesab\u0131 ba\u011fl\u0131. \u0130lk veriyi \u00e7ekmek i\u00e7in g\u00fcncelle.</p>
                     <button onClick={handleSyncAdSpend} disabled={adSpendSyncing}
                       className="px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-700 transition-colors font-medium">
-                      {adSpendSyncing ? 'Çekiliyor...' : 'Veriyi Çek'}
+                      {adSpendSyncing ? '\u00c7ekiliyor...' : 'Veriyi \u00c7ek'}
                     </button>
                   </div>
                 )}
 
-                {/* ROI & Özet kartlar */}
+                {/* ROI & ?zet kartlar */}
                 {adSpend.length > 0 && (
                   <>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                       {[
-                        { label: 'Toplam Harcama', value: `₺${totalSpend.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, sub: `${days} gün`, color: 'text-red-600', bg: 'from-red-50 to-white', border: 'border-red-100', icon: 'g���' },
-                        { label: 'Meta Geliri', value: `₺${metaRevenue.toLocaleString()}`, sub: `${metaSales.length} satış`, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100', icon: 'g���' },
-                        { label: 'ROI', value: `%${roi.toFixed(1)}`, sub: totalSpend > 0 ? (roi >= 0 ? 'Kârlı' : 'Zararlı') : '—', color: roi >= 0 ? 'text-emerald-600' : 'text-red-600', bg: roi >= 0 ? 'from-emerald-50 to-white' : 'from-red-50 to-white', border: roi >= 0 ? 'border-emerald-100' : 'border-red-100', icon: roi >= 0 ? 'g���' : 'g���' },
-                        { label: 'Potansiyel Müşteri Başı Maliyet', value: cpl > 0 ? `₺${cpl.toFixed(0)}` : '—', sub: `${metaLeads} meta potansiyel müşteri`, color: 'text-blue-600', bg: 'from-blue-50 to-white', border: 'border-blue-100', icon: 'g�?�' },
+                        { label: 'Toplam Harcama', value: `TL ${totalSpend.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, sub: `${days} g\u00fcn`, color: 'text-red-600', bg: 'from-red-50 to-white', border: 'border-red-100', icon: 'TL' },
+                        { label: 'Meta Geliri', value: `TL ${metaRevenue.toLocaleString()}`, sub: `${metaSales.length} sat\u0131\u015f`, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100', icon: 'TL' },
+                        { label: 'ROI', value: `%${roi.toFixed(1)}`, sub: totalSpend > 0 ? (roi >= 0 ? 'K\u00e2rl\u0131' : 'Zararl\u0131') : '-', color: roi >= 0 ? 'text-emerald-600' : 'text-red-600', bg: roi >= 0 ? 'from-emerald-50 to-white' : 'from-red-50 to-white', border: roi >= 0 ? 'border-emerald-100' : 'border-red-100', icon: 'ROI' },
+                        { label: 'Potansiyel M\u00fc\u015fteri Ba\u015f\u0131 Maliyet', value: cpl > 0 ? `TL ${cpl.toFixed(0)}` : '-', sub: `${metaLeads} meta potansiyel m\u00fc\u015fteri`, color: 'text-blue-600', bg: 'from-blue-50 to-white', border: 'border-blue-100', icon: 'PL' },
                      ].map((card: any) => (
                         <div key={card.label} className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-5 border ${card.border} hover:shadow-md transition-all`}>
                         <div className={`w-9 h-9 ${card.iconBg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
@@ -2744,12 +2744,12 @@ return (
 ))}
                     </div>
 
-                    {/* İkincil metrikler */}
+                    {/* ?kincil metrikler */}
                     <div className="grid grid-cols-3 gap-3">
                       {[
-                        { label: 'Toplam Gösterim', value: totalImpressions.toLocaleString(), icon: 'g���' },
-                        { label: 'Toplam Tıklama', value: totalClicks.toLocaleString(), icon: 'g���' },
-                        { label: 'Satış Başı Maliyet', value: cps > 0 ? `₺${cps.toFixed(0)}` : '—', icon: 'g���' },
+                        { label: 'Toplam G\u00f6sterim', value: totalImpressions.toLocaleString(), icon: 'GO' },
+                        { label: 'Toplam T\u0131klama', value: totalClicks.toLocaleString(), icon: 'TK' },
+                        { label: 'Sat\u0131\u015f Ba\u015f\u0131 Maliyet', value: cps > 0 ? `TL ${cps.toFixed(0)}` : '-', icon: 'SB' },
                       ].map(m => (
                         <div key={m.label} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3">
                           <span className="text-2xl">{m.icon}</span>
@@ -4300,14 +4300,14 @@ return (
           </div>
          <div className="max-h-40 overflow-y-auto space-y-2">
   {leadActivities.length === 0 ? (
-    <p className="text-xs text-gray-300 text-center py-2">Henüz not yok</p>
+    <p className="text-xs text-gray-300 text-center py-2">Hen\u00fcz not yok</p>
   ) : leadActivities.map(activity => (
     <div key={activity.id} className="flex gap-2 items-start bg-gray-50 rounded-xl px-3 py-2">
-      <span className="text-xs">{activity.type === 'note' ? 'g���' : '↔'}</span>
+      <span className="text-xs">{activity.type === 'note' ? 'NT' : 'DE'}</span>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-gray-700">{activity.content}</p>
         <p className="text-xs text-gray-400 mt-0.5">
-          {activity.profiles?.full_name} · {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          {activity.profiles?.full_name} - {new Date(activity.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
         </p>
       </div>
     </div>
@@ -4317,12 +4317,12 @@ return (
           <div className="flex gap-2">
             <a href={`tel:${selectedLead?.phone}`}
               className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
-              g��? Ara
+              Ara
             </a>
             <a href={`https://wa.me/90${selectedLead?.phone?.replace(/\D/g, '').replace(/^0/, '')}`}
               target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-green-50 text-green-700 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
-              g��� WhatsApp
+              WhatsApp
             </a>
           </div>
           <div>
@@ -4605,13 +4605,13 @@ return (
                 <div className="relative">
                   <select value={editLead.source || 'manuel'} onChange={e => setEditLead((prev: any) => ({ ...prev, source: e.target.value }))}
                     className="w-full appearance-none px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 pr-8">
-                    <option value="manuel">✏️ Manuel</option>
-                    <option value="meta_form">g�?� Meta Form</option>
-                    <option value="whatsapp">g��� WhatsApp</option>
-                    <option value="instagram_dm">g��� Instagram</option>
-                    <option value="referral">g��� Referans</option>
-                    <option value="website">g��� Web Sitesi</option>
-                    <option value="google_ads">g��� Google Ads</option>
+                    <option value="manuel">Manuel</option>
+                    <option value="meta_form">Meta Form</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="instagram_dm">Instagram</option>
+                    <option value="referral">Referans</option>
+                    <option value="website">Web Sitesi</option>
+                    <option value="google_ads">Google Ads</option>
                   </select>
                   <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </div>
@@ -4909,10 +4909,10 @@ return (
                 <div className="flex gap-3">
                   <Btn variant="secondary" className="flex-1" onClick={() => setShowPaymentReport(false)}>Kapat</Btn>
                   <Btn variant="success" className="flex-1" onClick={downloadPaymentExcel} disabled={paymentReportLoading}>
-                    {paymentReportLoading ? 'Hazırlanıyor...' : 'g��� Excel İndir'}
+                    {paymentReportLoading ? 'Haz\u0131rlan\u0131yor...' : 'Excel \u0130ndir'}
                   </Btn>
                   <Btn className="flex-1" onClick={downloadPaymentPDF} disabled={paymentReportLoading}>
-                    {paymentReportLoading ? 'Hazırlanıyor...' : 'g��� PDF İndir'}
+                    {paymentReportLoading ? 'Haz\u0131rlan\u0131yor...' : 'PDF \u0130ndir'}
                   </Btn>
                 </div>
               </>
@@ -4921,49 +4921,49 @@ return (
         </div>
       </Modal>
       {/* ── RAPOR ── */}
-      <Modal open={showReportPanel} onClose={() => setShowReportPanel(false)} title="Rapor İndir" subtitle="Filtreleri ayarlayın ve indirin">
+      <Modal open={showReportPanel} onClose={() => setShowReportPanel(false)} title="Rapor \u0130ndir" subtitle="Filtreleri ayarlay\u0131n ve indirin">
         <div className="p-6 space-y-5">
-          <Select label="Dönem" value={reportPeriod} onChange={(e: any) => setReportPeriod(e.target.value)}>
-            <option value="today">Bugün</option>
+          <Select label="D\u00f6nem" value={reportPeriod} onChange={(e: any) => setReportPeriod(e.target.value)}>
+            <option value="today">Bug\u00fcn</option>
             <option value="this_week">Bu Hafta</option>
             <option value="this_month">Bu Ay</option>
-            <option value="last_month">Geçen Ay</option>
-            <option value="custom">Özel Tarih Aralığı</option>
+            <option value="last_month">Ge\u00e7en Ay</option>
+            <option value="custom">\u00d6zel Tarih Aral\u0131\u011f\u0131</option>
           </Select>
           {reportPeriod === 'custom' && (
             <div className="grid grid-cols-2 gap-3 bg-indigo-50 rounded-xl p-4">
-              <Input label="Başlangıç" type="date" value={reportStartDate} onChange={(e: any) => setReportStartDate(e.target.value)} />
-              <Input label="Bitiş" type="date" value={reportEndDate} onChange={(e: any) => setReportEndDate(e.target.value)} />
+              <Input label="Ba\u015flang\u0131\u00e7" type="date" value={reportStartDate} onChange={(e: any) => setReportStartDate(e.target.value)} />
+              <Input label="Biti\u015f" type="date" value={reportEndDate} onChange={(e: any) => setReportEndDate(e.target.value)} />
             </div>
           )}
           <Select label="Durum Filtresi" value={reportStatus} onChange={(e: any) => setReportStatus(e.target.value)}>
-            <option value="all">Tüm Durumlar</option>
+            <option value="all">T\u00fcm Durumlar</option>
             {Object.entries(STATUS_CONFIG).map(([k, v]: any) => <option key={k} value={k}>{v.label}</option>)}
           </Select>
           <div>
             <p className="text-xs font-medium text-gray-500 mb-2">Format</p>
             <div className="grid grid-cols-2 gap-3">
-              {[{ key: 'excel', label: 'Excel', icon: 'g���', ext: '.xlsx' }, { key: 'pdf', label: 'PDF', icon: 'g���', ext: '.pdf' }].map(f => (
+              {[{ key: 'excel', label: 'Excel', icon: 'XL', ext: '.xlsx' }, { key: 'pdf', label: 'PDF', icon: 'PD', ext: '.pdf' }].map(f => (
                 <button key={f.key} onClick={() => setReportFormat(f.key)}
                   className={`p-4 rounded-xl border-2 text-left transition-all ${reportFormat === f.key ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'}`}>
                   <span className="text-xl block mb-1">{f.icon}</span>
                   <p className={`text-sm font-semibold ${reportFormat === f.key ? 'text-indigo-700' : 'text-gray-700'}`}>{f.label}</p>
-                  <p className="text-xs text-gray-400">{f.ext} dosyası</p>
+                  <p className="text-xs text-gray-400">{f.ext} dosyas\u0131</p>
                 </button>
               ))}
             </div>
           </div>
           <div className="bg-gradient-to-r from-indigo-50 to-violet-50 rounded-xl p-4 flex items-center justify-between border border-indigo-100">
             <div>
-              <p className="text-xs text-gray-500">Seçilen kriterlere göre</p>
+              <p className="text-xs text-gray-500">Se\u00e7ilen kriterlere g\u00f6re</p>
               <p className="text-xl font-bold text-indigo-600 mt-0.5">{getReportLeads().length} <span className="text-sm font-normal text-gray-500">lead</span></p>
             </div>
-            <span className="text-3xl">{reportFormat === 'excel' ? 'g���' : 'g���'}</span>
+            <span className="text-3xl">{reportFormat === 'excel' ? 'XL' : 'PD'}</span>
           </div>
           <div className="flex gap-3">
-            <Btn variant="secondary" className="flex-1" onClick={() => setShowReportPanel(false)}>İptal</Btn>
+            <Btn variant="secondary" className="flex-1" onClick={() => setShowReportPanel(false)}>\u0130ptal</Btn>
             <Btn variant="success" className="flex-1" onClick={reportFormat === 'excel' ? downloadExcel : downloadPDF} disabled={reportLoading || getReportLeads().length === 0}>
-              {reportLoading ? 'Hazırlanıyor...' : `${reportFormat === 'excel' ? 'g���' : 'g���'} İndir`}
+              {reportLoading ? 'Haz\u0131rlan\u0131yor...' : `${reportFormat === 'excel' ? 'Excel' : 'PDF'} \u0130ndir`}
             </Btn>
           </div>
         </div>

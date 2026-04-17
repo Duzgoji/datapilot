@@ -12,15 +12,15 @@ const menuStructure = [
   {
     key: 'meta', label: 'Meta Reklam', icon: '?', children: [
       { key: 'meta-kampanyalar', label: 'Kampanyalar' },
-      { key: 'meta-leadformlar', label: 'Potansiyel M?teri Formlar?' },
-      { key: 'meta-leadler', label: 'Potansiyel M?teri Y?netimi' },
+      { key: 'meta-leadformlar', label: 'Potansiyel Müşteri Formları' },
+      { key: 'meta-leadler', label: 'Potansiyel Müşteri Yönetimi' },
       { key: 'meta-analitik', label: 'Analitik & Raporlar' },
-      { key: 'meta-ekip', label: 'Ekip & Sat?lar' },
+      { key: 'meta-ekip', label: 'Ekip & Satışlar' },
     ]
   },
   {
     key: 'veri', label: 'Veri Merkezi', icon: '?', children: [
-      { key: 'veri-yukle', label: 'Veri Y?kle' },
+      { key: 'veri-yukle', label: 'Veri Yükle' },
       { key: 'veri-setlerim', label: 'Veri Setlerim' },
       { key: 'veri-analiz', label: 'Analiz' },
       { key: 'veri-raporlar', label: 'Raporlar' },
@@ -31,10 +31,10 @@ const menuStructure = [
 
 const STATUS_LABELS: any = {
   new: { label: 'Yeni', color: 'bg-blue-100 text-blue-700' },
-  called: { label: 'Arand?', color: 'bg-yellow-100 text-yellow-700' },
+  called: { label: 'Arandı', color: 'bg-yellow-100 text-yellow-700' },
   appointment_scheduled: { label: 'Randevu', color: 'bg-purple-100 text-purple-700' },
-  procedure_done: { label: 'Sat?', color: 'bg-green-100 text-green-700' },
-  cancelled: { label: '?ptal', color: 'bg-red-100 text-red-700' },
+  procedure_done: { label: 'Satış', color: 'bg-green-100 text-green-700' },
+  cancelled: { label: 'İptal', color: 'bg-red-100 text-red-700' },
 }
 
 const SOURCE_LABELS: any = {
@@ -783,13 +783,13 @@ const [branches, setBranches] = useState<any[]>([])
                           placeholder="satis@email.com" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">?ifre *</label>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Şifre *</label>
                         <input type="password" value={memberPassword} onChange={e => setMemberPassword(e.target.value)} required
                           className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="En az 6 karakter" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Prim Oran? (%)</label>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Prim Oranı (%)</label>
                         <input type="number" value={memberCommission} onChange={e => setMemberCommission(e.target.value)}
                           className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="5" />
@@ -797,10 +797,10 @@ const [branches, setBranches] = useState<any[]>([])
                       <div className="col-span-2 flex gap-3">
                         <button type="submit" disabled={saving}
                           className="bg-purple-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium">
-                          {saving ? 'Ekleniyor...' : 'Sat? Ekle'}
+                          {saving ? 'Ekleniyor...' : 'Satış Ekle'}
                         </button>
                         <button type="button" onClick={() => setShowAddMember(false)}
-                          className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">?ptal</button>
+                          className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">İptal</button>
                       </div>
                     </form>
                   </div>
@@ -810,7 +810,7 @@ const [branches, setBranches] = useState<any[]>([])
                   {teamMembers.length === 0 ? (
                     <div className="p-10 text-center">
                       <span className="text-3xl mb-2 block">?</span>
-                      <p className="text-gray-500 text-sm">Hen?z sat? yok.</p>
+                      <p className="text-gray-500 text-sm">Henüz satış yok.</p>
                     </div>
                   ) : teamMembers.map(m => {
                     const memberLeads = leads.filter(l => l.assigned_to === m.user_id)
@@ -825,11 +825,11 @@ const [branches, setBranches] = useState<any[]>([])
                           </div>
                           <div>
                             <p className="font-semibold text-gray-900 text-sm">{m.profiles?.full_name}</p>
-                            <p className="text-xs text-gray-500">{m.branches?.branch_name} ? %{m.commission_rate} prim</p>
+                            <p className="text-xs text-gray-500">{m.branches?.branch_name} - %{m.commission_rate} prim</p>
                             <div className="flex gap-2 mt-1">
-                              <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{memberLeads.length} potansiyel m?teri</span>
-                              <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">{memberSales.length} sat?</span>
-                              <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">?{commission.toLocaleString()} prim</span>
+                              <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{memberLeads.length} potansiyel müşteri</span>
+                              <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">{memberSales.length} satış</span>
+                              <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">TL {commission.toLocaleString()} prim</span>
                             </div>
                           </div>
                         </div>
@@ -850,28 +850,28 @@ const [branches, setBranches] = useState<any[]>([])
             <MetaConnect ownerId={tenantId || profile?.id} />
           )}
 
-          {/* ANAL?T?K */}
+          {/* ANALİTİK */}
           {activeTab === 'meta-analitik' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
               <span className="text-5xl mb-4 block">?</span>
               <h3 className="font-bold text-gray-900 mb-2">Analitik & Raporlar</h3>
-              <p className="text-gray-500 text-sm mb-6">T?m verilerinizi analiz edin, AI raporu olu?turun</p>
+              <p className="text-gray-500 text-sm mb-6">Tüm verilerinizi analiz edin, AI raporu oluşturun</p>
               <button onClick={() => router.push('/customer/analytics')}
                 className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-medium">
-                Analitik Sayfas?na Git
+                Analitik Sayfasına Git
               </button>
             </div>
           )}
 
-          {/* VER? Y?KLE */}
+          {/* VERİ YÜKLE */}
           {activeTab === 'veri-yukle' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
               <span className="text-5xl mb-4 block">?</span>
               <h3 className="font-bold text-gray-900 mb-2">Veri Merkezi</h3>
-              <p className="text-gray-500 text-sm mb-6">Excel dosyan?z? y?kleyerek leadlerinizi sisteme aktar?n</p>
+              <p className="text-gray-500 text-sm mb-6">Excel dosyanızı yükleyerek leadlerinizi sisteme aktarın</p>
               <button onClick={() => router.push('/customer/upload')}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium">
-                Veri Y?kleme Sayfas?na Git
+                Veri Yükleme Sayfasına Git
               </button>
             </div>
           )}
@@ -881,7 +881,7 @@ const [branches, setBranches] = useState<any[]>([])
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
               <span className="text-5xl mb-4 block">?</span>
               <h3 className="font-bold text-gray-900 mb-2">{getPageTitle()}</h3>
-              <p className="text-gray-500 text-sm">Bu mod?l yak?nda eklenecek.</p>
+              <p className="text-gray-500 text-sm">Bu modül yakında eklenecek.</p>
             </div>
           )}
 
