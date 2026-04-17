@@ -122,7 +122,7 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
   }
 
   async function handleDisconnect() {
-    if (!confirm('Meta baglantisini kesmek istediginize emin misiniz?')) return
+    if (!confirm('Meta ba?lant?s?n? kesmek istedi?inize emin misiniz?')) return
     const tenant = await fetchTenantContext(ownerId)
     logTenantWriteUsage(tenant, 'meta_connect', 'meta_connection')
     const { error } = await supabase
@@ -173,12 +173,12 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
             <span className="text-white font-bold text-sm">f</span>
           </div>
           <div>
-            <h3 className="font-bold text-gray-900">Meta Reklam Baglantisi</h3>
-            <p className="text-xs text-gray-500">Facebook ve Instagram reklam hesabinizi baglayin</p>
+            <h3 className="font-bold text-gray-900">Meta Reklam Bağlantısı</h3>
+            <p className="text-xs text-gray-500">Facebook ve Instagram reklam hesabınızı bağlayın</p>
           </div>
           {connection?.is_active && (
             <span className="ml-auto bg-green-100 text-green-700 text-xs font-medium px-3 py-1.5 rounded-full">
-              Bagli
+              Bağlı
             </span>
           )}
         </div>
@@ -186,29 +186,29 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
         {!connection?.is_active ? (
           <div className="text-center py-6">
             <p className="text-gray-500 text-sm mb-6">
-              Meta reklam hesabinizi baglayarak lead formlarindan gelen verileri otomatik cekebilirsiniz.
+              Meta reklam hesabınızı bağlayarak lead formlarından gelen verileri otomatik çekebilirsiniz.
             </p>
             <button
               onClick={() => void handleConnect()}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 mx-auto"
             >
               <span className="text-lg">f</span>
-              Meta ile Baglan
+              Meta ile Bağlan
             </button>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="bg-green-50 rounded-xl p-4">
-              <p className="text-green-700 text-sm font-medium">Meta hesabi bagli</p>
+              <p className="text-green-700 text-sm font-medium">Meta hesabı bağlı</p>
               <p className="text-green-600 text-xs mt-1">
-                Baglanti tarihi: {new Date(connection.connected_at || '').toLocaleDateString('tr-TR')}
+                Bağlantı tarihi: {new Date(connection.connected_at || '').toLocaleDateString('tr-TR')}
               </p>
             </div>
 
             {connection.ad_accounts && connection.ad_accounts.length > 0 && (
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-2">
-                  Reklam Hesabi Secin ({connection.ad_accounts.length} hesap bulundu)
+                  Reklam Hesabı Seçin ({connection.ad_accounts.length} hesap bulundu)
                 </label>
                 <div className="flex gap-2">
                   <select
@@ -216,7 +216,7 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
                     onChange={(e) => setSelectedAccount(e.target.value)}
                     className="flex-1 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Hesap secin...</option>
+                    <option value="">Hesap seçin...</option>
                     {connection.ad_accounts.map((account) => (
                       <option key={account.id} value={account.id}>
                         {account.name} ({account.account_id})
@@ -241,7 +241,7 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
 
             <div className="pt-2 border-t border-gray-100">
               <button onClick={() => void handleDisconnect()} className="text-red-500 hover:text-red-700 text-xs font-medium">
-                Baglantiyi Kes
+                Bağlantıyı Kes
               </button>
             </div>
           </div>
@@ -249,9 +249,9 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
       </div>
 
       <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-        <p className="text-blue-700 text-xs font-medium mb-1">Nasil calisir?</p>
+        <p className="text-blue-700 text-xs font-medium mb-1">Nasıl çalışır?</p>
         <p className="text-blue-600 text-xs">
-          Meta hesabinizi bagladiktan sonra reklam hesabinizi secin. Lead formlarindan gelen veriler otomatik olarak sisteme aktarilir.
+          Meta hesabınızı bağladıktan sonra reklam hesabınızı seçin. Lead formlarından gelen veriler otomatik olarak sisteme aktarılır.
         </p>
       </div>
     </div>

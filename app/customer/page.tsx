@@ -526,7 +526,7 @@ const loadNotifications = async () => {
     // Yeni şifreyi kaydet
     const { error } = await supabase.auth.updateUser({ password: settingsNewPassword })
     if (error) setPasswordMsg({ type: 'error', text: 'Hata: ' + error.message })
-    else { setPasswordMsg({ type: 'success', text: '�?ifre güncellendi!' }); setSettingsOldPassword(''); setSettingsNewPassword(''); setSettingsNewPassword2('') }
+    else { setPasswordMsg({ type: 'success', text: 'Şifre güncellendi!' }); setSettingsOldPassword(''); setSettingsNewPassword(''); setSettingsNewPassword2('') }
     setTimeout(() => setPasswordMsg(null), 3000)
   }
 
@@ -890,9 +890,9 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
     const XLSX = await import('xlsx')
     const agentNames = teamMembers.filter(m => m.role === 'agent' || m.role === 'team').map(m => m.profiles?.full_name || '').filter(Boolean)
     const ws = XLSX.utils.aoa_to_sheet([
-      ['Ad Soyad', 'Telefon', 'E-posta', 'Kaynak', 'Not', '�?ube Adı', 'Satışçı'],
-      ['Ahmet Yılmaz', '05321234567', 'ahmet@email.com', 'manuel', 'Instagram reklamından geldi', branches[0]?.branch_name || 'Merkez �?ube', agentNames[0] || ''],
-      ['Fatma Kaya', '05431234567', '', 'referral', 'Referans müşteri', branches[0]?.branch_name || 'Merkez �?ube', ''],
+      ['Ad Soyad', 'Telefon', 'E-posta', 'Kaynak', 'Not', 'Şube Adı', 'Satışçı'],
+      ['Ahmet Yılmaz', '05321234567', 'ahmet@email.com', 'manuel', 'Instagram reklamından geldi', branches[0]?.branch_name || 'Merkez Şube', agentNames[0] || ''],
+      ['Fatma Kaya', '05431234567', '', 'referral', 'Referans müşteri', branches[0]?.branch_name || 'Merkez Şube', ''],
       ['', '', '', '', '', '', ''],
       ['Geçerli Kaynak Değerleri:', 'manuel', 'referral', 'website', 'whatsapp', 'instagram_dm', ''],
       ['Satışçı Adları:', ...agentNames.slice(0, 5), ''],
@@ -952,7 +952,7 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
       const fullName = String(row['Ad Soyad'] || row['ad soyad'] || row['Ad'] || '').trim()
       const phone = String(row['Telefon'] || row['telefon'] || '').trim()
       if (!fullName && !phone) { errors.push(`Satır ${i + 2}: Ad ve telefon boş, atlandı`); continue }
-      const branchRaw = String(row['�?ube Adı'] || row['sube adi'] || '').toLowerCase().trim()
+      const branchRaw = String(row['Şube Adı'] || row['sube adi'] || '').toLowerCase().trim()
       const branchId = branchMap[branchRaw] || branches[0]?.id || null
       const source = String(row['Kaynak'] || row['kaynak'] || 'excel_import').trim()
       const note = String(row['Not'] || row['not'] || '').trim()
@@ -1345,10 +1345,10 @@ return (
               {/* Stat cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                 { label: 'Aktif Potansiyel Müşteri', value: leads.filter(l => l.status === 'new' || l.status === 'called').length, sub: 'Yeni + Arandı', color: 'text-blue-600', border: 'border-blue-100', gradient: 'from-blue-50 to-white', iconBg: 'bg-blue-100', icon: '�?', tab: 'leadler-liste' },
+                 { label: 'Aktif Potansiyel Müşteri', value: leads.filter(l => l.status === 'new' || l.status === 'called').length, sub: 'Yeni + Arandı', color: 'text-blue-600', border: 'border-blue-100', gradient: 'from-blue-50 to-white', iconBg: 'bg-blue-100', icon: '?', tab: 'leadler-liste' },
 { label: 'Randevu', value: leads.filter(l => l.status === 'appointment_scheduled').length, sub: 'Bekleyen randevu', color: 'text-violet-600', border: 'border-violet-100', gradient: 'from-violet-50 to-white', iconBg: 'bg-violet-100', icon: '◐', tab: 'leadler-liste' },
 { label: 'Toplam Satış', value: totalSales, sub: `₺${totalRevenue.toLocaleString()}`, color: 'text-emerald-600', border: 'border-emerald-100', gradient: 'from-emerald-50 to-white', iconBg: 'bg-emerald-100', icon: '◉', tab: 'leadler-liste' },
-{ label: '�?ubeler', value: branches.length, sub: `${teamMembers.length} ekip üyesi`, color: 'text-orange-600', border: 'border-orange-100', gradient: 'from-orange-50 to-white', iconBg: 'bg-orange-100', icon: '◈', tab: 'ekip-sube' },
+{ label: 'Şubeler', value: branches.length, sub: `${teamMembers.length} ekip üyesi`, color: 'text-orange-600', border: 'border-orange-100', gradient: 'from-orange-50 to-white', iconBg: 'bg-orange-100', icon: '◈', tab: 'ekip-sube' },
                 ].map((card: any) => (
   <div key={card.label} onClick={() => setActiveTab(card.tab)} className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-5 border ${card.border} hover:shadow-md transition-all cursor-pointer`}>
                     <div className={`w-9 h-9 ${card.iconBg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
@@ -1670,20 +1670,20 @@ return (
             <div className="space-y-4">
             <div className="flex items-center justify-between">
   <div>
-    <h2 className="text-base font-semibold text-gray-900">�?ubeler</h2>
+    <h2 className="text-base font-semibold text-gray-900">Şubeler</h2>
     <p className="text-xs text-gray-400 mt-0.5">{branches.length} şube</p>
   </div>
   <button onClick={() => setShowAddBranch(true)}
     className="flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm">
     <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
-    �?ube Ekle
+    Şube Ekle
   </button>
 </div>
               {branchInviteLink && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
                   <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 text-sm">✓</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-emerald-800">�?ube oluşturuldu!</p>
+                    <p className="text-sm font-medium text-emerald-800">Şube oluşturuldu!</p>
                     <p className="text-xs text-emerald-600 truncate mt-0.5">{branchInviteLink}</p>
                   </div>
                   <button onClick={() => navigator.clipboard.writeText(branchInviteLink)} className="text-xs text-emerald-700 font-medium hover:text-emerald-900 bg-emerald-100 hover:bg-emerald-200 px-3 py-1.5 rounded-lg transition-colors flex-shrink-0">Kopyala</button>
@@ -2599,12 +2599,12 @@ return (
             <span className="text-2xl">g���</span>
             <div>
               <p className="text-sm font-semibold text-gray-900">API Entegrasyonu Yakında</p>
-              <p className="text-xs text-gray-500 mt-0.5">Google Ads API entegrasyonu hazırlanıyor. �?imdilik demo bağlantısını deneyebilirsiniz.</p>
+              <p className="text-xs text-gray-500 mt-0.5">Google Ads API entegrasyonu hazırlanıyor. Şimdilik demo bağlantısını deneyebilirsiniz.</p>
             </div>
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-gray-700 mb-3">�?u an ne yapabilirsiniz?</p>
+            <p className="text-sm font-semibold text-gray-700 mb-3">Şu an ne yapabilirsiniz?</p>
             <div className="space-y-2">
               {[
                 { icon: '✏️', text: 'Lead eklerken kaynak olarak "Google Ads" seçin' },
@@ -2692,7 +2692,7 @@ return (
                       <svg className={adSpendSyncing ? 'animate-spin' : ''} width="13" height="13" viewBox="0 0 13 13" fill="none">
                         <path d="M11 6.5A4.5 4.5 0 012.5 4M2 2v2.5H4.5M2 6.5a4.5 4.5 0 008.5 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      {adSpendSyncing ? 'Senkronize ediliyor...' : '�?imdi Güncelle'}
+                      {adSpendSyncing ? 'Senkronize ediliyor...' : 'Şimdi Güncelle'}
                     </button>
                   </div>
                 </div>
@@ -3114,7 +3114,7 @@ return (
                 {branches.length > 1 && (
                   <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-100">
-                      <h3 className="font-semibold text-gray-900">�?ube Karşılaştırması</h3>
+                      <h3 className="font-semibold text-gray-900">Şube Karşılaştırması</h3>
                     </div>
                     <div className="divide-y divide-gray-50">
                       {branchPerf.sort((a, b) => b.sales - a.sales).map((b, i) => (
@@ -3650,7 +3650,7 @@ return (
                           <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[160px]">Ad Soyad</th>
                           <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[140px]">Telefon</th>
                           <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[135px]">Kaynak</th>
-                          <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[130px]">�?ube</th>
+                          <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[130px]">Şube</th>
                           <th className="px-2 py-2.5 text-left text-xs font-semibold text-gray-400 min-w-[150px]">Not</th>
                           <th className="px-2 py-2.5 w-8"></th>
                         </tr>
@@ -3776,7 +3776,7 @@ return (
                         <p className="text-sm font-semibold text-gray-900">1. �?ablonu İndir</p>
                         <p className="text-xs text-gray-400 mt-0.5">Sütun başlıkları hazır, sadece verilerini yapıştır</p>
                         <div className="flex flex-wrap gap-1.5 mt-2">
-                          {['Ad Soyad', 'Telefon', 'E-posta', 'Kaynak', 'Not', '�?ube Adı'].map(col => (
+                          {['Ad Soyad', 'Telefon', 'E-posta', 'Kaynak', 'Not', 'Şube Adı'].map(col => (
                             <span key={col} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-medium">{col}</span>
                           ))}
                         </div>
@@ -4141,13 +4141,13 @@ return (
                 </div>
               </div>
 
-              {/* �?ifre Değiştir */}
+              {/* Şifre Değiştir */}
               <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                <h3 className="font-semibold text-gray-900 mb-5">�?ifre Değiştir</h3>
+                <h3 className="font-semibold text-gray-900 mb-5">Şifre Değiştir</h3>
                 <div className="space-y-4">
-                  <Input label="Mevcut �?ifre" type="password" value={settingsOldPassword} onChange={(e: any) => setSettingsOldPassword(e.target.value)} placeholder="Mevcut şifreniz" />
-                  <Input label="Yeni �?ifre" type="password" value={settingsNewPassword} onChange={(e: any) => setSettingsNewPassword(e.target.value)} placeholder="En az 6 karakter" />
-                  <Input label="Yeni �?ifre (Tekrar)" type="password" value={settingsNewPassword2} onChange={(e: any) => setSettingsNewPassword2(e.target.value)} placeholder="�?ifreyi tekrar girin" />
+                  <Input label="Mevcut Şifre" type="password" value={settingsOldPassword} onChange={(e: any) => setSettingsOldPassword(e.target.value)} placeholder="Mevcut şifreniz" />
+                  <Input label="Yeni Şifre" type="password" value={settingsNewPassword} onChange={(e: any) => setSettingsNewPassword(e.target.value)} placeholder="En az 6 karakter" />
+                  <Input label="Yeni Şifre (Tekrar)" type="password" value={settingsNewPassword2} onChange={(e: any) => setSettingsNewPassword2(e.target.value)} placeholder="Şifreyi tekrar girin" />
                 </div>
 
                 {passwordMsg && (
@@ -4158,7 +4158,7 @@ return (
 
                 <div className="flex justify-end mt-5">
                   <Btn onClick={handleChangePassword} disabled={!settingsOldPassword || !settingsNewPassword || !settingsNewPassword2}>
-                    �?ifreyi Güncelle
+                    Şifreyi Güncelle
                   </Btn>
                 </div>
               </div>
@@ -4189,9 +4189,9 @@ return (
       {/* ─────────────────── MODALS ─────────────────────── */}
 
       {/* ── �?UBE EKLE ── */}
-      <Modal open={showAddBranch} onClose={() => setShowAddBranch(false)} title="Yeni �?ube" subtitle="�?ube bilgilerini girin">
+      <Modal open={showAddBranch} onClose={() => setShowAddBranch(false)} title="Yeni Şube" subtitle="Şube bilgilerini girin">
         <form onSubmit={handleAddBranch} className="p-6 space-y-4">
-          <Input label="�?ube Adı *" value={branchName} onChange={(e: any) => setBranchName(e.target.value)} required placeholder="İstanbul �?ubesi" />
+          <Input label="Şube Adı *" value={branchName} onChange={(e: any) => setBranchName(e.target.value)} required placeholder="İstanbul Şubesi" />
           <div className="grid grid-cols-2 gap-4">
             <Input label="İletişim Kişisi" value={branchContact} onChange={(e: any) => setBranchContact(e.target.value)} placeholder="Ad Soyad" />
             <Input label="E-posta" type="email" value={branchEmail} onChange={(e: any) => setBranchEmail(e.target.value)} placeholder="sube@email.com" />
@@ -4205,7 +4205,7 @@ return (
           </div>
           <div className="flex gap-3 pt-2">
             <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddBranch(false)}>İptal</Btn>
-            <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Oluşturuluyor...' : '�?ube Oluştur'}</Btn>
+            <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Oluşturuluyor...' : 'Şube Oluştur'}</Btn>
           </div>
         </form>
       </Modal>
@@ -4226,14 +4226,14 @@ return (
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input label="Ad Soyad *" value={memberName} onChange={(e: any) => setMemberName(e.target.value)} required placeholder="Ad Soyad" />
-            <Select label="�?ube *" value={memberBranch} onChange={(e: any) => setMemberBranch(e.target.value)} required>
-              <option value="">�?ube seçin...</option>
+            <Select label="Şube *" value={memberBranch} onChange={(e: any) => setMemberBranch(e.target.value)} required>
+              <option value="">Şube seçin...</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
             </Select>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input label="E-posta *" type="email" value={memberEmail} onChange={(e: any) => setMemberEmail(e.target.value)} required placeholder="satis@email.com" />
-            <Input label="�?ifre *" type="password" value={memberPassword} onChange={(e: any) => setMemberPassword(e.target.value)} required placeholder="En az 6 karakter" />
+            <Input label="Şifre *" type="password" value={memberPassword} onChange={(e: any) => setMemberPassword(e.target.value)} required placeholder="En az 6 karakter" />
           </div>
           <Input label="Prim Oranı (%)" type="number" value={memberCommission} onChange={(e: any) => setMemberCommission(e.target.value)} placeholder="10" />
           <div className="flex gap-3 pt-2">
@@ -4250,8 +4250,8 @@ return (
             <Input label="Ad Soyad *" value={leadName} onChange={(e: any) => setLeadName(e.target.value)} required placeholder="Ad Soyad" />
             <Input label="Telefon *" value={leadPhone} onChange={(e: any) => setLeadPhone(e.target.value)} required placeholder="05xx xxx xx xx" />
             <Input label="E-posta" type="email" value={leadEmail} onChange={(e: any) => setLeadEmail(e.target.value)} placeholder="ornek@email.com" />
-           <Select label="�?ube" value={leadBranch} onChange={(e: any) => setLeadBranch(e.target.value)}>
-              <option value="">�?ube seçin...</option>
+           <Select label="Şube" value={leadBranch} onChange={(e: any) => setLeadBranch(e.target.value)}>
+              <option value="">Şube seçin...</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
             </Select>
             <Select label="Kaynak" value={leadSource} onChange={(e: any) => setLeadSource(e.target.value)}>
@@ -4617,11 +4617,11 @@ return (
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">�?ube</label>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Şube</label>
                 <div className="relative">
                   <select value={editLead.branch_id || ''} onChange={e => setEditLead((prev: any) => ({ ...prev, branch_id: e.target.value }))}
                     className="w-full appearance-none px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 pr-8">
-                    <option value="">�?ube seç</option>
+                    <option value="">Şube seç</option>
                     {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
                   </select>
                   <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -4750,7 +4750,7 @@ return (
                 if (ms.memberPayments.length === 0) {
                   rows.push({
                     'Satışçı': ms.member.profiles?.full_name || '',
-                    '�?ube': ms.member.branches?.branch_name || '',
+                    'Şube': ms.member.branches?.branch_name || '',
                     'Ödeme Tarihi': '—',
                     'Ödeme Tutarı': 0,
                     'Not': '',
@@ -4762,7 +4762,7 @@ return (
                   ms.memberPayments.forEach((p, i) => {
                     rows.push({
                       'Satışçı': i === 0 ? (ms.member.profiles?.full_name || '') : '',
-                      '�?ube': i === 0 ? (ms.member.branches?.branch_name || '') : '',
+                      'Şube': i === 0 ? (ms.member.branches?.branch_name || '') : '',
                       'Ödeme Tarihi': new Date(p.paid_at).toLocaleDateString('tr-TR'),
                       'Ödeme Tutarı': p.amount,
                       'Not': p.note || '',
@@ -4789,21 +4789,21 @@ return (
               doc.setFontSize(16); doc.setFont('helvetica', 'bold')
               doc.text('DataPilot — Odeme Raporu', 14, 18)
               doc.setFontSize(9); doc.setFont('helvetica', 'normal')
-              doc.text(`Toplam Odenen: TL${totalPeriodPaid.toLocaleString()}  |  Kalan Borc: TL${totalRemaining.toLocaleString()}  |  ${memberSummaries.length} satisci`, 14, 26)
+              doc.text(`Toplam ?denen: ?${totalPeriodPaid.toLocaleString()}  |  Kalan Bor?: ?${totalRemaining.toLocaleString()}  |  ${memberSummaries.length} sat?`, 14, 26)
               const tableRows: any[] = []
               memberSummaries.forEach(ms => {
                 if (ms.memberPayments.length === 0) {
-                  tableRows.push([ms.member.profiles?.full_name || '', ms.member.branches?.branch_name || '', '—', '—', `TL${ms.totalEarned.toLocaleString()}`, `TL${ms.allPaid.toLocaleString()}`, `TL${Math.max(0, ms.remaining).toLocaleString()}`])
+                  tableRows.push([ms.member.profiles?.full_name || '', ms.member.branches?.branch_name || '', '—', '—', `?${ms.totalEarned.toLocaleString()}`, `?${ms.allPaid.toLocaleString()}`, `?${Math.max(0, ms.remaining).toLocaleString()}`])
                 } else {
                   ms.memberPayments.forEach((p, i) => {
                     tableRows.push([
                       i === 0 ? (ms.member.profiles?.full_name || '') : '',
                       i === 0 ? (ms.member.branches?.branch_name || '') : '',
                       new Date(p.paid_at).toLocaleDateString('tr-TR'),
-                      `TL${p.amount.toLocaleString()}`,
-                      i === 0 ? `TL${ms.totalEarned.toLocaleString()}` : '',
-                      i === 0 ? `TL${ms.allPaid.toLocaleString()}` : '',
-                      i === 0 ? `TL${Math.max(0, ms.remaining).toLocaleString()}` : '',
+                      `?${p.amount.toLocaleString()}`,
+                      i === 0 ? `?${ms.totalEarned.toLocaleString()}` : '',
+                      i === 0 ? `?${ms.allPaid.toLocaleString()}` : '',
+                      i === 0 ? `?${Math.max(0, ms.remaining).toLocaleString()}` : '',
                     ])
                   })
                 }

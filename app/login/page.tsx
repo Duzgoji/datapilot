@@ -26,7 +26,7 @@ export default function LoginPage() {
         return
       }
 
-      const user = data.user ?? data.session?.user
+      const user = data.user || data.session?.user
       if (!user) {
         setError('Oturum başlatılamadı. Sayfayı yenileyip tekrar deneyin.')
         return

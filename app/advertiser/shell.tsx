@@ -176,7 +176,7 @@ function Sidebar({
   const profileRef = useRef<HTMLDivElement>(null)
 
   const customerIdMatch = pathname.match(/\/advertiser\/customers\/([^/]+)/)
-  const activeCustomerId = customerIdMatch?.[1] ?? null
+  const activeCustomerId = customerIdMatch?.[1] || null
   const activeCustomer = customers.find(c => c.id === activeCustomerId)
   const isCompact = !mobileMenuOpen && collapsed
 

@@ -12,10 +12,10 @@ const menuStructure = [
   {
     key: 'meta', label: 'Meta Reklam', icon: '?', children: [
       { key: 'meta-kampanyalar', label: 'Kampanyalar' },
-      { key: 'meta-leadformlar', label: 'Potansiyel M??teri Formlar?' },
-      { key: 'meta-leadler', label: 'Potansiyel M??teri Y?netimi' },
+      { key: 'meta-leadformlar', label: 'Potansiyel M?teri Formlar?' },
+      { key: 'meta-leadler', label: 'Potansiyel M?teri Y?netimi' },
       { key: 'meta-analitik', label: 'Analitik & Raporlar' },
-      { key: 'meta-ekip', label: 'Ekip & Sat??lar' },
+      { key: 'meta-ekip', label: 'Ekip & Sat?lar' },
     ]
   },
   {
@@ -26,14 +26,14 @@ const menuStructure = [
       { key: 'veri-raporlar', label: 'Raporlar' },
     ]
   },
-  { key: 'ayarlar', label: 'Ayarlar', icon: '??' },
+  { key: 'ayarlar', label: 'Ayarlar', icon: '?' },
 ]
 
 const STATUS_LABELS: any = {
   new: { label: 'Yeni', color: 'bg-blue-100 text-blue-700' },
   called: { label: 'Arand?', color: 'bg-yellow-100 text-yellow-700' },
   appointment_scheduled: { label: 'Randevu', color: 'bg-purple-100 text-purple-700' },
-  procedure_done: { label: 'Sat??', color: 'bg-green-100 text-green-700' },
+  procedure_done: { label: 'Sat?', color: 'bg-green-100 text-green-700' },
   cancelled: { label: '?ptal', color: 'bg-red-100 text-red-700' },
 }
 
@@ -333,7 +333,7 @@ const [branches, setBranches] = useState<any[]>([])
             <p className="text-slate-400 text-xs uppercase tracking-wide mb-1">Firma</p>
             <p className="text-white font-semibold text-sm truncate">{profile?.company_name || profile?.full_name}</p>
             <span className="text-xs bg-blue-900 text-blue-300 px-2 py-0.5 rounded-full mt-1 inline-block">
-                {profile?.sector || 'M??teri'}
+                {profile?.sector || 'M?teri'}
             </span>
           </div>
         )}
@@ -387,7 +387,7 @@ const [branches, setBranches] = useState<any[]>([])
             </div>
             <button onClick={handleLogout}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-400 hover:bg-slate-800 hover:text-white">
-              ??k?? Yap
+              ?k? Yap
             </button>
           </div>
         )}
@@ -407,23 +407,23 @@ const [branches, setBranches] = useState<any[]>([])
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
           </button>
           <div className="relative flex-1 max-w-sm">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">??</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">?</span>
             <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Potansiyel m??teri, sat???? ara..."
+              placeholder="Potansiyel m?teri, sat? ara..."
               className="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div className="flex items-center gap-2 ml-auto">
             <button onClick={() => { setActiveTab('meta-leadler'); setShowAddLead(true) }}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded-lg font-medium">
-              + Potansiyel M??teri Ekle
+              + Potansiyel M?teri Ekle
             </button>
             <button onClick={() => { setActiveTab('meta-ekip'); setShowAddMember(true) }}
               className="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-2 rounded-lg font-medium">
-              + Sat???? Ekle
+              + Sat? Ekle
             </button>
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">??</button>
+            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg">?</button>
             <span className="bg-blue-100 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-full">
-              {profile?.company_name || 'M??teri'}
+              {profile?.company_name || 'M?teri'}
             </span>
           </div>
         </div>
@@ -436,9 +436,9 @@ const [branches, setBranches] = useState<any[]>([])
             <>
               <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
                 {[
-                  { label: 'Toplam Potansiyel M??teri', value: leads.length, icon: '??', color: 'text-blue-600', bg: 'bg-blue-50' },
-                  { label: 'Toplam Sat??', value: totalSales, icon: '?', color: 'text-green-600', bg: 'bg-green-50' },
-                  { label: 'D?n???m Oran?', value: `%${conversionRate}`, icon: '??', color: 'text-purple-600', bg: 'bg-purple-50' },
+                  { label: 'Toplam Potansiyel M?teri', value: leads.length, icon: '?', color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'Toplam Sat?', value: totalSales, icon: '?', color: 'text-green-600', bg: 'bg-green-50' },
+                  { label: 'D?n?m Oran?', value: `%${conversionRate}`, icon: '?', color: 'text-purple-600', bg: 'bg-purple-50' },
                   { label: 'Toplam Ciro', value: `?${totalRevenue.toLocaleString()}`, icon: '?', color: 'text-amber-600', bg: 'bg-amber-50' },
                 ].map(card => (
                   <div key={card.label} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
@@ -452,10 +452,10 @@ const [branches, setBranches] = useState<any[]>([])
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 <div className="col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
                   <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                    <h3 className="font-bold text-gray-900 text-sm">Son Potansiyel M??teriler</h3>
+                    <h3 className="font-bold text-gray-900 text-sm">Son Potansiyel M?teriler</h3>
                     <button onClick={() => setActiveTab('meta-leadler')} className="text-xs text-blue-600 hover:underline">T?m? ?</button>
                   </div>
-                  {leads.length === 0 && <p className="p-6 text-xs text-gray-400 text-center">Hen?z potansiyel m??teri yok.</p>}
+                  {leads.length === 0 && <p className="p-6 text-xs text-gray-400 text-center">Hen?z potansiyel m?teri yok.</p>}
                   {leads.slice(0, 6).map(lead => (
                     <div key={lead.id} className="px-4 py-3 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
                       <div>
@@ -490,7 +490,7 @@ const [branches, setBranches] = useState<any[]>([])
 
                   <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                     <h3 className="font-bold text-gray-900 text-sm mb-3">Ekip</h3>
-                    {teamMembers.length === 0 && <p className="text-xs text-gray-400">Hen?z sat???? yok.</p>}
+                    {teamMembers.length === 0 && <p className="text-xs text-gray-400">Hen?z sat? yok.</p>}
                     {teamMembers.slice(0, 4).map(m => (
                       <div key={m.id} className="flex items-center gap-2 py-2 border-b border-gray-50 last:border-0">
                         <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -512,7 +512,7 @@ const [branches, setBranches] = useState<any[]>([])
                 {[
                   { label: 'Toplam', value: leads.length, color: 'text-blue-600', bg: 'bg-blue-50' },
                   { label: 'Randevu', value: leads.filter(l => l.status === 'appointment_scheduled').length, color: 'text-purple-600', bg: 'bg-purple-50' },
-                  { label: 'Sat??', value: totalSales, color: 'text-green-600', bg: 'bg-green-50' },
+                  { label: 'Sat?', value: totalSales, color: 'text-green-600', bg: 'bg-green-50' },
                   { label: '?ptal', value: leads.filter(l => l.status === 'cancelled').length, color: 'text-red-600', bg: 'bg-red-50' },
                 ].map(s => (
                   <div key={s.label} className={`${s.bg} rounded-xl p-4 text-center border border-gray-100`}>
@@ -523,17 +523,17 @@ const [branches, setBranches] = useState<any[]>([])
               </div>
 
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-gray-500">{leads.length} potansiyel m??teri</p>
+                <p className="text-sm text-gray-500">{leads.length} potansiyel m?teri</p>
                 <button onClick={() => setShowAddLead(!showAddLead)}
                   className="flex min-h-[40px] w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 sm:w-auto">
-                  + Manuel Potansiyel M??teri Ekle
+                  + Manuel Potansiyel M?teri Ekle
                 </button>
               </div>
 
               {showAddLead && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4">
                   <div className="mb-4 flex items-center justify-between gap-3">
-                    <h3 className="font-bold text-gray-900">Yeni Potansiyel M??teri Ekle</h3>
+                    <h3 className="font-bold text-gray-900">Yeni Potansiyel M?teri Ekle</h3>
                     <button onClick={() => setShowAddLead(false)} className="flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600">?</button>
                   </div>
                   <form onSubmit={handleAddLead} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -578,7 +578,7 @@ const [branches, setBranches] = useState<any[]>([])
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Sat????ya Ata</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Sat?ya Ata</label>
                       <select value={leadAssignTo} onChange={e => setLeadAssignTo(e.target.value)}
                         className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Atama yapma</option>
@@ -596,7 +596,7 @@ const [branches, setBranches] = useState<any[]>([])
                     <div className="flex flex-col gap-3 sm:col-span-2 sm:flex-row">
                       <button type="submit" disabled={saving}
                         className="min-h-[40px] rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white">
-                        {saving ? 'Ekleniyor...' : 'Potansiyel M??teri Ekle'}
+                        {saving ? 'Ekleniyor...' : 'Potansiyel M?teri Ekle'}
                       </button>
                       <button type="button" onClick={() => setShowAddLead(false)}
                         className="min-h-[40px] rounded-lg border border-gray-200 px-5 py-2.5 text-sm text-gray-600">?ptal</button>
@@ -609,7 +609,7 @@ const [branches, setBranches] = useState<any[]>([])
                 {leads.length === 0 ? (
                   <div className="p-12 text-center">
                     <span className="text-4xl mb-3 block">?</span>
-                    <p className="text-gray-500 text-sm">Hen?z potansiyel m??teri yok.</p>
+                    <p className="text-gray-500 text-sm">Hen?z potansiyel m?teri yok.</p>
                   </div>
                 ) : leads.map(lead => (
                   <div key={lead.id} className="px-5 py-3.5 flex items-center justify-between border-b border-gray-50 last:border-0 hover:bg-gray-50">
@@ -646,7 +646,7 @@ const [branches, setBranches] = useState<any[]>([])
             </>
           )}
 
-          {/* EK?P & SATI??ILAR */}
+          {/* EK?P & SATI?ILAR */}
           {activeTab === 'meta-ekip' && (
             <>
               <div className="mb-6">
@@ -750,10 +750,10 @@ const [branches, setBranches] = useState<any[]>([])
 
               <div>
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="font-bold text-gray-900">Sat????lar</h3>
+                  <h3 className="font-bold text-gray-900">Sat?lar</h3>
                   <button onClick={() => setShowAddMember(!showAddMember)}
                     className="flex min-h-[40px] w-full items-center justify-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 sm:w-auto">
-                    + Sat???? Ekle
+                    + Sat? Ekle
                   </button>
                 </div>
 
@@ -797,7 +797,7 @@ const [branches, setBranches] = useState<any[]>([])
                       <div className="col-span-2 flex gap-3">
                         <button type="submit" disabled={saving}
                           className="bg-purple-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium">
-                          {saving ? 'Ekleniyor...' : 'Sat???? Ekle'}
+                          {saving ? 'Ekleniyor...' : 'Sat? Ekle'}
                         </button>
                         <button type="button" onClick={() => setShowAddMember(false)}
                           className="border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm">?ptal</button>
@@ -810,7 +810,7 @@ const [branches, setBranches] = useState<any[]>([])
                   {teamMembers.length === 0 ? (
                     <div className="p-10 text-center">
                       <span className="text-3xl mb-2 block">?</span>
-                      <p className="text-gray-500 text-sm">Hen?z sat???? yok.</p>
+                      <p className="text-gray-500 text-sm">Hen?z sat? yok.</p>
                     </div>
                   ) : teamMembers.map(m => {
                     const memberLeads = leads.filter(l => l.assigned_to === m.user_id)
@@ -827,8 +827,8 @@ const [branches, setBranches] = useState<any[]>([])
                             <p className="font-semibold text-gray-900 text-sm">{m.profiles?.full_name}</p>
                             <p className="text-xs text-gray-500">{m.branches?.branch_name} ? %{m.commission_rate} prim</p>
                             <div className="flex gap-2 mt-1">
-                              <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{memberLeads.length} potansiyel m??teri</span>
-                              <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">{memberSales.length} sat??</span>
+                              <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{memberLeads.length} potansiyel m?teri</span>
+                              <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">{memberSales.length} sat?</span>
                               <span className="text-xs bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full">?{commission.toLocaleString()} prim</span>
                             </div>
                           </div>
@@ -853,7 +853,7 @@ const [branches, setBranches] = useState<any[]>([])
           {/* ANAL?T?K */}
           {activeTab === 'meta-analitik' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-              <span className="text-5xl mb-4 block">??</span>
+              <span className="text-5xl mb-4 block">?</span>
               <h3 className="font-bold text-gray-900 mb-2">Analitik & Raporlar</h3>
               <p className="text-gray-500 text-sm mb-6">T?m verilerinizi analiz edin, AI raporu olu?turun</p>
               <button onClick={() => router.push('/customer/analytics')}
@@ -866,7 +866,7 @@ const [branches, setBranches] = useState<any[]>([])
           {/* VER? Y?KLE */}
           {activeTab === 'veri-yukle' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-              <span className="text-5xl mb-4 block">??</span>
+              <span className="text-5xl mb-4 block">?</span>
               <h3 className="font-bold text-gray-900 mb-2">Veri Merkezi</h3>
               <p className="text-gray-500 text-sm mb-6">Excel dosyan?z? y?kleyerek leadlerinizi sisteme aktar?n</p>
               <button onClick={() => router.push('/customer/upload')}

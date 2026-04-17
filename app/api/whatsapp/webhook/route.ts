@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
             {
               owner_id: ownerId,
               lead_code: leadCode,
-              full_name: 'WhatsApp Kullanicisi',
+              full_name: 'WhatsApp Kullanıcısı',
               phone,
               source: 'whatsapp',
               note: text,

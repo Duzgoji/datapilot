@@ -41,10 +41,10 @@ export async function POST(req: NextRequest) {
     const result = await logAuditEvent({
       action: body.action || '',
       entityType: body.entityType || '',
-      entityId: body.entityId ?? null,
+      entityId: body.entityId || null,
       userId: auth.user.id,
-      tenantId: body.tenantId ?? null,
-      metadata: body.metadata ?? {},
+      tenantId: body.tenantId || null,
+      metadata: body.metadata || {},
     })
 
     return NextResponse.json({ success: result.ok, skipped: result.skipped })
