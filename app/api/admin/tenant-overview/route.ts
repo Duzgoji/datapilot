@@ -36,17 +36,43 @@ export async function GET(req: Request) {
           .select('id, owner_id, name, advertiser_id, status'),
         supabaseAdmin
           .from('meta_connections')
-          .select('owner_id, is_active, connected_at'),
+          .select('owner_id, is_active, connected_at, token_expires_at, page_id, ad_account_id, selected_ad_account_id, selected_ad_account_name, access_token'),
         supabaseAdmin
           .from('whatsapp_connections')
-          .select('owner_id, is_active, connected_at'),
+          .select('owner_id, is_active, connected_at, phone_number_id, access_token'),
       ])
+
+    const normalizedMetaConnections = (metaConnections || []).map((connection) => ({
+      owner_id: connection.owner_id,
+      is_active: connection.is_active,
+      connected_at: connection.connected_at,
+      token_expires_at: connection.token_expires_at || null,
+      page_id: connection.page_id || null,
+      ad_account_id: connection.ad_account_id || connection.selected_ad_account_id || null,
+      selected_ad_account_name: connection.selected_ad_account_name || null,
+      health: {
+        token_present: !!connection.access_token,
+        page_mapping_present: !!connection.page_id,
+        ad_account_present: !!(connection.ad_account_id || connection.selected_ad_account_id),
+      },
+    }))
+
+    const normalizedWhatsAppConnections = (whatsAppConnections || []).map((connection) => ({
+      owner_id: connection.owner_id,
+      is_active: connection.is_active,
+      connected_at: connection.connected_at,
+      phone_number_id: connection.phone_number_id || null,
+      health: {
+        token_present: !!connection.access_token,
+        phone_number_mapping_present: !!connection.phone_number_id,
+      },
+    }))
 
     return NextResponse.json({
       data: {
         customerTenants: customerTenants || [],
-        metaConnections: metaConnections || [],
-        whatsAppConnections: whatsAppConnections || [],
+        metaConnections: normalizedMetaConnections,
+        whatsAppConnections: normalizedWhatsAppConnections,
       },
     })
   } catch (err: unknown) {

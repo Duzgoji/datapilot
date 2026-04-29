@@ -11,10 +11,17 @@ type MetaAccount = {
   account_id?: string
 }
 
+type MetaPage = {
+  id: string
+  name?: string
+}
+
 type MetaConnection = {
   owner_id: string
   is_active?: boolean
   connected_at?: string
+  page_id?: string
+  ad_account_id?: string
   selected_ad_account_id?: string
   selected_ad_account_name?: string
   ad_accounts?: MetaAccount[]
@@ -22,9 +29,42 @@ type MetaConnection = {
 
 export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: string; autoSelect?: boolean }) {
   const [connection, setConnection] = useState<MetaConnection | null>(null)
+  const [pages, setPages] = useState<MetaPage[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedAccount, setSelectedAccount] = useState('')
+  const [selectedPage, setSelectedPage] = useState('')
   const [saving, setSaving] = useState(false)
+
+  async function loadPages() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    const res = await fetch(`/api/meta/pages?owner_id=${encodeURIComponent(ownerId)}`, {
+      headers: {
+        Authorization: `Bearer ${session?.access_token ?? ''}`,
+      },
+    })
+
+    const json = (await res.json()) as {
+      data?: {
+        pages?: MetaPage[]
+      }
+      error?: string
+    }
+
+    if (!res.ok) {
+      console.warn('[MetaConnect] Page fetch failed', {
+        source: 'meta_connect',
+        owner_id: ownerId,
+        message: json.error || 'unknown_error',
+      })
+      setPages([])
+      return
+    }
+
+    setPages(Array.isArray(json.data?.pages) ? json.data.pages : [])
+  }
 
   async function loadConnection() {
     const tenant = await fetchTenantContext(ownerId)
@@ -38,20 +78,28 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
       null
 
     setConnection(resolvedConnection)
+    setSelectedAccount(resolvedConnection?.selected_ad_account_id || resolvedConnection?.ad_account_id || '')
+    setSelectedPage(resolvedConnection?.page_id || '')
 
-    if (resolvedConnection?.selected_ad_account_id) {
-      setSelectedAccount(resolvedConnection.selected_ad_account_id)
-    } else if (resolvedConnection?.ad_accounts && resolvedConnection.ad_accounts.length > 0 && autoSelect) {
+    if (resolvedConnection?.ad_accounts && resolvedConnection.ad_accounts.length > 0 && autoSelect && !resolvedConnection.selected_ad_account_id) {
       const firstAccount = resolvedConnection.ad_accounts[0]
-      setSelectedAccount(firstAccount.id)
       logTenantWriteUsage(tenant, 'meta_connect', 'meta_connection')
       await supabase
         .from('meta_connections')
         .update({
           selected_ad_account_id: firstAccount.id,
           selected_ad_account_name: firstAccount.name,
+          ad_account_id: firstAccount.id,
         })
         .eq('owner_id', tenant.tenantId)
+
+      setSelectedAccount(firstAccount.id)
+    }
+
+    if (resolvedConnection?.is_active) {
+      await loadPages()
+    } else {
+      setPages([])
     }
 
     setLoading(false)
@@ -62,48 +110,7 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
       return
     }
 
-    let isMounted = true
-
-    void (async () => {
-      const tenant = await fetchTenantContext(ownerId)
-      const { data } = await supabase.from('meta_connections').select('*').in('owner_id', tenant.readOwnerIds)
-
-      if (!isMounted) {
-        return
-      }
-
-      const rows = (data || []) as MetaConnection[]
-      const resolvedConnection =
-        rows.find((row) => row.owner_id === tenant.tenantId) ||
-        rows.find((row) => row.owner_id === tenant.profileId) ||
-        rows[0] ||
-        null
-
-      setConnection(resolvedConnection)
-
-      if (resolvedConnection?.selected_ad_account_id) {
-        setSelectedAccount(resolvedConnection.selected_ad_account_id)
-      } else if (resolvedConnection?.ad_accounts && resolvedConnection.ad_accounts.length > 0 && autoSelect) {
-        const firstAccount = resolvedConnection.ad_accounts[0]
-        setSelectedAccount(firstAccount.id)
-        logTenantWriteUsage(tenant, 'meta_connect', 'meta_connection')
-        await supabase
-          .from('meta_connections')
-          .update({
-            selected_ad_account_id: firstAccount.id,
-            selected_ad_account_name: firstAccount.name,
-          })
-          .eq('owner_id', tenant.tenantId)
-      }
-
-      if (isMounted) {
-        setLoading(false)
-      }
-    })()
-
-    return () => {
-      isMounted = false
-    }
+    void loadConnection()
   }, [autoSelect, ownerId])
 
   async function handleConnect() {
@@ -114,7 +121,7 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
     const params = new URLSearchParams({
       client_id: process.env.NEXT_PUBLIC_META_APP_ID!,
       redirect_uri: process.env.NEXT_PUBLIC_META_REDIRECT_URI!,
-      scope: 'ads_read,leads_retrieval,pages_read_engagement',
+      scope: 'ads_read,leads_retrieval,pages_read_engagement,pages_show_list,business_management',
       response_type: 'code',
       state: stateParam,
     })
@@ -122,7 +129,7 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
   }
 
   async function handleDisconnect() {
-    if (!confirm('Meta ba?lant?s?n? kesmek istedi?inize emin misiniz?')) return
+    if (!confirm('Meta bağlantısını kesmek istediğinize emin misiniz?')) return
     const tenant = await fetchTenantContext(ownerId)
     logTenantWriteUsage(tenant, 'meta_connect', 'meta_connection')
     const { error } = await supabase
@@ -154,16 +161,18 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
     await supabase
       .from('meta_connections')
       .update({
-        selected_ad_account_id: selectedAccount,
-        selected_ad_account_name: account?.name,
+        selected_ad_account_id: selectedAccount || null,
+        selected_ad_account_name: account?.name || null,
+        ad_account_id: selectedAccount || null,
+        page_id: selectedPage || null,
       })
       .eq('owner_id', tenant.tenantId)
     await loadConnection()
     setSaving(false)
-    alert('Reklam hesabi kaydedildi!')
+    alert('Meta bağlantı ayarları kaydedildi!')
   }
 
-  if (loading) return <div className="p-8 text-center text-gray-400 text-sm">Yukleniyor...</div>
+  if (loading) return <div className="p-8 text-center text-gray-400 text-sm">Yükleniyor...</div>
 
   return (
     <div className="max-w-2xl space-y-4">
@@ -205,16 +214,41 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
               </p>
             </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                {
+                  label: 'Bağlantı',
+                  value: connection?.is_active ? 'Aktif' : 'Eksik',
+                  tone: connection?.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100',
+                },
+                {
+                  label: 'Ad Account',
+                  value: selectedAccount ? 'Seçili' : 'Eksik',
+                  tone: selectedAccount ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100',
+                },
+                {
+                  label: 'Webhook Sayfası',
+                  value: selectedPage ? 'Seçili' : 'Eksik',
+                  tone: selectedPage ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100',
+                },
+              ].map((item) => (
+                <div key={item.label} className={`rounded-xl border p-3 ${item.tone}`}>
+                  <p className="text-[11px] uppercase tracking-wide opacity-70">{item.label}</p>
+                  <p className="text-sm font-semibold mt-1">{item.value}</p>
+                </div>
+              ))}
+            </div>
+
             {connection.ad_accounts && connection.ad_accounts.length > 0 && (
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2">
-                  Reklam Hesabı Seçin ({connection.ad_accounts.length} hesap bulundu)
-                </label>
-                <div className="flex gap-2">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                    Reklam Hesabı Seçin ({connection.ad_accounts.length} hesap bulundu)
+                  </label>
                   <select
                     value={selectedAccount}
                     onChange={(e) => setSelectedAccount(e.target.value)}
-                    className="flex-1 px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Hesap seçin...</option>
                     {connection.ad_accounts.map((account) => (
@@ -223,19 +257,43 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
                       </option>
                     ))}
                   </select>
+                  {connection.selected_ad_account_name && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Aktif hesap: <span className="font-medium text-blue-600">{connection.selected_ad_account_name}</span>
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                    Webhook Sayfası Seçin {pages.length > 0 ? `(${pages.length} sayfa bulundu)` : ''}
+                  </label>
+                  <select
+                    value={selectedPage}
+                    onChange={(e) => setSelectedPage(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Sayfa seçin...</option>
+                    {pages.map((page) => (
+                      <option key={page.id} value={page.id}>
+                        {page.name || page.id}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Meta webhook eşleşmesi için bir sayfa seçili olmalı.
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
                   <button
                     onClick={() => void handleSaveAccount()}
-                    disabled={saving || !selectedAccount}
+                    disabled={saving || !selectedAccount || !selectedPage}
                     className="bg-blue-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium disabled:bg-blue-300"
                   >
                     {saving ? 'Kaydediliyor...' : 'Kaydet'}
                   </button>
                 </div>
-                {connection.selected_ad_account_name && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    Aktif hesap: <span className="font-medium text-blue-600">{connection.selected_ad_account_name}</span>
-                  </p>
-                )}
               </div>
             )}
 
@@ -251,7 +309,7 @@ export default function MetaConnect({ ownerId, autoSelect = false }: { ownerId: 
       <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
         <p className="text-blue-700 text-xs font-medium mb-1">Nasıl çalışır?</p>
         <p className="text-blue-600 text-xs">
-          Meta hesabınızı bağladıktan sonra reklam hesabınızı seçin. Lead formlarından gelen veriler otomatik olarak sisteme aktarılır.
+          Meta hesabınızı bağladıktan sonra reklam hesabını ve webhook sayfasını seçin. Lead formlarından gelen veriler otomatik olarak sisteme aktarılır.
         </p>
       </div>
     </div>

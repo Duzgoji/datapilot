@@ -167,11 +167,11 @@ const PlanUsageWidget = ({ ownerId, plan }: { ownerId: string, plan: PlanName })
 }
 
 const SourceBadge = ({ source }: { source: string }) => (
-  <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md ${SOURCE_CONFIG[source]?.badge || 'bg-gray-100 text-gray-500'}`}>
-    {source === 'meta' && (
+  <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md ${SOURCE_CONFIG[source]?.badge || SOURCE_CONFIG[source === 'meta' ? 'meta_form' : source]?.badge || 'bg-gray-100 text-gray-500'}`}>
+    {(source === 'meta' || source === 'meta_form') && (
       <svg width="11" height="11" viewBox="0 0 48 48" fill="currentColor"><path d="M4.5 26.45C4.5 30.96 7.15 34 11.05 34C13.7 34 15.7 32.73 18.36 29.31L20.48 26.58C21.95 24.67 23.08 23.31 24 22.5C24.92 23.31 26.05 24.67 27.52 26.58L29.64 29.31C32.3 32.73 34.3 34 36.95 34C40.85 34 43.5 30.96 43.5 26.45C43.5 22.86 41.87 19.73 39.13 17.79C36.54 15.96 33.1 15.37 29.86 16.35C28.29 16.83 26.83 17.73 25.48 19.06C24.96 18.61 24.49 18.24 24 17.96C23.51 18.24 23.04 18.61 22.52 19.06C21.17 17.73 19.71 16.83 18.14 16.35C14.9 15.37 11.46 15.96 8.87 17.79C6.13 19.73 4.5 22.86 4.5 26.45ZM28.97 27.88L26.83 25.13C25.71 23.69 24.82 22.6 24 21.84C23.18 22.6 22.29 23.69 21.17 25.13L19.03 27.88C16.59 31.03 14.96 32.5 12.82 32.5C9.37 32.5 7 29.95 7 26.45C7 23.6 8.27 21.16 10.44 19.67C12.52 18.25 15.27 17.78 17.77 18.54C19.04 18.93 20.22 19.68 21.35 20.82C20.73 21.46 20.14 22.14 19.55 22.87L17.46 25.56C15.01 28.64 13.3 29.97 11.05 29.97C10.26 29.97 9.65 29.68 9.25 29.15C8.9 28.69 8.75 28.07 8.83 27.42C8.96 26.35 9.73 25.16 10.99 24.16L11.95 25.27C10.94 26.07 10.41 26.97 10.33 27.62C10.28 28.01 10.36 28.35 10.54 28.59C10.74 28.85 11.06 29 11.05 29C12.68 29 14.08 27.92 16.27 25.16L18.36 22.46C19.08 21.54 19.73 20.84 20.38 20.26C19.26 19.22 18.1 18.56 16.9 18.2C14.85 17.59 12.63 17.98 10.94 19.11C9.15 20.31 8.1 22.26 8.1 26.45C8.1 29.38 9.95 31.44 12.82 31.44C14.54 31.44 15.93 30.27 18.12 27.52L20.25 24.79C21.69 22.97 22.8 21.79 24 21.05C25.2 21.79 26.31 22.97 27.75 24.79L29.88 27.52C32.07 30.27 33.46 31.44 35.18 31.44C38.05 31.44 39.9 29.38 39.9 26.45C39.9 22.26 38.85 20.31 37.06 19.11C35.37 17.98 33.15 17.59 31.1 18.2C29.9 18.56 28.74 19.22 27.62 20.26C28.27 20.84 28.92 21.54 29.64 22.46L31.73 25.16C33.92 27.92 35.32 29 36.95 29C36.94 29 37.26 28.85 37.46 28.59C37.64 28.35 37.72 28.01 37.67 27.62C37.59 26.97 37.06 26.07 36.05 25.27L37.01 24.16C38.27 25.16 39.04 26.35 39.17 27.42C39.25 28.07 39.1 28.69 38.75 29.15C38.35 29.68 37.74 29.97 36.95 29.97C34.7 29.97 32.99 28.64 30.54 25.56L28.45 22.87C27.86 22.14 27.27 21.46 26.65 20.82C27.78 19.68 28.96 18.93 30.23 18.54C32.73 17.78 35.48 18.25 37.56 19.67C39.73 21.16 41 23.6 41 26.45C41 29.95 38.63 32.5 35.18 32.5C33.04 32.5 31.41 31.03 28.97 27.88Z"/></svg>
     )}
-    {SOURCE_CONFIG[source]?.label || source}
+    {SOURCE_CONFIG[source]?.label || SOURCE_CONFIG[source === 'meta' ? 'meta_form' : source]?.label || source}
   </span>
 )
 
@@ -386,7 +386,7 @@ const [branches, setBranches] = useState<any[]>([])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.get('meta') === 'waConnected') setActiveTab('meta-baglanti')
+    if (params.get('meta') === 'connected') setActiveTab('meta-baglanti')
     loadData()
     const handleClickOutside = (e: MouseEvent) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) setShowProfileMenu(false)
@@ -1003,7 +1003,10 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
   const filteredLeads = leads.filter(l => {
     const matchesSearch = !searchQuery || l.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || l.phone?.includes(searchQuery) || l.lead_code?.toLowerCase().includes(searchQuery.toLowerCase()) || l.email?.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = filterStatus === 'all' || l.status === filterStatus
-    const matchesSource = filterSource === 'all' || l.source === filterSource
+    const matchesSource =
+      filterSource === 'all' ||
+      l.source === filterSource ||
+      (filterSource === 'meta_form' && l.source === 'meta')
     let matchesDate = true
     if (filterDate !== 'all' && l.appointment_at) {
       const d = new Date(l.appointment_at); d.setHours(0, 0, 0, 0)
@@ -2152,6 +2155,7 @@ return (
             </div>
           )}
          {activeTab === 'whatsapp-baglanti' && (() => {
+  return <WhatsAppConnect ownerId={tenantContext?.tenantId || profile.id} />
   
 
   const providers = [
@@ -2504,6 +2508,53 @@ return (
 })()}
 
 {activeTab === 'google-baglanti' && (() => {
+  return (
+    <div className="space-y-5 max-w-3xl">
+      <div className="bg-gradient-to-br from-yellow-400 to-orange-400 rounded-2xl p-6 text-white relative overflow-hidden">
+        <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-sm font-bold text-yellow-600">G</div>
+            <div>
+              <p className="font-bold text-lg">Google Ads</p>
+              <p className="text-yellow-100 text-sm">Entegrasyon durumu</p>
+            </div>
+          </div>
+          <p className="text-yellow-100 text-sm">
+            Google Ads için gerçek OAuth, webhook ve lead alma akışı bu kod tabanında henüz uygulanmış değil.
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-amber-200 p-6 space-y-4">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <p className="text-sm font-semibold text-gray-900">Şu anki durum: Placeholder</p>
+          <p className="text-xs text-gray-600 mt-1">
+            Customer panelinde yalnızca demo/placeholder bağlantı arayüzü var. Gerçek Google OAuth callback, token saklama,
+            webhook veya lead çekme API route'u bulunmuyor.
+          </p>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-gray-900 mb-2">Güvenli şekilde eksik olan parçalar</p>
+          <div className="space-y-2">
+            {[
+              'Google OAuth başlangıç ve callback route’ları',
+              'workspace/tenant bazlı token saklama tablosu ve mapping',
+              'lead kaynağı için gerçek inbound akış veya scheduled fetch',
+              'Google lead verisini normalize edip leads tablosuna yazan servis',
+              'bağlantı sağlık durumu ve hata kaydı',
+            ].map((item) => (
+              <div key={item} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <span className="text-sm font-bold text-amber-600">•</span>
+                <p className="text-sm text-gray-700">{item}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
   const googleLeads = leads.filter(l => l.source === 'google_ads')
   const mockCampaigns = [
     { name: 'Yaz Kampanyası', status: 'active', budget: 500 },
@@ -2659,8 +2710,8 @@ return (
             const totalSpend = campaigns.reduce((s: number, c: any) => s + c.spend, 0)
             const totalImpressions = campaigns.reduce((s: number, c: any) => s + c.impressions, 0)
             const totalClicks = campaigns.reduce((s: number, c: any) => s + c.clicks, 0)
-            const metaLeads = leads.filter(l => l.source === 'meta_form').length
-            const metaSales = leads.filter(l => l.source === 'meta_form' && l.status === 'procedure_done')
+            const metaLeads = leads.filter(l => l.source === 'meta_form' || l.source === 'meta').length
+            const metaSales = leads.filter(l => (l.source === 'meta_form' || l.source === 'meta') && l.status === 'procedure_done')
             const metaRevenue = metaSales.reduce((s, l) => s + (l.procedure_amount || 0), 0)
             const cpl = metaLeads > 0 ? totalSpend / metaLeads : 0
             const cps = metaSales.length > 0 ? totalSpend / metaSales.length : 0
@@ -2819,7 +2870,7 @@ return (
           })()}
           {activeTab === 'meta-leadformlar' && (() => {
             const notConnected = !metaConn?.access_token
-            const metaLeads = leads.filter(l => l.source === 'meta')
+            const metaLeads = leads.filter(l => l.source === 'meta' || l.source === 'meta_form')
             const metaLeadsThisMonth = metaLeads.filter(l => {
               const d = new Date(l.created_at)
               const now = new Date()
@@ -4972,6 +5023,3 @@ return (
     </div>
   )
 }
-
-
-

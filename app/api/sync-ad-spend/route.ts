@@ -1,4 +1,3 @@
-// app/api/sync-ad-spend/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -7,27 +6,23 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Vercel cron veya manuel tetikleme için
 export async function POST(req: NextRequest) {
   try {
-    // Cron güvenlik kontrolü
     const authHeader = req.headers.get('authorization')
     const isCron = authHeader === `Bearer ${process.env.CRON_SECRET}`
-    
-    // Manuel tetikleme için owner_id body'den gelir
+
     let targetOwnerIds: string[] = []
 
     if (isCron) {
-      // Tüm aktif meta bağlantılarını çek
       const { data: connections } = await supabaseAdmin
         .from('meta_connections')
-        .select('owner_id, access_token, ad_account_id')
+        .select('owner_id, access_token, ad_account_id, selected_ad_account_id')
         .not('access_token', 'is', null)
-        .not('ad_account_id', 'is', null)
-      
-      targetOwnerIds = (connections || []).map(c => c.owner_id)
+
+      targetOwnerIds = (connections || [])
+        .filter((connection) => connection.ad_account_id || connection.selected_ad_account_id)
+        .map((connection) => connection.owner_id)
     } else {
-      // Manuel: sadece istekte gelen owner_id
       const body = await req.json().catch(() => ({}))
       if (body.owner_id) targetOwnerIds = [body.owner_id]
     }
@@ -40,26 +35,26 @@ export async function POST(req: NextRequest) {
 
     for (const ownerId of targetOwnerIds) {
       try {
-        // Bu owner'ın meta bağlantısını al
         const { data: conn } = await supabaseAdmin
           .from('meta_connections')
-          .select('access_token, ad_account_id')
+          .select('access_token, ad_account_id, selected_ad_account_id')
           .eq('owner_id', ownerId)
           .single()
 
-        if (!conn?.access_token || !conn?.ad_account_id) {
+        const effectiveAdAccountId = conn?.ad_account_id || conn?.selected_ad_account_id
+
+        if (!conn?.access_token || !effectiveAdAccountId) {
           results[ownerId] = { error: 'Meta bağlantısı eksik' }
           continue
         }
 
-        // Son 30 günün verilerini çek
         const since = new Date()
         since.setDate(since.getDate() - 30)
         const sinceStr = since.toISOString().split('T')[0]
         const untilStr = new Date().toISOString().split('T')[0]
 
         const fields = 'campaign_id,campaign_name,spend,impressions,clicks,date_start'
-        const url = `https://graph.facebook.com/v18.0/act_${conn.ad_account_id}/insights?fields=${fields}&time_range={"since":"${sinceStr}","until":"${untilStr}"}&time_increment=1&level=campaign&access_token=${conn.access_token}`
+        const url = `https://graph.facebook.com/v18.0/act_${effectiveAdAccountId}/insights?fields=${fields}&time_range={"since":"${sinceStr}","until":"${untilStr}"}&time_increment=1&level=campaign&access_token=${conn.access_token}`
 
         const res = await fetch(url)
         const json = await res.json()
@@ -76,10 +71,9 @@ export async function POST(req: NextRequest) {
           continue
         }
 
-        // Supabase'e upsert
         const rows = insightData.map((item: any) => ({
           owner_id: ownerId,
-          ad_account_id: conn.ad_account_id,
+          ad_account_id: effectiveAdAccountId,
           campaign_id: item.campaign_id,
           campaign_name: item.campaign_name,
           date: item.date_start,
@@ -99,22 +93,18 @@ export async function POST(req: NextRequest) {
           results[ownerId] = { synced: rows.length }
         }
 
-        // Meta API rate limit için kısa bekleme
-        await new Promise(r => setTimeout(r, 200))
-
-      } catch (err: any) {
-        results[ownerId] = { error: err.message }
+        await new Promise((resolve) => setTimeout(resolve, 200))
+      } catch (error: any) {
+        results[ownerId] = { error: error.message }
       }
     }
 
     return NextResponse.json({ ok: true, results })
-
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
-// Vercel cron GET ile de çağırabilir
 export async function GET(req: NextRequest) {
   return POST(req)
 }

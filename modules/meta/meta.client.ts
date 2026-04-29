@@ -1,7 +1,11 @@
 export async function fetchMetaLead(leadId: string, accessToken: string) {
-  const res = await fetch(
-    `https://graph.facebook.com/v18.0/${leadId}?access_token=${accessToken}`
-  )
+  const url = new URL(`https://graph.facebook.com/v18.0/${leadId}`)
+  url.search = new URLSearchParams({
+    fields: 'id,created_time,field_data,ad_id,form_id',
+    access_token: accessToken,
+  }).toString()
+
+  const res = await fetch(url.toString(), { method: 'GET' })
 
   if (!res.ok) {
     const errorText = await res.text()
