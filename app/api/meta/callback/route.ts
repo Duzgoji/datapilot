@@ -78,6 +78,7 @@ export async function GET(request: NextRequest) {
     const firstAdAccount = adAccounts.length === 1 ? adAccounts[0] : null
     const firstPage = pages.length === 1 ? pages[0] : null
 
+    await supabase.from('meta_connections').delete().eq('owner_id', ownerId)
     await supabase.from('meta_connections').upsert({
       owner_id: ownerId,
       access_token: accessToken,
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
       page_id: firstPage?.id || null,
       connected_at: new Date().toISOString(),
       is_active: true,
-    }, { onConflict: 'owner_id' })
+    })
 
     await logAuditEvent({
       action: 'integration_connected',
