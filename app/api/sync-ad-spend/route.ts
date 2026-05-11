@@ -49,6 +49,12 @@ export async function POST(req: NextRequest) {
         }
 
         const cleanAccountId = effectiveAdAccountId.replace(/^act_/, '')
+        // Eski hesap verilerini temizle
+        await supabaseAdmin
+        .from('ad_spend')
+        .delete()
+        .eq('owner_id', ownerId)
+        .neq('ad_account_id', cleanAccountId)
 
         // Kampanyaları çek
         const campaignsRes = await fetch(
