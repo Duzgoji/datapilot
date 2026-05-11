@@ -36,8 +36,13 @@ if (entries.length === 0 && body?.field === 'messages') {
   return NextResponse.json({ status: 'ok' }, { status: 200 })
 }
     for (const entry of entries) {
-      const pageId = entry.id
-      const messagingEvents = entry.messaging || []
+        const pageId = entry.id
+console.info('[Instagram Webhook] Entry received', { 
+  source: 'instagram_webhook', 
+  entry_id: pageId,
+  body: JSON.stringify(body).slice(0, 500)
+})
+        const messagingEvents = entry.messaging || []
 
       if (!messagingEvents.length) continue
 
