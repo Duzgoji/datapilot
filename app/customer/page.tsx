@@ -356,8 +356,9 @@ const [branches, setBranches] = useState<any[]>([])
   const [adSpend, setAdSpend] = useState<any[]>([])
   const [adSpendLoading, setAdSpendLoading] = useState(false)
   const [adSpendSyncing, setAdSpendSyncing] = useState(false)
-  const [adSpendPeriod, setAdSpendPeriod] = useState<'7'|'30'|'90'>('30')
-  
+  const [adSpendPeriod, setAdSpendPeriod] = useState<'1'|'7'|'15'|'30'|'custom'>('7')
+  const [adSpendStartDate, setAdSpendStartDate] = useState('')
+  const [adSpendEndDate, setAdSpendEndDate] = useState('')  
   // Veri Merkezi
   const EMPTY_ROW = () => ({ id: Date.now() + Math.random(), full_name: '', phone: '', email: '', source: 'manuel', branch_id: '', note: '' })
   const [importTab, setImportTab] = useState<'manuel'|'excel'>('manuel')
@@ -2500,9 +2501,17 @@ return (
 
           {activeTab === 'meta-baglanti' && profile?.id && <MetaConnect ownerId={tenantContext?.tenantId || profile.id} />}
  {activeTab === 'meta-kampanyalar' && (() => {
-            const days = parseInt(adSpendPeriod)
-            const since = new Date(); since.setDate(since.getDate() - days)
-            const filtered = adSpend.filter(r => new Date(r.date) >= since)
+            const days = adSpendPeriod === 'custom' ? 30 : parseInt(adSpendPeriod)
+const sinceDate = adSpendPeriod === 'custom' && adSpendStartDate
+  ? new Date(adSpendStartDate)
+  : (() => { const d = new Date(); d.setDate(d.getDate() - days); return d })()
+const untilDate = adSpendPeriod === 'custom' && adSpendEndDate
+  ? new Date(adSpendEndDate + 'T23:59:59')
+  : new Date()
+const filtered = adSpend.filter(r => {
+  const d = new Date(r.date)
+  return d >= sinceDate && d <= untilDate
+})
 
             // Kampanya bazında topla
             const campaignMap: Record<string, any> = {}
@@ -2566,14 +2575,25 @@ return (
                     {lastSync && <p className="text-xs text-gray-400 mt-0.5">Son güncelleme: {lastSync}</p>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
-                      {([['7', '7G'], ['30', '30G'], ['90', '90G']] as const).map(([val, label]) => (
-                        <button key={val} onClick={() => setAdSpendPeriod(val)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${adSpendPeriod === val ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>
-                          {label}
-                        </button>
-                      ))}
-                    </div>
+                   <div className="flex flex-wrap items-center gap-2">
+  <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+    {([['1', 'Bugün'], ['7', 'Son 7G'], ['15', 'Son 15G'], ['30', 'Son 30G'], ['custom', 'Özel']] as const).map(([val, label]) => (
+      <button key={val} onClick={() => setAdSpendPeriod(val)}
+        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${adSpendPeriod === val ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>
+        {label}
+      </button>
+    ))}
+  </div>
+  {adSpendPeriod === 'custom' && (
+    <div className="flex items-center gap-2">
+      <input type="date" value={adSpendStartDate} onChange={e => setAdSpendStartDate(e.target.value)}
+        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <span className="text-xs text-gray-400">—</span>
+      <input type="date" value={adSpendEndDate} onChange={e => setAdSpendEndDate(e.target.value)}
+        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+    </div>
+  )}
+</div>
                     <button onClick={handleSyncAdSpend} disabled={adSpendSyncing || !metaConn?.access_token}
                       className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-medium rounded-xl transition-colors">
                       <svg className={adSpendSyncing ? 'animate-spin' : ''} width="13" height="13" viewBox="0 0 13 13" fill="none">
