@@ -2539,8 +2539,8 @@ return (
                 {/* Header */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-base font-semibold text-gray-900">Kampanya Performans\u0131</h2>
-                    {lastSync && <p className="text-xs text-gray-400 mt-0.5">Son g\u00fcncelleme: {lastSync}</p>}
+                    <h2 className="text-base font-semibold text-gray-900">Kampanya Performansı</h2>
+                    {lastSync && <p className="text-xs text-gray-400 mt-0.5">Son güncelleme: {lastSync}</p>}
                   </div>
                   <div className="flex items-center gap-2">
                     {/* Periyot seçici */}
@@ -2558,7 +2558,7 @@ return (
                       <svg className={adSpendSyncing ? 'animate-spin' : ''} width="13" height="13" viewBox="0 0 13 13" fill="none">
                         <path d="M11 6.5A4.5 4.5 0 012.5 4M2 2v2.5H4.5M2 6.5a4.5 4.5 0 008.5 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      {adSpendSyncing ? 'Senkronize ediliyor...' : '\u015eimdi G\u00fcncelle'}
+                      {adSpendSyncing ? 'Senkronize ediliyor...' : 'Şimdi Güncelle'}
                     </button>
                   </div>
                 </div>
