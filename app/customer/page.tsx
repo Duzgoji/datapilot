@@ -2723,7 +2723,9 @@ const filtered = adSpend.filter(r => {
                     <div className="bg-white rounded-2xl border border-gray-100 p-5">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">Son 7 Gün Trendi</p>
+                         <p className="text-sm font-semibold text-gray-900">
+  {adSpendPeriod === '1' ? 'Bugün' : adSpendPeriod === 'custom' ? 'Özel Dönem' : `Son ${days} Gün`} Trendi
+</p>
                           <p className="text-xs text-gray-400 mt-0.5">Günlük harcama dağılımı</p>
                         </div>
                         <div className="flex items-center gap-4 text-xs text-gray-400">
