@@ -2499,8 +2499,7 @@ return (
           {/* ── META ── */}
 
           {activeTab === 'meta-baglanti' && profile?.id && <MetaConnect ownerId={tenantContext?.tenantId || profile.id} />}
-          {activeTab === 'meta-kampanyalar' && (() => {
-            // Seçilen periyoda göre filtrele
+ {activeTab === 'meta-kampanyalar' && (() => {
             const days = parseInt(adSpendPeriod)
             const since = new Date(); since.setDate(since.getDate() - days)
             const filtered = adSpend.filter(r => new Date(r.date) >= since)
@@ -2513,37 +2512,60 @@ return (
                   campaign_id: r.campaign_id,
                   campaign_name: r.campaign_name,
                   spend: 0, impressions: 0, clicks: 0,
+                  daily: [] as any[],
                 }
               }
               campaignMap[r.campaign_id].spend += r.spend || 0
               campaignMap[r.campaign_id].impressions += r.impressions || 0
               campaignMap[r.campaign_id].clicks += r.clicks || 0
+              campaignMap[r.campaign_id].daily.push({ date: r.date, spend: r.spend, clicks: r.clicks })
             })
-            const campaigns = Object.values(campaignMap).sort((a: any, b: any) => b.spend - a.spend)
+            const allCampaigns = Object.values(campaignMap).sort((a: any, b: any) => b.spend - a.spend)
 
             // Toplamlar
-            const totalSpend = campaigns.reduce((s: number, c: any) => s + c.spend, 0)
-            const totalImpressions = campaigns.reduce((s: number, c: any) => s + c.impressions, 0)
-            const totalClicks = campaigns.reduce((s: number, c: any) => s + c.clicks, 0)
+            const totalSpend = allCampaigns.reduce((s: number, c: any) => s + c.spend, 0)
+            const totalImpressions = allCampaigns.reduce((s: number, c: any) => s + c.impressions, 0)
+            const totalClicks = allCampaigns.reduce((s: number, c: any) => s + c.clicks, 0)
             const metaLeads = leads.filter(l => l.source === 'meta_form' || l.source === 'meta').length
             const metaSales = leads.filter(l => (l.source === 'meta_form' || l.source === 'meta') && l.status === 'procedure_done')
             const metaRevenue = metaSales.reduce((s, l) => s + (l.procedure_amount || 0), 0)
             const cpl = metaLeads > 0 ? totalSpend / metaLeads : 0
             const cps = metaSales.length > 0 ? totalSpend / metaSales.length : 0
             const roi = totalSpend > 0 ? ((metaRevenue - totalSpend) / totalSpend * 100) : 0
+            const avgCtr = totalImpressions > 0 ? (totalClicks / totalImpressions * 100) : 0
             const lastSync = adSpend.length > 0 ? new Date(adSpend[0].synced_at).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : null
 
+            // En iyi kampanya (CTR'ye göre)
+            const bestCtr = [...allCampaigns].filter(c => c.impressions > 0).sort((a: any, b: any) => (b.clicks / b.impressions) - (a.clicks / a.impressions))[0]
+            // En çok harcayan
+            const mostSpent = allCampaigns[0]
+            // En verimli (tıklama başı maliyet)
+            const mostEfficient = [...allCampaigns].filter(c => c.clicks > 0).sort((a: any, b: any) => (a.spend / a.clicks) - (b.spend / b.clicks))[0]
+
+            // Günlük trend (son 7 gün)
+            const trendDays = 7
+            const trendData = Array.from({ length: trendDays }, (_, i) => {
+              const d = new Date(); d.setDate(d.getDate() - (trendDays - 1 - i))
+              const dateStr = d.toISOString().split('T')[0]
+              const dayData = filtered.filter(r => r.date === dateStr)
+              return {
+                date: d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }),
+                spend: dayData.reduce((s, r) => s + (r.spend || 0), 0),
+                clicks: dayData.reduce((s, r) => s + (r.clicks || 0), 0),
+              }
+            })
+            const maxTrendSpend = Math.max(...trendData.map(d => d.spend), 1)
+
             return (
-              <div className="space-y-5 max-w-4xl">
+              <div className="space-y-5 max-w-5xl">
 
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-3">
                   <div>
                     <h2 className="text-base font-semibold text-gray-900">Kampanya Performansı</h2>
                     {lastSync && <p className="text-xs text-gray-400 mt-0.5">Son güncelleme: {lastSync}</p>}
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Periyot seçici */}
                     <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
                       {([['7', '7G'], ['30', '30G'], ['90', '90G']] as const).map(([val, label]) => (
                         <button key={val} onClick={() => setAdSpendPeriod(val)}
@@ -2552,7 +2574,6 @@ return (
                         </button>
                       ))}
                     </div>
-                    {/* Sync butonu */}
                     <button onClick={handleSyncAdSpend} disabled={adSpendSyncing || !metaConn?.access_token}
                       className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-medium rounded-xl transition-colors">
                       <svg className={adSpendSyncing ? 'animate-spin' : ''} width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -2563,15 +2584,15 @@ return (
                   </div>
                 </div>
 
-                {/* Meta ba?l? de?ilse uyar? */}
+                {/* Meta bağlı değilse uyarı */}
                 {!metaConn?.access_token && (
                   <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 flex items-center gap-4">
-                    <span className="text-3xl">??</span>
+                    <span className="text-3xl">⚠️</span>
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">Meta hesab\u0131 ba\u011fl\u0131 de\u011fil</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Kampanya verilerini g\u00f6rmek i\u00e7in Meta hesab\u0131n\u0131 ba\u011fla.</p>
+                      <p className="text-sm font-semibold text-gray-900">Meta hesabı bağlı değil</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Kampanya verilerini görmek için Meta hesabını bağla.</p>
                       <button onClick={() => setActiveTab('meta-baglanti')}
-                        className="mt-2 text-xs text-blue-600 font-medium hover:underline">Meta Ba\u011flant\u0131s\u0131na Git -&gt;</button>
+                        className="mt-2 text-xs text-blue-600 font-medium hover:underline">Meta Bağlantısına Git →</button>
                     </div>
                   </div>
                 )}
@@ -2582,40 +2603,40 @@ return (
                     <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0" stroke="#3b82f6" strokeWidth="1.5"/><path d="M12 8v4l3 3" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/></svg>
                     </div>
-                    <p className="text-gray-600 text-sm font-medium">Hen\u00fcz veri yok</p>
-                    <p className="text-gray-400 text-xs mt-1 mb-4">Meta hesab\u0131 ba\u011fl\u0131. \u0130lk veriyi \u00e7ekmek i\u00e7in g\u00fcncelle.</p>
+                    <p className="text-gray-600 text-sm font-medium">Henüz veri yok</p>
+                    <p className="text-gray-400 text-xs mt-1 mb-4">Meta hesabı bağlı. İlk veriyi çekmek için güncelle.</p>
                     <button onClick={handleSyncAdSpend} disabled={adSpendSyncing}
                       className="px-4 py-2 bg-blue-600 text-white text-sm rounded-xl hover:bg-blue-700 transition-colors font-medium">
-                      {adSpendSyncing ? '\u00c7ekiliyor...' : 'Veriyi \u00c7ek'}
+                      {adSpendSyncing ? 'Çekiliyor...' : 'Veriyi Çek'}
                     </button>
                   </div>
                 )}
 
-                {/* ROI & ?zet kartlar */}
                 {adSpend.length > 0 && (
                   <>
+                    {/* Özet kartlar */}
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                       {[
-                        { label: 'Toplam Harcama', value: `TL ${totalSpend.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, sub: `${days} g\u00fcn`, color: 'text-red-600', bg: 'from-red-50 to-white', border: 'border-red-100', icon: 'TL' },
-                        { label: 'Meta Geliri', value: `TL ${metaRevenue.toLocaleString()}`, sub: `${metaSales.length} sat\u0131\u015f`, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100', icon: 'TL' },
-                        { label: 'ROI', value: `%${roi.toFixed(1)}`, sub: totalSpend > 0 ? (roi >= 0 ? 'K\u00e2rl\u0131' : 'Zararl\u0131') : '-', color: roi >= 0 ? 'text-emerald-600' : 'text-red-600', bg: roi >= 0 ? 'from-emerald-50 to-white' : 'from-red-50 to-white', border: roi >= 0 ? 'border-emerald-100' : 'border-red-100', icon: 'ROI' },
-                        { label: 'Potansiyel M\u00fc\u015fteri Ba\u015f\u0131 Maliyet', value: cpl > 0 ? `TL ${cpl.toFixed(0)}` : '-', sub: `${metaLeads} meta potansiyel m\u00fc\u015fteri`, color: 'text-blue-600', bg: 'from-blue-50 to-white', border: 'border-blue-100', icon: 'PL' },
-                     ].map((card: any) => (
-                        <div key={card.label} className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-5 border ${card.border} hover:shadow-md transition-all`}>
-                        <div className={`w-9 h-9 ${card.iconBg} rounded-xl flex items-center justify-center text-lg mb-3`}>{card.icon}</div>
-                         <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
-                         <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
-                         <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
-                    </div>
-))}
+                        { label: 'Toplam Harcama', value: `₺${totalSpend.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, sub: `${days} gün`, color: 'text-red-600', bg: 'from-red-50 to-white', border: 'border-red-100', icon: '💸' },
+                        { label: 'Meta Geliri', value: `₺${metaRevenue.toLocaleString()}`, sub: `${metaSales.length} satış`, color: 'text-emerald-600', bg: 'from-emerald-50 to-white', border: 'border-emerald-100', icon: '💰' },
+                        { label: 'ROI', value: `%${roi.toFixed(1)}`, sub: totalSpend > 0 ? (roi >= 0 ? 'Kârlı' : 'Zararlı') : '-', color: roi >= 0 ? 'text-emerald-600' : 'text-red-600', bg: roi >= 0 ? 'from-emerald-50 to-white' : 'from-red-50 to-white', border: roi >= 0 ? 'border-emerald-100' : 'border-red-100', icon: '📈' },
+                        { label: 'Potansiyel Müşteri Başı Maliyet', value: cpl > 0 ? `₺${cpl.toFixed(0)}` : '-', sub: `${metaLeads} meta potansiyel müşteri`, color: 'text-blue-600', bg: 'from-blue-50 to-white', border: 'border-blue-100', icon: '🎯' },
+                      ].map((card: any) => (
+                        <div key={card.label} className={`bg-gradient-to-br ${card.bg} rounded-2xl p-5 border ${card.border} hover:shadow-md transition-all`}>
+                          <div className="text-2xl mb-3">{card.icon}</div>
+                          <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+                          <p className="text-xs font-medium text-gray-700 mt-1">{card.label}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{card.sub}</p>
+                        </div>
+                      ))}
                     </div>
 
-                    {/* ?kincil metrikler */}
+                    {/* İkincil metrikler */}
                     <div className="grid grid-cols-3 gap-3">
                       {[
-                        { label: 'Toplam G\u00f6sterim', value: totalImpressions.toLocaleString(), icon: 'GO' },
-                        { label: 'Toplam T\u0131klama', value: totalClicks.toLocaleString(), icon: 'TK' },
-                        { label: 'Sat\u0131\u015f Ba\u015f\u0131 Maliyet', value: cps > 0 ? `TL ${cps.toFixed(0)}` : '-', icon: 'SB' },
+                        { label: 'Toplam Gösterim', value: totalImpressions.toLocaleString(), icon: '👁️' },
+                        { label: 'Toplam Tıklama', value: totalClicks.toLocaleString(), icon: '🖱️' },
+                        { label: 'Ortalama CTR', value: `%${avgCtr.toFixed(2)}`, icon: '📊' },
                       ].map(m => (
                         <div key={m.label} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3">
                           <span className="text-2xl">{m.icon}</span>
@@ -2627,12 +2648,97 @@ return (
                       ))}
                     </div>
 
+                    {/* Tavsiye kartları */}
+                    {(bestCtr || mostSpent || mostEfficient) && (
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        {bestCtr && (
+                          <div className="bg-gradient-to-br from-violet-50 to-white border border-violet-100 rounded-2xl p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-lg">🏆</span>
+                              <p className="text-xs font-semibold text-violet-700 uppercase tracking-wide">En Yüksek CTR</p>
+                            </div>
+                            <p className="text-sm font-bold text-gray-900 truncate">{bestCtr.campaign_name}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              %{(bestCtr.clicks / bestCtr.impressions * 100).toFixed(2)} tıklama oranı
+                            </p>
+                            <p className="text-xs text-violet-600 mt-2 font-medium">
+                              💡 Bu kampanya en ilgi çekici içeriğe sahip
+                            </p>
+                          </div>
+                        )}
+                        {mostSpent && (
+                          <div className="bg-gradient-to-br from-red-50 to-white border border-red-100 rounded-2xl p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-lg">💸</span>
+                              <p className="text-xs font-semibold text-red-700 uppercase tracking-wide">En Çok Harcayan</p>
+                            </div>
+                            <p className="text-sm font-bold text-gray-900 truncate">{mostSpent.campaign_name}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              ₺{mostSpent.spend.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} harcama
+                            </p>
+                            <p className="text-xs text-red-600 mt-2 font-medium">
+                              💡 Bütçenin %{(mostSpent.spend / totalSpend * 100).toFixed(0)}'ini tüketiyor
+                            </p>
+                          </div>
+                        )}
+                        {mostEfficient && (
+                          <div className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-2xl p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-lg">⚡</span>
+                              <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">En Verimli</p>
+                            </div>
+                            <p className="text-sm font-bold text-gray-900 truncate">{mostEfficient.campaign_name}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              ₺{(mostEfficient.spend / mostEfficient.clicks).toFixed(2)} tıklama başı maliyet
+                            </p>
+                            <p className="text-xs text-emerald-600 mt-2 font-medium">
+                              💡 En düşük maliyetle trafik getiriyor
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Günlük trend */}
+                    <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">Son 7 Gün Trendi</p>
+                          <p className="text-xs text-gray-400 mt-0.5">Günlük harcama dağılımı</p>
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-gray-400">
+                          <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-sm bg-blue-400 inline-block" /> Harcama</span>
+                        </div>
+                      </div>
+                      <div className="flex items-end gap-2 h-24">
+                        {trendData.map((d, i) => {
+                          const h = maxTrendSpend > 0 ? (d.spend / maxTrendSpend) * 100 : 0
+                          return (
+                            <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+                              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                ₺{d.spend.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                              </div>
+                              <div className="w-full flex flex-col justify-end" style={{ height: '80px' }}>
+                                <div
+                                  className={`w-full rounded-t-lg transition-all ${d.spend > 0 ? 'bg-blue-400 hover:bg-blue-500' : 'bg-gray-100'}`}
+                                  style={{ height: `${Math.max(h, d.spend > 0 ? 4 : 0)}%` }}
+                                />
+                              </div>
+                              <p className="text-[9px] text-gray-400 text-center">{d.date}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+
                     {/* Kampanya tablosu */}
-                    {campaigns.length > 0 && (
+                    {allCampaigns.length > 0 && (
                       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                        <div className="px-5 py-4 border-b border-gray-50">
-                          <p className="text-sm font-semibold text-gray-900">Kampanya Detayı</p>
-                          <p className="text-xs text-gray-400 mt-0.5">Son {days} gün · {campaigns.length} kampanya</p>
+                        <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">Kampanya Detayı</p>
+                            <p className="text-xs text-gray-400 mt-0.5">Son {days} gün · {allCampaigns.length} kampanya</p>
+                          </div>
                         </div>
                         <div className="overflow-x-auto">
                           <table className="w-full">
@@ -2643,31 +2749,39 @@ return (
                                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">Gösterim</th>
                                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">Tıklama</th>
                                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">CTR</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">TBM</th>
                                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400">Pay</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {campaigns.map((c: any, i: number) => {
-                                const ctr = c.impressions > 0 ? (c.clicks / c.impressions * 100).toFixed(2) : '0.00'
-                                const share = totalSpend > 0 ? (c.spend / totalSpend * 100).toFixed(0) : 0
+                              {allCampaigns.map((c: any, i: number) => {
+                                const ctr = c.impressions > 0 ? (c.clicks / c.impressions * 100) : 0
+                                const tbm = c.clicks > 0 ? (c.spend / c.clicks) : 0
+                                const share = totalSpend > 0 ? (c.spend / totalSpend * 100) : 0
+                                const ctrColor = ctr >= 3 ? 'text-emerald-600' : ctr >= 1 ? 'text-amber-600' : 'text-red-500'
                                 return (
-                                  <tr key={c.campaign_id} className={`border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors`}>
+                                  <tr key={c.campaign_id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
                                     <td className="px-4 py-3">
                                       <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" style={{ opacity: 1 - i * 0.15 }} />
+                                        <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" style={{ opacity: Math.max(1 - i * 0.12, 0.2) }} />
                                         <p className="text-sm text-gray-800 font-medium truncate max-w-[180px]">{c.campaign_name}</p>
                                       </div>
                                     </td>
-                                    <td className="px-4 py-3 text-right text-sm font-semibold text-red-600">₺{c.spend.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                                    <td className="px-4 py-3 text-right text-sm font-semibold text-red-600">
+                                      ₺{c.spend.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                    </td>
                                     <td className="px-4 py-3 text-right text-sm text-gray-600">{c.impressions.toLocaleString()}</td>
                                     <td className="px-4 py-3 text-right text-sm text-gray-600">{c.clicks.toLocaleString()}</td>
-                                    <td className="px-4 py-3 text-right text-sm text-gray-600">%{ctr}</td>
+                                    <td className={`px-4 py-3 text-right text-sm font-medium ${ctrColor}`}>%{ctr.toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-right text-sm text-gray-600">
+                                      {tbm > 0 ? `₺${tbm.toFixed(2)}` : '-'}
+                                    </td>
                                     <td className="px-4 py-3 text-right">
                                       <div className="flex items-center justify-end gap-2">
                                         <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                           <div className="h-full bg-blue-400 rounded-full" style={{ width: `${share}%` }} />
                                         </div>
-                                        <span className="text-xs text-gray-400 w-8 text-right">%{share}</span>
+                                        <span className="text-xs text-gray-400 w-8 text-right">%{share.toFixed(0)}</span>
                                       </div>
                                     </td>
                                   </tr>
@@ -2675,6 +2789,14 @@ return (
                               })}
                             </tbody>
                           </table>
+                        </div>
+
+                        {/* CTR renk açıklaması */}
+                        <div className="px-5 py-3 border-t border-gray-50 flex items-center gap-4 bg-gray-50/50">
+                          <p className="text-xs text-gray-400 font-medium">CTR Değerlendirme:</p>
+                          <span className="text-xs text-emerald-600 font-medium">● %3+ İyi</span>
+                          <span className="text-xs text-amber-600 font-medium">● %1-3 Orta</span>
+                          <span className="text-xs text-red-500 font-medium">● %1 altı Düşük</span>
                         </div>
                       </div>
                     )}
