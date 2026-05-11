@@ -719,6 +719,7 @@ export default function LandingPage() {
               <ul className="space-y-2.5 text-sm">
                 <li><a href="#iletisim" className="transition-colors hover:text-white">İletişim</a></li>
                 <li><a href="#sss" className="transition-colors hover:text-white">SSS</a></li>
+                <li><a href="/privacy" className="transition-colors hover:text-white">Gizlilik Politikası</a></li>
               </ul>
             </div>
             <div>
@@ -731,7 +732,10 @@ export default function LandingPage() {
           </div>
           <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-800 pt-6">
             <p className="text-sm">DataPilot © 2026 — Tüm hakları saklıdır.</p>
-            <p className="text-sm">İstanbul, Türkiye</p>
+            <div className="flex items-center gap-4 text-sm">
+  <p>İstanbul, Türkiye</p>
+  <a href="/privacy" className="transition-colors hover:text-white">Gizlilik Politikası</a>
+</div>
           </div>
         </div>
       </footer>
