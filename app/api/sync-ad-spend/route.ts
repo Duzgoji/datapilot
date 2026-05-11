@@ -48,14 +48,23 @@ export async function POST(req: NextRequest) {
           continue
         }
 
+        const cleanAccountId = effectiveAdAccountId.replace(/^act_/, '')
+
+        // Kampanyaları çek
+        const campaignsRes = await fetch(
+          `https://graph.facebook.com/v18.0/act_${cleanAccountId}/campaigns?fields=id,name,status&access_token=${conn.access_token}`
+        )
+        const campaignsData = await campaignsRes.json()
+        const campaigns = campaignsData.data || []
+
+        // Insights çek (son 90 gün)
         const since = new Date()
-        since.setDate(since.getDate() - 30)
+        since.setDate(since.getDate() - 90)
         const sinceStr = since.toISOString().split('T')[0]
         const untilStr = new Date().toISOString().split('T')[0]
 
         const fields = 'campaign_id,campaign_name,spend,impressions,clicks,date_start'
-        const cleanAccountId = effectiveAdAccountId.replace(/^act_/, '')
-const url = `https://graph.facebook.com/v18.0/act_${cleanAccountId}/insights?...`
+        const url = `https://graph.facebook.com/v18.0/act_${cleanAccountId}/insights?fields=${fields}&time_range={"since":"${sinceStr}","until":"${untilStr}"}&time_increment=1&level=campaign&access_token=${conn.access_token}`
 
         const res = await fetch(url)
         const json = await res.json()
@@ -67,6 +76,24 @@ const url = `https://graph.facebook.com/v18.0/act_${cleanAccountId}/insights?...
 
         const insightData = json.data || []
 
+        // Harcama verisi yoksa kampanya listesini kaydet
+        if (insightData.length === 0 && campaigns.length > 0) {
+          const campRows = campaigns.map((c: any) => ({
+            owner_id: ownerId,
+            ad_account_id: cleanAccountId,
+            campaign_id: c.id,
+            campaign_name: c.name,
+            date: untilStr,
+            spend: 0,
+            impressions: 0,
+            clicks: 0,
+            synced_at: new Date().toISOString(),
+          }))
+          await supabaseAdmin.from('ad_spend').upsert(campRows, { onConflict: 'owner_id,campaign_id,date' })
+          results[ownerId] = { synced: campRows.length, message: 'Kampanyalar eklendi (harcama yok)' }
+          continue
+        }
+
         if (insightData.length === 0) {
           results[ownerId] = { synced: 0, message: 'Veri yok' }
           continue
@@ -74,7 +101,7 @@ const url = `https://graph.facebook.com/v18.0/act_${cleanAccountId}/insights?...
 
         const rows = insightData.map((item: any) => ({
           owner_id: ownerId,
-          ad_account_id: effectiveAdAccountId,
+          ad_account_id: cleanAccountId,
           campaign_id: item.campaign_id,
           campaign_name: item.campaign_name,
           date: item.date_start,
