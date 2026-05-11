@@ -448,10 +448,10 @@ setProfile({ ...profileData, _resolvedPlan })
 
     const { data: metaConnRows } = await supabase.from('meta_connections').select('*').in('owner_id', tenant.readOwnerIds)
     const resolvedMetaConn =
-      metaConnRows?.find((row: any) => row.owner_id === tenant.tenantId) ||
-      metaConnRows?.find((row: any) => row.owner_id === tenant.profileId) ||
-      metaConnRows?.[0] ||
-      null
+    metaConnRows?.find((row: any) => row.owner_id === tenant.tenantId && row.is_active) ||
+    metaConnRows?.find((row: any) => row.owner_id === tenant.profileId && row.is_active) ||
+    metaConnRows?.find((row: any) => row.is_active) ||
+    null
     setMetaConn(resolvedMetaConn)
 
     // Ad spend yükle
