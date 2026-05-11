@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { logAuditEvent } from '@/lib/audit/logAuditEvent'
@@ -78,8 +79,9 @@ export async function GET(request: NextRequest) {
     const firstAdAccount = adAccounts.length === 1 ? adAccounts[0] : null
     const firstPage = pages.length === 1 ? pages[0] : null
 
-    await supabase.from('meta_connections').delete().eq('owner_id', ownerId)
-    await supabase.from('meta_connections').upsert({
+      await supabase.from('meta_connections').delete().eq('owner_id', ownerId)
+      await supabase.from('meta_connections').insert({
+      id: randomUUID(),
       owner_id: ownerId,
       access_token: accessToken,
       token_expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
