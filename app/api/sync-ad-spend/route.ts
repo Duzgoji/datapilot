@@ -54,7 +54,8 @@ export async function POST(req: NextRequest) {
         const untilStr = new Date().toISOString().split('T')[0]
 
         const fields = 'campaign_id,campaign_name,spend,impressions,clicks,date_start'
-        const url = `https://graph.facebook.com/v18.0/act_${effectiveAdAccountId}/insights?fields=${fields}&time_range={"since":"${sinceStr}","until":"${untilStr}"}&time_increment=1&level=campaign&access_token=${conn.access_token}`
+        const cleanAccountId = effectiveAdAccountId.replace(/^act_/, '')
+const url = `https://graph.facebook.com/v18.0/act_${cleanAccountId}/insights?...`
 
         const res = await fetch(url)
         const json = await res.json()
