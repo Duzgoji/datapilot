@@ -27,8 +27,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
 
     // Instagram DM payload yapısı
-    const entries = body?.entry || []
+// Instagram webhook iki farklı format gönderebilir
+const entries = body?.entry || []
 
+// Test payload formatını da destekle
+if (entries.length === 0 && body?.field === 'messages') {
+  console.info('[Instagram Webhook] Test payload received', { source: 'instagram_webhook' })
+  return NextResponse.json({ status: 'ok' }, { status: 200 })
+}
     for (const entry of entries) {
       const pageId = entry.id
       const messagingEvents = entry.messaging || []
