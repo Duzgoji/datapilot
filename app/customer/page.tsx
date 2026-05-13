@@ -1066,7 +1066,7 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
-       <img src="/logo2.png" alt="DataPilot" className="h-10 w-auto mx-auto mb-3" />
+       <img src="/logo.png" alt="DataPilot" className="h-10 w-auto mx-auto mb-3" />
         <div className="flex gap-1 justify-center">
           {[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
         </div>
@@ -1103,7 +1103,7 @@ return (
   `}>
             {/* DataPilot Logo */}
        <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-  <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
+  <img src="/logo.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
   {!sidebarCollapsed && (
     <>
       <span className="font-semibold text-white text-sm tracking-tight truncate flex-1">DataPilot</span>
