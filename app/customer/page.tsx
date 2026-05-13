@@ -80,7 +80,7 @@ const SOURCE_CONFIG: any = {
   whatsapp:     { label: 'WhatsApp',     badge: 'bg-green-100 text-green-700' },
   website:      { label: 'Web',          badge: 'bg-purple-100 text-purple-700' },
   referral:     { label: 'Referans',     badge: 'bg-orange-100 text-orange-700' },
-   google_ads:   { label: 'Google Ads',   badge: 'bg-yellow-100 text-yellow-700' },
+
 }
 
 // ─── SHARED COMPONENTS ────────────────────────────────────────────────────────
@@ -352,7 +352,6 @@ const [branches, setBranches] = useState<any[]>([])
   const [logoUploading, setLogoUploading] = useState(false)
 
   const [metaConn, setMetaConn] = useState<any>(null)
-  const [googleConnected, setGoogleConnected] = useState(false)
   const [adSpend, setAdSpend] = useState<any[]>([])
   const [adSpendLoading, setAdSpendLoading] = useState(false)
   const [adSpendSyncing, setAdSpendSyncing] = useState(false)
@@ -1492,15 +1491,7 @@ return (
                     <p className="text-gray-500 text-sm font-medium">Sonuç bulunamadı</p>
                     {(searchQuery || filterStatus !== 'all' || filterDate !== 'all' || filterSource !== 'all') && <button onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterDate('all'); setFilterSource('all') }} className="mt-2 text-xs text-indigo-600 hover:underline">Filtreleri temizle</button>}
                   </div>
-                // ─── BUNU BUL VE DE�?İ�?TİR ────────────────────────────────────────────────────
-// leadler-liste sekmesinde şu satırı bul:
-//   ) : filteredLeads.map((lead, i) => (
-//     <div key={lead.id} onClick={() => openDetailModal(lead)}
-//       className={`px-5 py-4 flex items-center gap-4 cursor-pointer ...`}>
-//
-// O bloktan kapanış parantezine kadar olan tüm kısmı sil,
-// yerine aşağıdaki kodu yapıştır:
-// ─────────────────────────────────────────────────────────────────────────────
+               
 
                 ) : filteredLeads.map((lead, i) => {
                   const assignedMember = teamMembers.find(m => m.user_id === lead.assigned_to)
@@ -1539,7 +1530,7 @@ return (
                           )}
                           {hasAppointmentSoon && (
                             <span className="text-xs text-violet-600 font-medium bg-violet-100 px-1.5 py-0.5 rounded-md flex-shrink-0">
-                              g��� Yakın
+                              📅 Yakın
                             </span>
                           )}
                           {isAppointmentOverdue && (
@@ -1580,7 +1571,7 @@ return (
                             <>
                               <span className="text-xs text-gray-300">·</span>
                               <span className={`text-xs font-medium ${isAppointmentOverdue ? 'text-red-500' : 'text-violet-600'}`}>
-                                g��� {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                📝 {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </>
                           )}
@@ -1588,7 +1579,7 @@ return (
 
                         {/* Not varsa */}
                         {lead.note && (
-                          <p className="text-xs text-gray-400 mt-1 truncate max-w-sm">g��� {lead.note}</p>
+                          <p className="text-xs text-gray-400 mt-1 truncate max-w-sm">📅 {lead.note}</p>
                         )}
                       </div>
 
@@ -2140,7 +2131,7 @@ return (
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
                       <p className="text-xs text-gray-400">{lead.phone} · {new Date(lead.created_at).toLocaleDateString('tr-TR')}</p>
-                      {lead.note && <p className="text-xs text-gray-400 truncate mt-0.5">g��� {lead.note}</p>}
+                      {lead.note && <p className="text-xs text-gray-400 truncate mt-0.5">⚠️ {lead.note}</p>}
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
                       <a href={`https://wa.me/90${lead.phone?.replace(/\D/g, '').replace(/^0/, '')}`}
@@ -2405,7 +2396,7 @@ return (
                       className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white py-3 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                       {waConnecting ? (
                         <><svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="30 70"/></svg>Bağlanıyor...</>
-                      ) : <>g��� {p.name} ile Bağlan</>}
+                      ) : <>🔗 {p.name} ile Bağlan</>}
                     </button>
                   </div>
                 )
@@ -3689,7 +3680,6 @@ const filtered = adSpend.filter(r => {
                                   <option value="whatsapp">WhatsApp</option>
                                   <option value="instagram_dm">Instagram</option>
                                   <option value="meta_form">Meta Form</option>
-                                  <option value="google_ads">Google Ads</option>
                                 </select>
                                 <svg className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                               </div>
@@ -3767,9 +3757,9 @@ const filtered = adSpend.filter(r => {
                   {/* Adımlar */}
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { step: '1', icon: '⬇️', title: '�?ablonu İndir', desc: 'Excel şablonunu indir', color: 'from-blue-50 to-indigo-50 border-blue-100' },
+                      { step: '1', icon: '⬇️', title: 'Şablonu İndir', desc: 'Excel şablonunu indir', color: 'from-blue-50 to-indigo-50 border-blue-100' },
                       { step: '2', icon: '✏️', title: 'Doldur', desc: 'Mevcut datanı kopyala yapıştır', color: 'from-violet-50 to-purple-50 border-violet-100' },
-                      { step: '3', icon: 'g���', title: 'Yükle', desc: 'Dosyayı seç ve aktar', color: 'from-emerald-50 to-teal-50 border-emerald-100' },
+                      { step: '3', icon: '📤', title: 'Yükle', desc: 'Dosyayı seç ve aktar', color: 'from-emerald-50 to-teal-50 border-emerald-100' },
                     ].map(s => (
                       <div key={s.step} className={`bg-gradient-to-br ${s.color} border rounded-xl p-4 text-center`}>
                         <span className="text-2xl">{s.icon}</span>
@@ -3806,7 +3796,7 @@ const filtered = adSpend.filter(r => {
                     {/* Varsayılan satışçı seçici */}
                     <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
                       <div className="flex items-start gap-3">
-                        <span className="text-lg mt-0.5">g���</span>
+                        <span className="text-lg mt-0.5">📝</span>
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-gray-800">Varsayılan Satışçı</p>
                           <p className="text-xs text-gray-500 mt-0.5 mb-2">Excel'de "Satışçı" sütunu doluysa o isim öncelikli atanır. Boş satirlar için buradan seç.</p>
@@ -3848,7 +3838,7 @@ const filtered = adSpend.filter(r => {
                     {/* Önizleme */}
                     {xlsxPreview.length > 0 && (
                       <div>
-                        <p className="text-xs font-medium text-gray-500 mb-2">g��� Önizleme (ilk {xlsxPreview.length} satır)</p>
+                        <p className="text-xs font-medium text-gray-500 mb-2">👁️ Önizleme (ilk {xlsxPreview.length} satır)</p>
                         <div className="overflow-x-auto rounded-xl border border-gray-100 bg-gray-50">
                           <table className="w-full text-xs">
                             <thead>
@@ -4226,7 +4216,7 @@ const filtered = adSpend.filter(r => {
           <div>
             <p className="text-xs font-medium text-gray-500 mb-2">Rol</p>
             <div className="grid grid-cols-2 gap-2">
-              {[{ key: 'agent', label: 'g��� Satışçı' }, { key: 'manager', label: 'g��� Yönetici' }].map(r => (
+              {[{ key: 'agent', label: '👤 Satışçı' }, { key: 'manager', label: '👤 Yönetici' }].map(r => (
                 <button key={r.key} type="button" onClick={() => setMemberRole(r.key)}
                   className={`py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${memberRole === r.key ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
                   {r.label}
@@ -4271,7 +4261,6 @@ const filtered = adSpend.filter(r => {
               <option value="whatsapp">WhatsApp</option>
               <option value="website">Web Sitesi</option>
               <option value="referral">Referans</option>
-              <option value="google_ads">Google Ads</option>
             </Select>
             <Select label="Satışçıya Ata" value={leadAssignTo} onChange={(e: any) => setLeadAssignTo(e.target.value)}>
               <option value="">Atama yapma</option>
@@ -4362,7 +4351,7 @@ const filtered = adSpend.filter(r => {
           )}
           {newStatus === 'appointment_scheduled' && (
            <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
-  <p className="text-xs font-semibold text-violet-700 mb-3">g��� Randevu Tarihi</p>
+  <p className="text-xs font-semibold text-violet-700 mb-3">📅 Randevu Tarihi</p>
   <Input type="datetime-local" value={appointmentDate} onChange={(e: any) => setAppointmentDate(e.target.value)} />
 </div>
           )}
@@ -4379,7 +4368,7 @@ const filtered = adSpend.filter(r => {
     <p className="text-xs text-gray-300 text-center py-2">Henüz not yok</p>
   ) : leadActivities.map(activity => (
     <div key={activity.id} className="flex gap-2 items-start bg-gray-50 rounded-xl px-3 py-2">
-      <span className="text-xs">g���</span>
+      <span className="text-xs">📝</span>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-gray-700">{activity.content}</p>
         <p className="text-xs text-gray-400 mt-0.5">{activity.profiles?.full_name} · {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
@@ -4484,7 +4473,7 @@ const filtered = adSpend.filter(r => {
       <p className="text-xs text-gray-300 text-center py-2">Henüz not yok</p>
     ) : leadActivities.map(activity => (
       <div key={activity.id} className="flex gap-2 items-start bg-gray-50 rounded-xl px-3 py-2">
-        <span className="text-xs">g���</span>
+        <span className="text-xs">📝</span>
         <div className="flex-1 min-w-0">
           <p className="text-xs text-gray-700">{activity.content}</p>
           <p className="text-xs text-gray-400 mt-0.5">{activity.profiles?.full_name} · {new Date(activity.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
@@ -4621,7 +4610,6 @@ const filtered = adSpend.filter(r => {
                     <option value="instagram_dm">Instagram</option>
                     <option value="referral">Referans</option>
                     <option value="website">Web Sitesi</option>
-                    <option value="google_ads">Google Ads</option>
                   </select>
                   <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </div>
