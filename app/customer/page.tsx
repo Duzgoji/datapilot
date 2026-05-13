@@ -1073,7 +1073,7 @@ if (!bulkAllowed) { alert(bulkMsg); setBulkLoading(false); return }
       </div>
     </div>
   )
-
+if (!profile) return null
   // ─── RENDER ───────────────────────────────────────────────────────────────
  const sidebarWidth = sidebarCollapsed ? '4rem' : '15rem'
 return (
@@ -4383,7 +4383,7 @@ const filtered = adSpend.filter(r => {
       </Modal>
 
       {/* ── LEAD DETAY ── */}
-      <Modal open={showDetailModal} onClose={() => setShowDetailModal(false)} title={detailLead.full_name || 'Potansiyel Müşteri Detayı'} subtitle={detailLead?.lead_code} size="lg">
+      <Modal open={showDetailModal} onClose={() => setShowDetailModal(false)} title={detailLead?.full_name || 'Potansiyel Müşteri Detayı'} subtitle={detailLead?.lead_code} size="lg">
         {detailLead && (
           <div className="p-6 space-y-5">
             <div className="flex items-center gap-3">
@@ -4579,7 +4579,7 @@ const filtered = adSpend.filter(r => {
       </Modal>
 
       {/* ── LEAD DÜZENLE ── */}
-      <Modal open={showEditModal} onClose={() => { setShowEditModal(false); setEditLead(null) }} title="Potansiyel Müşteri Düzenle" subtitle={editLead.lead_code}>
+      <Modal open={showEditModal} onClose={() => { setShowEditModal(false); setEditLead(null) }} title="Potansiyel Müşteri Düzenle" subtitle={editLead?.lead_code}>
         {editLead && (
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-3">
