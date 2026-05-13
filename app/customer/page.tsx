@@ -673,7 +673,7 @@ if (!newStatus && statusNote.trim()) {
     lead_id: selectedLead.id, user_id: profile.id,
     type: 'note', content: statusNote
   })
-  if (selectedLead?.id) await loadLeadActivities(selectedLead.id)
+  if (selectedLead.id) await loadLeadActivities(selectedLead.id)
   
   setStatusNote('')
   setSaving(false)
@@ -4395,7 +4395,7 @@ const filtered = adSpend.filter(r => {
       </Modal>
 
       {/* ── LEAD DETAY ── */}
-      <Modal open={showDetailModal} onClose={() => setShowDetailModal(false)} title={detailLead?.full_name || 'Potansiyel Müşteri Detayı'} subtitle={detailLead?.lead_code} size="lg">
+      <Modal open={showDetailModal} onClose={() => setShowDetailModal(false)} title={detailLead.full_name || 'Potansiyel Müşteri Detayı'} subtitle={detailLead?.lead_code} size="lg">
         {detailLead && (
           <div className="p-6 space-y-5">
             <div className="flex items-center gap-3">
@@ -4591,7 +4591,7 @@ const filtered = adSpend.filter(r => {
       </Modal>
 
       {/* ── LEAD DÜZENLE ── */}
-      <Modal open={showEditModal} onClose={() => { setShowEditModal(false); setEditLead(null) }} title="Potansiyel Müşteri Düzenle" subtitle={editLead?.lead_code}>
+      <Modal open={showEditModal} onClose={() => { setShowEditModal(false); setEditLead(null) }} title="Potansiyel Müşteri Düzenle" subtitle={editLead.lead_code}>
         {editLead && (
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-3">
