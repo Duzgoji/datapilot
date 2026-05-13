@@ -1,4 +1,4 @@
-export type PlanName = 'starter' | 'pro' | 'enterprise'
+export type PlanName = 'custom'
 
 export const PLAN_LIMITS: Record<PlanName, {
   label: string
@@ -7,23 +7,9 @@ export const PLAN_LIMITS: Record<PlanName, {
   maxBranches: number | null
   maxMonthlyLeads: number | null
 }> = {
-  starter: {
-    label: 'Starter',
-    price: 2000,
-    maxUsers: 2,
-    maxBranches: 1,
-    maxMonthlyLeads: 400,
-  },
-  pro: {
-    label: 'Pro',
-    price: 5500,
-    maxUsers: 10,
-    maxBranches: 3,
-    maxMonthlyLeads: 2000,
-  },
-  enterprise: {
-    label: 'Enterprise',
-    price: 15000,
+  custom: {
+    label: 'DataPilot',
+    price: 0,
     maxUsers: null,
     maxBranches: null,
     maxMonthlyLeads: null,
@@ -37,5 +23,5 @@ export function getPlanLimits(plan: PlanName) {
 }
 
 export function isValidPlan(plan: string | null | undefined): plan is PlanName {
-  return !!plan && VALID_PLANS.includes(plan as PlanName)
+  return true // Herkese tam erişim
 }
