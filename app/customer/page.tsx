@@ -1472,7 +1472,6 @@ return (
                       { key: 'instagram_dm', label: 'Instagram', color: filterSource === 'instagram_dm' ? 'bg-pink-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-pink-200' },
                       { key: 'referral', label: 'Referans', color: filterSource === 'referral' ? 'bg-amber-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-amber-200' },
                       { key: 'website', label: 'Web', color: filterSource === 'website' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-indigo-200' },
-                      { key: 'google_ads', label: 'Google Ads', color: filterSource === 'google_ads' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:border-yellow-200' },
                     ].map(f => (
                       <button key={f.key} onClick={() => setFilterSource(f.key)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${f.color}`}>
@@ -1515,7 +1514,7 @@ return (
                           <span className="text-indigo-600 text-sm font-semibold">{(lead.full_name || "I").charAt(0)}</span>
                         </div>
                         <span className="absolute -bottom-1 -right-1 text-xs leading-none">
-                          {lead.source === 'meta_form' ? 'MF' : lead.source === 'whatsapp' ? 'WA' : lead.source === 'instagram_dm' ? 'IG' : lead.source === 'referral' ? 'RF' : lead.source === 'website' ? 'WB' : lead.source === 'google_ads' ? 'GA' : 'MN'}                        </span>
+                         {lead.source === 'meta_form' ? '📘' : lead.source === 'whatsapp' ? '💬' : lead.source === 'instagram_dm' ? '📸' : lead.source === 'referral' ? '🤝' : lead.source === 'website' ? '🌐' : '✏️'}               </span>
                       </div>
 
                       {/* Ana bilgi */}
