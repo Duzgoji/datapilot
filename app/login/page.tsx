@@ -80,7 +80,11 @@ export default function LoginPage() {
         await new Promise((r) => setTimeout(r, 50))
       }
       if (!sessionReady) { setError('Oturum kaydedilemedi. Çerezleri temizleyip tekrar deneyin.'); return }
-
+    await supabase.from('session_logs').insert({
+      user_id: user.id,
+      event: 'login',
+      user_agent: navigator.userAgent,
+    })
       window.location.assign(path)
     } catch {
       setError('Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.')
