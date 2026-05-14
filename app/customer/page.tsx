@@ -246,6 +246,7 @@ const [branches, setBranches] = useState<any[]>([])
   const [leads, setLeads] = useState<any[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [sessionLogs, setSessionLogs] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState('dashboard')
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['leadler', 'ekip'])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
@@ -482,6 +483,13 @@ const { data: invoicesData } = await supabase
   .or(`customer_id.eq.${tenant.tenantId},owner_id.in.(${tenant.readOwnerIds.join(',')})`)
   .order('created_at', { ascending: false })
 setCustomerInvoices(invoicesData || [])
+// Session logları yükle
+const { data: sessionLogsData } = await supabase
+  .from('session_logs')
+  .select('*, profiles(full_name, email)')
+  .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+  .order('created_at', { ascending: false })
+setSessionLogs(sessionLogsData || [])
     setLoading(false)
   }
 
@@ -1381,7 +1389,53 @@ return (
                   </div>
                 ))}
               </div>
-
+              {/* Ekip Durumu */}
+<div className="bg-white rounded-2xl border border-gray-100">
+  <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+    <h3 className="font-semibold text-gray-900 text-sm">Ekip Durumu</h3>
+    <span className="text-xs text-gray-400">Son 24 saat</span>
+  </div>
+  {teamMembers.length === 0 ? (
+    <div className="p-8 text-center"><p className="text-gray-400 text-sm">Henüz ekip üyesi yok.</p></div>
+  ) : (
+    <div className="divide-y divide-gray-50">
+      {teamMembers.map((member) => {
+        const memberLogs = sessionLogs.filter(l => l.user_id === member.user_id)
+        const lastLogin = memberLogs.find(l => l.event === 'login')
+        const lastLogout = memberLogs.find(l => l.event === 'logout')
+        const isOnline = lastLogin && (!lastLogout || new Date(lastLogin.created_at) > new Date(lastLogout.created_at))
+        const loginTime = lastLogin ? new Date(lastLogin.created_at) : null
+        const logoutTime = lastLogout ? new Date(lastLogout.created_at) : null
+        const duration = loginTime && logoutTime && !isOnline
+          ? Math.round((logoutTime.getTime() - loginTime.getTime()) / 60000)
+          : loginTime && isOnline
+          ? Math.round((Date.now() - loginTime.getTime()) / 60000)
+          : null
+        return (
+          <div key={member.id} className="px-5 py-3 flex items-center gap-3">
+            <div className="relative flex-shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <span className="text-indigo-600 text-xs font-bold">{member.profiles?.full_name?.charAt(0)}</span>
+              </div>
+              <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${isOnline ? 'bg-emerald-500' : lastLogin ? 'bg-amber-400' : 'bg-gray-300'}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">{member.profiles?.full_name}</p>
+              <p className="text-xs text-gray-400">
+                {isOnline ? '🟢 Çevrimiçi' : lastLogin ? `🟡 Son giriş: ${loginTime?.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}` : '⚫ Bugün giriş yapmadı'}
+              </p>
+            </div>
+            {duration !== null && (
+              <span className="text-xs text-gray-400 flex-shrink-0">
+                {duration >= 60 ? `${Math.floor(duration / 60)}s ${duration % 60}dk` : `${duration}dk`}
+              </span>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )}
+</div>
               {/* Recent leads */}
               <div className="bg-white rounded-2xl border border-gray-100">
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
