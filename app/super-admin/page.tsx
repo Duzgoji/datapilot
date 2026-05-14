@@ -168,7 +168,7 @@ export default function SuperAdminPage() {
   const [obCompany, setObCompany] = useState('')
   const [obSector, setObSector] = useState('')
   const [obPhone, setObPhone] = useState('')
-  const [obPlan, setObPlan] = useState('starter')
+  const [obPlan, setObPlan] = useState('custom')
   const [obMonthlyFee, setObMonthlyFee] = useState('2000')
   const [obPerBranchFee, setObPerBranchFee] = useState('0')
   const [obBranchName, setObBranchName] = useState('')
@@ -480,10 +480,7 @@ const advRes = await fetch('/api/get-advertisers', {
 
       {/* ── SIDEBAR ── */}
       <aside
-        onMouseEnter={() => setSidebarCollapsed(false)}
-        onMouseLeave={() => setSidebarCollapsed(true)}
-        className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 ${effectiveSidebarCollapsed ? 'md:w-16' : 'md:w-60'} w-60 bg-gray-950 border-r border-gray-800 flex flex-col fixed top-0 left-0 h-full z-40 transition-all duration-200 shadow-xl`}>
-
+        className={`${sidebarCollapsed ? 'w-16' : 'w-60'} bg-gray-950 ...`}>
         {/* Logo */}
         <div className={`flex items-center h-14 border-b border-gray-800 px-4 ${effectiveSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
           <img src="/logo2.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0 object-contain" />
@@ -577,7 +574,7 @@ const advRes = await fetch('/api/get-advertisers', {
       </aside>
 
       {/* ── MAIN ── */}
-      <div className="ml-0 min-w-0 flex-1 overflow-x-hidden transition-all duration-200 md:ml-16">
+      <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-60'} flex-1 transition-all duration-200 min-w-0 overflow-x-hidden`}>
 
         {/* Top bar */}
         <header className="sticky top-0 z-10 flex min-h-14 flex-wrap items-center gap-2 border-b border-gray-100 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm sm:px-6">
@@ -665,7 +662,7 @@ const advRes = await fetch('/api/get-advertisers', {
         <div className="flex gap-8 mt-5 pt-5 border-t border-white/10 relative">
           <div><p className="text-3xl font-bold">{customers.length}</p><p className="text-gray-500 text-xs mt-0.5">Firma</p></div>
           <div><p className="text-3xl font-bold">{advertisers.length}</p><p className="text-amber-400 text-xs mt-0.5">Reklamcı</p></div>
-                <div><p className="text-3xl font-bold">{branches.length}</p><p className="text-gray-500 text-xs mt-0.5">Şube</p></div>
+                <div><p className="text-3xl font-bold">{branches.length}</p><p className="text-gray-500 text-xs mt-0.5">?ube</p></div>
           <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-gray-500 text-xs mt-0.5">Potansiyel Müşteri</p></div>
           <div><p className="text-3xl font-bold">{allUsers.length}</p><p className="text-gray-500 text-xs mt-0.5">Kullanıcı</p></div>
         </div>
@@ -824,6 +821,65 @@ const advRes = await fetch('/api/get-advertisers', {
   return (
     <div>
       <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+      {/* Yeni Kayıt Onayı Bekleyenler */}
+{(() => {
+  const pendingCustomers = customers.filter(c => c.approval_status === 'pending')
+  if (pendingCustomers.length === 0) return null
+  return (
+    <div>
+      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+        Kayıt Onayı Bekleyenler
+        <span className="bg-rose-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">{pendingCustomers.length}</span>
+      </h2>
+      <div className="bg-white rounded-2xl border border-rose-200 overflow-hidden">
+        <div className="px-5 py-3 bg-rose-50 border-b border-rose-100 flex items-center gap-2">
+          <span className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+          <p className="text-xs font-semibold text-rose-700">Yeni kullanıcı kaydı — onay bekleniyor</p>
+        </div>
+        {pendingCustomers.map((c, i) => (
+          <div key={c.id} className={`px-5 py-4 flex items-center gap-4 ${i < pendingCustomers.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-rose-50/20 transition-colors`}>
+            <div className="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center flex-shrink-0">
+              <span className="text-rose-600 font-bold text-sm">{(c.company_name || c.full_name || '?').charAt(0)}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900">{c.company_name || c.full_name}</p>
+              <p className="text-xs text-gray-400">{c.email}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{new Date(c.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
+            </div>
+            <div className="flex gap-2 flex-shrink-0">
+              <button
+                onClick={async () => {
+                  await supabase.from('profiles').update({
+                    approval_status: 'rejected',
+                    is_active: false
+                  }).eq('id', c.id)
+                  await loadData()
+                }}
+                className="text-xs bg-gray-50 hover:bg-gray-100 text-gray-500 font-medium px-3 py-1.5 rounded-lg border border-gray-200 transition-colors">
+                Reddet
+              </button>
+              <button
+                onClick={async () => {
+                  const trialEnd = new Date()
+                  trialEnd.setDate(trialEnd.getDate() + 14)
+                  await supabase.from('profiles').update({
+                    approval_status: 'approved',
+                    approved_at: new Date().toISOString(),
+                    trial_ends_at: trialEnd.toISOString(),
+                    is_active: true
+                  }).eq('id', c.id)
+                  await loadData()
+                }}
+                className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors">
+                ✓ Onayla
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+})()}  
         Ödeme Onayı Bekleyenler
         <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">{awaitingApproval.length}</span>
       </h2>
@@ -1193,7 +1249,7 @@ const advRes = await fetch('/api/get-advertisers', {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="col-span-2"><Input label="Ad Soyad *" value={advName} onChange={(e: any) => setAdvName(e.target.value)} required placeholder="Ahmet Yılmaz" /></div>
                   <Input label="E-posta *" type="email" value={advEmail} onChange={(e: any) => setAdvEmail(e.target.value)} required placeholder="reklamci@email.com" />
-              <Input label="Şifre *" type="password" value={advPassword} onChange={(e: any) => setAdvPassword(e.target.value)} required placeholder="min. 6 karakter" />
+              <Input label="?ifre *" type="password" value={advPassword} onChange={(e: any) => setAdvPassword(e.target.value)} required placeholder="min. 6 karakter" />
                   <Input label="Firma/Ajans Adı" value={advCompany} onChange={(e: any) => setAdvCompany(e.target.value)} placeholder="Ajans Adı" />
                   <Input label="Telefon" value={advPhone} onChange={(e: any) => setAdvPhone(e.target.value)} placeholder="05XX XXX XXXX" />
                 </div>
@@ -1275,7 +1331,7 @@ const advRes = await fetch('/api/get-advertisers', {
                     <div className="col-span-2">Firma</div>
                     <div>Plan</div>
                     <div className="text-right">Aylık (₺)</div>
-                      <div className="text-right">Şube</div>
+                      <div className="text-right">?ube</div>
                     <div className="text-right">Durum</div>
                   </div>
                 </div>
@@ -1348,7 +1404,7 @@ const advRes = await fetch('/api/get-advertisers', {
                     <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
                       <div className="grid grid-cols-4 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                         <div>Eylem</div>
-                        <div>Kullanıcı</div>
+                        <div>Kullanici</div>
                         <div>Tenant</div>
                         <div className="text-right">Zaman</div>
                       </div>
@@ -1967,7 +2023,7 @@ else created++
                 { label: 'Plan', value: sub?.plan ? String(sub.plan).toUpperCase() : 'Tanımsız' },
                 { label: 'Abonelik Durumu', value: sub?.status || 'Tanımsız' },
                 { label: 'Lead Sayısı', value: tenantContext.leadCount },
-              { label: 'Şube Sayısı', value: tenantContext.branchCount },
+              { label: '?ube Say?s?', value: tenantContext.branchCount },
               ].map(item => (
                 <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
                   <p className="text-xs text-gray-400 mb-1">{item.label}</p>
@@ -1981,7 +2037,7 @@ else created++
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div><p className="text-xs text-indigo-400">Plan</p><p className="text-sm font-bold text-indigo-800 capitalize">{sub.plan}</p></div>
                   <div><p className="text-xs text-indigo-400">Aylık Ücret</p><p className="text-sm font-bold text-indigo-800">₺{sub.monthly_fee}</p></div>
-                          <div><p className="text-xs text-indigo-400">Şube Başı</p><p className="text-sm font-bold text-indigo-800">₺{sub.per_branch_fee}</p></div>
+                          <div><p className="text-xs text-indigo-400">?ube Ba??</p><p className="text-sm font-bold text-indigo-800">?{sub.per_branch_fee}</p></div>
                 </div>
               </div>
             )}
@@ -2195,14 +2251,11 @@ else created++
 function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmail, obPassword, setObPassword, obCompany, setObCompany, obSector, setObSector, obPhone, setObPhone, obPlan, setObPlan, obMonthlyFee, setObMonthlyFee, obPerBranchFee, setObPerBranchFee, obBranchName, setObBranchName, obBranchCity, setObBranchCity, obCommissionModel, setObCommissionModel, obInviteLink, obSaving, onStep1, onStep2, onStep3, onReset, isModal }: any) {
 
   const PLANS = [
-    { key: 'starter', label: 'Starter', price: '₺2000', desc: '3 kullanıcı · 1 şube · 500 lead/ay', color: 'border-indigo-500 bg-indigo-50' },
-    { key: 'pro', label: 'Pro', price: '₺5.500', desc: '15 kullanıcı · 5 şube · sınırsız lead', color: 'border-violet-500 bg-violet-50' },
-    { key: 'enterprise', label: 'Enterprise', price: '₺15.000+', desc: 'Sınırsız her şey · AI rapor dahil', color: 'border-amber-500 bg-amber-50' },
-    { key: 'trial', label: 'Deneme', price: 'Ücretsiz', desc: '14 gün · tüm özellikler', color: 'border-gray-300 bg-gray-50' },
-  ]
+  { key: 'custom', label: 'Özel Plan', price: 'Görüşmeye göre', desc: 'Sınırsız kullanıcı · sınırsız şube · sınırsız lead', color: 'border-indigo-500 bg-indigo-50' },
+]
 
   const SECTORS = ['Estetik Klinik', 'Diş Kliniği', 'Saç Ekim', 'Güzellik Merkezi', 'Medikal Estetik', 'Dermatoloji', 'Ortopedi', 'Göz Hastalıkları', 'Diğer']
-  const stepLabels = ['Firma Bilgileri', 'Plan & Fiyat', 'İlk Şube', 'Tamamlandı']
+  const stepLabels = ['Firma Bilgileri', 'Plan & Fiyat', '?lk ?ube', 'Tamamland?']
   const wrapClass = isModal ? 'p-6 space-y-5' : 'space-y-5'
 
   return (
@@ -2229,7 +2282,7 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
       {step === 1 && (
         <div className={wrapClass}>
           <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
-            <p className="text-xs font-semibold text-indigo-700 mb-0.5">Hesap Sahibi Bilgileri</p>
+            <p className="text-xs font-semibold text-indigo-700 mb-0.5">?? Hesap Sahibi Bilgileri</p>
             <p className="text-xs text-indigo-400">Firmanın giriş yapacağı kullanıcı hesabı</p>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -2249,12 +2302,12 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şifre *</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">?ifre *</label>
               <input type="password" value={obPassword} onChange={e => setObPassword(e.target.value)} placeholder="min. 6 karakter"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şirket Adı *</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">?irket Ad? *</label>
               <input value={obCompany} onChange={e => setObCompany(e.target.value)} placeholder="Firma Adı"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
@@ -2279,7 +2332,7 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
       {step === 2 && (
         <div className={wrapClass}>
           <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
-            <p className="text-xs font-semibold text-violet-700 mb-0.5">Plan & Fiyatlandırma</p>
+            <p className="text-xs font-semibold text-violet-700 mb-0.5">?? Plan & Fiyatland?rma</p>
             <p className="text-xs text-violet-400">{obCompany} için abonelik planı seçin</p>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -2305,7 +2358,7 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şube Başı Ücret (₺)</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">?ube Ba?? ?cret (?)</label>
               <input type="number" value={obPerBranchFee} onChange={e => setObPerBranchFee(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
@@ -2320,13 +2373,13 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
       {step === 3 && (
         <div className={wrapClass}>
           <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-            <p className="text-xs font-semibold text-emerald-700 mb-0.5">İlk Şube Kurulumu</p>
+            <p className="text-xs font-semibold text-emerald-700 mb-0.5">?? ?lk ?ube Kurulumu</p>
             <p className="text-xs text-emerald-400">İsteğe bağlı — sonradan da eklenebilir</p>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="col-span-2">
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şube Adı</label>
-              <input value={obBranchName} onChange={e => setObBranchName(e.target.value)} placeholder="Örn. Merkez Şube"
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">?ube Ad?</label>
+              <input value={obBranchName} onChange={e => setObBranchName(e.target.value)} placeholder="?rn. Merkez ?ube"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
@@ -2362,7 +2415,7 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
             <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M6 16l7 7L26 9" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
-            <h3 className="text-lg font-bold text-gray-900">Firma Oluşturuldu! ✓</h3>
+            <h3 className="text-lg font-bold text-gray-900">Firma Olu?turuldu! ?</h3>
             <p className="text-sm text-gray-400 mt-1">{obCompany} başarıyla platforma eklendi.</p>
           </div>
           <div className="bg-gray-50 rounded-xl p-4 space-y-2">
@@ -2370,7 +2423,7 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
               { label: 'Firma', value: obCompany },
               { label: 'E-posta', value: obEmail },
               { label: 'Plan', value: obPlan },
-              obBranchName ? { label: 'İlk Şube', value: obBranchName } : null,
+              obBranchName ? { label: '?lk ?ube', value: obBranchName } : null,
             ].filter(Boolean).map((item: any) => (
               <div key={item.label} className="flex items-center justify-between">
                 <span className="text-xs text-gray-400">{item.label}</span>
@@ -2380,7 +2433,7 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
           </div>
           {obInviteLink && (
             <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
-              <p className="text-xs font-semibold text-indigo-700 mb-2">Davet Linki</p>
+              <p className="text-xs font-semibold text-indigo-700 mb-2">?? Davet Linki</p>
               <div className="flex items-center gap-2">
                 <input readOnly value={obInviteLink}
                   className="flex-1 text-xs bg-white border border-indigo-200 rounded-lg px-3 py-2 text-gray-600 truncate focus:outline-none" />

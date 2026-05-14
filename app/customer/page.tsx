@@ -432,6 +432,15 @@ if (!isValidPlan(subData?.plan)) {
 }
 
 setProfile({ ...profileData, _resolvedPlan })
+// Deneme süresi ve onay kontrolü
+if (profileData?.approval_status === 'pending') {
+  router.push('/pending-approval')
+  return
+}
+if (profileData?.trial_ends_at && new Date(profileData.trial_ends_at) < new Date() && profileData?.approval_status !== 'approved') {
+  router.push('/trial-expired')
+  return
+}
     setSettingsName(profileData?.full_name || '')
     setSettingsCompany(profileData?.company_name || '')
     setSettingsPhone(profileData?.phone || '')
