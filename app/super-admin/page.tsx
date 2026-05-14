@@ -662,7 +662,7 @@ const advRes = await fetch('/api/get-advertisers', {
         <div className="flex gap-8 mt-5 pt-5 border-t border-white/10 relative">
           <div><p className="text-3xl font-bold">{customers.length}</p><p className="text-gray-500 text-xs mt-0.5">Firma</p></div>
           <div><p className="text-3xl font-bold">{advertisers.length}</p><p className="text-amber-400 text-xs mt-0.5">Reklamcı</p></div>
-                <div><p className="text-3xl font-bold">{branches.length}</p><p className="text-gray-500 text-xs mt-0.5">?ube</p></div>
+                <div><p className="text-3xl font-bold">{branches.length}</p><p className="text-gray-500 text-xs mt-0.5">?Ş</p></div>
           <div><p className="text-3xl font-bold">{leads.length}</p><p className="text-gray-500 text-xs mt-0.5">Potansiyel Müşteri</p></div>
           <div><p className="text-3xl font-bold">{allUsers.length}</p><p className="text-gray-500 text-xs mt-0.5">Kullanıcı</p></div>
         </div>
@@ -1018,7 +1018,7 @@ const advRes = await fetch('/api/get-advertisers', {
                                 </div>
                                 <p className="text-xs text-gray-400">{c.email}</p>
                                 <div className="flex gap-3 mt-1 flex-wrap">
-                                  <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
+                                  <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şŞ</span>
                                   {sub && <span className="text-xs text-gray-400">₺{sub.monthly_fee}/ay</span>}
                                   <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('tr-TR')}</span>
                                 </div>
@@ -1065,7 +1065,7 @@ const advRes = await fetch('/api/get-advertisers', {
                                 {advName && <p className="text-xs text-amber-700 font-medium mt-0.5">Reklamcı: {advName}</p>}
                                 <p className="text-xs text-gray-400">{c.email}</p>
                                 <div className="flex gap-3 mt-1 flex-wrap">
-                                  <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şube</span>
+                                  <span className="text-xs text-indigo-600 font-medium">{cBranches.length} şŞ</span>
                                   {sub && <span className="text-xs text-gray-400">₺{sub.monthly_fee}/ay</span>}
                                   <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('tr-TR')}</span>
                                 </div>
@@ -1226,7 +1226,7 @@ const advRes = await fetch('/api/get-advertisers', {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="col-span-2"><Input label="Ad Soyad *" value={advName} onChange={(e: any) => setAdvName(e.target.value)} required placeholder="Ahmet Yılmaz" /></div>
                   <Input label="E-posta *" type="email" value={advEmail} onChange={(e: any) => setAdvEmail(e.target.value)} required placeholder="reklamci@email.com" />
-              <Input label="?ifre *" type="password" value={advPassword} onChange={(e: any) => setAdvPassword(e.target.value)} required placeholder="min. 6 karakter" />
+              <Input label="?Ş *" type="password" value={advPassword} onChange={(e: any) => setAdvPassword(e.target.value)} required placeholder="min. 6 karakter" />
                   <Input label="Firma/Ajans Adı" value={advCompany} onChange={(e: any) => setAdvCompany(e.target.value)} placeholder="Ajans Adı" />
                   <Input label="Telefon" value={advPhone} onChange={(e: any) => setAdvPhone(e.target.value)} placeholder="05XX XXX XXXX" />
                 </div>
@@ -1256,10 +1256,10 @@ const advRes = await fetch('/api/get-advertisers', {
               <h2 className="text-base font-semibold text-gray-900">Abonelik Planları</h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {[
-                  { key: 'trial', label: 'Deneme', price: '₺0', period: '14 gün', color: 'border-gray-200', badge: 'bg-gray-100 text-gray-600', features: ['Tüm özellikler açık', '1 şube', '3 kullanıcı', '500 lead/ay'] },
-                  { key: 'starter', label: 'Starter', price: '₺2.000', period: '/ay', color: 'border-indigo-200', badge: 'bg-indigo-50 text-indigo-700', features: ['1 şube', '2 kullanıcı', '400 lead/ay', 'Email destek'] },
-                  { key: 'pro', label: 'Pro', price: '₺5.500', period: '/ay', color: 'border-violet-200', badge: 'bg-violet-50 text-violet-700', features: ['3 şube', '10 kullanıcı', '2000 lead/ay', 'Öncelikli destek'] },
-                  { key: 'enterprise', label: 'Enterprise', price: '₺15.000+', period: '/ay', color: 'border-amber-200', badge: 'bg-amber-50 text-amber-700', features: ['Sınırsız şube', 'Sınırsız kullanıcı', 'Sınırsız lead', '7/24 destek'] },
+                  { key: 'trial', label: 'Deneme', price: '₺0', period: '14 gün', color: 'border-gray-200', badge: 'bg-gray-100 text-gray-600', features: ['Tüm özellikler açık', '1 şŞ', '3 kullanıcı', '500 lead/ay'] },
+                  { key: 'starter', label: 'Starter', price: '₺2.000', period: '/ay', color: 'border-indigo-200', badge: 'bg-indigo-50 text-indigo-700', features: ['1 şŞ', '2 kullanıcı', '400 lead/ay', 'Email destek'] },
+                  { key: 'pro', label: 'Pro', price: '₺5.500', period: '/ay', color: 'border-violet-200', badge: 'bg-violet-50 text-violet-700', features: ['3 şŞ', '10 kullanıcı', '2000 lead/ay', 'Öncelikli destek'] },
+                  { key: 'enterprise', label: 'Enterprise', price: '₺15.000+', period: '/ay', color: 'border-amber-200', badge: 'bg-amber-50 text-amber-700', features: ['Sınırsız şŞ', 'Sınırsız kullanıcı', 'Sınırsız lead', '7/24 destek'] },
                 ].map(plan => (
                   <div key={plan.key} className={`bg-white rounded-2xl border-2 ${plan.color} p-5`}>
                     <div className="flex items-center justify-between mb-3">
@@ -1308,7 +1308,7 @@ const advRes = await fetch('/api/get-advertisers', {
                     <div className="col-span-2">Firma</div>
                     <div>Plan</div>
                     <div className="text-right">Aylık (₺)</div>
-                      <div className="text-right">?ube</div>
+                      <div className="text-right">?Ş</div>
                     <div className="text-right">Durum</div>
                   </div>
                 </div>
@@ -2000,7 +2000,7 @@ else created++
                 { label: 'Plan', value: sub?.plan ? String(sub.plan).toUpperCase() : 'Tanımsız' },
                 { label: 'Abonelik Durumu', value: sub?.status || 'Tanımsız' },
                 { label: 'Lead Sayısı', value: tenantContext.leadCount },
-              { label: '?ube Say?s?', value: tenantContext.branchCount },
+              { label: 'Şube Sayısı', value: tenantContext.branchCount },
               ].map(item => (
                 <div key={item.label} className="bg-gray-50 rounded-xl p-3.5">
                   <p className="text-xs text-gray-400 mb-1">{item.label}</p>
@@ -2014,7 +2014,7 @@ else created++
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div><p className="text-xs text-indigo-400">Plan</p><p className="text-sm font-bold text-indigo-800 capitalize">{sub.plan}</p></div>
                   <div><p className="text-xs text-indigo-400">Aylık Ücret</p><p className="text-sm font-bold text-indigo-800">₺{sub.monthly_fee}</p></div>
-                          <div><p className="text-xs text-indigo-400">?ube Ba??</p><p className="text-sm font-bold text-indigo-800">?{sub.per_branch_fee}</p></div>
+                          <div><p className="text-xs text-indigo-400">iŞ Başı</p><p className="text-sm font-bold text-indigo-800">?{sub.per_branch_fee}</p></div>
                 </div>
               </div>
             )}
@@ -2228,11 +2228,11 @@ else created++
 function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmail, obPassword, setObPassword, obCompany, setObCompany, obSector, setObSector, obPhone, setObPhone, obPlan, setObPlan, obMonthlyFee, setObMonthlyFee, obPerBranchFee, setObPerBranchFee, obBranchName, setObBranchName, obBranchCity, setObBranchCity, obCommissionModel, setObCommissionModel, obInviteLink, obSaving, onStep1, onStep2, onStep3, onReset, isModal }: any) {
 
   const PLANS = [
-  { key: 'custom', label: 'Özel Plan', price: 'Görüşmeye göre', desc: 'Sınırsız kullanıcı · sınırsız şube · sınırsız lead', color: 'border-indigo-500 bg-indigo-50' },
+  { key: 'custom', label: 'Özel Plan', price: 'Görüşmeye göre', desc: 'Sınırsız kullanıcı · sınırsız şŞ · sınırsız lead', color: 'border-indigo-500 bg-indigo-50' },
 ]
 
   const SECTORS = ['Estetik Klinik', 'Diş Kliniği', 'Saç Ekim', 'Güzellik Merkezi', 'Medikal Estetik', 'Dermatoloji', 'Ortopedi', 'Göz Hastalıkları', 'Diğer']
-  const stepLabels = ['Firma Bilgileri', 'Plan & Fiyat', '?lk ?ube', 'Tamamland?']
+  const stepLabels = ['Firma Bilgileri', 'Plan & Fiyat', 'İlk İş', 'Tamamlandı']
   const wrapClass = isModal ? 'p-6 space-y-5' : 'space-y-5'
 
   return (
@@ -2279,12 +2279,12 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">?ifre *</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şifre *</label>
               <input type="password" value={obPassword} onChange={e => setObPassword(e.target.value)} placeholder="min. 6 karakter"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">?irket Ad? *</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şirket Adı *</label>
               <input value={obCompany} onChange={e => setObCompany(e.target.value)} placeholder="Firma Adı"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
@@ -2335,7 +2335,7 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">?ube Ba?? ?cret (?)</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">iŞ Başı ücret (?)</label>
               <input type="number" value={obPerBranchFee} onChange={e => setObPerBranchFee(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
@@ -2350,17 +2350,17 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
       {step === 3 && (
         <div className={wrapClass}>
           <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-            <p className="text-xs font-semibold text-emerald-700 mb-0.5">?? ?lk ?ube Kurulumu</p>
+            <p className="text-xs font-semibold text-emerald-700 mb-0.5"> 🏢  İlk iŞ Kurulumu</p>
             <p className="text-xs text-emerald-400">İsteğe bağlı — sonradan da eklenebilir</p>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="col-span-2">
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">?ube Ad?</label>
-              <input value={obBranchName} onChange={e => setObBranchName(e.target.value)} placeholder="?rn. Merkez ?ube"
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">İŞ Adı</label>
+              <input value={obBranchName} onChange={e => setObBranchName(e.target.value)} placeholder="İlk İş"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">?ehir</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">Şehir</label>
               <input value={obBranchCity} onChange={e => setObBranchCity(e.target.value)} placeholder="İstanbul"
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
@@ -2400,7 +2400,7 @@ function OnboardingWizard({ step, setStep, obName, setObName, obEmail, setObEmai
               { label: 'Firma', value: obCompany },
               { label: 'E-posta', value: obEmail },
               { label: 'Plan', value: obPlan },
-              obBranchName ? { label: '?lk ?ube', value: obBranchName } : null,
+              obBranchName ? { label: 'İlk İş', value: obBranchName } : null,
             ].filter(Boolean).map((item: any) => (
               <div key={item.label} className="flex items-center justify-between">
                 <span className="text-xs text-gray-400">{item.label}</span>
