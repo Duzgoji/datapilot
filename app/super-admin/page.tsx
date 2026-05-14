@@ -97,7 +97,7 @@ export default function SuperAdminPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['firmalar', 'reklamcilar'])
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
@@ -814,14 +814,7 @@ const advRes = await fetch('/api/get-advertisers', {
           </div>
         </div>
       </div>
-{/* Onay Bekleyenler */}
-{(() => {
-  const awaitingApproval = invoices.filter(i => i.status === 'awaiting_approval')
-  if (awaitingApproval.length === 0) return null
-  return (
-    <div>
-      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-      {/* Yeni Kayıt Onayı Bekleyenler */}
+{/* Yeni Kayıt Onayı Bekleyenler */}
 {(() => {
   const pendingCustomers = customers.filter(c => c.approval_status === 'pending')
   if (pendingCustomers.length === 0) return null
@@ -847,30 +840,15 @@ const advRes = await fetch('/api/get-advertisers', {
               <p className="text-xs text-gray-400 mt-0.5">{new Date(c.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
             </div>
             <div className="flex gap-2 flex-shrink-0">
-              <button
-                onClick={async () => {
-                  await supabase.from('profiles').update({
-                    approval_status: 'rejected',
-                    is_active: false
-                  }).eq('id', c.id)
-                  await loadData()
-                }}
+              <button onClick={async () => { await supabase.from('profiles').update({ approval_status: 'rejected', is_active: false }).eq('id', c.id); await loadData() }}
                 className="text-xs bg-gray-50 hover:bg-gray-100 text-gray-500 font-medium px-3 py-1.5 rounded-lg border border-gray-200 transition-colors">
                 Reddet
               </button>
-              <button
-                onClick={async () => {
-                  const trialEnd = new Date()
-                  trialEnd.setDate(trialEnd.getDate() + 14)
-                  await supabase.from('profiles').update({
-                    approval_status: 'approved',
-                    approved_at: new Date().toISOString(),
-                    trial_ends_at: trialEnd.toISOString(),
-                    is_active: true
-                  }).eq('id', c.id)
-                  await loadData()
-                }}
-                className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors">
+              <button onClick={async () => {
+                const trialEnd = new Date(); trialEnd.setDate(trialEnd.getDate() + 14)
+                await supabase.from('profiles').update({ approval_status: 'approved', approved_at: new Date().toISOString(), trial_ends_at: trialEnd.toISOString(), is_active: true }).eq('id', c.id)
+                await loadData()
+              }} className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors">
                 ✓ Onayla
               </button>
             </div>
@@ -879,7 +857,14 @@ const advRes = await fetch('/api/get-advertisers', {
       </div>
     </div>
   )
-})()}  
+})()}
+{/* Ödeme Onayı Bekleyenler */}
+{(() => {
+  const awaitingApproval = invoices.filter(i => i.status === 'awaiting_approval')
+  if (awaitingApproval.length === 0) return null
+  return (
+    <div>
+      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
         Ödeme Onayı Bekleyenler
         <span className="bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">{awaitingApproval.length}</span>
       </h2>
@@ -904,19 +889,11 @@ const advRes = await fetch('/api/get-advertisers', {
               <div className="text-right flex-shrink-0">
                 <p className="text-base font-bold text-gray-900 mb-2">₺{inv.total_amount?.toLocaleString()}</p>
                 <div className="flex gap-2">
-                  <button
-                    onClick={async () => {
-                      await supabase.from('invoices').update({ status: 'pending' }).eq('id', inv.id)
-                      await loadData()
-                    }}
+                  <button onClick={async () => { await supabase.from('invoices').update({ status: 'pending' }).eq('id', inv.id); await loadData() }}
                     className="text-xs bg-gray-50 hover:bg-gray-100 text-gray-500 font-medium px-3 py-1.5 rounded-lg border border-gray-200 transition-colors">
                     Reddet
                   </button>
-                  <button
-                    onClick={async () => {
-                      await supabase.from('invoices').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', inv.id)
-                      await loadData()
-                    }}
+                  <button onClick={async () => { await supabase.from('invoices').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', inv.id); await loadData() }}
                     className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors">
                     ✓ Onayla
                   </button>
