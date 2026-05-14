@@ -850,7 +850,18 @@ const handlePayCommission = async () => {
   loadLeadActivities(lead.id)
 }
 
-  const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
+  const handleLogout = async () => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    await supabase.from('session_logs').insert({
+      user_id: user.id,
+      event: 'logout',
+      user_agent: navigator.userAgent,
+    })
+  }
+  await supabase.auth.signOut()
+  router.push('/login')
+}
   const toggleMenu = (key: string) => setExpandedMenus(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
 
   // ─── VERİ MERKEZİ ─────────────────────────────────────────────────────────
