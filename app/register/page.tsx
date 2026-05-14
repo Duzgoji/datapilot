@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [sector, setSector] = useState('')
+  const [phone, setPhone] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -35,8 +36,10 @@ export default function RegisterPage() {
         full_name: fullName,
         company_name: companyName,
         sector,
+        phone,
         role: 'customer',
-        is_active: true,
+        is_active: false,
+        approval_status: 'pending',
       })
 
       await supabase.from('subscriptions').insert({
@@ -47,7 +50,7 @@ export default function RegisterPage() {
         per_branch_fee: 0,
       })
 
-      router.push('/customer')
+      router.push('/pending-approval')
     }
 
     setSaving(false)
@@ -78,17 +81,26 @@ export default function RegisterPage() {
           </div>
 
           <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Telefon *</label>
+            <input value={phone} onChange={e => setPhone(e.target.value)} required
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="05XX XXX XX XX" />
+          </div>
+
+          <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Sektör</label>
             <select value={sector} onChange={e => setSector(e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">Seçin...</option>
-              <option value="saglik">Sağlık</option>
-              <option value="estetik">Estetik & Güzellik</option>
-              <option value="turizm">Turizm</option>
-              <option value="restoran">Restoran & Gıda</option>
-              <option value="egitim">Eğitim</option>
-              <option value="gayrimenkul">Gayrimenkul</option>
-              <option value="diger">Diğer</option>
+              <option value="Estetik Klinik">Estetik Klinik</option>
+              <option value="Diş Kliniği">Diş Kliniği</option>
+              <option value="Saç Ekim">Saç Ekim</option>
+              <option value="Güzellik Merkezi">Güzellik Merkezi</option>
+              <option value="Medikal Estetik">Medikal Estetik</option>
+              <option value="Dermatoloji">Dermatoloji</option>
+              <option value="Ortopedi">Ortopedi</option>
+              <option value="Göz Hastalıkları">Göz Hastalıkları</option>
+              <option value="Diğer">Diğer</option>
             </select>
           </div>
 
@@ -116,6 +128,12 @@ export default function RegisterPage() {
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-3 rounded-xl font-medium text-sm transition-colors">
             {saving ? 'Hesap Oluşturuluyor...' : 'Ücretsiz Başla →'}
           </button>
+
+          <div className="bg-gray-50 rounded-xl p-3 text-center">
+            <p className="text-xs text-gray-500">
+              Kayıt olduktan sonra hesabınız incelemeye alınacak ve en kısa sürede aktif edilecektir.
+            </p>
+          </div>
 
           <p className="text-center text-xs text-gray-500">
             Zaten hesabınız var mı?{' '}
