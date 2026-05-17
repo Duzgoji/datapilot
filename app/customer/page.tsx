@@ -595,39 +595,31 @@ const loadNotifications = async () => {
   }
 
   const handleAddMember = async (e: React.FormEvent) => {
-  e.preventDefault(); setSaving(true)
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  const tenant = await fetchTenantContext(user.id)
-
-  const { allowed, message } = await checkLimit(tenant.tenantId, 'user')
-  if (!allowed) {
-    alert(message)
-    setSaving(false)
-    return
-  }
-
-  const { data, error } = await supabase.auth.signUp({ email: memberEmail, password: memberPassword, options: { data: { full_name: memberName, role: 'team' } } })
-  if (error) { alert(error.message); setSaving(false); return }
-if (data.user) {
-    await supabase.from('profiles').insert({ 
-      id: data.user.id, 
-      email: memberEmail, 
-      full_name: memberName, 
-      role: 'team', 
-      is_active: true 
+ e.preventDefault(); setSaving(true)
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/create-team-member', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token}`
+      },
+      body: JSON.stringify({
+        email: memberEmail,
+        password: memberPassword,
+        full_name: memberName,
+        role: memberRole,
+        commission_rate: memberCommission,
+        owner_id: profile?.id
+      })
     })
-    await supabase.from('team_members').insert({ 
-      branch_id: memberBranch || null, 
-      user_id: data.user.id, 
-      role: memberRole, 
-      commission_rate: parseFloat(memberCommission) || 0,
-      owner_id: profile?.id
-    })
+    const result = await res.json()
+    if (result.error) { alert(result.error); setSaving(false); return }
     setMemberName(''); setMemberEmail(''); setMemberPassword(''); setMemberCommission(''); setMemberBranch(''); setMemberRole('agent')
     setShowAddMember(false)
     await loadData()
+  } catch (err: any) {
+    alert(err.message)
   }
   setSaving(false)
 }
