@@ -304,7 +304,7 @@ export default function CustomerPage() {
   const [leadPhone, setLeadPhone] = useState('')
   const [leadEmail, setLeadEmail] = useState('')
   const [leadBranch, setLeadBranch] = useState('')
-  const [leadDepartment, setLeadDepartment] = useState('')
+  const [leadDepartments, setLeadDepartments] = useState<string[]>([])
   const [leadSource, setLeadSource] = useState('manual')
   const [leadAssignTo, setLeadAssignTo] = useState('')
   const [leadNote, setLeadNote] = useState('')
@@ -737,14 +737,13 @@ if (newStatus === selectedLead.status) {
   }
   setSaving(true)
     const updates: any = { status: newStatus }
-    if (newStatus === 'called') {
-  if (!leadDepartment) {
-    alert('Lütfen departman seçin.')
+ if (newStatus === 'called') {
+  if (leadDepartments.length === 0) {
+    alert('Lütfen en az bir departman seçin.')
     setSaving(false)
     return
   }
   updates.called_at = new Date().toISOString()
-  updates.department_id = leadDepartment
 }
     if (newStatus === 'appointment_scheduled') updates.appointment_date = appointmentDate
     if (newStatus === 'procedure_done') { updates.procedure_type = procedureType; updates.procedure_amount = parseFloat(procedureAmount) || 0; updates.procedure_date = new Date().toISOString() }
@@ -753,6 +752,12 @@ if (newStatus === selectedLead.status) {
   updates.cancel_reason = cancelReason || 'Satış iptal edildi'
 }
 await supabase.from('leads').update(updates).eq('id', selectedLead.id)
+if (newStatus === 'called' && leadDepartments.length > 0) {
+  await supabase.from('lead_departments').delete().eq('lead_id', selectedLead.id)
+  await supabase.from('lead_departments').insert(
+    leadDepartments.map(dId => ({ lead_id: selectedLead.id, department_id: dId }))
+  )
+}
 if (newStatus !== selectedLead.status) {
   await supabase.from('lead_history').insert({ 
     lead_id: selectedLead.id, changed_by: profile.id, 
@@ -768,7 +773,7 @@ if (statusNote.trim()) {
   })
 }
 const updatedLead = { ...selectedLead, status: newStatus }
-setSelectedLead(null); setStatusNote(''); setProcedureType(''); setProcedureAmount(''); setCancelReason(''); setAppointmentDate(''); setLeadDepartment('')
+setSelectedLead(null); setStatusNote(''); setProcedureType(''); setProcedureAmount(''); setCancelReason(''); setAppointmentDate(''); setLeadDepartments([])
 loadData(); setSaving(false)
 openDetailModal(updatedLead)
 }
@@ -4507,13 +4512,22 @@ const filtered = adSpend.filter(r => {
             </div>
           )}
           {newStatus === 'called' && (
-  <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
-    <p className="text-xs font-semibold text-indigo-700 mb-3">🏥 Departman Seçimi (Zorunlu)</p>
-    <Select value={leadDepartment} onChange={(e: any) => setLeadDepartment(e.target.value)}>
-      <option value="">Departman seçin...</option>
-      {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-    </Select>
-  </div>
+  <div className="flex flex-wrap gap-2">
+      {departments.map(d => (
+        <button key={d.id} type="button"
+          onClick={() => setLeadDepartments(prev => 
+            prev.includes(d.id) ? prev.filter(id => id !== d.id) : [...prev, d.id]
+          )}
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border-2 transition-all ${
+            leadDepartments.includes(d.id) 
+              ? 'border-indigo-500 bg-indigo-50 text-indigo-700' 
+              : 'border-gray-200 text-gray-500 hover:border-gray-300'
+          }`}>
+          {leadDepartments.includes(d.id) && <span>✓</span>}
+          {d.name}
+        </button>
+      ))}
+    </div>
 )}
           {newStatus === 'appointment_scheduled' && (
            <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
