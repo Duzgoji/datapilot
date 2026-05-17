@@ -1703,21 +1703,18 @@ export default function CustomerPage() {
                                 <span className="text-xs text-gray-300">·</span>
                                 <span className={`text-xs font-medium ${isAppointmentOverdue ? 'text-red-500' : 'text-violet-600'}`}>
                                   📝 {new Date(lead.appointment_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                                {leadDepartmentMap[lead.id]?.length > 0 && (
-                                  <>
-                                    <span className="text-xs text-gray-300">·</span>
-                                    <div className="flex gap-1 flex-wrap">
-                                      {leadDepartmentMap[lead.id].map((ld: any) => (
-                                        <span key={ld.id} className="text-xs bg-violet-50 text-violet-600 font-medium px-1.5 py-0.5 rounded-md">
-                                          {ld.departments?.name}
-                                        </span>
-                                      ))}
-                                    </div>
-                                  </>
-                                )}
+                                </span>                               
                               </>
                             )}
+                            {leadDepartmentMap[lead.id]?.length > 0 && (
+  <div className="flex gap-1 flex-wrap mt-0.5">
+    {leadDepartmentMap[lead.id].map((ld: any) => (
+      <span key={ld.id} className="text-xs bg-violet-50 text-violet-600 font-medium px-1.5 py-0.5 rounded-md">
+        {ld.departments?.name}
+      </span>
+    ))}
+  </div>
+)}
                           </div>
 
                           {/* Not varsa */}
