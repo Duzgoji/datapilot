@@ -304,6 +304,7 @@ export default function CustomerPage() {
   const [leadPhone, setLeadPhone] = useState('')
   const [leadEmail, setLeadEmail] = useState('')
   const [leadBranch, setLeadBranch] = useState('')
+  const [leadDepartment, setLeadDepartment] = useState('')
   const [leadSource, setLeadSource] = useState('manual')
   const [leadAssignTo, setLeadAssignTo] = useState('')
   const [leadNote, setLeadNote] = useState('')
@@ -736,7 +737,15 @@ if (newStatus === selectedLead.status) {
   }
   setSaving(true)
     const updates: any = { status: newStatus }
-    if (newStatus === 'called') updates.called_at = new Date().toISOString()
+    if (newStatus === 'called') {
+  if (!leadDepartment) {
+    alert('Lütfen departman seçin.')
+    setSaving(false)
+    return
+  }
+  updates.called_at = new Date().toISOString()
+  updates.department_id = leadDepartment
+}
     if (newStatus === 'appointment_scheduled') updates.appointment_date = appointmentDate
     if (newStatus === 'procedure_done') { updates.procedure_type = procedureType; updates.procedure_amount = parseFloat(procedureAmount) || 0; updates.procedure_date = new Date().toISOString() }
     if (newStatus === 'cancelled') updates.cancel_reason = cancelReason
@@ -759,7 +768,7 @@ if (statusNote.trim()) {
   })
 }
 const updatedLead = { ...selectedLead, status: newStatus }
-setSelectedLead(null); setStatusNote(''); setProcedureType(''); setProcedureAmount(''); setCancelReason(''); setAppointmentDate('')
+setSelectedLead(null); setStatusNote(''); setProcedureType(''); setProcedureAmount(''); setCancelReason(''); setAppointmentDate(''); setLeadDepartment('')
 loadData(); setSaving(false)
 openDetailModal(updatedLead)
 }
@@ -4497,6 +4506,15 @@ const filtered = adSpend.filter(r => {
               <Input value={cancelReason} onChange={(e: any) => setCancelReason(e.target.value)} placeholder="Neden satış iptal ediliyor?" />
             </div>
           )}
+          {newStatus === 'called' && (
+  <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+    <p className="text-xs font-semibold text-indigo-700 mb-3">🏥 Departman Seçimi (Zorunlu)</p>
+    <Select value={leadDepartment} onChange={(e: any) => setLeadDepartment(e.target.value)}>
+      <option value="">Departman seçin...</option>
+      {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+    </Select>
+  </div>
+)}
           {newStatus === 'appointment_scheduled' && (
            <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
   <p className="text-xs font-semibold text-violet-700 mb-3">📅 Randevu Tarihi</p>
