@@ -608,8 +608,14 @@ const loadNotifications = async () => {
   const { data, error } = await supabase.auth.signUp({ email: memberEmail, password: memberPassword, options: { data: { full_name: memberName, role: 'team' } } })
   if (error) { alert(error.message); setSaving(false); return }
   if (data.user) {
-    await supabase.from('profiles').insert({ id: data.user.id, email: memberEmail, full_name: memberName, role: 'team', is_active: true })
-    await supabase.from('team_members').insert({ branch_id: memberBranch, user_id: data.user.id, role: memberRole, commission_rate: parseFloat(memberCommission) || 0 })
+    await supabase.from('team_members').insert({ 
+  branch_id: memberBranch || null, 
+  user_id: data.user.id, 
+  role: memberRole, 
+  commission_rate: parseFloat(memberCommission) || 0,
+  owner_id: profile?.id
+})
+  await supabase.from('team_members').insert({ branch_id: memberBranch || null, user_id: data.user.id, role: memberRole, commission_rate: parseFloat(memberCommission) || 0, owner_id: profile?.id })
     setMemberName(''); setMemberEmail(''); setMemberPassword(''); setMemberCommission(''); setMemberBranch(''); setMemberRole('agent')
     setShowAddMember(false); loadData()
   }
@@ -4299,7 +4305,7 @@ const filtered = adSpend.filter(r => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input label="Ad Soyad *" value={memberName} onChange={(e: any) => setMemberName(e.target.value)} required placeholder="Ad Soyad" />
-            <Select label="Şube *" value={memberBranch} onChange={(e: any) => setMemberBranch(e.target.value)} required>
+            <Select label="Şube (opsiyonel)" value={memberBranch} onChange={(e: any) => setMemberBranch(e.target.value)}>
               <option value="">Şube seçin...</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
             </Select>
