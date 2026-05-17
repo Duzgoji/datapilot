@@ -452,8 +452,11 @@ if (profileData?.trial_ends_at && new Date(profileData.trial_ends_at) < new Date
     const { data: leadsData } = await supabase.from('leads').select('*').in('owner_id', tenant.readOwnerIds).order('updated_at', { ascending: false })
     setLeads(leadsData || [])
     if (branchIds.length > 0) {
-   const { data: membersData } = await supabase.from('team_members').select('*, profiles(full_name, email), branches(branch_name)').in('branch_id', branchIds)
-    setTeamMembers(membersData || [])
+   const { data: membersData } = await supabase
+  .from('team_members')
+  .select('*, profiles(full_name, email), branches(branch_name)')
+  .eq('owner_id', profile?.id)
+setTeamMembers(membersData || [])
 }
 
     const { data: metaConnRows } = await supabase.from('meta_connections').select('*').in('owner_id', tenant.readOwnerIds)
@@ -607,17 +610,24 @@ const loadNotifications = async () => {
 
   const { data, error } = await supabase.auth.signUp({ email: memberEmail, password: memberPassword, options: { data: { full_name: memberName, role: 'team' } } })
   if (error) { alert(error.message); setSaving(false); return }
-  if (data.user) {
+if (data.user) {
+    await supabase.from('profiles').insert({ 
+      id: data.user.id, 
+      email: memberEmail, 
+      full_name: memberName, 
+      role: 'team', 
+      is_active: true 
+    })
     await supabase.from('team_members').insert({ 
-  branch_id: memberBranch || null, 
-  user_id: data.user.id, 
-  role: memberRole, 
-  commission_rate: parseFloat(memberCommission) || 0,
-  owner_id: profile?.id
-})
-  await supabase.from('team_members').insert({ branch_id: memberBranch || null, user_id: data.user.id, role: memberRole, commission_rate: parseFloat(memberCommission) || 0, owner_id: profile?.id })
+      branch_id: memberBranch || null, 
+      user_id: data.user.id, 
+      role: memberRole, 
+      commission_rate: parseFloat(memberCommission) || 0,
+      owner_id: profile?.id
+    })
     setMemberName(''); setMemberEmail(''); setMemberPassword(''); setMemberCommission(''); setMemberBranch(''); setMemberRole('agent')
-    setShowAddMember(false); loadData()
+    setShowAddMember(false)
+    await loadData()
   }
   setSaving(false)
 }
