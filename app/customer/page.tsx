@@ -4303,13 +4303,11 @@ const filtered = adSpend.filter(r => {
               ))}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+         <div className="grid grid-cols-2 gap-4">
             <Input label="Ad Soyad *" value={memberName} onChange={(e: any) => setMemberName(e.target.value)} required placeholder="Ad Soyad" />
-            <Select label="Şube (opsiyonel)" value={memberBranch} onChange={(e: any) => setMemberBranch(e.target.value)}>
-              <option value="">Şube seçin...</option>
-              {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
-            </Select>
+            <Input label="Prim Oranı (%)" type="number" value={memberCommission} onChange={(e: any) => setMemberCommission(e.target.value)} placeholder="10" />
           </div>
+          <div className="flex gap-3 pt-2"></div>
           <div className="grid grid-cols-2 gap-4">
             <Input label="E-posta *" type="email" value={memberEmail} onChange={(e: any) => setMemberEmail(e.target.value)} required placeholder="satis@email.com" />
             <Input label="Şifre *" type="password" value={memberPassword} onChange={(e: any) => setMemberPassword(e.target.value)} required placeholder="En az 6 karakter" />
