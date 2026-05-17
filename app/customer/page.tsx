@@ -4309,12 +4309,10 @@ const filtered = adSpend.filter(r => {
             <Input label="Ad Soyad *" value={memberName} onChange={(e: any) => setMemberName(e.target.value)} required placeholder="Ad Soyad" />
             <Input label="Prim Oranı (%)" type="number" value={memberCommission} onChange={(e: any) => setMemberCommission(e.target.value)} placeholder="10" />
           </div>
-          <div className="flex gap-3 pt-2"></div>
           <div className="grid grid-cols-2 gap-4">
             <Input label="E-posta *" type="email" value={memberEmail} onChange={(e: any) => setMemberEmail(e.target.value)} required placeholder="satis@email.com" />
             <Input label="Şifre *" type="password" value={memberPassword} onChange={(e: any) => setMemberPassword(e.target.value)} required placeholder="En az 6 karakter" />
           </div>
-          <Input label="Prim Oranı (%)" type="number" value={memberCommission} onChange={(e: any) => setMemberCommission(e.target.value)} placeholder="10" />
           <div className="flex gap-3 pt-2">
             <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddMember(false)}>İptal</Btn>
             <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Ekleniyor...' : 'Üye Ekle'}</Btn>
