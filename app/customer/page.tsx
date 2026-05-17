@@ -240,13 +240,17 @@ export default function CustomerPage() {
   const notifRef = useRef<HTMLDivElement>(null)
 
   // Core state
-const [profile, setProfile] = useState<any>(null)
-const [tenantContext, setTenantContext] = useState<TenantContextState>(null)
-const [branches, setBranches] = useState<any[]>([])
+  const [profile, setProfile] = useState<any>(null)
+  const [tenantContext, setTenantContext] = useState<TenantContextState>(null)
+  const [branches, setBranches] = useState<any[]>([])
   const [leads, setLeads] = useState<any[]>([])
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [sessionLogs, setSessionLogs] = useState<any[]>([])
+  const [departments, setDepartments] = useState<any[]>([])
+  const [showAddDepartment, setShowAddDepartment] = useState(false)
+  const [departmentBranch, setDepartmentBranch] = useState('')
+  const [departmentName, setDepartmentName] = useState('')
   const [activeTab, setActiveTab] = useState('dashboard')
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['leadler', 'ekip'])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
@@ -494,7 +498,15 @@ const { data: sessionLogsData } = await supabase
   .order('created_at', { ascending: false })
 setSessionLogs(sessionLogsData || [])
     setLoading(false)
+    const { data: departmentsData } = await supabase
+  .from('departments')
+  .select('*')
+  .eq('owner_id', profileData?.id)
+  .order('created_at', { ascending: false })
+setDepartments(departmentsData || [])
+
   }
+
 
  const loadLeadActivities = async (leadId: string) => {
   const { data } = await supabase
