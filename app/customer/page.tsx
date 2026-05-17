@@ -796,6 +796,21 @@ const handlePayCommission = async () => {
   await loadData()
 }
   const handleToggleBranch = async (branch: any) => { await supabase.from('branches').update({ is_active: !branch.is_active }).eq('id', branch.id); loadData() }
+  const handleAddDepartment = async (e: React.FormEvent) => {
+  e.preventDefault(); setSaving(true)
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  await supabase.from('departments').insert({
+    name: departmentName,
+    branch_id: departmentBranch || null,
+    owner_id: profile?.id,
+    is_active: true
+  })
+  setDepartmentName(''); setDepartmentBranch('')
+  setShowAddDepartment(false)
+  await loadData()
+  setSaving(false)
+}
   const handleToggleMember = async (member: any) => { await supabase.from('team_members').update({ is_active: !member.is_active }).eq('id', member.id); loadData() }
   const handleSyncAdSpend = async () => {
     if (!profile?.id) return
@@ -1800,7 +1815,38 @@ return (
               </div>
             </div>
           )}
-
+        {/* Departmanlar */}
+<div>
+  <div className="flex items-center justify-between mb-3">
+    <h3 className="text-sm font-semibold text-gray-900">Departmanlar</h3>
+    <button onClick={() => setShowAddDepartment(true)}
+      className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors">
+      <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+      Departman Ekle
+    </button>
+  </div>
+  <div className="bg-white rounded-2xl border border-gray-100">
+    {departments.length === 0 ? (
+      <div className="p-8 text-center"><p className="text-gray-400 text-sm">Henüz departman yok.</p></div>
+    ) : departments.map((dept, i) => (
+      <div key={dept.id} className={`px-5 py-3.5 flex items-center gap-3 ${i < departments.length - 1 ? 'border-b border-gray-50' : ''}`}>
+        <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
+          <span className="text-violet-600 text-xs font-bold">{dept.name?.charAt(0)}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900">{dept.name}</p>
+          <p className="text-xs text-gray-400">{branches.find(b => b.id === dept.branch_id)?.branch_name || 'Şube yok'}</p>
+        </div>
+        <button onClick={async () => {
+          await supabase.from('departments').delete().eq('id', dept.id)
+          loadData()
+        }} className="text-xs text-red-400 hover:text-red-600 px-2 py-1 hover:bg-red-50 rounded-lg transition-colors">
+          Sil
+        </button>
+      </div>
+    ))}
+  </div>
+</div>
          {/* ── SATI�?ÇILAR ── */}
         {activeTab === 'ekip-liste' && (
   <div className="space-y-4">
@@ -4280,8 +4326,21 @@ const filtered = adSpend.filter(r => {
       </div>
 
       {/* ─────────────────── MODALS ─────────────────────── */}
-
-      {/* ── �?UBE EKLE ── */}
+{/* Departman Ekle Modal */}
+<Modal open={showAddDepartment} onClose={() => setShowAddDepartment(false)} title="Departman Ekle" subtitle="Şube altına departman ekleyin">
+  <form onSubmit={handleAddDepartment} className="p-6 space-y-4">
+    <Input label="Departman Adı *" value={departmentName} onChange={(e: any) => setDepartmentName(e.target.value)} required placeholder="Örn: Saç Ekim, Estetik" />
+    <Select label="Şube (opsiyonel)" value={departmentBranch} onChange={(e: any) => setDepartmentBranch(e.target.value)}>
+      <option value="">Şube seçin...</option>
+      {branches.map(b => <option key={b.id} value={b.id}>{b.branch_name}</option>)}
+    </Select>
+    <div className="flex gap-3 pt-2">
+      <Btn type="button" variant="secondary" className="flex-1" onClick={() => setShowAddDepartment(false)}>İptal</Btn>
+      <Btn type="submit" className="flex-1" disabled={saving}>{saving ? 'Ekleniyor...' : 'Departman Ekle'}</Btn>
+    </div>
+  </form>
+</Modal>
+      {/* ── ŞUBE EKLE ── */}
       <Modal open={showAddBranch} onClose={() => setShowAddBranch(false)} title="Yeni Şube" subtitle="Şube bilgilerini girin">
         <form onSubmit={handleAddBranch} className="p-6 space-y-4">
           <Input label="Şube Adı *" value={branchName} onChange={(e: any) => setBranchName(e.target.value)} required placeholder="İstanbul Şubesi" />
