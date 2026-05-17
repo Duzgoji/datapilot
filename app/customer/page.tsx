@@ -455,7 +455,7 @@ if (profileData?.trial_ends_at && new Date(profileData.trial_ends_at) < new Date
    const { data: membersData } = await supabase
   .from('team_members')
   .select('*, profiles(full_name, email), branches(branch_name)')
-  .eq('owner_id', profile?.id)
+  .eq('owner_id', profileData?.id)
 setTeamMembers(membersData || [])
 }
 
