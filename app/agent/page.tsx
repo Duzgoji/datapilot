@@ -580,13 +580,13 @@ export default function AgentPage() {
                       {/* Etiketler */}
                       <div className="flex flex-wrap gap-1.5 mb-3">
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${SOURCE_CONFIG[lead.source]?.badge || 'bg-gray-100 text-gray-500'}`}>
-                         {leadDepartmentMap[lead.id]?.length > 0 && leadDepartmentMap[lead.id].map((ld: any) => (
-  <span key={ld.id} className="text-xs font-medium bg-violet-50 text-violet-600 px-2 py-0.5 rounded-md">
-    {ld.departments?.name}
-  </span>
-))}
                           {SOURCE_CONFIG[lead.source]?.label || lead.source}
                         </span>
+                        {leadDepartmentMap[lead.id]?.length > 0 && leadDepartmentMap[lead.id].map((ld: any) => (
+                          <span key={ld.id} className="text-xs font-medium bg-violet-50 text-violet-600 px-2 py-0.5 rounded-md">
+                            {ld.departments?.name}
+                          </span>
+                        ))}
                         {stale && (
                           <span className="text-xs font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md">
                             ⏳ {days} gündür işlem yapılmadı
@@ -655,20 +655,20 @@ export default function AgentPage() {
                             </div>
                           </div>
                           {newStatus === 'called' && departments.length > 0 && (
-  <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
-    <p className="text-xs font-semibold text-indigo-700 mb-3">🏥 Departman Seçimi (Zorunlu)</p>
-    <div className="flex flex-wrap gap-1.5 mb-3">
-  <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${SOURCE_CONFIG[lead.source]?.badge || 'bg-gray-100 text-gray-500'}`}>
-    {SOURCE_CONFIG[lead.source]?.label || lead.source}
-  </span>
-  {leadDepartmentMap[lead.id]?.length > 0 && leadDepartmentMap[lead.id].map((ld: any) => (
-    <span key={ld.id} className="text-xs font-medium bg-violet-50 text-violet-600 px-2 py-0.5 rounded-md">
-      {ld.departments?.name}
-    </span>
-  ))}
-    </div>
-  </div>
-)}
+                            <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+                              <p className="text-xs font-semibold text-indigo-700 mb-3">🏥 Departman Seçimi (Zorunlu)</p>
+                              <div className="flex flex-wrap gap-1.5 mb-3">
+                                <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${SOURCE_CONFIG[lead.source]?.badge || 'bg-gray-100 text-gray-500'}`}>
+                                  {SOURCE_CONFIG[lead.source]?.label || lead.source}
+                                </span>
+                                {leadDepartmentMap[lead.id]?.length > 0 && leadDepartmentMap[lead.id].map((ld: any) => (
+                                  <span key={ld.id} className="text-xs font-medium bg-violet-50 text-violet-600 px-2 py-0.5 rounded-md">
+                                    {ld.departments?.name}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                           <div>
                             <p className="text-xs font-medium text-gray-500 mb-2">Yeni Durum</p>
                             <div className="grid grid-cols-2 gap-2">
@@ -911,27 +911,26 @@ export default function AgentPage() {
                     ))}
                   </div>
                 </div>
-                    {newStatus === 'called' && departments.length > 0 && (
-  <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
-    <p className="text-xs font-semibold text-indigo-700 mb-3">🏥 Departman Seçimi (Zorunlu)</p>
-    <div className="flex flex-wrap gap-2">
-      {departments.map(d => (
-        <button key={d.id} type="button"
-          onClick={() => setLeadDepartments(prev =>
-            prev.includes(d.id) ? prev.filter(id => id !== d.id) : [...prev, d.id]
-          )}
-          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border-2 transition-all ${
-            leadDepartments.includes(d.id)
-              ? 'border-indigo-500 bg-white text-indigo-700'
-              : 'border-gray-200 bg-white text-gray-500'
-          }`}>
-          {leadDepartments.includes(d.id) && <span>✓</span>}
-          {d.name}
-        </button>
-      ))}
-    </div>
-  </div>
-)}
+                {newStatus === 'called' && departments.length > 0 && (
+                  <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+                    <p className="text-xs font-semibold text-indigo-700 mb-3">🏥 Departman Seçimi (Zorunlu)</p>
+                    <div className="flex flex-wrap gap-2">
+                      {departments.map(d => (
+                        <button key={d.id} type="button"
+                          onClick={() => setLeadDepartments(prev =>
+                            prev.includes(d.id) ? prev.filter(id => id !== d.id) : [...prev, d.id]
+                          )}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border-2 transition-all ${leadDepartments.includes(d.id)
+                              ? 'border-indigo-500 bg-white text-indigo-700'
+                              : 'border-gray-200 bg-white text-gray-500'
+                            }`}>
+                          {leadDepartments.includes(d.id) && <span>✓</span>}
+                          {d.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {newStatus === 'appointment_scheduled' && (
                   <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
                     <p className="text-xs font-semibold text-violet-700 mb-3">📅 Randevu Tarihi</p>
