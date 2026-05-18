@@ -254,9 +254,7 @@ export default function AgentPage() {
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
-        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center mx-auto mb-3">
-          <span className="text-white font-bold text-sm">D</span>
-        </div>
+        <img src="/logo.png" alt="DataPilot" className="h-10 w-auto mx-auto mb-3" />
         <div className="flex gap-1 justify-center">
           {[0, 1, 2].map(i => <div key={i} className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
         </div>
@@ -659,21 +657,15 @@ export default function AgentPage() {
                           {newStatus === 'called' && departments.length > 0 && (
   <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
     <p className="text-xs font-semibold text-indigo-700 mb-3">🏥 Departman Seçimi (Zorunlu)</p>
-    <div className="flex flex-wrap gap-2">
-      {departments.map(d => (
-        <button key={d.id} type="button"
-          onClick={() => setLeadDepartments(prev =>
-            prev.includes(d.id) ? prev.filter(id => id !== d.id) : [...prev, d.id]
-          )}
-          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border-2 transition-all ${
-            leadDepartments.includes(d.id)
-              ? 'border-indigo-500 bg-white text-indigo-700'
-              : 'border-gray-200 bg-white text-gray-500'
-          }`}>
-          {leadDepartments.includes(d.id) && <span>✓</span>}
-          {d.name}
-        </button>
-      ))}
+    <div className="flex flex-wrap gap-1.5 mb-3">
+  <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${SOURCE_CONFIG[lead.source]?.badge || 'bg-gray-100 text-gray-500'}`}>
+    {SOURCE_CONFIG[lead.source]?.label || lead.source}
+  </span>
+  {leadDepartmentMap[lead.id]?.length > 0 && leadDepartmentMap[lead.id].map((ld: any) => (
+    <span key={ld.id} className="text-xs font-medium bg-violet-50 text-violet-600 px-2 py-0.5 rounded-md">
+      {ld.departments?.name}
+    </span>
+  ))}
     </div>
   </div>
 )}
