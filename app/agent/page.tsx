@@ -582,6 +582,11 @@ export default function AgentPage() {
                       {/* Etiketler */}
                       <div className="flex flex-wrap gap-1.5 mb-3">
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${SOURCE_CONFIG[lead.source]?.badge || 'bg-gray-100 text-gray-500'}`}>
+                         {leadDepartmentMap[lead.id]?.length > 0 && leadDepartmentMap[lead.id].map((ld: any) => (
+  <span key={ld.id} className="text-xs font-medium bg-violet-50 text-violet-600 px-2 py-0.5 rounded-md">
+    {ld.departments?.name}
+  </span>
+))}
                           {SOURCE_CONFIG[lead.source]?.label || lead.source}
                         </span>
                         {stale && (
