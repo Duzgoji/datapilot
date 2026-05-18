@@ -27,6 +27,7 @@ const menuStructure = [
     ]
   },
   { key: 'guvenlik-loglar', label: 'Denetim Logları', icon: '◐' },
+  { key: 'god-mode', label: 'God Mode', icon: '👁' },
 ]
 // ─── SHARED ───────────────────────────────────────────────────────────────────
 
@@ -111,6 +112,10 @@ export default function SuperAdminPage() {
   const [advertisers, setAdvertisers] = useState<any[]>([])
   const [metaConnections, setMetaConnections] = useState<any[]>([])
   const [whatsAppConnections, setWhatsAppConnections] = useState<any[]>([])
+  const [godModeLeads, setGodModeLeads] = useState<any[]>([])
+  const [godModeCustomer, setGodModeCustomer] = useState<string>('all')
+  const [godModeSearch, setGodModeSearch] = useState<string>('')
+  const [sessionLogs, setSessionLogs] = useState<any[]>([])
   const [auditLogs, setAuditLogs] = useState<any[]>([])
 
   // Firma modals
@@ -280,6 +285,18 @@ const advRes = await fetch('/api/get-advertisers', {
     })
     const auditJson = await auditRes.json()
     setAuditLogs(auditJson.data || [])
+    const { data: godLeadsData } = await supabase
+  .from('leads')
+  .select('*, profiles!leads_assigned_to_fkey(full_name)')
+  .order('created_at', { ascending: false })
+  .limit(500)
+setGodModeLeads(godLeadsData || [])
+const { data: sessionLogsData } = await supabase
+  .from('session_logs')
+  .select('*, profiles(full_name, email)')
+  .order('created_at', { ascending: false })
+  .limit(200)
+setSessionLogs(sessionLogsData || [])
     console.log('advertiser ids:', (advJson.data || []).map((a: any) => a.id))
     setLoading(false)
     const { data: advSubsData } = await supabase.from('advertiser_subscriptions').select('*')
@@ -1726,8 +1743,105 @@ else created++
     </div>
   </div>
 )}
+{activeTab === 'god-mode' && (() => {
+  const STATUS_CONFIG: any = {
+    new: { label: 'Yeni', badge: 'bg-blue-50 text-blue-700' },
+    called: { label: 'Arandı', badge: 'bg-amber-50 text-amber-700' },
+    appointment_scheduled: { label: 'Randevu', badge: 'bg-violet-50 text-violet-700' },
+    procedure_done: { label: 'Satış', badge: 'bg-emerald-50 text-emerald-700' },
+    cancelled: { label: 'İptal', badge: 'bg-red-50 text-red-600' },
+  }
+  const filteredGodLeads = godModeLeads.filter(l => {
+    const matchCustomer = godModeCustomer === 'all' || l.owner_id === godModeCustomer
+    const q = godModeSearch.toLowerCase()
+    const matchSearch = !q || l.full_name?.toLowerCase().includes(q) || l.phone?.includes(q)
+    return matchCustomer && matchSearch
+  })
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-5 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+        <div className="relative flex items-center gap-3">
+          <span className="text-3xl">👁</span>
+          <div>
+            <h2 className="text-lg font-bold">God Mode</h2>
+            <p className="text-gray-400 text-xs mt-0.5">Tüm platform verilerine erişim — sadece sen görürsün</p>
+          </div>
+          <div className="ml-auto flex gap-4 text-center">
+            <div><p className="text-2xl font-bold">{godModeLeads.length}</p><p className="text-gray-400 text-xs">Lead</p></div>
+            <div><p className="text-2xl font-bold">{sessionLogs.length}</p><p className="text-gray-400 text-xs">Session</p></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Platform geneli session logları */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-900">Son Oturumlar</h3>
+          <span className="text-xs text-gray-400">Son 200 kayıt</span>
+        </div>
+        {sessionLogs.length === 0 ? (
+          <div className="p-8 text-center"><p className="text-gray-400 text-sm">Session log yok.</p></div>
+        ) : (
+          <div className="divide-y divide-gray-50 max-h-64 overflow-y-auto">
+            {sessionLogs.slice(0, 50).map((log, i) => (
+              <div key={log.id || i} className="px-5 py-3 flex items-center gap-3">
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${log.event === 'login' ? 'bg-emerald-400' : 'bg-gray-300'}`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{log.profiles?.full_name || log.profiles?.email || log.user_id}</p>
+                  <p className="text-xs text-gray-400">{log.event === 'login' ? 'Giriş yaptı' : 'Çıkış yaptı'}</p>
+                </div>
+                <p className="text-xs text-gray-400 flex-shrink-0">{new Date(log.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Tüm leadler */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Tüm Leadler</h3>
+          <div className="flex gap-3">
+            <input value={godModeSearch} onChange={e => setGodModeSearch(e.target.value)}
+              placeholder="İsim veya telefon ara..."
+              className="flex-1 px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <select value={godModeCustomer} onChange={e => setGodModeCustomer(e.target.value)}
+              className="appearance-none px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="all">Tüm Firmalar</option>
+              {customers.map(c => <option key={c.id} value={c.id}>{c.company_name || c.full_name}</option>)}
+            </select>
+          </div>
+          <p className="text-xs text-gray-400 mt-2">{filteredGodLeads.length} lead gösteriliyor</p>
+        </div>
+        <div className="divide-y divide-gray-50 max-h-96 overflow-y-auto">
+          {filteredGodLeads.slice(0, 100).map((lead, i) => {
+            const owner = customers.find(c => c.id === lead.owner_id)
+            const st = STATUS_CONFIG[lead.status]
+            return (
+              <div key={lead.id} className="px-5 py-3 flex items-center gap-3 hover:bg-gray-50/50 transition-colors">
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                  <span className="text-indigo-600 text-xs font-bold">{(lead.full_name || 'İ').charAt(0)}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{lead.full_name || 'İsimsiz'}</p>
+                  <p className="text-xs text-gray-400">{lead.phone} · {owner?.company_name || owner?.full_name || '?'}</p>
+                </div>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${st?.badge || 'bg-gray-100 text-gray-500'}`}>
+                  {st?.label || lead.status}
+                </span>
+                <p className="text-xs text-gray-300 flex-shrink-0">{new Date(lead.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}</p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+})()}
           {/* ── BO�?LAR ── */}
-        {!['dashboard','firma-listesi','firma-onboarding','firma-mali','reklamci-listesi','reklamci-ekle','reklamci-mali','fatura-planlar','fatura-abonelikler','guvenlik-loglar'].includes(activeTab) && (
+        {!['dashboard','firma-listesi','firma-onboarding','firma-mali','reklamci-listesi','reklamci-ekle','reklamci-mali','fatura-planlar','fatura-abonelikler','guvenlik-loglar','god-mode'].includes(activeTab) && (
             <div className="bg-white rounded-2xl border border-gray-100 p-16 text-center">
               <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">◌</div>
               <p className="text-gray-500 text-sm font-medium">{getPageTitle()}</p>
