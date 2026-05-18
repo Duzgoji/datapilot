@@ -268,13 +268,10 @@ export default function AgentPage() {
       {/* TOP BAR */}
       <header className="bg-white border-b border-gray-100 px-4 h-14 flex items-center justify-between sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-xs font-bold">D</span>
-          </div>
-          <div className="h-4 w-px bg-gray-200" />
-          <span className="text-sm font-medium text-gray-700 truncate max-w-[140px]">{teamMember?.branches?.branch_name || 'Şube'}</span>
-        </div>
-
+  <img src="/logo.png" alt="DataPilot" className="h-7 w-auto flex-shrink-0" />
+  <div className="h-4 w-px bg-gray-200" />
+  <span className="text-sm font-medium text-gray-700">DataPilot</span>
+</div>
         <div className="flex items-center gap-1">
           {/* Bildirim Zili */}
           <div className="relative" ref={notifRef}>
