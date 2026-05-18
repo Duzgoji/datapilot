@@ -5,20 +5,20 @@ import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 const STATUS_CONFIG: any = {
-  new:                   { label: 'Yeni',    dot: 'bg-blue-500',    badge: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' },
-  called:                { label: 'Arandı',  dot: 'bg-amber-500',   badge: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' },
-  appointment_scheduled: { label: 'Randevu', dot: 'bg-violet-500',  badge: 'bg-violet-50 text-violet-700 ring-1 ring-violet-200' },
-  procedure_done:        { label: 'Satış',   dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' },
-  cancelled:             { label: 'İptal',   dot: 'bg-red-400',     badge: 'bg-red-50 text-red-600 ring-1 ring-red-200' },
+  new: { label: 'Yeni', dot: 'bg-blue-500', badge: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' },
+  called: { label: 'Arandı', dot: 'bg-amber-500', badge: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' },
+  appointment_scheduled: { label: 'Randevu', dot: 'bg-violet-500', badge: 'bg-violet-50 text-violet-700 ring-1 ring-violet-200' },
+  procedure_done: { label: 'Satış', dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' },
+  cancelled: { label: 'İptal', dot: 'bg-red-400', badge: 'bg-red-50 text-red-600 ring-1 ring-red-200' },
 }
 
 const SOURCE_CONFIG: any = {
-  manual:       { label: 'Manuel',    badge: 'bg-slate-100 text-slate-600' },
-  meta_form:    { label: 'Meta Form', badge: 'bg-blue-100 text-blue-700' },
+  manual: { label: 'Manuel', badge: 'bg-slate-100 text-slate-600' },
+  meta_form: { label: 'Meta Form', badge: 'bg-blue-100 text-blue-700' },
   instagram_dm: { label: 'Instagram', badge: 'bg-pink-100 text-pink-700' },
-  whatsapp:     { label: 'WhatsApp',  badge: 'bg-green-100 text-green-700' },
-  website:      { label: 'Web',       badge: 'bg-purple-100 text-purple-700' },
-  referral:     { label: 'Referans',  badge: 'bg-orange-100 text-orange-700' },
+  whatsapp: { label: 'WhatsApp', badge: 'bg-green-100 text-green-700' },
+  website: { label: 'Web', badge: 'bg-purple-100 text-purple-700' },
+  referral: { label: 'Referans', badge: 'bg-orange-100 text-orange-700' },
 }
 
 const Badge = ({ status }: { status: string }) => (
@@ -60,6 +60,9 @@ export default function AgentPage() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [appointmentDate, setAppointmentDate] = useState('')
   const [appointmentTime, setAppointmentTime] = useState('')
+  const [leadDepartments, setLeadDepartments] = useState<string[]>([])
+  const [departments, setDepartments] = useState<any[]>([])
+  const [leadDepartmentMap, setLeadDepartmentMap] = useState<Record<string, any[]>>({})
 
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterDate, setFilterDate] = useState('all')
@@ -95,6 +98,24 @@ export default function AgentPage() {
       .eq('assigned_to', user.id)
       .order('updated_at', { ascending: true }) // en eski güncellenen üstte
     setLeads(leadsData || [])
+    const ownerId = memberData?.branches?.owner_id
+    if (ownerId) {
+      const { data: deptsData } = await supabase
+        .from('departments')
+        .select('*')
+        .eq('owner_id', ownerId)
+      setDepartments(deptsData || [])
+      const { data: leadDepsData } = await supabase
+        .from('lead_departments')
+        .select('*, departments(name)')
+        .in('lead_id', (leadsData || []).map((l: any) => l.id))
+      const ldMap: Record<string, any[]> = {}
+        ; (leadDepsData || []).forEach((ld: any) => {
+          if (!ldMap[ld.lead_id]) ldMap[ld.lead_id] = []
+          ldMap[ld.lead_id].push(ld)
+        })
+      setLeadDepartmentMap(ldMap)
+    }
     setLoading(false)
   }
 
@@ -117,6 +138,17 @@ export default function AgentPage() {
       if (selectedLead.status === 'procedure_done') return
       if (newStatus === 'procedure_done') return
       const updateData: any = { status: newStatus }
+      if (newStatus === 'called') {
+        if (leadDepartments.length === 0) {
+          alert('Lütfen en az bir departman seçin.')
+          setSaving(false)
+          return
+        }
+        await supabase.from('lead_departments').delete().eq('lead_id', selectedLead.id)
+        await supabase.from('lead_departments').insert(
+          leadDepartments.map(dId => ({ lead_id: selectedLead.id, department_id: dId }))
+        )
+      }
       if (newNote) updateData.note = newNote
       if (newStatus === 'appointment_scheduled' && appointmentDate) {
         updateData.appointment_at = appointmentTime ? `${appointmentDate}T${appointmentTime}` : appointmentDate
@@ -168,17 +200,17 @@ export default function AgentPage() {
   }
 
   const handleLogout = async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    await supabase.from('session_logs').insert({
-      user_id: user.id,
-      event: 'logout',
-      user_agent: navigator.userAgent,
-    })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await supabase.from('session_logs').insert({
+        user_id: user.id,
+        event: 'logout',
+        user_agent: navigator.userAgent,
+      })
+    }
+    await supabase.auth.signOut()
+    router.push('/login')
   }
-  await supabase.auth.signOut()
-  router.push('/login')
-}
 
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7)
@@ -226,7 +258,7 @@ export default function AgentPage() {
           <span className="text-white font-bold text-sm">D</span>
         </div>
         <div className="flex gap-1 justify-center">
-          {[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
+          {[0, 1, 2].map(i => <div key={i} className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
         </div>
       </div>
     </div>
@@ -253,8 +285,8 @@ export default function AgentPage() {
               className="relative w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors"
             >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M9 1.5a5.5 5.5 0 015.5 5.5v3.5l1.5 2H2L3.5 10.5V7A5.5 5.5 0 019 1.5z" stroke="#374151" strokeWidth="1.25"/>
-                <path d="M7 14.5a2 2 0 004 0" stroke="#374151" strokeWidth="1.25"/>
+                <path d="M9 1.5a5.5 5.5 0 015.5 5.5v3.5l1.5 2H2L3.5 10.5V7A5.5 5.5 0 019 1.5z" stroke="#374151" strokeWidth="1.25" />
+                <path d="M7 14.5a2 2 0 004 0" stroke="#374151" strokeWidth="1.25" />
               </svg>
               {notifications.filter(n => !n.is_read).length > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
@@ -316,7 +348,7 @@ export default function AgentPage() {
                 <span className="text-indigo-600 text-xs font-bold">{profile?.full_name?.charAt(0)}</span>
               </div>
               <span className="text-sm font-medium text-gray-700 hidden sm:block truncate max-w-[100px]">{profile?.full_name}</span>
-              <svg className="text-gray-400" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg className="text-gray-400" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
             {showProfileMenu && (
               <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50">
@@ -326,7 +358,7 @@ export default function AgentPage() {
                   <span className="text-xs bg-indigo-50 text-indigo-600 font-medium px-2 py-0.5 rounded-full mt-1 inline-block">Satışçı</span>
                 </div>
                 <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2">
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M5 11H2.5A1.5 1.5 0 011 9.5v-6A1.5 1.5 0 012.5 2H5M9 9.5l3-3-3-3M12 6.5H5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M5 11H2.5A1.5 1.5 0 011 9.5v-6A1.5 1.5 0 012.5 2H5M9 9.5l3-3-3-3M12 6.5H5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   Çıkış Yap
                 </button>
               </div>
@@ -353,7 +385,7 @@ export default function AgentPage() {
                   <div><p className="text-2xl font-bold">{leads.length}</p><p className="text-indigo-300 text-xs mt-0.5">Potansiyel Müşteri</p></div>
                   <div><p className="text-2xl font-bold">{totalSales}</p><p className="text-indigo-300 text-xs mt-0.5">Satış</p></div>
                   <div><p className="text-2xl font-bold">%{conversionRate}</p><p className="text-indigo-300 text-xs mt-0.5">Dönüşüm</p></div>
-                  <div><p className="text-2xl font-bold">₺{(commission/1000).toFixed(1)}K</p><p className="text-indigo-300 text-xs mt-0.5">Prim</p></div>
+                  <div><p className="text-2xl font-bold">₺{(commission / 1000).toFixed(1)}K</p><p className="text-indigo-300 text-xs mt-0.5">Prim</p></div>
                 </div>
               </div>
             </div>
@@ -408,7 +440,7 @@ export default function AgentPage() {
                   <p className="text-gray-400 text-sm">Henüz potansiyel müşteri atanmadı.</p>
                 </div>
               ) : sortedLeads.slice(0, 5).map((lead, i) => {
-                const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600','from-violet-100 to-purple-100 text-violet-600','from-emerald-100 to-teal-100 text-emerald-600','from-orange-100 to-amber-100 text-orange-600','from-pink-100 to-rose-100 text-rose-600']
+                const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600', 'from-violet-100 to-purple-100 text-violet-600', 'from-emerald-100 to-teal-100 text-emerald-600', 'from-orange-100 to-amber-100 text-orange-600', 'from-pink-100 to-rose-100 text-rose-600']
                 const ac = avatarColors[i % avatarColors.length]
                 return (
                   <div key={lead.id} onClick={() => openUpdateModal(lead)}
@@ -441,16 +473,16 @@ export default function AgentPage() {
             {/* Durum özeti */}
             <div className="grid grid-cols-4 gap-2">
               {[
-                { key: 'new',                   label: 'Yeni',    color: 'bg-blue-50 text-blue-700 border-blue-100' },
-                { key: 'called',                label: 'Arandı',  color: 'bg-amber-50 text-amber-700 border-amber-100' },
+                { key: 'new', label: 'Yeni', color: 'bg-blue-50 text-blue-700 border-blue-100' },
+                { key: 'called', label: 'Arandı', color: 'bg-amber-50 text-amber-700 border-amber-100' },
                 { key: 'appointment_scheduled', label: 'Randevu', color: 'bg-violet-50 text-violet-700 border-violet-100' },
-                { key: 'procedure_done',        label: 'Satış',   color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+                { key: 'procedure_done', label: 'Satış', color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
               ].map(s => (
                 <div
-  key={s.key}
-  onClick={() => setFilterStatus(filterStatus === s.key ? 'all' : s.key)}
-  className={`rounded-xl border p-2.5 text-center cursor-pointer hover:shadow-sm transition-all ${s.color} ${filterStatus === s.key ? 'ring-2 ring-offset-1 ring-indigo-400' : ''}`}
->
+                  key={s.key}
+                  onClick={() => setFilterStatus(filterStatus === s.key ? 'all' : s.key)}
+                  className={`rounded-xl border p-2.5 text-center cursor-pointer hover:shadow-sm transition-all ${s.color} ${filterStatus === s.key ? 'ring-2 ring-offset-1 ring-indigo-400' : ''}`}
+                >
                   <p className="text-lg font-bold">{leads.filter(l => l.status === s.key).length}</p>
                   <p className="text-xs font-medium mt-0.5">{s.label}</p>
                 </div>
@@ -469,12 +501,12 @@ export default function AgentPage() {
 
             {/* Arama */}
             <div className="relative">
-              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4" stroke="currentColor" strokeWidth="1.5" /><path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
               <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="İsim, telefon veya kod ara..."
                 className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               {searchQuery && (
                 <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
                 </button>
               )}
             </div>
@@ -505,29 +537,29 @@ export default function AgentPage() {
             ) : (
               <div className="space-y-3">
                 {sortedLeads.map((lead, i) => {
-  const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600','from-violet-100 to-purple-100 text-violet-600','from-emerald-100 to-teal-100 text-emerald-600','from-orange-100 to-amber-100 text-orange-600','from-pink-100 to-rose-100 text-rose-600']
-  const ac = avatarColors[i % avatarColors.length]
+                  const avatarColors = ['from-blue-100 to-indigo-100 text-indigo-600', 'from-violet-100 to-purple-100 text-violet-600', 'from-emerald-100 to-teal-100 text-emerald-600', 'from-orange-100 to-amber-100 text-orange-600', 'from-pink-100 to-rose-100 text-rose-600']
+                  const ac = avatarColors[i % avatarColors.length]
                   const stale = isStale(lead)
                   const days = staleDays(lead)
                   const isAppointmentOverdue = lead.appointment_at && new Date(lead.appointment_at) < new Date() && lead.status === 'appointment_scheduled'
                   const hasAppointmentSoon = lead.appointment_at && (() => {
-                    const d = new Date(lead.appointment_at); d.setHours(0,0,0,0)
+                    const d = new Date(lead.appointment_at); d.setHours(0, 0, 0, 0)
                     const diff = Math.floor((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
                     return diff >= 0 && diff <= 1
                   })()
-            
-         return (
-  <div
-    key={lead.id}
-  onClick={() => toggleLeadAccordion(lead)}
-  className={`relative bg-white rounded-2xl border-2 p-4 cursor-pointer transition-all hover:shadow-md group
+
+                  return (
+                    <div
+                      key={lead.id}
+                      onClick={() => toggleLeadAccordion(lead)}
+                      className={`relative bg-white rounded-2xl border-2 p-4 cursor-pointer transition-all hover:shadow-md group
     ${stale ? 'border-amber-300 bg-amber-50/30' : 'border-gray-100 hover:border-indigo-200'}`}
->
-  {stale && (
-    <div className="absolute -top-2 left-3 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-md shadow">
-      Bekliyor
-    </div>
-  )}
+                    >
+                      {stale && (
+                        <div className="absolute -top-2 left-3 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-md shadow">
+                          Bekliyor
+                        </div>
+                      )}
                       {/* Üst satır */}
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="flex items-center gap-3 min-w-0">
@@ -542,7 +574,7 @@ export default function AgentPage() {
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <Badge status={lead.status} />
                           <svg className={`text-gray-300 transition-transform ${expandedLeadId === lead.id ? 'rotate-180' : ''}`} width="14" height="14" viewBox="0 0 14 14" fill="none">
-                            <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </div>
                       </div>
@@ -589,16 +621,16 @@ export default function AgentPage() {
                         <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                           <a href={`tel:${lead.phone}`}
                             className="p-1.5 hover:bg-green-50 rounded-lg text-gray-300 hover:text-green-500 transition-colors">
-                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 9.5L9.5 11.5C6.2 10.1 2.9 6.8 1.5 3.5L3.5 1.5l2.5 2.5L4.5 5.5C5.3 6.7 6.3 7.7 7.5 8.5L9 7l2.5 2.5z" fill="currentColor"/></svg>
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 9.5L9.5 11.5C6.2 10.1 2.9 6.8 1.5 3.5L3.5 1.5l2.5 2.5L4.5 5.5C5.3 6.7 6.3 7.7 7.5 8.5L9 7l2.5 2.5z" fill="currentColor" /></svg>
                           </a>
                           <a href={`https://wa.me/90${lead.phone?.replace(/\D/g, '').replace(/^0/, '')}`}
                             target="_blank" rel="noopener noreferrer"
                             className="p-1.5 hover:bg-green-50 rounded-lg text-gray-300 hover:text-green-600 transition-colors">
-                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1C3.46 1 1 3.46 1 6.5c0 .97.25 1.88.69 2.67L1 12l2.9-.67A5.48 5.48 0 006.5 12C9.54 12 12 9.54 12 6.5S9.54 1 6.5 1zm2.7 7.5c-.11.3-.63.58-.87.61-.21.03-.48.04-.77-.05-.18-.05-.41-.13-.7-.26C5.47 8.32 4.5 7.1 4.42 7s-.6-.8-.6-1.52c0-.72.37-1.07.5-1.22.13-.15.28-.18.38-.18h.27c.09 0 .21-.03.33.25l.43 1.05c.04.09.07.19.01.3L5.5 5.9c-.07.1-.1.13-.05.23.25.45.54.86.9 1.2.42.4.87.67 1.4.85.1.03.2 0 .26-.07l.35-.42c.07-.1.16-.11.26-.07l1 .47c.1.04.17.1.2.19.03.1 0 .31-.1.57z" fill="currentColor"/></svg>
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1C3.46 1 1 3.46 1 6.5c0 .97.25 1.88.69 2.67L1 12l2.9-.67A5.48 5.48 0 006.5 12C9.54 12 12 9.54 12 6.5S9.54 1 6.5 1zm2.7 7.5c-.11.3-.63.58-.87.61-.21.03-.48.04-.77-.05-.18-.05-.41-.13-.7-.26C5.47 8.32 4.5 7.1 4.42 7s-.6-.8-.6-1.52c0-.72.37-1.07.5-1.22.13-.15.28-.18.38-.18h.27c.09 0 .21-.03.33.25l.43 1.05c.04.09.07.19.01.3L5.5 5.9c-.07.1-.1.13-.05.23.25.45.54.86.9 1.2.42.4.87.67 1.4.85.1.03.2 0 .26-.07l.35-.42c.07-.1.16-.11.26-.07l1 .47c.1.04.17.1.2.19.03.1 0 .31-.1.57z" fill="currentColor" /></svg>
                           </a>
                           <button onClick={() => toggleLeadAccordion(lead)}
                             className="p-1.5 hover:bg-indigo-50 rounded-lg text-gray-300 hover:text-indigo-600 transition-colors">
-                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 7l3 3L12 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 7l3 3L12 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                           </button>
                         </div>
                       </div>
@@ -619,7 +651,27 @@ export default function AgentPage() {
                               <p className="text-sm font-medium text-gray-900">{STATUS_CONFIG[lead.status]?.label || '-'}</p>
                             </div>
                           </div>
-
+                          {newStatus === 'called' && departments.length > 0 && (
+  <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+    <p className="text-xs font-semibold text-indigo-700 mb-3">🏥 Departman Seçimi (Zorunlu)</p>
+    <div className="flex flex-wrap gap-2">
+      {departments.map(d => (
+        <button key={d.id} type="button"
+          onClick={() => setLeadDepartments(prev =>
+            prev.includes(d.id) ? prev.filter(id => id !== d.id) : [...prev, d.id]
+          )}
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border-2 transition-all ${
+            leadDepartments.includes(d.id)
+              ? 'border-indigo-500 bg-white text-indigo-700'
+              : 'border-gray-200 bg-white text-gray-500'
+          }`}>
+          {leadDepartments.includes(d.id) && <span>✓</span>}
+          {d.name}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
                           <div>
                             <p className="text-xs font-medium text-gray-500 mb-2">Yeni Durum</p>
                             <div className="grid grid-cols-2 gap-2">
@@ -661,7 +713,7 @@ export default function AgentPage() {
                               className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
                               Kapat
                             </button>
-                            <button type="button" onClick={() => void handleUpdateLead({ preventDefault: () => {} } as React.FormEvent)} disabled={saving || !newStatus}
+                            <button type="button" onClick={() => void handleUpdateLead({ preventDefault: () => { } } as React.FormEvent)} disabled={saving || !newStatus}
                               className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white py-3 rounded-xl text-sm font-semibold transition-colors">
                               {saving ? 'Kaydediliyor...' : 'Kaydet'}
                             </button>
@@ -713,7 +765,7 @@ export default function AgentPage() {
                   <div className="flex gap-6 mt-2">
                     <div><p className="text-2xl font-bold">{thisMonthLeads.length}</p><p className="text-emerald-200 text-xs mt-0.5">Potansiyel Müşteri</p></div>
                     <div><p className="text-2xl font-bold">{thisMonthSales.length}</p><p className="text-emerald-200 text-xs mt-0.5">Satış</p></div>
-                    <div><p className="text-2xl font-bold">₺{(thisMonthRevenue/1000).toFixed(1)}K</p><p className="text-emerald-200 text-xs mt-0.5">Ciro</p></div>
+                    <div><p className="text-2xl font-bold">₺{(thisMonthRevenue / 1000).toFixed(1)}K</p><p className="text-emerald-200 text-xs mt-0.5">Ciro</p></div>
                     <div><p className="text-2xl font-bold">₺{thisMonthCommission.toLocaleString()}</p><p className="text-emerald-200 text-xs mt-0.5">Prim</p></div>
                   </div>
                 </div>
@@ -786,9 +838,9 @@ export default function AgentPage() {
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-10 shadow-lg">
         <div className="flex max-w-2xl mx-auto">
           {[
-            { key: 'dashboard', label: 'Anasayfa', icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="1" y="11" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg> },
-            { key: 'leadler', label: 'Potansiyel Müşterilerim', icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3.5" stroke="currentColor" strokeWidth="1.5"/><path d="M2 16c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> },
-            { key: 'performans', label: 'Performans', icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 14l4-4 3 3 4-5 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> },
+            { key: 'dashboard', label: 'Anasayfa', icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5" /><rect x="11" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5" /><rect x="1" y="11" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5" /><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5" /></svg> },
+            { key: 'leadler', label: 'Potansiyel Müşterilerim', icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="6" r="3.5" stroke="currentColor" strokeWidth="1.5" /><path d="M2 16c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg> },
+            { key: 'performans', label: 'Performans', icon: <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 14l4-4 3 3 4-5 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg> },
           ].map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
               className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors relative ${activeTab === tab.key ? 'text-indigo-600' : 'text-gray-400'}`}>
@@ -814,7 +866,7 @@ export default function AgentPage() {
                 <p className="text-xs text-gray-400 mt-0.5">{selectedLead.phone} · {selectedLead.lead_code}</p>
               </div>
               <button onClick={() => setShowUpdateModal(false)} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 ml-3">
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/></svg>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" /></svg>
               </button>
             </div>
             <div className="overflow-y-auto flex-1">
@@ -862,7 +914,27 @@ export default function AgentPage() {
                     ))}
                   </div>
                 </div>
-
+                    {newStatus === 'called' && departments.length > 0 && (
+  <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+    <p className="text-xs font-semibold text-indigo-700 mb-3">🏥 Departman Seçimi (Zorunlu)</p>
+    <div className="flex flex-wrap gap-2">
+      {departments.map(d => (
+        <button key={d.id} type="button"
+          onClick={() => setLeadDepartments(prev =>
+            prev.includes(d.id) ? prev.filter(id => id !== d.id) : [...prev, d.id]
+          )}
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border-2 transition-all ${
+            leadDepartments.includes(d.id)
+              ? 'border-indigo-500 bg-white text-indigo-700'
+              : 'border-gray-200 bg-white text-gray-500'
+          }`}>
+          {leadDepartments.includes(d.id) && <span>✓</span>}
+          {d.name}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
                 {newStatus === 'appointment_scheduled' && (
                   <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
                     <p className="text-xs font-semibold text-violet-700 mb-3">📅 Randevu Tarihi</p>
